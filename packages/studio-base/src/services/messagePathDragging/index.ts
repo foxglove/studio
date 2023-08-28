@@ -3,7 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { CSSProperties, useMemo, useRef, useState } from "react";
-import { ConnectDragSource, ConnectDropTarget, useDrag, useDrop } from "react-dnd";
+import {
+  ConnectDragPreview,
+  ConnectDragSource,
+  ConnectDropTarget,
+  useDrag,
+  useDrop,
+} from "react-dnd";
 
 import { MessagePathDropConfig, MessagePathDropStatus } from "@foxglove/studio";
 
@@ -44,6 +50,7 @@ type MessagePathDragParams = {
  */
 export function useMessagePathDrag({ path, rootSchemaName }: MessagePathDragParams): {
   connectDragSource: ConnectDragSource;
+  connectDragPreview: ConnectDragPreview;
   cursor?: CSSProperties["cursor"];
   isDragging: boolean;
 } {
@@ -58,7 +65,7 @@ export function useMessagePathDrag({ path, rootSchemaName }: MessagePathDragPara
     }),
     [path, rootSchemaName],
   );
-  const [{ isDragging }, connectDragSource] = useDrag({
+  const [{ isDragging }, connectDragSource, connectDragPreview] = useDrag({
     type: MESSAGE_PATH_DRAG_TYPE,
     item: dragItem,
     options: {
@@ -73,15 +80,19 @@ export function useMessagePathDrag({ path, rootSchemaName }: MessagePathDragPara
   });
 
   let cursor = undefined;
-  if (isDragging && dropStatus) {
-    if (!dropStatus.canDrop) {
+  if (isDragging) {
+    if (!dropStatus) {
+      cursor = "auto";
+    } else if (!dropStatus.canDrop) {
       cursor = "no-drop";
     } else if (dropStatus.effect === "add") {
       cursor = "copy";
+    } else {
+      cursor = "auto";
     }
   }
 
-  return { connectDragSource, cursor, isDragging };
+  return { connectDragSource, connectDragPreview, cursor, isDragging };
 }
 
 /**
@@ -93,15 +104,15 @@ export function useMessagePathDrop(): {
   isDragging: boolean;
   isOver: boolean;
   isValidTarget: boolean;
-  message: string | undefined;
-  connectDropTarget: ConnectDropTarget;
+  dropMessage: string | undefined;
+  connectMessagePathDropTarget: ConnectDropTarget;
   setMessagePathDropConfig: (config: MessagePathDropConfig | undefined) => void;
 } {
   const [messagePathDropConfig, setMessagePathDropConfig] = useState<
     MessagePathDropConfig | undefined
   >();
 
-  const [{ isDragging, isOver, isValidTarget = false, message }, connectDropTarget] = useDrop({
+  const [{ isDragging, isOver, isValidTarget, message }, connectDropTarget] = useDrop({
     accept: MESSAGE_PATH_DRAG_TYPE,
     canDrop(item: MessagePathDragObject, _monitor) {
       if (!messagePathDropConfig) {
@@ -115,19 +126,19 @@ export function useMessagePathDrop(): {
     collect(monitor) {
       // don't run the code below when dragging other types of items (i.e. panels)
       if (monitor.getItemType() !== MESSAGE_PATH_DRAG_TYPE) {
-        return { isDragging: false, isOver: false };
+        return { isDragging: false, isOver: false, isValidTarget: false };
       }
       const item = monitor.getItem<MessagePathDragObject | undefined>();
       const targetId = monitor.getHandlerId();
-      if (!item || !messagePathDropConfig || targetId == undefined) {
+      if (!item || targetId == undefined) {
         return {
           isDragging: item != undefined,
           isOver: false,
-          isValidTarget: item != undefined && messagePathDropConfig?.getDropStatus(item).canDrop,
+          isValidTarget: false,
         };
       }
       const monitorIsOver = monitor.isOver({ shallow: true });
-      const dropStatus = messagePathDropConfig.getDropStatus(item);
+      const dropStatus = messagePathDropConfig?.getDropStatus(item) ?? { canDrop: false };
 
       // Not ideal to have side effects in collect(), but this is the only place where we get
       // access to "isOver: false" when the drag leaves the target.
@@ -144,7 +155,7 @@ export function useMessagePathDrop(): {
       return {
         isDragging: true,
         isOver: monitorIsOver && monitor.canDrop(),
-        isValidTarget: messagePathDropConfig.getDropStatus(item).canDrop,
+        isValidTarget: dropStatus.canDrop,
         message:
           dropStatus.message ??
           (dropStatus.effect === "add" ? `Add ${item.path}` : `View ${item.path}`),
@@ -159,8 +170,8 @@ export function useMessagePathDrop(): {
     isDragging,
     isOver,
     isValidTarget,
-    message,
-    connectDropTarget,
+    dropMessage: message,
+    connectMessagePathDropTarget: connectDropTarget,
     setMessagePathDropConfig,
   };
 }

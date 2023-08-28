@@ -415,8 +415,8 @@ export default function Panel<
       isDragging,
       isOver,
       isValidTarget,
-      connectDropTarget: connectMessagePathDropTarget,
-      message: dropMessage,
+      connectMessagePathDropTarget,
+      dropMessage,
       setMessagePathDropConfig,
     } = useMessagePathDrop();
 

@@ -27,7 +27,7 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { StatsChip } from "@foxglove/studio-base/components/StatsChip";
+import { TopicStatsChip } from "@foxglove/studio-base/components/TopicStatsChip";
 import { PlayerPresence, TopicStats } from "@foxglove/studio-base/players/types";
 import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
 import { Topic } from "@foxglove/studio-base/src/players/types";
@@ -98,7 +98,7 @@ function TopicListItem({
   positions: Set<number>;
 }): JSX.Element {
   const { classes, cx } = useStyles();
-  const { connectDragSource, cursor, isDragging } = useMessagePathDrag({
+  const { connectDragSource, connectDragPreview, cursor, isDragging } = useMessagePathDrag({
     path: topic.name,
     rootSchemaName: topic.schemaName,
   });
@@ -108,8 +108,7 @@ function TopicListItem({
       key={topic.name}
       divider
       className={cx(classes.listItem, { isDragging })}
-      ref={connectDragSource}
-      style={{ cursor }}
+      ref={connectDragPreview}
     >
       <ListItemText
         className={classes.listItemText}
@@ -143,8 +142,15 @@ function TopicListItem({
         }}
       />
       <Stack direction="row" alignItems="center" fullHeight gap={0.5} paddingX={0.5}>
-        <StatsChip topicName={topic.name} />
-        <ReOrderDotsVertical16Regular className={classes.dragHandle} />
+        <TopicStatsChip topicName={topic.name} />
+        <div
+          className={classes.dragHandle}
+          data-testid="TopicListDragHandle"
+          ref={connectDragSource}
+          style={{ cursor }}
+        >
+          <ReOrderDotsVertical16Regular />
+        </div>
       </Stack>
     </ListItem>
   );

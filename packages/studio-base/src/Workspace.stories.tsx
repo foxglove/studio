@@ -16,6 +16,7 @@ import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
+import Tab from "@foxglove/studio-base/panels/Tab";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
@@ -96,7 +97,11 @@ class MockPanelCatalog implements PanelCatalog {
   };
 
   public getPanels(): readonly PanelInfo[] {
-    return [MockPanelCatalog.#fakePanel, MockPanelCatalog.#droppablePanel];
+    return [
+      MockPanelCatalog.#fakePanel,
+      MockPanelCatalog.#droppablePanel,
+      { title: "Tab", type: "Tab", module: async () => ({ default: Tab }) },
+    ];
   }
   public getPanelByType(type: string): PanelInfo | undefined {
     return this.getPanels().find((panel) => panel.type === type);
@@ -135,44 +140,53 @@ export const FullscreenPanel: typeof Basic = {
   },
 };
 
-export const DragTopicOver: typeof Basic = {
+export const DragTopicStart: typeof Basic = {
   ...Basic,
   args: {
     initialLayoutState: {
       layout: {
         direction: "column",
         first: "Fake",
-        second: "Droppable",
+        second: "Tab!a",
+      },
+      configById: {
+        "Tab!a": {
+          activeTabIdx: 0,
+          tabs: [
+            { title: "Tab A", layout: { direction: "row", first: "Fake", second: "Droppable" } },
+          ],
+        },
       },
     },
   },
   play: async () => {
     fireEvent.click(await screen.findByText("Topics"));
 
-    const row = await screen.findByText("test.Foo");
+    const handle = await screen.findByTestId("TopicListDragHandle");
+    fireEvent.dragStart(handle);
+  },
+};
+
+export const DragTopicOver: typeof Basic = {
+  ...DragTopicStart,
+  play: async () => {
+    fireEvent.click(await screen.findByText("Topics"));
+
+    const handle = await screen.findByTestId("TopicListDragHandle");
+    fireEvent.dragStart(handle);
     const dest = await screen.findByText("Drop here!");
-    fireEvent.dragStart(row);
     fireEvent.dragOver(dest);
   },
 };
 
 export const DragTopicDrop: typeof Basic = {
-  ...Basic,
-  args: {
-    initialLayoutState: {
-      layout: {
-        direction: "column",
-        first: "Fake",
-        second: "Droppable",
-      },
-    },
-  },
+  ...DragTopicStart,
   play: async () => {
     fireEvent.click(await screen.findByText("Topics"));
 
-    const row = await screen.findByText("test.Foo");
+    const handle = await screen.findByTestId("TopicListDragHandle");
+    fireEvent.dragStart(handle);
     const dest = await screen.findByText("Drop here!");
-    fireEvent.dragStart(row);
     fireEvent.dragOver(dest);
     fireEvent.drop(dest);
   },
