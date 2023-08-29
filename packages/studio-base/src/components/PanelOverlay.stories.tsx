@@ -8,8 +8,7 @@ import {
   TabDesktopMultiple20Regular,
   TableSimple20Regular,
 } from "@fluentui/react-icons";
-import { Meta, StoryObj } from "@storybook/react";
-import { useRef } from "react";
+import { Meta, StoryFn, StoryObj } from "@storybook/react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 
@@ -18,25 +17,21 @@ import { PanelOverlay } from "./PanelOverlay";
 export default {
   title: "components/PanelOverlay",
   component: PanelOverlay,
-  args: {},
-  decorators: [
-    (Story, { args }) => {
-      const ref = useRef<HTMLDivElement>(ReactNull);
-
-      return (
-        <Stack
-          position="relative"
-          justifyContent="center"
-          alignItems="center"
-          paddingTop={3.75}
-          fullHeight
-        >
-          <Story {...args} quickActionsOverlayRef={ref} />
-          Background content
-        </Stack>
-      );
-    },
-  ],
+  decorators: [],
+  render: (args) => {
+    return (
+      <Stack
+        flex="auto"
+        position="relative"
+        justifyContent="center"
+        alignItems="center"
+        paddingTop={3.75}
+      >
+        <PanelOverlay {...args} />
+        Background content
+      </Stack>
+    );
+  },
 } as Meta<typeof PanelOverlay>;
 
 type Story = StoryObj<typeof PanelOverlay>;
@@ -68,6 +63,28 @@ export const SelectedPanelActions: Story = {
       { key: "create-tabs", text: "Create tabs", icon: <TabDesktopMultiple20Regular /> },
     ],
   },
+  parameters: {
+    colorScheme: "both-column",
+  },
+  decorators: [
+    (Story: StoryFn): JSX.Element => (
+      <Stack fullHeight gap={1}>
+        <Story />
+        <div
+          style={{
+            height: "100%",
+            display: "grid",
+            gridTemplateColumns: "1fr 260px 100px",
+            gap: 8,
+          }}
+        >
+          <Story />
+          <Story />
+          <Story />
+        </div>
+      </Stack>
+    ),
+  ],
 };
 
 export const QuickActions: Story = {
@@ -79,4 +96,26 @@ export const QuickActions: Story = {
       { key: "remove", text: "Remove panel", icon: <Delete20Regular />, color: "error" },
     ],
   },
+  parameters: {
+    colorScheme: "both-column",
+  },
+  decorators: [
+    (Story: StoryFn): JSX.Element => (
+      <Stack fullHeight gap={1}>
+        <Story />
+        <div
+          style={{
+            height: "100%",
+            display: "grid",
+            gridTemplateColumns: "1fr 260px auto",
+            gap: 8,
+          }}
+        >
+          <Story />
+          <Story />
+          <Story />
+        </div>
+      </Stack>
+    ),
+  ],
 };
