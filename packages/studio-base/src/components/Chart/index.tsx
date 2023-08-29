@@ -283,9 +283,9 @@ function Chart(props: Props): JSX.Element {
         // Flush any updates that occurred before the worker was initialized
         const { current: queued } = queuedUpdates;
         queuedUpdates.current = [];
-        for (const update of queued) {
-          const scales = await sendWrapperRef.current<RpcScales>("update", update);
-          maybeUpdateScales(scales);
+        for (const queuedUpdate of queued) {
+          const newScales = await sendWrapperRef.current<RpcScales>("update", queuedUpdate);
+          maybeUpdateScales(newScales);
         }
 
         // once we are initialized, we can allow other handlers to send to the rpc endpoint
