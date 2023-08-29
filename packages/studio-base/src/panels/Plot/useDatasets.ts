@@ -41,8 +41,8 @@ async function waitService(): Promise<Service> {
 
 const getIsLive = (ctx: MessagePipelineContext) => ctx.seekPlayback == undefined;
 
-// topic -> isSent
-type BlockStatus = Record<string, boolean>;
+// topic -> number of fields
+type BlockStatus = Record<string, number>;
 let blockStatus: BlockStatus[] = [];
 
 const getPayloadString = (payload: SubscribePayload): string =>
@@ -121,6 +121,15 @@ function chooseClient() {
   blockStatus = R.map((block) => R.pick(R.map(getPayloadString, topics), block), blockStatus);
 }
 
+function getNumFields(events: readonly MessageEvent[]): number {
+  const message = events[0]?.message;
+  if (message == undefined) {
+    return 0;
+  }
+
+  return Object.keys(message).length;
+}
+
 // Subscribe to "current" messages (those near the seek head) and forward new
 // messages to the worker as they arrive.
 function useData(id: string, topics: SubscribePayload[]) {
@@ -176,15 +185,20 @@ function useData(id: string, topics: SubscribePayload[]) {
       // Package any new messages into a single bundle to send to the worker
       const messages: Messages = {};
       const status: BlockStatus = blockStatus[index] ?? {};
-      for (const topic of subscribed) {
-        const ref = getPayloadString(topic);
-        const topicMessages = block[topic.topic];
-        if (topicMessages == undefined || status[ref] === true) {
+      for (const payload of subscribed) {
+        const ref = getPayloadString(payload);
+        const topicMessages = block[payload.topic];
+        if (topicMessages == undefined) {
           continue;
         }
 
-        status[ref] = true;
-        messages[topic.topic] = topicMessages as MessageEvent[];
+        const numFields = getNumFields(topicMessages);
+        if (status[ref] === numFields) {
+          continue;
+        }
+
+        status[ref] = numFields;
+        messages[payload.topic] = topicMessages as MessageEvent[];
       }
       blockStatus[index] = status;
 
