@@ -81,7 +81,7 @@ export function NumberInput(
     onChange,
     disabled,
     readOnly,
-    precision = 2,
+    precision = 100,
   } = props;
 
   const inputRef = useRef<HTMLInputElement>(ReactNull);
@@ -143,7 +143,7 @@ export function NumberInput(
   );
 
   const displayValue =
-    inputRef.current === document.activeElement ? value : value?.toFixed(precision);
+    inputRef.current === document.activeElement ? value : Number(value?.toFixed(precision));
 
   return (
     <TextField
