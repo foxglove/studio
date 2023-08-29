@@ -286,7 +286,9 @@ function Chart(props: Props): JSX.Element {
         return;
       }
 
-      assert(rpcSendRef.current, "No RPC");
+      if (!rpcSendRef.current) {
+        return;
+      }
 
       onStartRender?.();
       const scales = await rpcSendRef.current<RpcScales>("update", update);
