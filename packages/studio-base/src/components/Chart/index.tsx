@@ -127,6 +127,7 @@ function Chart(props: Props): JSX.Element {
   const rpcSendRef = useRef<RpcSend | undefined>();
 
   const hasPannedSinceMouseDown = useRef(false);
+  const queuedUpdates = useRef<Partial<ChartUpdateMessage>[]>([]);
   const previousUpdateMessage = useRef<Record<string, unknown>>({});
 
   useLayoutEffect(() => {
@@ -266,6 +267,7 @@ function Chart(props: Props): JSX.Element {
             node: offscreenCanvas,
             type,
             data: update.data,
+            typedData: update.typedData,
             options: update.options,
             devicePixelRatio,
             width: update.width,
@@ -278,6 +280,14 @@ function Chart(props: Props): JSX.Element {
           ],
         );
 
+        // Flush any updates that occurred before the worker was initialized
+        const { current: queued } = queuedUpdates;
+        queuedUpdates.current = [];
+        for (const update of queued) {
+          const scales = await sendWrapperRef.current<RpcScales>("update", update);
+          maybeUpdateScales(scales);
+        }
+
         // once we are initialized, we can allow other handlers to send to the rpc endpoint
         rpcSendRef.current = sendWrapperRef.current;
 
@@ -287,6 +297,7 @@ function Chart(props: Props): JSX.Element {
       }
 
       if (!rpcSendRef.current) {
+        queuedUpdates.current = [...queuedUpdates.current, update];
         return;
       }
 
