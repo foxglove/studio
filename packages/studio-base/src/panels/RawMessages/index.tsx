@@ -114,11 +114,11 @@ function RawMessages(props: Props) {
 
   useEffect(() => {
     setMessagePathDropConfig({
-      canDrop(_path) {
-        return true;
+      getDropStatus(_path) {
+        return { canDrop: true, effect: "replace" };
       },
       handleDrop(path) {
-        saveConfig({ topicPath: path });
+        saveConfig({ topicPath: path.path });
       },
     });
   }, [setMessagePathDropConfig, saveConfig]);

@@ -8,17 +8,12 @@ import {
   ReOrderDotsVertical16Regular,
 } from "@fluentui/react-icons";
 import { Typography } from "@mui/material";
-import { useMemo } from "react";
 import { NodeRendererProps } from "react-arborist";
-import { useDrag } from "react-dnd";
 
 import Stack from "@foxglove/studio-base/components/Stack";
-import {
-  MESSAGE_PATH_DRAG_TYPE,
-  MessagePathDragObject,
-} from "@foxglove/studio-base/components/TopicList";
-import { StatsChip } from "@foxglove/studio-base/components/TopicList/StatsChip";
+import { TopicStatsChip } from "@foxglove/studio-base/components/TopicList/TopicStatsChip";
 import { useTreeStyles } from "@foxglove/studio-base/components/TopicList/useTreeStyles";
+import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
 
 import { TreeData } from "./types";
 
@@ -35,20 +30,14 @@ export function TopicTreeItem({ node }: NodeRendererProps<TreeData>): JSX.Elemen
     <div style={{ width: 16, height: 16 }} />
   );
 
-  const dragItem: MessagePathDragObject = useMemo(
-    () => ({ path: node.data.messagePath }),
-    [node.data],
-  );
-  const [, connectDragSource] = useDrag({
-    type: MESSAGE_PATH_DRAG_TYPE,
-    item: dragItem,
-    options: { dropEffect: "copy" },
+  const { connectDragSource, connectDragPreview, cursor } = useMessagePathDrag({
+    path: node.data.messagePath,
+    rootSchemaName: undefined,
   });
-
   return (
     <div
       onClick={() => node.isInternal && node.toggle()}
-      ref={connectDragSource}
+      ref={connectDragPreview}
       style={{
         paddingLeft: node.level > 1 ? theme.spacing(node.level - 1 * 1) : undefined,
       }}
@@ -81,8 +70,10 @@ export function TopicTreeItem({ node }: NodeRendererProps<TreeData>): JSX.Elemen
           </Typography>
         </Stack>
       )}
-      {node.level === 0 && <StatsChip topicName={node.data.name} />}
-      <ReOrderDotsVertical16Regular className={classes.dragHandle} />
+      {node.level === 0 && <TopicStatsChip topicName={node.data.name} />}
+      <div data-testid="TopicListDragHandle" ref={connectDragSource} style={{ cursor }}>
+        <ReOrderDotsVertical16Regular />
+      </div>
     </div>
   );
 }

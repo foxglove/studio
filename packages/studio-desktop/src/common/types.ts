@@ -38,10 +38,6 @@ interface NativeMenuBridge {
    * https://www.electronjs.org/docs/latest/api/context-bridge#parameter--error--return-type-support
    */
   addIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void): UnregisterFn;
-
-  // Manage file menu input source menu items
-  menuAddInputSource(name: string, handler: () => void): Promise<void>;
-  menuRemoveInputSource(name: string): Promise<void>;
 }
 
 // Items suitable for storage
@@ -109,6 +105,9 @@ interface Desktop {
   unmaximizeWindow(): void;
   closeWindow(): void;
   reloadWindow(): void;
+
+  /** Notify the app that the language setting has been changed */
+  updateLanguage(): void;
 }
 
 export type { NativeMenuBridge, Storage, StorageContent, Desktop, DesktopExtension };

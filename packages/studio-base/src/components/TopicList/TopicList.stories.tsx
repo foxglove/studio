@@ -5,6 +5,8 @@
 import { Paper } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { PlayerCapabilities, TopicStats } from "@foxglove/studio-base/players/types";
@@ -40,11 +42,13 @@ export default {
     topicStats,
   },
   render: (args) => (
-    <MockMessagePipelineProvider {...args}>
-      <Paper square style={{ height: "100%" }}>
-        <TopicList />
-      </Paper>
-    </MockMessagePipelineProvider>
+    <DndProvider backend={HTML5Backend}>
+      <MockMessagePipelineProvider {...args}>
+        <Paper square style={{ height: "100%" }}>
+          <TopicList />
+        </Paper>
+      </MockMessagePipelineProvider>
+    </DndProvider>
   ),
 } as Meta<typeof MockMessagePipelineProvider>;
 

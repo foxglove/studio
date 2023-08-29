@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 type TreeClasses = "dragHandle" | "node";
@@ -66,8 +67,17 @@ export const useTreeStyles = makeStyles<void, TreeClasses>()((theme, _, classes)
     "&.isSelectedStart": {},
     "&.isSelectedEnd": {},
     "&.isSelectedStart.isSelectedEnd": {},
+    "&.isDragging:active": {
+      backgroundColor: tc(theme.palette.primary.main)
+        .setAlpha(theme.palette.action.hoverOpacity)
+        .toRgbString(),
+      outline: `1px solid ${theme.palette.primary.main}`,
+      outlineOffset: -1,
+      borderRadius: theme.shape.borderRadius,
+    },
   },
   dragHandle: {
-    opacity: 0.5,
+    opacity: 0.6,
+    cursor: "grab",
   },
 }));

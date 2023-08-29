@@ -13,70 +13,88 @@ import {
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { migrateV0WorkspaceState } from "@foxglove/studio-base/context/Workspace/migrations";
 
+/**
+ * Creates the default initial state for the workspace store.
+ */
+export function makeWorkspaceContextInitialState(): WorkspaceContextStore {
+  return {
+    dialogs: {
+      dataSource: {
+        activeDataSource: undefined,
+        item: undefined,
+        open: false,
+      },
+      preferences: {
+        initialTab: undefined,
+        open: false,
+      },
+    },
+    featureTours: {
+      active: undefined,
+      shown: [],
+    },
+    sidebars: {
+      left: {
+        item: "panel-settings",
+        open: true,
+        size: undefined,
+      },
+      right: {
+        item: undefined,
+        open: false,
+        size: undefined,
+      },
+    },
+    playbackControls: {
+      repeat: false,
+    },
+  };
+}
+
 function createWorkspaceContextStore(
   initialState?: Partial<WorkspaceContextStore>,
+  options?: { disablePersistenceForStorybook?: boolean },
 ): StoreApi<WorkspaceContextStore> {
+  const stateCreator = () => {
+    const store: WorkspaceContextStore = {
+      ...makeWorkspaceContextInitialState(),
+      ...initialState,
+    };
+    return store;
+  };
+  if (options?.disablePersistenceForStorybook === true) {
+    return createStore<WorkspaceContextStore>()(stateCreator);
+  }
   return createStore<WorkspaceContextStore>()(
-    persist(
-      () => {
-        const store: WorkspaceContextStore = {
-          dialogs: {
-            dataSource: {
-              activeDataSource: undefined,
-              item: undefined,
-              open: false,
-            },
-            preferences: {
-              initialTab: undefined,
-              open: false,
-            },
-          },
-          featureTours: {
-            active: undefined,
-            shown: [],
-          },
-          sidebars: {
-            left: {
-              item: "panel-settings",
-              open: true,
-              size: undefined,
-            },
-            right: {
-              item: undefined,
-              open: false,
-              size: undefined,
-            },
-          },
-          playbackControls: {
-            repeat: false,
-          },
-
-          ...initialState,
-        };
-        return store;
+    persist(stateCreator, {
+      name: "fox.workspace",
+      version: 1,
+      migrate: migrateV0WorkspaceState,
+      partialize: (state) => {
+        // Note that this is an opt-in list of keys from the store that we
+        // include and restore when persisting to and from localStorage.
+        return pick(state, ["featureTours", "playbackControls", "sidebars"]);
       },
-      {
-        name: "fox.workspace",
-        version: 1,
-        migrate: migrateV0WorkspaceState,
-        partialize: (value) => {
-          // Note that this is an opt-in list of keys from the store that we
-          // include and restore when persisting to and from localStorage.
-          return pick(value, ["featureTours", "playbackControls", "sidebars"]);
-        },
-      },
-    ),
+    }),
   );
 }
 
-export default function WorkspaceContextProvider({
-  children,
-  initialState,
-}: {
+export default function WorkspaceContextProvider(props: {
   children?: ReactNode;
+  disablePersistenceForStorybook?: boolean;
   initialState?: Partial<WorkspaceContextStore>;
+  workspaceStoreCreator?: (
+    initialState?: Partial<WorkspaceContextStore>,
+    options?: { disablePersistenceForStorybook?: boolean },
+  ) => StoreApi<WorkspaceContextStore>;
 }): JSX.Element {
-  const [store] = useState(() => createWorkspaceContextStore(initialState));
+  const { children, initialState, workspaceStoreCreator, disablePersistenceForStorybook } = props;
+
+  const [store] = useState(() =>
+    workspaceStoreCreator
+      ? workspaceStoreCreator(initialState, { disablePersistenceForStorybook })
+      : createWorkspaceContextStore(initialState, { disablePersistenceForStorybook }),
+  );
 
   return <WorkspaceContext.Provider value={store}>{children}</WorkspaceContext.Provider>;
 }

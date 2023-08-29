@@ -13,23 +13,33 @@ const useStyles = makeStyles()((theme) => ({
     color: theme.palette.text.secondary,
     backgroundColor: theme.palette.background.paper,
 
-    [`@container (max-width: 375px)`]: {
+    [`@container (max-width: 320px)`]: {
       display: "none",
     },
   },
   stat: {
-    minWidth: 24,
+    whiteSpace: "nowrap",
+    minWidth: "1em",
     textAlign: "center",
     fontSize: theme.typography.caption.fontSize,
     color: theme.palette.text.secondary,
-    padding: theme.spacing(0.25, 0.75),
+    paddingBlock: theme.spacing(0.25),
+    fontFeatureSettings: `${theme.typography.fontFeatureSettings}, 'tnum'`,
+
+    "&:nth-child(1)": {
+      paddingInlineStart: theme.spacing(0.75),
+    },
+    "&:nth-last-child(1)": {
+      paddingInlineEnd: theme.spacing(0.75),
+    },
   },
   divider: {
     borderColor: theme.palette.action.selected,
+    marginInline: theme.spacing(0.5),
   },
 }));
 
-export function StatsChip({ topicName }: { topicName: string }): JSX.Element {
+export function TopicStatsChip({ topicName }: { topicName: string }): JSX.Element {
   const { classes } = useStyles();
   return (
     <Paper variant="outlined" className={classes.root}>

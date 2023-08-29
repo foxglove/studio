@@ -15,4 +15,6 @@ export * from "./panels";
 export * from "./panelSettings";
 export * from "./plot";
 export * from "./settingsEditor";
+export * from "./stateTransitions";
 export * from "./threeDee";
+export * from "./desktopWindow";
