@@ -296,16 +296,9 @@ function Chart(props: Props): JSX.Element {
     [maybeUpdateScales, onFinishRender, onStartRender, type],
   );
 
-  // Prevent updating the chart if we are already updating the chart to avoid backing up stale updates
-  const running = useRef(false);
   const [updateError, setUpdateError] = useState<Error | undefined>();
   useLayoutEffect(() => {
     if (!containerRef.current) {
-      return;
-    }
-
-    // Do we want to queue up this change or do we assume another update will trigger it
-    if (running.current) {
       return;
     }
 
@@ -316,16 +309,11 @@ function Chart(props: Props): JSX.Element {
       return;
     }
 
-    running.current = true;
-    updateChart(newUpdate)
-      .catch((err: Error) => {
-        if (isMounted()) {
-          setUpdateError(err);
-        }
-      })
-      .finally(() => {
-        running.current = false;
-      });
+    updateChart(newUpdate).catch((err: Error) => {
+      if (isMounted()) {
+        setUpdateError(err);
+      }
+    });
   }, [getNewUpdateMessage, isMounted, updateChart]);
 
   useLayoutEffect(() => {
