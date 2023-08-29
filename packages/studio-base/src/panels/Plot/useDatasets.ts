@@ -207,6 +207,7 @@ export default function useDatasets(params: PlotParams): {
       if (numClients === 0) {
         worker?.terminate();
         worker = service = undefined;
+        blockStatus = [];
       }
     };
   }, []);
