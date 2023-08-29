@@ -10,6 +10,7 @@ import { ReactNode, useCallback, useRef } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
+import { formatNumber } from "@foxglove/studio-base/components/SettingsTreeEditor/inputs/formatNumber";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const useStyles = makeStyles()((theme) => ({
@@ -105,7 +106,7 @@ export function NumberInput(
         newValue == undefined
           ? undefined
           : clamp(newValue, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
-      onChange(clampedValue != undefined ? Number(clampedValue.toFixed(precision)) : clampedValue);
+      onChange(clampedValue != undefined ? formatNumber(clampedValue, precision) : clampedValue);
     },
     [disabled, readOnly, min, max, onChange, precision],
   );
@@ -143,7 +144,7 @@ export function NumberInput(
   );
 
   const displayValue =
-    inputRef.current === document.activeElement ? value : Number(value?.toFixed(precision));
+    inputRef.current === document.activeElement ? value : formatNumber(value, precision);
 
   return (
     <TextField
