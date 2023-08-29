@@ -26,7 +26,7 @@ import { FOXGLOVE_PRODUCT_NAME, FOXGLOVE_PRODUCT_VERSION } from "../common/webpa
 // hack to reset the page without deep links. By setting a session cookie and reloading
 // we allow this preload script to read the cookie and ignore deep links in `getDeepLinks`
 const ignoreDeepLinks = document.cookie.includes("fox.ignoreDeepLinks=true");
-document.cookie = `fox.ignoreDeepLinks=;max-age=0;`;
+document.cookie = "fox.ignoreDeepLinks=;max-age=0;";
 
 const deepLinks = ignoreDeepLinks ? [] : decodeRendererArg("deepLinks", window.process.argv) ?? [];
 
