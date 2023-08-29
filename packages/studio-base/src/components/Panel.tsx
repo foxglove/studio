@@ -11,6 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import {
+  Delete20Regular,
+  TabDesktop20Regular,
+  TabDesktopMultiple20Regular,
+  TableSimple20Regular,
+} from "@fluentui/react-icons";
 import { last } from "lodash";
 import React, {
   ComponentType,
@@ -42,7 +48,7 @@ import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import { MosaicPathContext } from "@foxglove/studio-base/components/MosaicPathContext";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
-import { PanelOverlay } from "@foxglove/studio-base/components/PanelOverlay";
+import { PanelOverlay, PanelOverlayProps } from "@foxglove/studio-base/components/PanelOverlay";
 import { PanelRoot } from "@foxglove/studio-base/components/PanelRoot";
 import {
   useCurrentLayoutActions,
@@ -76,6 +82,21 @@ const useStyles = makeStyles()((theme) => ({
     opacity: 0.7,
     userSelect: "none",
     mixBlendMode: "difference",
+  },
+  tabCount: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
+    display: "flex",
+    inset: 0,
+    textAlign: "center",
+    letterSpacing: "-1px",
+    // Totally random numbers here to get the text to fit inside the icon
+    paddingTop: 1,
+    paddingLeft: 5,
+    paddingRight: 11,
+    fontSize: `${theme.typography.subtitle2.fontSize} !important`,
+    fontWeight: 600,
   },
 }));
 
@@ -479,6 +500,83 @@ export default function Panel<
     const [connectOverlayDragSource, connectOverlayDragPreview] = usePanelDrag(dragSpec);
     const [connectToolbarDragHandle, connectToolbarDragPreview] = usePanelDrag(dragSpec);
 
+    const panelOverlayProps = useMemo(() => {
+      const overlayProps: PanelOverlayProps = {
+        open:
+          isDragging || quickActionsKeyPressed || (isSelected && numSelectedPanelsIfSelected > 1),
+        variant: undefined,
+        highlightMode: undefined,
+        actions: undefined,
+      };
+
+      if (isDragging && !isValidTarget) {
+        overlayProps.variant = "invalidDropTarget";
+      }
+      if (isDragging && isOver) {
+        overlayProps.variant = "validDropTarget";
+      }
+      if (isSelected && numSelectedPanelsIfSelected > 1) {
+        overlayProps.variant = "selected";
+        overlayProps.highlightMode = "all";
+        overlayProps.actions = [
+          {
+            key: "group",
+            text: "Group in tab",
+            icon: <TabDesktop20Regular />,
+            onClick: groupPanels,
+          },
+          {
+            key: "create-tabs",
+            text: "Create tabs",
+            icon: (
+              <>
+                <span className={classes.tabCount}>
+                  {numSelectedPanelsIfSelected <= 99 ? numSelectedPanelsIfSelected : ""}{" "}
+                </span>
+                <TabDesktopMultiple20Regular />
+              </>
+            ),
+            onClick: createTabs,
+          },
+        ];
+      }
+      if (type !== TAB_PANEL_TYPE && quickActionsKeyPressed) {
+        overlayProps.variant = "selected";
+        overlayProps.highlightMode = "active";
+      }
+      if (quickActionsKeyPressed) {
+        overlayProps.actions = [
+          {
+            key: "split",
+            text: "Split panel",
+            icon: <TableSimple20Regular />,
+            onClick: splitPanel,
+          },
+          {
+            key: "remove",
+            text: "Remove panel",
+            icon: <Delete20Regular />,
+            color: "error",
+            onClick: removePanel,
+          },
+        ];
+      }
+      return overlayProps;
+    }, [
+      classes.tabCount,
+      createTabs,
+      groupPanels,
+      isDragging,
+      isOver,
+      isSelected,
+      isValidTarget,
+      numSelectedPanelsIfSelected,
+      quickActionsKeyPressed,
+      removePanel,
+      splitPanel,
+      type,
+    ]);
+
     return (
       <Profiler
         id={childId}
@@ -545,23 +643,17 @@ export default function Panel<
                   connectMessagePathDropTarget(el);
                 }}
               >
-                {!fullscreen && (
+                {!fullscreen && type !== TAB_PANEL_TYPE && (
                   <PanelOverlay
-                    connectOverlayDragSource={connectOverlayDragSource}
+                    {...panelOverlayProps}
                     dropMessage={dropMessage}
-                    isDragging={isDragging}
-                    isNotTabPanel={type !== TAB_PANEL_TYPE}
-                    isOver={isOver}
-                    isSelected={isSelected}
-                    isTopLevelPanel={isTopLevelPanel}
-                    isValidTarget={isValidTarget}
-                    quickActionsKeyPressed={quickActionsKeyPressed}
-                    quickActionsOverlayRef={quickActionsOverlayRef}
-                    createTabs={createTabs}
-                    groupPanels={groupPanels}
-                    removePanel={removePanel}
-                    selectedPanelCount={numSelectedPanelsIfSelected}
-                    splitPanel={splitPanel}
+                    ref={(el) => {
+                      quickActionsOverlayRef.current = el;
+                      // disallow dragging the root panel in a layout
+                      if (!isTopLevelPanel) {
+                        connectOverlayDragSource(el);
+                      }
+                    }}
                   />
                 )}
                 <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>

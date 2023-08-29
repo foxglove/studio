@@ -2,21 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  TabDesktopMultiple20Regular,
-  TabDesktop20Regular,
-  Delete20Regular,
-  TableSimple20Regular,
-} from "@fluentui/react-icons";
-import { Backdrop, BackdropProps, Button, Chip, Paper, buttonClasses } from "@mui/material";
+import { Backdrop, Button, ButtonProps, Chip, Paper, buttonClasses } from "@mui/material";
+import { forwardRef } from "react";
+import { ReactElement } from "react-markdown/lib/react-markdown";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { PANEL_ROOT_CLASS_NAME } from "@foxglove/studio-base/components/PanelRoot";
 import { PANEL_TOOLBAR_MIN_HEIGHT } from "@foxglove/studio-base/components/PanelToolbar";
 
-const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params, classes) => {
-  const hoverPaper = tc(theme.palette.background.default)
+const useStyles = makeStyles<void, "buttonGroup">()((theme, _params, classes) => {
+  const transparentBackground = tc(theme.palette.background.default).setAlpha(0).toRgbString();
+  const hoverBackground = tc(theme.palette.background.default)
     .setAlpha(1 - theme.palette.action.disabledOpacity)
     .toRgbString();
   const hoverPrimary = tc(theme.palette.primary.main)
@@ -29,17 +26,18 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
       zIndex: theme.zIndex.modal - 1,
       padding: theme.spacing(2),
       container: "backdrop / size",
+      backgroundColor: transparentBackground,
     },
     invalidTarget: {
-      backgroundColor: hoverPaper,
+      backgroundColor: hoverBackground,
     },
     validTarget: {
       alignItems: "flex-end",
       backgroundColor: hoverPrimary,
     },
-    actionOverlay: {
+    selected: {
       backgroundImage: `linear-gradient(to bottom, ${hoverPrimary}, ${hoverPrimary})`,
-      backgroundColor: hoverPaper,
+      backgroundColor: hoverBackground,
     },
     highlightActive: {
       [`.${PANEL_ROOT_CLASS_NAME}:not(:hover) &`]: {
@@ -57,7 +55,13 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
       justifyContent: "center",
       gap: theme.spacing(1),
 
-      "@container backdrop (min-width: 360px)": {
+      "@container backdrop (max-height: 80px)": {
+        flexDirection: "row",
+      },
+      "@container backdrop (min-height: 120px)": {
+        marginTop: PANEL_TOOLBAR_MIN_HEIGHT,
+      },
+      "@container backdrop (min-width: 240px)": {
         flexDirection: "row",
       },
     },
@@ -83,28 +87,15 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
           width: "1em",
           fontSize: 32,
         },
-        [`.${classes.tabCount}`]: {
-          fontSize: theme.typography.subtitle2.fontSize,
-          fontWeight: 600,
-        },
-        "@container backdrop (max-height: 120px)": {
-          marginTop: PANEL_TOOLBAR_MIN_HEIGHT,
-          display: "none",
-        },
       },
     },
-    tabCount: {
-      alignItems: "center",
-      justifyContent: "center",
-      position: "absolute",
-      display: "flex",
-      inset: 0,
-      textAlign: "center",
-      letterSpacing: "-1px",
-      // Totally random numbers here to get the text to fit inside the icon
-      paddingTop: 1,
-      paddingLeft: 5,
-      paddingRight: 11,
+    buttonText: {
+      "@container backdrop (max-width: 120px)": {
+        display: "none",
+      },
+      "@container backdrop (max-height: 80px)": {
+        display: "none",
+      },
     },
     chip: {
       boxShadow: theme.shadows[2],
@@ -113,146 +104,61 @@ const useStyles = makeStyles<void, "buttonGroup" | "tabCount">()((theme, _params
   };
 });
 
-function StyledBackdrop(props: Omit<BackdropProps, "open">): JSX.Element {
-  const { classes, cx } = useStyles();
-  return <Backdrop {...props} open className={cx(classes.backdrop, props.className)} />;
-}
-
-type Props = {
+export type PanelOverlayProps = {
+  actions?: {
+    key: string;
+    text: string;
+    icon: ReactElement;
+    onClick?: () => void;
+    color?: ButtonProps["color"];
+  }[];
   dropMessage?: string;
-  isDragging: boolean;
-  isNotTabPanel: boolean;
-  isOver: boolean;
-  isSelected: boolean;
-  isTopLevelPanel: boolean;
-  isValidTarget: boolean;
-  quickActionsKeyPressed: boolean;
-  quickActionsOverlayRef: React.MutableRefObject<HTMLElement | ReactNull>;
-  selectedPanelCount: number;
-  connectOverlayDragSource: (el: HTMLElement | ReactNull) => void;
-  createTabs: () => void;
-  groupPanels: () => void;
-  removePanel: () => void;
-  splitPanel: () => void;
+  highlightMode?: "active" | "all";
+  open: boolean;
+  variant?: "validDropTarget" | "invalidDropTarget" | "selected";
 };
 
-export function PanelOverlay(props: Props): JSX.Element | ReactNull {
-  const {
-    connectOverlayDragSource,
-    dropMessage,
-    isDragging,
-    isNotTabPanel,
-    isOver,
-    isSelected,
-    isTopLevelPanel,
-    isValidTarget,
-    quickActionsKeyPressed,
-    quickActionsOverlayRef,
-    createTabs,
-    groupPanels,
-    removePanel,
-    selectedPanelCount,
-    splitPanel,
-  } = props;
+export const PanelOverlay = forwardRef<HTMLDivElement, PanelOverlayProps>(function PanelOverlay(
+  props,
+  ref,
+): JSX.Element | ReactNull {
+  const { actions, variant, highlightMode, dropMessage, open } = props;
   const { classes, cx } = useStyles();
 
-  if (isDragging) {
-    if (!isValidTarget) {
-      return <StyledBackdrop className={classes.invalidTarget} />;
-    }
-
-    if (isOver) {
-      return (
-        <StyledBackdrop className={classes.validTarget}>
-          {dropMessage && (
-            <Chip size="small" color="primary" label={dropMessage} className={classes.chip} />
-          )}
-        </StyledBackdrop>
-      );
-    }
-  }
-
-  if (isSelected && selectedPanelCount > 1) {
-    return (
-      <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightAll)}>
-        <div className={classes.buttonGroup}>
-          <Paper elevation={0} className={classes.buttonPaper}>
-            <Button
-              fullWidth
-              variant="outlined"
-              className={classes.button}
-              onClick={groupPanels}
-              startIcon={<TabDesktop20Regular />}
-            >
-              Group in tab
-            </Button>
-          </Paper>
-          <Paper elevation={0} className={classes.buttonPaper}>
-            <Button
-              fullWidth
-              variant="outlined"
-              className={classes.button}
-              onClick={createTabs}
-              startIcon={
-                <>
-                  <span className={classes.tabCount}>
-                    {selectedPanelCount <= 99 ? selectedPanelCount : ""}
-                  </span>
-                  <TabDesktopMultiple20Regular />
-                </>
-              }
-            >
-              Create tabs
-            </Button>
-          </Paper>
-        </div>
-      </StyledBackdrop>
-    );
-  }
-
-  if (isNotTabPanel && quickActionsKeyPressed) {
-    return (
-      <StyledBackdrop className={cx(classes.actionOverlay, classes.highlightActive)}>
-        <div
-          className={classes.buttonGroup}
-          ref={(el) => {
-            quickActionsOverlayRef.current = el;
-            // disallow dragging the root panel in a layout
-            if (!isTopLevelPanel) {
-              connectOverlayDragSource(el);
-            }
-          }}
-        >
-          <Paper elevation={0} className={classes.buttonPaper}>
-            <Button
-              fullWidth
-              variant="outlined"
-              className={classes.button}
-              startIcon={<TableSimple20Regular />}
-              onClick={splitPanel}
-            >
-              Split panel
-            </Button>
-          </Paper>
-          <Paper elevation={0} className={classes.buttonPaper}>
-            <Button
-              fullWidth
-              variant="outlined"
-              color="error"
-              className={classes.button}
-              startIcon={<Delete20Regular />}
-              onClick={(event) => {
-                event.stopPropagation();
-                removePanel();
-              }}
-            >
-              Remove panel
-            </Button>
-          </Paper>
-        </div>
-      </StyledBackdrop>
-    );
-  }
-
-  return ReactNull;
-}
+  return (
+    <Backdrop
+      ref={ref}
+      open={open}
+      className={cx(classes.backdrop, {
+        [classes.invalidTarget]: variant === "invalidDropTarget",
+        [classes.validTarget]: variant === "validDropTarget",
+        [classes.selected]: variant === "selected",
+        [classes.highlightActive]: highlightMode === "active",
+        [classes.highlightAll]: highlightMode === "all",
+      })}
+    >
+      {dropMessage && variant === "validDropTarget" ? (
+        <Chip size="small" color="primary" label={dropMessage} className={classes.chip} />
+      ) : (
+        actions && (
+          <div className={classes.buttonGroup}>
+            {actions.map((action) => (
+              <Paper key={action.key} elevation={0} className={classes.buttonPaper}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  className={classes.button}
+                  onClick={action.onClick}
+                  startIcon={action.icon}
+                  color={action.color}
+                >
+                  <div className={classes.buttonText}>{action.text}</div>
+                </Button>
+              </Paper>
+            ))}
+          </div>
+        )
+      )}
+    </Backdrop>
+  );
+});

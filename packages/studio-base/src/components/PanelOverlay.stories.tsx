@@ -2,6 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import {
+  Delete20Regular,
+  TabDesktop20Regular,
+  TabDesktopMultiple20Regular,
+  TableSimple20Regular,
+} from "@fluentui/react-icons";
 import { Meta, StoryObj } from "@storybook/react";
 import { useRef } from "react";
 
@@ -12,21 +18,19 @@ import { PanelOverlay } from "./PanelOverlay";
 export default {
   title: "components/PanelOverlay",
   component: PanelOverlay,
-  args: {
-    isDragging: false,
-    isFullscreen: false,
-    isOver: false,
-    isSelected: false,
-    isValidTarget: false,
-    dropMessage: undefined,
-    isNotTabPanel: true,
-  },
+  args: {},
   decorators: [
     (Story, { args }) => {
       const ref = useRef<HTMLDivElement>(ReactNull);
 
       return (
-        <Stack position="relative" justifyContent="center" alignItems="center" fullHeight>
+        <Stack
+          position="relative"
+          justifyContent="center"
+          alignItems="center"
+          paddingTop={3.75}
+          fullHeight
+        >
           <Story {...args} quickActionsOverlayRef={ref} />
           Background content
         </Stack>
@@ -41,32 +45,38 @@ export const Default: Story = {};
 
 export const ValidDropTarget: Story = {
   args: {
-    isDragging: true,
-    isOver: true,
-    isValidTarget: true,
+    open: true,
+    variant: "validDropTarget",
     dropMessage: "View /topic_name/field_name",
   },
 };
 
 export const InvalidDropTarget: Story = {
   args: {
-    isDragging: true,
-    isOver: true,
-    isValidTarget: false,
+    open: true,
+    variant: "invalidDropTarget",
+    dropMessage: "View /topic_name/field_name",
+  },
+};
+
+export const SelectedPanelActions: Story = {
+  args: {
+    open: true,
+    variant: "selected",
+    actions: [
+      { key: "group", text: "Group in tab", icon: <TabDesktop20Regular /> },
+      { key: "create-tabs", text: "Create tabs", icon: <TabDesktopMultiple20Regular /> },
+    ],
   },
 };
 
 export const QuickActions: Story = {
   args: {
-    // fix me
-    connectOverlayDragSource: () => <div />,
-    quickActionsKeyPressed: true,
-  },
-};
-
-export const SelectionActions: Story = {
-  args: {
-    isSelected: true,
-    selectedPanelCount: 99,
+    open: true,
+    variant: "selected",
+    actions: [
+      { key: "split", text: "Split panel", icon: <TableSimple20Regular /> },
+      { key: "remove", text: "Remove panel", icon: <Delete20Regular />, color: "error" },
+    ],
   },
 };
