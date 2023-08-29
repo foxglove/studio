@@ -143,11 +143,6 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         disableRipple: true,
       },
     },
-    MuiButtonGroup: {
-      defaultProps: {
-        disableRipple: true,
-      },
-    },
     MuiCard: {
       defaultProps: {
         variant: "outlined",

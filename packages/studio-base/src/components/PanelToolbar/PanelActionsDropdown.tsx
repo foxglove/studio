@@ -12,13 +12,13 @@
 //   You may not use this file except in compliance with the License.
 
 import {
-  ChevronRight16Regular,
   Delete20Regular,
   FullScreenMaximize20Regular,
   ShapeSubtract20Regular,
   SplitHorizontal20Regular,
   SplitVertical20Regular,
 } from "@fluentui/react-icons";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Divider, Menu, MenuItem } from "@mui/material";
 import { MouseEvent, useCallback, useContext, useMemo, useRef, useState } from "react";
@@ -41,9 +41,14 @@ const useStyles = makeStyles()((theme) => ({
     marginRight: theme.spacing(-1),
   },
   menuItem: {
+    display: "flex",
     gap: theme.spacing(1),
     alignItems: "center",
 
+    ".root-span": {
+      display: "flex",
+      marginLeft: theme.spacing(-0.25),
+    },
     "&.Mui-selected": {
       backgroundColor: theme.palette.action.hover,
 
@@ -231,7 +236,7 @@ function PanelActionsDropdownComponent({ isUnknownPanel }: Props): JSX.Element {
         >
           <ShapeSubtract20Regular />
           Change panel
-          <ChevronRight16Regular className={classes.icon} />
+          <ChevronRightIcon className={classes.icon} fontSize="small" />
         </MenuItem>
         <ChangePanelMenu anchorEl={subMenuAnchorEl} onClose={handleSubmenuClose} tabId={tabId} />
         <Divider variant="middle" />
