@@ -126,6 +126,10 @@ export function findIndices(
       x: { length: numElements },
     } = slice;
 
+    if (offset === numElements && i === dataset.length - 1) {
+      return [i, offset];
+    }
+
     if (offset >= numElements) {
       offset -= numElements;
       continue;
