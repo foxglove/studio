@@ -136,7 +136,7 @@ export function NumberInput(
           0.1 *
           step *
           scale;
-        scrubValue.current += delta;
+        scrubValue.current = formatNumber(scrubValue.current + delta, 4);
         updateValue(scrubValue.current);
       }
     },
