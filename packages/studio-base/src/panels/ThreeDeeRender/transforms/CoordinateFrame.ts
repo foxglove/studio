@@ -467,10 +467,9 @@ export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
 
       if (curFrame.offsetEulerDegrees) {
         const quaternion = tempTransform.rotation();
-        const rotationMatrix = mat4.fromQuat(temp2Matrix, quaternion);
-        const euler = eulerFromMatrixUnscaled(tempVec3, rotationMatrix);
-        vec3.add(euler, euler, curFrame.offsetEulerDegrees);
-        tempTransform.setRotation(quaternionFromEuler(tempVec4, euler));
+        const multByRotation = quaternionFromEuler(tempVec4, curFrame.offsetEulerDegrees);
+        quat.multiply(tempVec4, quaternion, multByRotation);
+        tempTransform.setRotation(tempVec4);
       }
 
       if (curFrame.offsetPosition) {
