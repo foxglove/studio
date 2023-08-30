@@ -21,11 +21,9 @@ const RAD2DEG = 180 / Math.PI;
 
 const tempLower: TimeAndTransform = [0n, Transform.Identity()];
 const tempUpper: TimeAndTransform = [0n, Transform.Identity()];
-const tempVec3: vec3 = [0, 0, 0];
 const tempVec4: vec4 = [0, 0, 0, 0];
 const tempTransform = Transform.Identity();
 const tempMatrix = mat4Identity();
-const temp2Matrix = mat4Identity();
 
 const FALLBACK_FRAME_ID = Symbol("FALLBACK_FRAME_ID");
 export type FallbackFrameId = typeof FALLBACK_FRAME_ID;
