@@ -5,12 +5,11 @@
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton, TextFieldProps, TextField } from "@mui/material";
-import { clamp, isFinite } from "lodash";
+import { clamp, isFinite, round } from "lodash";
 import { ReactNode, useCallback, useRef } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
-import { formatNumber } from "@foxglove/studio-base/components/SettingsTreeEditor/inputs/formatNumber";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const useStyles = makeStyles()((theme) => ({
@@ -106,7 +105,7 @@ export function NumberInput(
         newValue == undefined
           ? undefined
           : clamp(newValue, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
-      onChange(clampedValue != undefined ? formatNumber(clampedValue, precision) : clampedValue);
+      onChange(clampedValue != undefined ? round(clampedValue, precision) : clampedValue);
     },
     [disabled, readOnly, min, max, onChange, precision],
   );
@@ -136,7 +135,7 @@ export function NumberInput(
           0.1 *
           step *
           scale;
-        scrubValue.current = formatNumber(scrubValue.current + delta, 4);
+        scrubValue.current = round(scrubValue.current + delta, 4);
         updateValue(scrubValue.current);
       }
     },
@@ -144,7 +143,11 @@ export function NumberInput(
   );
 
   const displayValue =
-    inputRef.current === document.activeElement ? value : formatNumber(value, precision);
+    inputRef.current === document.activeElement
+      ? value
+      : value != undefined
+      ? round(value, precision)
+      : undefined;
 
   return (
     <TextField
