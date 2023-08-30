@@ -301,9 +301,9 @@ function getSliceIndices(
   start: number,
   end: number | undefined,
 ): [start: number, end: number] {
-  let clampedStart = R.clamp(0, start < 0 ? length + start : start, length);
+  let clampedStart = R.clamp(0, length, start < 0 ? length + start : start);
   let clampedEnd = end ?? length;
-  clampedEnd = R.clamp(0, clampedEnd < 0 ? length + clampedEnd : clampedEnd, length);
+  clampedEnd = R.clamp(0, length, clampedEnd < 0 ? length + clampedEnd : clampedEnd);
   if (clampedStart > clampedEnd) {
     const i = clampedStart;
     clampedStart = clampedEnd;
@@ -357,20 +357,18 @@ function sliceSingle(slice: TypedData, start: number, end?: number): TypedData {
 export function sliceTyped(dataset: TypedData[], start: number, end?: number): TypedData[] {
   const numElements = getTypedLength(dataset);
   const [i0, i1] = getSliceIndices(numElements, start, end);
-
   if (i0 === i1) {
     return [];
   }
 
   const startLoc = findIndices(dataset, i0);
-  const endLoc = findIndices(dataset, i1) ?? findIndices(dataset, i1 - 1);
+  const endLoc = findIndices(dataset, i1);
   if (startLoc == undefined || endLoc == undefined) {
     return [];
   }
 
   const [slice0, offset0] = startLoc;
   const [slice1, offset1] = endLoc;
-
   if (slice0 === slice1) {
     const slice = dataset[slice0];
     if (slice == undefined) {
