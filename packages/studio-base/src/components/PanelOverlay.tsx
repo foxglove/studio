@@ -127,6 +127,8 @@ export const PanelOverlay = forwardRef<HTMLDivElement, PanelOverlayProps>(functi
 
   return (
     <Backdrop
+      transitionDuration={0}
+      unmountOnExit
       ref={ref}
       open={open}
       className={cx(classes.backdrop, {
