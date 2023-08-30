@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { sliceTyped, mergeTyped } from "./datasets";
+import { sliceTyped, mergeTyped, resolveTypedIndices } from "./datasets";
 import { TypedData } from "./internalTypes";
 
 const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
@@ -50,5 +50,11 @@ describe("mergeTyped", () => {
       },
       makeDataset([2, 2, 2]),
     ]);
+  });
+});
+
+describe("resolveTypedIndices", () => {
+  it("can resolve points", () => {
+    expect(resolveTypedIndices([makeDataset([1, 2, 3])], [0])).toEqual([makeDataset([1])]);
   });
 });
