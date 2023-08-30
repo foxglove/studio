@@ -555,6 +555,9 @@ function copyPose(out: Pose, pose: Readonly<Pose>): void {
 
 // Compute XYZ Euler angles in degrees from an unscaled rotation matrix. This
 // method is adapted from THREE.js Euler#setFromRotationMatrix()
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function eulerFromMatrixUnscaled(out: vec3, m: mat4): vec3 {
   const m11 = m[0];
   const m12 = m[4];
