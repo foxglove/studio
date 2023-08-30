@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { sliceTyped } from "./datasets";
+import { sliceTyped, mergeTyped } from "./datasets";
 import { TypedData } from "./internalTypes";
 
 const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
@@ -32,5 +32,23 @@ describe("sliceTyped", () => {
   });
   it("handles negative end index", () => {
     expect(sliceTyped(sample, 0, -1)).toEqual([makeDataset([1, 2])]);
+  });
+});
+
+describe("mergeTyped", () => {
+  it("handles b that precedes a", () => {
+    expect(mergeTyped([makeDataset([1, 1, 1])], [makeDataset([0, 0, 0])])).toEqual([
+      makeDataset([1, 1, 1]),
+    ]);
+  });
+  it("handles b that follows a", () => {
+    expect(mergeTyped([makeDataset([1, 1, 1])], [makeDataset([2, 2, 2])])).toEqual([
+      makeDataset([1, 1, 1]),
+      {
+        ...makeDataset([NaN]),
+        value: [undefined],
+      },
+      makeDataset([2, 2, 2]),
+    ]);
   });
 });
