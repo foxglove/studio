@@ -60,7 +60,7 @@ export function* iterateObjects(dataset: ObjectData): Generator<Point> {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExtractPoint<T extends { [key: string]: Array<any> | Float32Array }> = {
-  [P in keyof T]-?: T[P] extends Float32Array ? number : NonNullable<T[P]>[0];
+  [P in keyof T]-?: NonNullable<T[P]>[0];
 } & {
   index: number;
   // downsampling requires a label, so even if T does not have a `label` property, we still
