@@ -2,10 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import {
+  Home20Regular,
+  Grid20Regular,
+  RecordStop20Regular,
+  LineStyle20Regular,
+} from "@fluentui/react-icons";
 import { Meta, StoryObj } from "@storybook/react";
 import { noop } from "lodash";
 
 import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { AppContext } from "@foxglove/studio-base/context/AppContext";
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -67,10 +74,55 @@ export const Default: Story = {};
 export const WithAppContextMenuItens: Story = {
   args: {
     appBarMenuItems: [
-      { type: "subheader", key: "browse", label: "Browse data", external: true },
-      { type: "item", key: "devices", label: "Devices", external: true },
-      { type: "item", key: "recordings", label: "Recordings", external: true },
-      { type: "item", key: "timeline", label: "Timeline", external: true },
+      {
+        type: "subheader",
+        key: "recent",
+        label: "Browse",
+      },
+      {
+        type: "item",
+        key: "home",
+        label: (
+          <Stack gap={1} direction="row" alignItems="center">
+            <Home20Regular />
+            Home
+          </Stack>
+        ),
+        external: true,
+      },
+      {
+        type: "item",
+        key: "devices",
+        label: (
+          <Stack gap={1} direction="row" alignItems="center">
+            <Grid20Regular />
+            Devices
+          </Stack>
+        ),
+        external: true,
+      },
+      {
+        type: "item",
+        key: "recordings",
+        label: (
+          <Stack gap={1} direction="row" alignItems="center">
+            <RecordStop20Regular />
+            Recordings
+          </Stack>
+        ),
+        external: true,
+      },
+      {
+        type: "item",
+        key: "timeline",
+        label: (
+          <Stack gap={1} direction="row" alignItems="center">
+            <LineStyle20Regular />
+            Timeline
+          </Stack>
+        ),
+        external: true,
+      },
     ],
   },
 };

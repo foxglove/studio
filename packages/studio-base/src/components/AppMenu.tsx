@@ -2,28 +2,30 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ArrowUpRight16Regular } from "@fluentui/react-icons";
 import {
-  Button,
-  ButtonGroup,
+  ArrowUpRight16Regular,
+  BookStar20Regular,
+  Document20Regular,
+  FolderOpen20Regular,
+} from "@fluentui/react-icons";
+import {
   Divider,
   List,
   ListItem,
   ListItemButton,
+  ListItemText,
   ListSubheader,
   Popover,
   PopoverProps,
   SvgIcon,
   Typography,
-  buttonClasses,
-  buttonGroupClasses,
   dividerClasses,
+  listItemSecondaryActionClasses,
 } from "@mui/material";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import Stack from "@foxglove/studio-base/components/Stack";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
@@ -32,26 +34,18 @@ import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectio
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles<void, "externalIcon">()((theme, _params, classes) => ({
-  buttonGroup: {
-    [`.${buttonGroupClasses.grouped}`]: {
-      textAlign: "left",
-      justifyContent: "flex-start",
-      gap: theme.spacing(1.5),
-      borderColor: theme.palette.divider,
-
-      [`.${buttonClasses.startIcon}`]: {
-        fontSize: 24,
-        marginRight: 0,
-
-        "> *:nth-of-type(1)": {
-          fontSize: "inherit",
-        },
-      },
+  listItem: {
+    [`&:not(:hover) .${listItemSecondaryActionClasses.root}`]: {
+      visibility: "hidden",
     },
   },
   listItemButton: {
     justifyContent: "space-between",
+    gap: theme.spacing(1),
 
+    svg: {
+      color: theme.palette.primary.main,
+    },
     [`&:not(:hover) .${classes.externalIcon}`]: {
       visibility: "hidden",
     },
@@ -60,6 +54,7 @@ const useStyles = makeStyles<void, "externalIcon">()((theme, _params, classes) =
     color: theme.palette.primary.main,
   },
   paper: {
+    // paddingInline: theme.spacing(1),
     maxWidth: 320,
     backgroundColor: theme.palette.background.menu,
 
@@ -98,52 +93,56 @@ export function AppMenu(props: PopoverProps): JSX.Element {
         },
       }}
     >
-      <Stack padding={2} paddingBottom={0}>
-        <ButtonGroup className={classes.buttonGroup} orientation="vertical">
-          <Button
-            fullWidth
-            startIcon={
-              <SvgIcon fontSize="inherit" color="primary" viewBox="0 0 2048 2048">
-                <path d="M1955 1533l-163-162v677h-128v-677l-163 162-90-90 317-317 317 317-90 90zM256 1920h1280v128H128V0h1115l549 549v475h-128V640h-512V128H256v1792zM1280 512h293l-293-293v293z" />
-              </SvgIcon>
-            }
-          >
-            <Stack flex="auto" zeroMinWidth>
-              <Typography variant="subtitle2" color="text.primary">
-                {t("openLocalFile")}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {t("openLocalFileDescription")}
-              </Typography>
-            </Stack>
-          </Button>
-          <Button
-            fullWidth
-            startIcon={
-              <SvgIcon fontSize="inherit" color="primary" viewBox="0 0 2048 2048">
-                <path d="M1408 256h640v640h-640V640h-120l-449 896H640v256H0v-640h640v256h120l449-896h199V256zM512 1664v-384H128v384h384zm1408-896V384h-384v384h384z" />
-              </SvgIcon>
-            }
-          >
-            <Stack flex="auto" zeroMinWidth>
-              <Typography variant="subtitle2" color="text.primary">
-                {t("openConnection")}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {t("openConnectionDescription")}
-              </Typography>
-            </Stack>
-          </Button>
-        </ButtonGroup>
-      </Stack>
-      <List>
+      <List dense>
+        <ListSubheader disableSticky>
+          <Typography variant="overline">{t("openDataSource")}</Typography>
+        </ListSubheader>
+        <ListItem disablePadding>
+          <ListItemButton className={classes.listItemButton}>
+            <FolderOpen20Regular />
+            <ListItemText
+              primary={t("openLocalFile")}
+              // secondary={t("openLocalFileDescription")}
+              primaryTypographyProps={{
+                variant: "subtitle2",
+                color: "text.primary",
+              }}
+              secondaryTypographyProps={{
+                variant: "caption",
+                color: "text.secondary",
+                noWrap: true,
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton className={classes.listItemButton}>
+            <SvgIcon fontSize="small" color="primary" viewBox="0 0 2048 2048">
+              <path d="M1408 256h640v640h-640V640h-120l-449 896H640v256H0v-640h640v256h120l449-896h199V256zM512 1664v-384H128v384h384zm1408-896V384h-384v384h384z" />
+            </SvgIcon>
+            <ListItemText
+              primary={t("openConnection")}
+              // secondary={t("openConnectionDescription")}
+              primaryTypographyProps={{
+                variant: "subtitle2",
+                color: "text.primary",
+              }}
+              secondaryTypographyProps={{
+                variant: "caption",
+                color: "text.secondary",
+                noWrap: true,
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+        <Divider variant="middle" />
         {recentSources.length > 0 && (
           <>
             <ListSubheader disableSticky>
               <Typography variant="overline">{t("recentDataSources")}</Typography>
             </ListSubheader>
             {recentSources.slice(0, 5).map((source) => (
-              <ListItem disablePadding key={source.id}>
+              <ListItem className={classes.listItem} disablePadding key={source.id}>
                 <ListItemButton
                   className={classes.listItemButton}
                   onClick={() => {
@@ -151,7 +150,13 @@ export function AppMenu(props: PopoverProps): JSX.Element {
                     selectRecent(source.id);
                   }}
                 >
-                  <TextMiddleTruncate text={source.title} />
+                  <Document20Regular style={{ flex: "none" }} />
+                  <ListItemText
+                    primary={<TextMiddleTruncate text={source.title} />}
+                    primaryTypographyProps={{ variant: "body2" }}
+                    // secondary="by Adrian Macneil 2 hours ago"
+                    secondaryTypographyProps={{ variant: "caption", color: "text.secondary" }}
+                  />
                 </ListItemButton>
               </ListItem>
             ))}
@@ -187,6 +192,16 @@ export function AppMenu(props: PopoverProps): JSX.Element {
               );
           }
         })}
+        <Divider variant="middle" />
+        <ListItem disablePadding>
+          <ListItemButton className={classes.listItemButton}>
+            <BookStar20Regular />
+            <ListItemText
+              primary={t("exploreSampleData")}
+              primaryTypographyProps={{ variant: "body2" }}
+            />
+          </ListItemButton>
+        </ListItem>
       </List>
     </Popover>
   );
