@@ -92,6 +92,8 @@ export default class ChartJSManager {
     const font = await fontLoaded;
     log.debug(`ChartJSManager(${id}) init, default font "${font.family}" status=${font.status}`);
 
+    // the types are wrong on `init`, but we will fix this soon
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (data != undefined) {
       for (const ds of data.datasets) {
         ds.segment = {
