@@ -2,25 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  ArrowUpRight16Regular,
-  BookStar20Regular,
-  Document20Regular,
-  FolderOpen20Regular,
-} from "@fluentui/react-icons";
+import { BookStar20Regular, Document20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
 import {
   Divider,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
   ListSubheader,
-  Popover,
-  PopoverProps,
+  Menu,
+  MenuItem,
+  MenuProps,
   SvgIcon,
   Typography,
-  dividerClasses,
-  listItemSecondaryActionClasses,
 } from "@mui/material";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,40 +23,20 @@ import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserCon
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-const useStyles = makeStyles<void, "externalIcon">()((theme, _params, classes) => ({
-  listItem: {
-    [`&:not(:hover) .${listItemSecondaryActionClasses.root}`]: {
-      visibility: "hidden",
-    },
-  },
-  listItemButton: {
-    justifyContent: "space-between",
+const useStyles = makeStyles<void>()((theme) => ({
+  menuItem: {
     gap: theme.spacing(1),
 
-    svg: {
-      color: theme.palette.primary.main,
-    },
-    [`&:not(:hover) .${classes.externalIcon}`]: {
-      visibility: "hidden",
-    },
-  },
-  externalIcon: {
-    color: theme.palette.primary.main,
+    svg: { color: theme.palette.primary.main },
   },
   paper: {
-    // paddingInline: theme.spacing(1),
-    maxWidth: 320,
-    backgroundColor: theme.palette.background.menu,
-
-    [`.${dividerClasses.root}`]: {
-      marginBlock: theme.spacing(1),
-    },
+    maxWidth: 300,
   },
 }));
 
-export type AppMenuProps = PopoverProps;
+export type AppMenuProps = MenuProps;
 
-export function AppMenu(props: PopoverProps): JSX.Element {
+export function AppMenu(props: MenuProps): JSX.Element {
   const { classes } = useStyles();
   const { appBarMenuItems } = useAppContext();
   const { recentSources, selectRecent } = usePlayerSelection();
@@ -81,7 +51,7 @@ export function AppMenu(props: PopoverProps): JSX.Element {
   );
 
   return (
-    <Popover
+    <Menu
       {...props}
       anchorOrigin={{
         vertical: "bottom",
@@ -93,116 +63,71 @@ export function AppMenu(props: PopoverProps): JSX.Element {
         },
       }}
     >
-      <List dense>
-        <ListSubheader disableSticky>
-          <Typography variant="overline">{t("openDataSource")}</Typography>
-        </ListSubheader>
-        <ListItem disablePadding>
-          <ListItemButton className={classes.listItemButton}>
-            <FolderOpen20Regular />
-            <ListItemText
-              primary={t("openLocalFile")}
-              // secondary={t("openLocalFileDescription")}
-              primaryTypographyProps={{
-                variant: "subtitle2",
-                color: "text.primary",
+      <ListSubheader disableSticky>
+        <Typography variant="overline">{t("openDataSource")}</Typography>
+      </ListSubheader>
+      <MenuItem className={classes.menuItem}>
+        <FolderOpen20Regular />
+        {t("openLocalFile")}
+      </MenuItem>
+      <MenuItem className={classes.menuItem}>
+        <SvgIcon fontSize="small" color="primary" viewBox="0 0 2048 2048">
+          <path d="M1408 256h640v640h-640V640h-120l-449 896H640v256H0v-640h640v256h120l449-896h199V256zM512 1664v-384H128v384h384zm1408-896V384h-384v384h384z" />
+        </SvgIcon>
+        {t("openConnection")}
+      </MenuItem>
+      {appBarMenuItems && <Divider variant="middle" />}
+      {(appBarMenuItems ?? []).map((item, idx) => {
+        switch (item.type) {
+          case "item":
+            return (
+              <MenuItem
+                onClick={(event) => {
+                  item.onClick?.(event);
+                  props.onClose?.({}, "backdropClick");
+                }}
+                key={item.key}
+                className={classes.menuItem}
+              >
+                {item.label}
+              </MenuItem>
+            );
+          case "divider":
+            return <Divider variant="middle" key={`divider${idx}`} />;
+          case "subheader":
+            return (
+              <ListSubheader key={item.key} disableSticky>
+                <Typography variant="overline">{item.label}</Typography>
+              </ListSubheader>
+            );
+        }
+      })}
+      <Divider variant="middle" />
+      {recentSources.length > 0 && (
+        <>
+          <ListSubheader disableSticky>
+            <Typography variant="overline">{t("recentDataSources")}</Typography>
+          </ListSubheader>
+          {recentSources.slice(0, 5).map((source) => (
+            <MenuItem
+              className={classes.menuItem}
+              onClick={() => {
+                handleAnalytics("open-recent");
+                selectRecent(source.id);
               }}
-              secondaryTypographyProps={{
-                variant: "caption",
-                color: "text.secondary",
-                noWrap: true,
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton className={classes.listItemButton}>
-            <SvgIcon fontSize="small" color="primary" viewBox="0 0 2048 2048">
-              <path d="M1408 256h640v640h-640V640h-120l-449 896H640v256H0v-640h640v256h120l449-896h199V256zM512 1664v-384H128v384h384zm1408-896V384h-384v384h384z" />
-            </SvgIcon>
-            <ListItemText
-              primary={t("openConnection")}
-              // secondary={t("openConnectionDescription")}
-              primaryTypographyProps={{
-                variant: "subtitle2",
-                color: "text.primary",
-              }}
-              secondaryTypographyProps={{
-                variant: "caption",
-                color: "text.secondary",
-                noWrap: true,
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-        <Divider variant="middle" />
-        {recentSources.length > 0 && (
-          <>
-            <ListSubheader disableSticky>
-              <Typography variant="overline">{t("recentDataSources")}</Typography>
-            </ListSubheader>
-            {recentSources.slice(0, 5).map((source) => (
-              <ListItem className={classes.listItem} disablePadding key={source.id}>
-                <ListItemButton
-                  className={classes.listItemButton}
-                  onClick={() => {
-                    handleAnalytics("open-recent");
-                    selectRecent(source.id);
-                  }}
-                >
-                  <Document20Regular style={{ flex: "none" }} />
-                  <ListItemText
-                    primary={<TextMiddleTruncate text={source.title} />}
-                    primaryTypographyProps={{ variant: "body2" }}
-                    // secondary="by Adrian Macneil 2 hours ago"
-                    secondaryTypographyProps={{ variant: "caption", color: "text.secondary" }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </>
-        )}
-        {appBarMenuItems && <Divider variant="middle" />}
-        {(appBarMenuItems ?? []).map((item, idx) => {
-          switch (item.type) {
-            case "item":
-              return (
-                <ListItem disablePadding key={item.key}>
-                  <ListItemButton
-                    className={classes.listItemButton}
-                    onClick={(event) => {
-                      item.onClick?.(event);
-                      props.onClose?.({}, "backdropClick");
-                    }}
-                  >
-                    {item.label}
-                    {item.external === true && (
-                      <ArrowUpRight16Regular className={classes.externalIcon} />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-              );
-            case "divider":
-              return <Divider variant="middle" key={`divider${idx}`} />;
-            case "subheader":
-              return (
-                <ListSubheader key={item.key} disableSticky>
-                  <Typography variant="overline">{item.label}</Typography>
-                </ListSubheader>
-              );
-          }
-        })}
-        <Divider variant="middle" />
-        <ListItem disablePadding>
-          <ListItemButton className={classes.listItemButton}>
-            <BookStar20Regular />
-            <ListItemText
-              primary={t("exploreSampleData")}
-              primaryTypographyProps={{ variant: "body2" }}
-            />
-          </ListItemButton>
-        </ListItem>
-      </List>
-    </Popover>
+              key={source.id}
+            >
+              <Document20Regular style={{ flex: "none" }} />
+              <TextMiddleTruncate text={source.title} />
+            </MenuItem>
+          ))}
+        </>
+      )}
+      <Divider variant="middle" />
+      <MenuItem className={classes.menuItem}>
+        <BookStar20Regular />
+        {t("exploreSampleData")}
+      </MenuItem>
+    </Menu>
   );
 }

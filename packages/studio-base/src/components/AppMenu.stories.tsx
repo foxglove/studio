@@ -12,7 +12,6 @@ import { Meta, StoryObj } from "@storybook/react";
 import { noop } from "lodash";
 
 import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
-import Stack from "@foxglove/studio-base/components/Stack";
 import { AppContext } from "@foxglove/studio-base/context/AppContext";
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -83,10 +82,9 @@ export const WithAppContextMenuItens: Story = {
         type: "item",
         key: "home",
         label: (
-          <Stack gap={1} direction="row" alignItems="center">
-            <Home20Regular />
-            Home
-          </Stack>
+          <>
+            <Home20Regular /> Home
+          </>
         ),
         external: true,
       },
@@ -94,10 +92,9 @@ export const WithAppContextMenuItens: Story = {
         type: "item",
         key: "devices",
         label: (
-          <Stack gap={1} direction="row" alignItems="center">
-            <Grid20Regular />
-            Devices
-          </Stack>
+          <>
+            <Grid20Regular /> Devices
+          </>
         ),
         external: true,
       },
@@ -105,10 +102,9 @@ export const WithAppContextMenuItens: Story = {
         type: "item",
         key: "recordings",
         label: (
-          <Stack gap={1} direction="row" alignItems="center">
-            <RecordStop20Regular />
-            Recordings
-          </Stack>
+          <>
+            <RecordStop20Regular /> Recordings
+          </>
         ),
         external: true,
       },
@@ -116,10 +112,9 @@ export const WithAppContextMenuItens: Story = {
         type: "item",
         key: "timeline",
         label: (
-          <Stack gap={1} direction="row" alignItems="center">
-            <LineStyle20Regular />
-            Timeline
-          </Stack>
+          <>
+            <LineStyle20Regular /> Timeline
+          </>
         ),
         external: true,
       },
