@@ -92,6 +92,12 @@ export default class ChartJSManager {
     const font = await fontLoaded;
     log.debug(`ChartJSManager(${id}) init, default font "${font.family}" status=${font.status}`);
 
+    for (const ds of data.datasets) {
+      ds.segment = {
+        borderColor: lineSegmentLabelColor,
+      };
+    }
+
     const fakeNode = {
       addEventListener: addEventListener(this.#fakeNodeEvents),
       removeEventListener: removeEventListener(this.#fakeNodeEvents),
