@@ -15,10 +15,14 @@ import {
   Typography,
 } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
+import { groupBy } from "lodash";
 import { useMemo, useState } from "react";
+import { AutoSizer } from "react-virtualized";
+import { VariableSizeList } from "react-window";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
+import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
@@ -27,11 +31,13 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { TopicStatsChip } from "@foxglove/studio-base/components/TopicStatsChip";
+import { TopicStatsChip } from "@foxglove/studio-base/components/TopicList/TopicStatsChip";
 import { PlayerPresence, TopicStats } from "@foxglove/studio-base/players/types";
 import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+
+import { MessagePathSearchItem, getMessagePathSearchItems } from "./getMessagePathSearchItems";
 
 type TopicWithStats = Topic & Partial<TopicStats>;
 
@@ -163,19 +169,87 @@ export function TopicList(): JSX.Element {
   const [filterText, setFilterText] = useState<string>("");
 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
-  const topics = useMessagePipeline(selectSortedTopics);
+  const { topics, datatypes } = useDataSourceInfo();
+
+  const topicsAndSchemaNamesFzf = useMemo(
+    () =>
+      new Fzf(topics, {
+        selector: (item) => `${item.name}|${item.schemaName}`,
+      }),
+    [topics],
+  );
+
+  const messagePathSearchItems = useMemo(
+    () => getMessagePathSearchItems(topics, datatypes),
+    [topics, datatypes],
+  );
+  const messagePathsFzf = useMemo(
+    () =>
+      new Fzf(messagePathSearchItems.items, {
+        selector: (item) => item.pathSuffix,
+      }),
+    [messagePathSearchItems],
+  );
 
   const filteredTopics: FzfResultItem<Topic>[] = useMemo(
     () =>
       filterText
-        ? new Fzf(topics, {
-            fuzzy: filterText.length > 2 ? "v2" : false,
-            sort: true,
-            selector: (item) => `${item.name}|${item.schemaName}`,
-          }).find(filterText)
+        ? topicsAndSchemaNamesFzf.find(filterText)
         : topics.map((item) => topicToFzfResult(item)),
-    [filterText, topics],
+    [filterText, topics, topicsAndSchemaNamesFzf],
   );
+
+  const messagePathResults = useMemo(
+    () => (filterText ? messagePathsFzf.find(filterText) : []),
+    [filterText, messagePathsFzf],
+  );
+
+  type TreeItem =
+    | { type: "topic"; item: FzfResultItem<Topic> }
+    | { type: "schema"; item: FzfResultItem<MessagePathSearchItem> };
+  const treeItems = useMemo(() => {
+    const results: TreeItem[] = [];
+
+    const messagePathResultsBySchemaName = groupBy(
+      messagePathResults,
+      (item) => item.item.rootSchemaName,
+    );
+
+    // Gather all topics that either match or contain a matching message path
+    const allTopicsToShowByName = new Map<string, Topic>();
+    const matchedTopicsByName = new Map<string, FzfResultItem<Topic>>();
+    for (const topic of filteredTopics) {
+      allTopicsToShowByName.set(topic.item.name, topic.item);
+      matchedTopicsByName.set(topic.item.name, topic);
+    }
+    for (const result of messagePathResults) {
+      for (const topic of result.item.topics) {
+        allTopicsToShowByName.set(topic.name, topic);
+      }
+    }
+
+    const sortedTopics = Array.from(allTopicsToShowByName.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+
+    for (const topic of sortedTopics) {
+      results.push({
+        type: "topic",
+        item: matchedTopicsByName.get(topic.name) ?? topicToFzfResult(topic),
+      });
+      if (topic.schemaName == undefined) {
+        continue;
+      }
+      const matchedMessagePaths = messagePathResultsBySchemaName[topic.schemaName];
+      if (matchedMessagePaths == undefined) {
+        continue;
+      }
+      for (const messagePathResult of matchedMessagePaths) {
+        results.push({ type: "schema", item: messagePathResult });
+      }
+    }
+    return results;
+  }, [filteredTopics, messagePathResults]);
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return <EmptyState>No data source selected</EmptyState>;
@@ -248,12 +322,44 @@ export function TopicList(): JSX.Element {
         />
       </header>
 
-      {filteredTopics.length > 0 ? (
-        <List key="topics" dense disablePadding>
-          {filteredTopics.map(({ item: topic, positions }) => (
-            <MemoTopicListItem key={topic.name} topic={topic} positions={positions} />
-          ))}
-        </List>
+      {treeItems.length > 0 ? (
+        // <List dense disablePadding>
+        //   <AutoSizer>
+        //     {({ width, height }) => (
+        //       <VariableSizeList
+        //         width={width}
+        //         height={height}
+        //         itemCount={filteredTopics.length}
+        //         itemSize={(_index) => 50}
+        //       >
+        //         {({ index }) => {
+        //           const { item: topic, positions } = filteredTopics[index]!;
+        //           return <MemoTopicListItem key={topic.name} topic={topic} positions={positions} />;
+        //         }}
+        //       </VariableSizeList>
+        //     )}
+        //   </AutoSizer>
+        // </List>
+        <AutoSizer>
+          {({ width, height }) => (
+            <VariableSizeList
+              width={width}
+              height={height}
+              itemCount={treeItems.length}
+              itemSize={(_index) => 24}
+            >
+              {({ index }) => {
+                const treeItem = treeItems[index]!;
+                switch (treeItem.type) {
+                  case "topic":
+                    return <div>Topic {treeItem.item.item.name}</div>;
+                  case "schema":
+                    return <div>- Path {treeItem.item.item.pathSuffix}</div>;
+                }
+              }}
+            </VariableSizeList>
+          )}
+        </AutoSizer>
       ) : (
         <EmptyState>
           {playerPresence === PlayerPresence.PRESENT && filterText

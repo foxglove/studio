@@ -31,6 +31,7 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import {
   PanelContextMenu,
   PanelContextMenuItem,
@@ -118,6 +119,25 @@ function Plot(props: Props) {
     sidebarDimension = config.sidebarWidth ?? defaultSidebarDimension,
     [PANEL_TITLE_CONFIG_KEY]: customTitle,
   } = config;
+
+  const { setMessagePathDropConfig } = usePanelContext();
+
+  useEffect(() => {
+    setMessagePathDropConfig({
+      getDropStatus(path) {
+        return { canDrop: true };
+      },
+      handleDrop(path) {
+        saveConfig((prevConfig) => ({
+          ...prevConfig,
+          paths: [
+            ...prevConfig.paths,
+            { value: path.path, enabled: true, timestampMethod: "receiveTime" },
+          ],
+        }));
+      },
+    });
+  }, [saveConfig, setMessagePathDropConfig]);
 
   useEffect(() => {
     if (legacyTitle && (customTitle == undefined || customTitle === "")) {
