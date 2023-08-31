@@ -25,6 +25,12 @@ import {
   inputClasses,
 } from "@mui/material";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ImperativePanelHandle,
+  PanelGroup,
+  PanelResizeHandle,
+  Panel as ResizablePanel,
+} from "react-resizable-panels";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
@@ -110,6 +116,9 @@ const useStyles = makeStyles()((theme) => ({
     [`.${inputClasses.input}`]: {
       padding: theme.spacing(1),
     },
+  },
+  resizeHandle: {
+    height: 4,
   },
 }));
 
@@ -344,6 +353,12 @@ function NodePlayground(props: Props) {
     };
   }, []);
 
+  const bottomBarRef = useRef<ImperativePanelHandle>(ReactNull);
+
+  const onChangeBottomBarTab = useCallback(() => {
+    bottomBarRef.current?.expand();
+  }, []);
+
   return (
     <Stack fullHeight>
       <PanelToolbar />
@@ -414,17 +429,9 @@ function NodePlayground(props: Props) {
             </IconButton>
           </Stack>
 
-          <Stack flexGrow={1} overflow="hidden ">
+          <PanelGroup direction="vertical">
             {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}
-            <Stack
-              flexGrow={1}
-              fullWidth
-              overflow="hidden"
-              style={{
-                display: selectedNodeId != undefined ? "flex" : "none",
-                /* Ensures the monaco-editor starts loading before the user opens it */
-              }}
-            >
+            <ResizablePanel>
               <Suspense
                 fallback={
                   <Stack
@@ -455,19 +462,21 @@ function NodePlayground(props: Props) {
                   />
                 )}
               </Suspense>
-            </Stack>
-            <Stack>
+            </ResizablePanel>
+            <PanelResizeHandle className={classes.resizeHandle} />
+            <ResizablePanel collapsible collapsedSize={5} defaultSize={5} ref={bottomBarRef}>
               <BottomBar
-                nodeId={selectedNodeId}
+                diagnostics={selectedNodeDiagnostics}
                 isSaved={isNodeSaved}
+                logs={selectedNodeLogs}
+                nodeId={selectedNodeId}
+                onChangeTab={onChangeBottomBarTab}
                 save={() => {
                   saveNode(currentScript?.code);
                 }}
-                diagnostics={selectedNodeDiagnostics}
-                logs={selectedNodeLogs}
               />
-            </Stack>
-          </Stack>
+            </ResizablePanel>
+          </PanelGroup>
         </Stack>
       </Stack>
     </Stack>
