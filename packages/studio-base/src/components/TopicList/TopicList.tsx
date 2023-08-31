@@ -291,7 +291,15 @@ export function TopicList(): JSX.Element {
   }
 
   return (
-    <>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <header className={classes.appBar}>
         <TextField
           id="topic-filter"
@@ -340,26 +348,32 @@ export function TopicList(): JSX.Element {
         //     )}
         //   </AutoSizer>
         // </List>
-        <AutoSizer>
-          {({ width, height }) => (
-            <VariableSizeList
-              width={width}
-              height={height}
-              itemCount={treeItems.length}
-              itemSize={(_index) => 24}
-            >
-              {({ index }) => {
-                const treeItem = treeItems[index]!;
-                switch (treeItem.type) {
-                  case "topic":
-                    return <div>Topic {treeItem.item.item.name}</div>;
-                  case "schema":
-                    return <div>- Path {treeItem.item.item.pathSuffix}</div>;
-                }
-              }}
-            </VariableSizeList>
-          )}
-        </AutoSizer>
+        <div style={{ flex: "1 1 100%" }}>
+          <AutoSizer>
+            {({ width, height }) => (
+              <VariableSizeList
+                width={width}
+                height={height}
+                itemCount={treeItems.length}
+                itemSize={(_index) => 24}
+              >
+                {({ index, style }) => {
+                  const treeItem = treeItems[index]!;
+                  switch (treeItem.type) {
+                    case "topic":
+                      return (
+                        <div style={style}>
+                          Topic {treeItem.item.item.name} ({treeItem.item.item.schemaName})
+                        </div>
+                      );
+                    case "schema":
+                      return <div style={style}>- Path {treeItem.item.item.pathSuffix}</div>;
+                  }
+                }}
+              </VariableSizeList>
+            )}
+          </AutoSizer>
+        </div>
       ) : (
         <EmptyState>
           {playerPresence === PlayerPresence.PRESENT && filterText
@@ -369,6 +383,6 @@ export function TopicList(): JSX.Element {
         </EmptyState>
       )}
       <DirectTopicStatsUpdater interval={6} />
-    </>
+    </div>
   );
 }
