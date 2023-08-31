@@ -12,6 +12,10 @@ import { makeStyles } from "tss-react/mui";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
+const Constants = {
+  ScrubPrecision: 4,
+} as const;
+
 const useStyles = makeStyles()((theme) => ({
   iconButton: {
     "&.MuiIconButton-edgeStart": {
@@ -135,7 +139,7 @@ export function NumberInput(
           0.1 *
           step *
           scale;
-        scrubValue.current = round(scrubValue.current + delta, 4);
+        scrubValue.current = round(scrubValue.current + delta, Constants.ScrubPrecision);
         updateValue(scrubValue.current);
       }
     },
