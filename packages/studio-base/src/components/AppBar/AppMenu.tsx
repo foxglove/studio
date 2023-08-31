@@ -9,6 +9,7 @@ import {
   PaperProps,
   PopoverPosition,
   PopoverReference,
+  Typography,
 } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -276,21 +277,30 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           } as Partial<PaperProps & { "data-tourid"?: string }>
         }
       >
-        {(appBarMenuItems ?? []).map((item, idx) =>
-          item.type === "divider" ? (
-            <Divider key={`divider${idx}`} />
-          ) : (
-            <MuiMenuItem
-              key={item.key}
-              onClick={item.onClick}
-              onPointerEnter={() => {
-                setNestedMenu(undefined);
-              }}
-            >
-              {item.label}
-            </MuiMenuItem>
-          ),
-        )}
+        {(appBarMenuItems ?? []).map((item, idx) => {
+          switch (item.type) {
+            case "item":
+              return (
+                <MuiMenuItem
+                  key={item.key}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    handleClose();
+                  }}
+                >
+                  {item.label}
+                </MuiMenuItem>
+              );
+            case "divider":
+              return <Divider variant="middle" key={`divider${idx}`} />;
+            case "subheader":
+              return (
+                <MuiMenuItem disabled key={item.key}>
+                  <Typography variant="overline">{item.label}</Typography>
+                </MuiMenuItem>
+              );
+          }
+        })}
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
           items={fileItems}
