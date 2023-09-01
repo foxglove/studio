@@ -21,6 +21,7 @@ import { AutoSizer } from "react-virtualized";
 import { VariableSizeList } from "react-window";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
+import { useDebounce } from "use-debounce";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
@@ -94,7 +95,6 @@ const useStyles = makeStyles<void, "dragHandle">()((theme, _params, classes) => 
 }));
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectSortedTopics = ({ sortedTopics }: MessagePipelineContext) => sortedTopics;
 
 function TopicListItem({
   topic,
@@ -166,7 +166,8 @@ const MemoTopicListItem = React.memo(TopicListItem);
 
 export function TopicList(): JSX.Element {
   const { classes, cx } = useStyles();
-  const [filterText, setFilterText] = useState<string>("");
+  const [undebouncedFilterText, setFilterText] = useState<string>("");
+  const [debouncedFilterText] = useDebounce(undebouncedFilterText, 50);
 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const { topics, datatypes } = useDataSourceInfo();
@@ -184,24 +185,21 @@ export function TopicList(): JSX.Element {
     [topics, datatypes],
   );
   const messagePathsFzf = useMemo(
-    () =>
-      new Fzf(messagePathSearchItems.items, {
-        selector: (item) => item.pathSuffix,
-      }),
+    () => new Fzf(messagePathSearchItems.items, { selector: (item) => item.fullPath }),
     [messagePathSearchItems],
   );
 
   const filteredTopics: FzfResultItem<Topic>[] = useMemo(
     () =>
-      filterText
-        ? topicsAndSchemaNamesFzf.find(filterText)
+      debouncedFilterText
+        ? topicsAndSchemaNamesFzf.find(debouncedFilterText)
         : topics.map((item) => topicToFzfResult(item)),
-    [filterText, topics, topicsAndSchemaNamesFzf],
+    [debouncedFilterText, topics, topicsAndSchemaNamesFzf],
   );
 
   const messagePathResults = useMemo(
-    () => (filterText ? messagePathsFzf.find(filterText) : []),
-    [filterText, messagePathsFzf],
+    () => (debouncedFilterText ? messagePathsFzf.find(debouncedFilterText) : []),
+    [debouncedFilterText, messagePathsFzf],
   );
 
   type TreeItem =
@@ -210,9 +208,9 @@ export function TopicList(): JSX.Element {
   const treeItems = useMemo(() => {
     const results: TreeItem[] = [];
 
-    const messagePathResultsBySchemaName = groupBy(
+    const messagePathResultsByTopicName = groupBy(
       messagePathResults,
-      (item) => item.item.rootSchemaName,
+      (item) => item.item.topic.name,
     );
 
     // Gather all topics that either match or contain a matching message path
@@ -222,10 +220,10 @@ export function TopicList(): JSX.Element {
       allTopicsToShowByName.set(topic.item.name, topic.item);
       matchedTopicsByName.set(topic.item.name, topic);
     }
-    for (const result of messagePathResults) {
-      for (const topic of result.item.topics) {
-        allTopicsToShowByName.set(topic.name, topic);
-      }
+    for (const {
+      item: { topic },
+    } of messagePathResults) {
+      allTopicsToShowByName.set(topic.name, topic);
     }
 
     const sortedTopics = Array.from(allTopicsToShowByName.values()).sort((a, b) =>
@@ -237,10 +235,7 @@ export function TopicList(): JSX.Element {
         type: "topic",
         item: matchedTopicsByName.get(topic.name) ?? topicToFzfResult(topic),
       });
-      if (topic.schemaName == undefined) {
-        continue;
-      }
-      const matchedMessagePaths = messagePathResultsBySchemaName[topic.schemaName];
+      const matchedMessagePaths = messagePathResultsByTopicName[topic.name];
       if (matchedMessagePaths == undefined) {
         continue;
       }
@@ -306,7 +301,7 @@ export function TopicList(): JSX.Element {
           variant="filled"
           disabled={playerPresence !== PlayerPresence.PRESENT}
           onChange={(event) => setFilterText(event.target.value)}
-          value={filterText}
+          value={undebouncedFilterText}
           fullWidth
           placeholder="Filter by topic or schema name…"
           InputProps={{
@@ -316,7 +311,7 @@ export function TopicList(): JSX.Element {
                 <SearchIcon fontSize="small" />
               </label>
             ),
-            endAdornment: filterText && (
+            endAdornment: undebouncedFilterText && (
               <IconButton
                 size="small"
                 title="Clear filter"
@@ -367,7 +362,12 @@ export function TopicList(): JSX.Element {
                         </div>
                       );
                     case "schema":
-                      return <div style={style}>- Path {treeItem.item.item.pathSuffix}</div>;
+                      return (
+                        <div style={style}>
+                          - Path {treeItem.item.item.suffix.pathSuffix} (
+                          {treeItem.item.item.suffix.type})
+                        </div>
+                      );
                   }
                 }}
               </VariableSizeList>
@@ -376,8 +376,8 @@ export function TopicList(): JSX.Element {
         </div>
       ) : (
         <EmptyState>
-          {playerPresence === PlayerPresence.PRESENT && filterText
-            ? `No topics or datatypes matching \n “${filterText}”`
+          {playerPresence === PlayerPresence.PRESENT && undebouncedFilterText
+            ? `No topics or datatypes matching \n “${undebouncedFilterText}”`
             : "No topics available. "}
           {playerPresence === PlayerPresence.RECONNECTING && "Waiting for connection"}
         </EmptyState>

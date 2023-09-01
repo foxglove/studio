@@ -6,30 +6,36 @@ import { groupBy } from "lodash";
 
 import { MessageDefinition } from "@foxglove/message-definition";
 import { Immutable } from "@foxglove/studio";
-import { quoteFieldNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import {
+  quoteFieldNameIfNeeded,
+  quoteTopicNameIfNeeded,
+} from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 
-export type MessagePathSearchItem = Immutable<{
-  topics: Topic[];
-  rootSchemaName: string;
+/**
+ * Represents a message path inside a specific schema
+ */
+type MessagePathSuffix = Immutable<{
+  /**
+   * The message path suffix which can be appended to a topic name, e.g. `.header.stamp`
+   */
   pathSuffix: string;
+  /**
+   * Human-readable type of the value or sub-message at this path, e.g. `foxglove.Point2` or `string[]`.
+   */
   type: string;
 }>;
 
 /**
- * @param topics Passed through as {@link MessagePathSearchItem.topics}
- * @param rootSchemaName Passed through as {@link MessagePathSearchItem.rootSchemaName}
- * @param prefix Prepended to each item's {@link MessagePathSearchItem.pathSuffix}
- * @param seenSchemaNames List of schema names that have been visited
+ * @param prefix Prepended to each item's {@link MessagePathSuffix.pathSuffix}
+ * @param seenSchemaNames List of schema names that have been visited, including the current {@link schema}
  */
-function* generateMessagePathSearchItemsForSchema(
-  topics: Topic[],
-  rootSchemaName: string,
+function* generateMessagePathSuffixesForSchema(
   schema: Immutable<MessageDefinition>,
   schemasByName: Immutable<Map<string, MessageDefinition>>,
   prefix: string,
   seenSchemaNames: readonly string[],
-): Iterable<MessagePathSearchItem> {
+): Iterable<MessagePathSuffix> {
   for (const { name, isArray, isConstant, isComplex, type } of schema.definitions) {
     if (isConstant === true) {
       continue;
@@ -37,23 +43,19 @@ function* generateMessagePathSearchItemsForSchema(
 
     const pathSuffix = `${prefix}.${quoteFieldNameIfNeeded(name)}`;
     yield {
-      rootSchemaName,
-      topics,
       pathSuffix,
       type: isArray === true ? `${type}[]` : type,
     };
 
     if (isComplex === true) {
-      if (rootSchemaName === type || seenSchemaNames.includes(type)) {
+      if (seenSchemaNames.includes(type)) {
         continue;
       }
       const fieldSchema = schemasByName.get(type);
       if (!fieldSchema || fieldSchema.name == undefined) {
         continue;
       }
-      yield* generateMessagePathSearchItemsForSchema(
-        topics,
-        rootSchemaName,
+      yield* generateMessagePathSuffixesForSchema(
         fieldSchema,
         schemasByName,
         isArray === true ? `${pathSuffix}[:]` : pathSuffix,
@@ -63,15 +65,19 @@ function* generateMessagePathSearchItemsForSchema(
   }
 }
 
+export type MessagePathSearchItem = {
+  topic: Topic;
+  suffix: MessagePathSuffix;
+  /** Full message path, e.g. `/my_topic.header.stamp` */
+  fullPath: string;
+};
+
 export function getMessagePathSearchItems(
   allTopics: readonly Topic[],
   schemasByName: Immutable<Map<string, MessageDefinition>>,
-): {
-  items: MessagePathSearchItem[];
-  itemsBySchemaName: Map<string, MessagePathSearchItem[]>;
-} {
+): { items: MessagePathSearchItem[]; itemsByTopicName: Map<string, MessagePathSearchItem[]> } {
   const items: MessagePathSearchItem[] = [];
-  const itemsBySchemaName = new Map<string, MessagePathSearchItem[]>();
+  const itemsByTopicName = new Map<string, MessagePathSearchItem[]>();
   const topicsBySchemaName = groupBy(
     allTopics.filter((topic) => topic.schemaName != undefined),
     (topic) => topic.schemaName,
@@ -81,16 +87,25 @@ export function getMessagePathSearchItems(
     if (!schema) {
       continue;
     }
-    for (const searchItem of generateMessagePathSearchItemsForSchema(
-      topics,
+    for (const suffix of generateMessagePathSuffixesForSchema(schema, schemasByName, "", [
       schemaName,
-      schema,
-      schemasByName,
-      "",
-      [],
-    )) {
-      items.push(searchItem);
+    ])) {
+      for (const topic of topics) {
+        const item: MessagePathSearchItem = {
+          topic,
+          suffix,
+          fullPath: quoteTopicNameIfNeeded(topic.name) + suffix.pathSuffix,
+        };
+        items.push(item);
+
+        let itemsForTopic = itemsByTopicName.get(topic.name);
+        if (!itemsForTopic) {
+          itemsForTopic = [];
+          itemsByTopicName.set(topic.name, itemsForTopic);
+        }
+        itemsForTopic.push(item);
+      }
     }
   }
-  return { items, itemsBySchemaName };
+  return { items, itemsByTopicName };
 }

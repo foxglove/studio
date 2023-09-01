@@ -42,88 +42,94 @@ describe("getMessagePathSearchItems", () => {
 
     expect(getMessagePathSearchItems(topics, schemasByName).items).toEqual([
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".num",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "float64",
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.num",
+        suffix: { pathSuffix: ".num", type: "float64" },
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".num_array",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "float64[]",
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.num",
+        suffix: { pathSuffix: ".num", type: "float64" },
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "Bar",
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.num_array",
+        suffix: { pathSuffix: ".num_array", type: "float64[]" },
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar.str",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "string",
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.num_array",
+        suffix: { pathSuffix: ".num_array", type: "float64[]" },
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar.str_array",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "string[]",
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.bar",
+        suffix: { pathSuffix: ".bar", type: "Bar" },
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar_array",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "Bar[]",
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.bar",
+        suffix: { pathSuffix: ".bar", type: "Bar" },
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar_array[:].str",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "string",
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.bar.str",
+        suffix: { pathSuffix: ".bar.str", type: "string" },
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar_array[:].str_array",
-        topics: [
-          { name: "foo1", schemaName: "Foo" },
-          { name: "foo2", schemaName: "Foo" },
-        ],
-        type: "string[]",
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.bar.str",
+        suffix: { pathSuffix: ".bar.str", type: "string" },
       },
       {
-        rootSchemaName: "Bar",
-        pathSuffix: ".str",
-        topics: [{ name: "bar", schemaName: "Bar" }],
-        type: "string",
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.bar.str_array",
+        suffix: { pathSuffix: ".bar.str_array", type: "string[]" },
       },
       {
-        rootSchemaName: "Bar",
-        pathSuffix: ".str_array",
-        topics: [{ name: "bar", schemaName: "Bar" }],
-        type: "string[]",
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.bar.str_array",
+        suffix: { pathSuffix: ".bar.str_array", type: "string[]" },
+      },
+      {
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.bar_array",
+        suffix: { pathSuffix: ".bar_array", type: "Bar[]" },
+      },
+      {
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.bar_array",
+        suffix: { pathSuffix: ".bar_array", type: "Bar[]" },
+      },
+      {
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.bar_array[:].str",
+        suffix: { pathSuffix: ".bar_array[:].str", type: "string" },
+      },
+      {
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.bar_array[:].str",
+        suffix: { pathSuffix: ".bar_array[:].str", type: "string" },
+      },
+      {
+        topic: { name: "foo1", schemaName: "Foo" },
+        fullPath: "foo1.bar_array[:].str_array",
+        suffix: { pathSuffix: ".bar_array[:].str_array", type: "string[]" },
+      },
+      {
+        topic: { name: "foo2", schemaName: "Foo" },
+        fullPath: "foo2.bar_array[:].str_array",
+        suffix: { pathSuffix: ".bar_array[:].str_array", type: "string[]" },
+      },
+      {
+        topic: { name: "bar", schemaName: "Bar" },
+        fullPath: "bar.str",
+        suffix: { pathSuffix: ".str", type: "string" },
+      },
+      {
+        topic: { name: "bar", schemaName: "Bar" },
+        fullPath: "bar.str_array",
+        suffix: { pathSuffix: ".str_array", type: "string[]" },
       },
     ]);
   });
@@ -153,22 +159,19 @@ describe("getMessagePathSearchItems", () => {
       getMessagePathSearchItems([{ name: "foo", schemaName: "Foo" }], schemasByName).items,
     ).toEqual([
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".self",
-        topics: [{ name: "foo", schemaName: "Foo" }],
-        type: "Foo",
+        topic: { name: "foo", schemaName: "Foo" },
+        suffix: { pathSuffix: ".self", type: "Foo" },
+        fullPath: "foo.self",
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar",
-        topics: [{ name: "foo", schemaName: "Foo" }],
-        type: "Bar",
+        topic: { name: "foo", schemaName: "Foo" },
+        suffix: { pathSuffix: ".bar", type: "Bar" },
+        fullPath: "foo.bar",
       },
       {
-        rootSchemaName: "Foo",
-        pathSuffix: ".bar.foo",
-        topics: [{ name: "foo", schemaName: "Foo" }],
-        type: "Foo",
+        topic: { name: "foo", schemaName: "Foo" },
+        suffix: { pathSuffix: ".bar.foo", type: "Foo" },
+        fullPath: "foo.bar.foo",
       },
     ]);
 
@@ -176,22 +179,19 @@ describe("getMessagePathSearchItems", () => {
       getMessagePathSearchItems([{ name: "bar", schemaName: "Bar" }], schemasByName).items,
     ).toEqual([
       {
-        rootSchemaName: "Bar",
-        pathSuffix: ".foo",
-        topics: [{ name: "bar", schemaName: "Bar" }],
-        type: "Foo",
+        topic: { name: "bar", schemaName: "Bar" },
+        suffix: { pathSuffix: ".foo", type: "Foo" },
+        fullPath: "bar.foo",
       },
       {
-        rootSchemaName: "Bar",
-        pathSuffix: ".foo.self",
-        topics: [{ name: "bar", schemaName: "Bar" }],
-        type: "Foo",
+        topic: { name: "bar", schemaName: "Bar" },
+        suffix: { pathSuffix: ".foo.self", type: "Foo" },
+        fullPath: "bar.foo.self",
       },
       {
-        rootSchemaName: "Bar",
-        pathSuffix: ".foo.bar",
-        topics: [{ name: "bar", schemaName: "Bar" }],
-        type: "Bar",
+        topic: { name: "bar", schemaName: "Bar" },
+        suffix: { pathSuffix: ".foo.bar", type: "Bar" },
+        fullPath: "bar.foo.bar",
       },
     ]);
   });
