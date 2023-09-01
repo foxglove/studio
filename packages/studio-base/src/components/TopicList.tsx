@@ -19,7 +19,6 @@ import { useMemo, useState } from "react";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
 import {
@@ -262,7 +261,6 @@ export function TopicList(): JSX.Element {
           {playerPresence === PlayerPresence.RECONNECTING && "Waiting for connection"}
         </EmptyState>
       )}
-      <DirectTopicStatsUpdater interval={6} />
     </>
   );
 }

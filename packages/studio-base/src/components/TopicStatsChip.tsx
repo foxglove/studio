@@ -5,6 +5,8 @@
 import { Divider, Paper } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
+import { useDirectTopicStatsUpdate } from "@foxglove/studio-base/hooks/useDirectTopicStatsUpdate";
+
 const useStyles = makeStyles()((theme) => ({
   root: {
     display: "flex",
@@ -41,13 +43,16 @@ const useStyles = makeStyles()((theme) => ({
 
 export function TopicStatsChip({ topicName }: { topicName: string }): JSX.Element {
   const { classes } = useStyles();
+
+  const { countRef, frequencyRef } = useDirectTopicStatsUpdate<HTMLDivElement>(topicName);
+
   return (
     <Paper variant="outlined" className={classes.root}>
-      <div className={classes.stat} data-topic={topicName} data-topic-stat="frequency">
+      <div className={classes.stat} ref={frequencyRef}>
         &ndash;
       </div>
       <Divider className={classes.divider} orientation="vertical" flexItem />
-      <div className={classes.stat} data-topic={topicName} data-topic-stat="count">
+      <div className={classes.stat} ref={countRef}>
         &ndash;
       </div>
     </Paper>
