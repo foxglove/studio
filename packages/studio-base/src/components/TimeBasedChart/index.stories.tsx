@@ -237,7 +237,7 @@ export const CallPauseOnInitialMount: StoryObj = {
     const readySignal = useReadySignal();
 
     useEffect(() => {
-      if (unpauseFrameCount === 3) {
+      if (unpauseFrameCount === 1) {
         readySignal();
       }
     }, [readySignal, unpauseFrameCount]);
