@@ -253,28 +253,27 @@ export function ThreeDeeRender(props: {
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
-    (action: SettingsTreeAction) =>
+    (action: SettingsTreeAction) => {
       // Wrapping in unstable_batchedUpdates causes React to run effects _after_ the handleAction
       // function has finished executing. This allows scene extensions that call
       // renderer.updateConfig to read out the new config value and configure their renderables
       // before the render occurs.
-      {
-        ReactDOM.unstable_batchedUpdates(() => {
-          if (renderer) {
-            const initialCameraState = renderer.getCameraState();
-            renderer.settings.handleAction(action);
-            const updatedCameraState = renderer.getCameraState();
-            // Communicate camera changes from settings to the global state if syncing.
-            if (updatedCameraState !== initialCameraState && config.scene.syncCamera === true) {
-              context.setSharedPanelState({
-                cameraState: updatedCameraState,
-                followMode: config.followMode,
-                followTf: renderer.followFrameId,
-              });
-            }
+      ReactDOM.unstable_batchedUpdates(() => {
+        if (renderer) {
+          const initialCameraState = renderer.getCameraState();
+          renderer.settings.handleAction(action);
+          const updatedCameraState = renderer.getCameraState();
+          // Communicate camera changes from settings to the global state if syncing.
+          if (updatedCameraState !== initialCameraState && config.scene.syncCamera === true) {
+            context.setSharedPanelState({
+              cameraState: updatedCameraState,
+              followMode: config.followMode,
+              followTf: renderer.followFrameId,
+            });
           }
-        });
-      },
+        }
+      });
+    },
     [config.followMode, config.scene.syncCamera, context, renderer],
   );
 

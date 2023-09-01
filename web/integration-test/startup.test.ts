@@ -18,7 +18,7 @@ describe("startup", () => {
     const publicPath = path.join(__dirname, "..", ".webpack");
 
     const server = http.createServer(async (request, response) => {
-      return await serveHandler(request, response, {
+      await serveHandler(request, response, {
         public: publicPath,
       });
     });

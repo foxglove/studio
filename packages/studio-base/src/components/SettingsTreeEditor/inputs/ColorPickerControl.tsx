@@ -91,7 +91,9 @@ export function ColorPickerControl(props: ColorPickerInputProps): JSX.Element {
         placeholder={alphaType === "alpha" ? "RRGGBBAA" : "RRGGBB"}
         value={editedValue}
         onKeyDown={(event) => event.key === "Enter" && onEnterKey?.()}
-        onChange={(event) => { updateEditedValue(event.target.value); }}
+        onChange={(event) => {
+          updateEditedValue(event.target.value);
+        }}
         onBlur={onInputBlur}
       />
     </Stack>
