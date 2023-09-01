@@ -54,23 +54,6 @@ export function useMessagePipeline<T>(selector: (arg0: MessagePipelineContext) =
   );
 }
 
-/**
- * Establish a subscription to message pipeline context changes. Changes will not trigger the
- * component to re-render, so this can be used for handling rapid updates without extra renders.
- *
- * @param callback Should be a stable callback created with `useCallback`. Will be called at least
- * once with the initial value of the state.
- */
-export function useMessagePipelineSubscription(
-  callback: (publicState: MessagePipelineContext) => void,
-): void {
-  const store = useGuaranteedContext(ContextInternal);
-  useEffect(() => {
-    callback(store.getState().public);
-    return store.subscribe((state) => callback(state.public));
-  }, [callback, store]);
-}
-
 type ProviderProps = {
   children: React.ReactNode;
 
