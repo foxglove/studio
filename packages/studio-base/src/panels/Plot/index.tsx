@@ -134,7 +134,11 @@ function Plot(props: Props) {
         saveConfig((prevConfig) => ({
           ...prevConfig,
           paths: [
-            ...prevConfig.paths,
+            // If there was only a single series and its path was empty (the default state of the
+            // panel), replace the series rather than adding to it
+            ...(prevConfig.paths.length === 1 && prevConfig.paths[0]?.value === ""
+              ? []
+              : prevConfig.paths),
             { value: path.path, enabled: true, timestampMethod: "receiveTime" },
           ],
         }));
