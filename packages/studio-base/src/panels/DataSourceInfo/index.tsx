@@ -6,7 +6,6 @@ import { Divider, Typography } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
 import CopyButton from "@foxglove/studio-base/components/CopyButton";
-import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
   MessagePipelineContext,
@@ -15,6 +14,7 @@ import {
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useDirectTopicStatsUpdate } from "@foxglove/studio-base/hooks/useDirectTopicStatsUpdate";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 
 const useStyles = makeStyles<void, "copyIcon">()((theme, _params, classes) => ({
@@ -66,6 +66,8 @@ const useStyles = makeStyles<void, "copyIcon">()((theme, _params, classes) => ({
 function TopicRow({ topic }: { topic: Topic }): JSX.Element {
   const { classes } = useStyles();
 
+  const { countRef, frequencyRef } = useDirectTopicStatsUpdate<HTMLTableCellElement>(topic.name);
+
   return (
     <tr>
       <td>
@@ -99,12 +101,8 @@ function TopicRow({ topic }: { topic: Topic }): JSX.Element {
           </>
         )}
       </td>
-      <td data-topic={topic.name} data-topic-stat="count">
-        &mdash;
-      </td>
-      <td data-topic={topic.name} data-topic-stat="frequency">
-        &mdash;
-      </td>
+      <td ref={countRef}>&ndash;</td>
+      <td ref={frequencyRef}>&ndash;</td>
     </tr>
   );
 }
@@ -151,7 +149,6 @@ function SourceInfo(): JSX.Element {
             ))}
           </tbody>
         </table>
-        <DirectTopicStatsUpdater interval={6} />
       </Stack>
     </>
   );
