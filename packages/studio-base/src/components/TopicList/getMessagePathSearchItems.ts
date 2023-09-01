@@ -52,7 +52,7 @@ function* generateMessagePathSuffixesForSchema(
         continue;
       }
       const fieldSchema = schemasByName.get(type);
-      if (!fieldSchema || fieldSchema.name == undefined) {
+      if (!fieldSchema) {
         continue;
       }
       yield* generateMessagePathSuffixesForSchema(
@@ -70,6 +70,10 @@ export type MessagePathSearchItem = {
   suffix: MessagePathSuffix;
   /** Full message path, e.g. `/my_topic.header.stamp` */
   fullPath: string;
+  /**
+   * Offset of `suffix.pathSuffix` in the `fullPath` (differs from `topic.name.length` if the topic name requires quoting)
+   */
+  offset: number;
 };
 
 export function getMessagePathSearchItems(
@@ -91,10 +95,12 @@ export function getMessagePathSearchItems(
       schemaName,
     ])) {
       for (const topic of topics) {
+        const quotedTopicName = quoteTopicNameIfNeeded(topic.name);
         const item: MessagePathSearchItem = {
           topic,
           suffix,
-          fullPath: quoteTopicNameIfNeeded(topic.name) + suffix.pathSuffix,
+          fullPath: quotedTopicName + suffix.pathSuffix,
+          offset: quotedTopicName.length,
         };
         items.push(item);
 
