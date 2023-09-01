@@ -82,7 +82,9 @@ export default function useDownsampler(datasets: ChartDataset[]): {
     return {
       downsampler: {
         setView,
-        register: setSetter,
+        // setSetter cannot take two arguments, so we can't just write
+        // `register: setSetter`
+        register: (setter) => setSetter(setter),
       },
       setScales,
     };
