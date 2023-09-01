@@ -170,7 +170,7 @@ function FieldInput({
               actionHandler({ action: "update", payload: { path, input: "autocomplete", value } });
             }
           }}
-          onChange={(_event, value) =>
+          onChange={(_event, value) => {
             actionHandler({
               action: "update",
               payload: { path, input: "autocomplete", value: value ?? undefined },

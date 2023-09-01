@@ -335,15 +335,21 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     submenu: [
       {
         label: t("appBar:about"),
-        click: () => sendNativeAppMenuEvent("open-help-about", browserWindow),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-about", browserWindow);
+        },
       },
       {
         label: t("appBar:viewOurDocs"),
-        click: () => sendNativeAppMenuEvent("open-help-docs", browserWindow),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-docs", browserWindow);
+        },
       },
       {
         label: t("appBar:joinOurSlack"),
-        click: () => sendNativeAppMenuEvent("open-help-slack", browserWindow),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-slack", browserWindow);
+        },
       },
       { type: "separator" },
       {

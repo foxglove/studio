@@ -363,8 +363,12 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const keyDownHandlers = useMemo(() => {
     return {
-      "[": () => sidebarActions.left.setOpen((oldValue) => !oldValue),
-      "]": () => sidebarActions.right.setOpen((oldValue) => !oldValue),
+      "[": () => {
+        sidebarActions.left.setOpen((oldValue) => !oldValue);
+      },
+      "]": () => {
+        sidebarActions.right.setOpen((oldValue) => !oldValue);
+      },
     };
   }, [sidebarActions.left, sidebarActions.right]);
 

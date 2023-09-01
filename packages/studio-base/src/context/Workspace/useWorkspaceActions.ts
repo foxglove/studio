@@ -236,7 +236,7 @@ export function useWorkspaceActions(): WorkspaceActions {
         },
       },
 
-      openPanelSettings: () =>
+      openPanelSettings: () => {
         set((draft) => {
           draft.sidebars.left.item = "panel-settings";
           draft.sidebars.left.open = true;

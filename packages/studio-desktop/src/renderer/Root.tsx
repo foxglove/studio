@@ -120,16 +120,18 @@ export default function Root(props: {
   }, [nativeWindow]);
 
   useEffect(() => {
-    const unregisterFull = desktopBridge.addIpcEventListener("enter-full-screen", () =>
-      setFullScreen(true),
-    );
-    const unregisterLeave = desktopBridge.addIpcEventListener("leave-full-screen", () =>
-      setFullScreen(false),
-    );
-    const unregisterMax = desktopBridge.addIpcEventListener("maximize", () => setMaximized(true));
-    const unregisterUnMax = desktopBridge.addIpcEventListener("unmaximize", () =>
-      setMaximized(false),
-    );
+    const unregisterFull = desktopBridge.addIpcEventListener("enter-full-screen", () => {
+      setFullScreen(true);
+    });
+    const unregisterLeave = desktopBridge.addIpcEventListener("leave-full-screen", () => {
+      setFullScreen(false);
+    });
+    const unregisterMax = desktopBridge.addIpcEventListener("maximize", () => {
+      setMaximized(true);
+    });
+    const unregisterUnMax = desktopBridge.addIpcEventListener("unmaximize", () => {
+      setMaximized(false);
+    });
     return () => {
       unregisterFull();
       unregisterLeave();
