@@ -13,6 +13,7 @@ import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
+import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
   MessagePipelineContext,
@@ -163,7 +164,6 @@ export function TopicList(): JSX.Element {
           }}
         />
       </header>
-
       {treeItems.length > 0 ? (
         <div style={{ flex: "1 1 100%" }}>
           <AutoSizer>
@@ -197,6 +197,7 @@ export function TopicList(): JSX.Element {
           {playerPresence === PlayerPresence.RECONNECTING && "Waiting for connection"}
         </EmptyState>
       )}
+      <DirectTopicStatsUpdater interval={6} />
     </div>
   );
 }
