@@ -24,13 +24,15 @@ export function MessagePathRow({
 
   const {
     fullPath,
-    suffix: { pathSuffix, type },
+    suffix: { pathSuffix, type, isLeaf },
     topic,
   } = messagePathResult.item;
 
   const { connectDragSource, cursor, isDragging } = useMessagePathDrag({
     path: fullPath,
     rootSchemaName: topic.schemaName,
+    isTopic: false,
+    isLeaf,
   });
 
   return (

@@ -125,7 +125,10 @@ function Plot(props: Props) {
   useEffect(() => {
     setMessagePathDropConfig({
       getDropStatus(path) {
-        return { canDrop: true };
+        if (!path.isLeaf) {
+          return { canDrop: false };
+        }
+        return { canDrop: true, effect: "add" };
       },
       handleDrop(path) {
         saveConfig((prevConfig) => ({

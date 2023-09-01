@@ -28,6 +28,8 @@ export function TopicRow({
   const { connectDragSource, connectDragPreview, cursor, isDragging } = useMessagePathDrag({
     path: topic.name,
     rootSchemaName: topic.schemaName,
+    isTopic: true,
+    isLeaf: false,
   });
 
   return (

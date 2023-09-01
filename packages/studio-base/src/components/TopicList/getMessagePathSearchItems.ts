@@ -24,6 +24,8 @@ type MessagePathSuffix = Immutable<{
    * Human-readable type of the value or sub-message at this path, e.g. `foxglove.Point2` or `string[]`.
    */
   type: string;
+  /** True if this path represents a value with no children underneath it. */
+  isLeaf: boolean;
 }>;
 
 /**
@@ -45,6 +47,7 @@ function* generateMessagePathSuffixesForSchema(
     yield {
       pathSuffix,
       type: isArray === true ? `${type}[]` : type,
+      isLeaf: isComplex !== true,
     };
 
     if (isComplex === true) {
