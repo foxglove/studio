@@ -37,7 +37,7 @@ export function MessagePathRow({
     <div
       ref={connectDragSource}
       className={cx(classes.row, classes.fieldRow, { [classes.isDragging]: isDragging })}
-      style={style}
+      style={{ ...style, cursor }}
     >
       <Stack flex="auto" direction="row" gap={2} overflow="hidden">
         <Typography variant="body2" noWrap>
