@@ -79,6 +79,10 @@ export type MessagePathSearchItem = {
   offset: number;
 };
 
+/**
+ * Get the list of all message path search items in the TopicList (entries to be passed to fzf).
+ * This includes an entry for each message path nested underneath each topic.
+ */
 export function getMessagePathSearchItems(
   allTopics: readonly Topic[],
   schemasByName: Immutable<Map<string, MessageDefinition>>,

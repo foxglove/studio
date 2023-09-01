@@ -26,6 +26,13 @@ import { TopicRow } from "./TopicRow";
 import { useTopicListSearch } from "./useTopicListSearch";
 
 const useStyles = makeStyles<void, "dragHandle">()((theme, _params, classes) => ({
+  root: {
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+  },
   appBar: {
     top: 0,
     zIndex: theme.zIndex.appBar,
@@ -126,15 +133,7 @@ export function TopicList(): JSX.Element {
   }
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className={classes.root}>
       <header className={classes.appBar}>
         <TextField
           id="topic-filter"
