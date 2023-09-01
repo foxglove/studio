@@ -165,10 +165,12 @@ function FieldInput({
           renderInput={(params) => (
             <TextField {...params} variant="filled" size="small" placeholder={field.placeholder} />
           )}
-          onInputChange={(_event, value) => {
-            actionHandler({ action: "update", payload: { path, input: "autocomplete", value } });
+          onInputChange={(_event, value, reason) => {
+            if (reason === "input") {
+              actionHandler({ action: "update", payload: { path, input: "autocomplete", value } });
+            }
           }}
-          onChange={(_event, value) => {
+          onChange={(_event, value) =>
             actionHandler({
               action: "update",
               payload: { path, input: "autocomplete", value: value ?? undefined },
@@ -373,8 +375,8 @@ function FieldInput({
           }}
           MenuProps={{ MenuListProps: { dense: true } }}
         >
-          {field.options.map(({ label, value = UNDEFINED_SENTINEL_VALUE }) => (
-            <MenuItem key={value} value={value}>
+          {field.options.map(({ label, value = UNDEFINED_SENTINEL_VALUE, disabled }) => (
+            <MenuItem key={value} value={value} disabled={disabled}>
               {label}
             </MenuItem>
           ))}

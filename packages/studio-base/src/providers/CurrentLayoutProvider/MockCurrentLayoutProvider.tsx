@@ -7,8 +7,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useShallowMemo } from "@foxglove/hooks";
 import CurrentLayoutContext, {
   ICurrentLayout,
-  LayoutID,
   LayoutState,
+  SelectedLayout,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   PanelsActions,
@@ -18,7 +18,6 @@ import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLa
 
 import panelsReducer from "./reducers";
 
-// ts-prune-ignore-next
 /**
  * An alternative implementation of CurrentLayoutProvider, for use in tests, which performs actions
  * synchronously and doesn't require a LayoutManager.
@@ -41,7 +40,6 @@ export default function MockCurrentLayoutProvider({
 
   const [layoutState, setLayoutStateInternal] = useState<LayoutState>({
     selectedLayout: {
-      id: "mock-layout" as LayoutID,
       data: {
         configById: {},
         globalVariables: {},
@@ -63,13 +61,31 @@ export default function MockCurrentLayoutProvider({
     }
   }, []);
 
+  const setCurrentLayout = useCallback(
+    (newLayout: SelectedLayout | undefined) => {
+      setLayoutState({
+        selectedLayout: newLayout,
+      });
+    },
+    [setLayoutState],
+  );
+
+  const updateSharedPanelState = useCallback<ICurrentLayout["actions"]["updateSharedPanelState"]>(
+    (type, newSharedState) => {
+      setLayoutState({
+        ...layoutStateRef.current,
+        sharedPanelState: { ...layoutStateRef.current.sharedPanelState, [type]: newSharedState },
+      });
+    },
+    [setLayoutState],
+  );
+
   const performAction = useCallback(
     (action: PanelsActions) => {
       onAction?.(action);
       setLayoutState({
         ...layoutStateRef.current,
         selectedLayout: {
-          id: "mock-layout" as LayoutID,
           ...layoutStateRef.current.selectedLayout,
           data: layoutStateRef.current.selectedLayout?.data
             ? panelsReducer(layoutStateRef.current.selectedLayout.data, action)
@@ -83,7 +99,9 @@ export default function MockCurrentLayoutProvider({
   const actions: ICurrentLayout["actions"] = useMemo(
     () => ({
       getCurrentLayoutState: () => layoutStateRef.current,
-      setCurrentLayoutState: setLayoutState,
+
+      setCurrentLayout,
+      updateSharedPanelState,
 
       savePanelConfigs: (payload) => {
         performAction({ type: "SAVE_PANEL_CONFIGS", payload });
@@ -134,7 +152,7 @@ export default function MockCurrentLayoutProvider({
         performAction({ type: "END_DRAG", payload });
       },
     }),
-    [performAction, setLayoutState],
+    [performAction, setCurrentLayout, updateSharedPanelState],
   );
 
   const value: ICurrentLayout = useShallowMemo({

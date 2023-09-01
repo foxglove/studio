@@ -20,11 +20,10 @@ import { useResizeDetector } from "react-resize-detector";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
+import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import { add as addTimes, fromSec, subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
-import { useBlocksByTopic } from "@foxglove/studio-base/PanelAPI";
-import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageDataItemsByPath,
   useDecodeMessagePathsForMessagesByTopic,
@@ -43,7 +42,10 @@ import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { ChartData, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
+import { SubscribePayload } from "@foxglove/studio-base/players/types";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
+import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -168,6 +170,10 @@ function selectCurrentTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.currentTime;
 }
 
+function selectEndTime(ctx: MessagePipelineContext) {
+  return ctx.playerState.activeData?.endTime;
+}
+
 type Props = {
   config: StateTransitionConfig;
   saveConfig: SaveConfig<StateTransitionConfig>;
@@ -179,7 +185,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { classes } = useStyles();
 
   const pathStrings = useMemo(() => paths.map(({ value }) => value), [paths]);
-  const subscribeTopics = useMemo(() => getTopicsFromPaths(pathStrings), [pathStrings]);
 
   const { openPanelSettings } = useWorkspaceActions();
   const { id: panelId } = usePanelContext();
@@ -189,14 +194,32 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { startTime } = PanelAPI.useDataSourceInfo();
   const currentTime = useMessagePipeline(selectCurrentTime);
   const currentTimeSinceStart = useMemo(
-    () => (!currentTime || !startTime ? undefined : toSec(subtractTimes(currentTime, startTime))),
+    () => (currentTime && startTime ? toSec(subtractTimes(currentTime, startTime)) : undefined),
     [currentTime, startTime],
+  );
+  const endTime = useMessagePipeline(selectEndTime);
+  const endTimeSinceStart = useMemo(
+    () => (endTime && startTime ? toSec(subtractTimes(endTime, startTime)) : undefined),
+    [endTime, startTime],
   );
   const itemsByPath = useMessagesByPath(pathStrings);
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(pathStrings);
 
-  const blocks = useBlocksByTopic(subscribeTopics);
+  const subscriptions: SubscribePayload[] = useMemo(
+    () =>
+      filterMap(paths, (path) => {
+        const payload = subscribePayloadFromMessagePath(path.value, "full");
+        // Include the header in case we are ordering by header stamp.
+        if (path.timestampMethod === "headerStamp" && payload?.fields != undefined) {
+          payload.fields.push("header");
+        }
+        return payload;
+      }),
+    [paths],
+  );
+
+  const blocks = PanelAPI.useBlocksSubscriptions(subscriptions);
   const decodedBlocks = useMemo(
     () => blocks.map(decodeMessagePathsForMessagesByTopic),
     [blocks, decodeMessagePathsForMessagesByTopic],
@@ -243,11 +266,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
 
       const newBlockDataSets = messagesToDatasets({
+        blocks: blocksForPath,
         path,
+        pathIndex,
         startTime,
         y,
-        pathIndex,
-        blocks: blocksForPath,
       });
 
       outDatasets = outDatasets.concat(newBlockDataSets);
@@ -257,11 +280,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       const items = newItemsByPath[path.value];
       if (items) {
         const newPathDataSets = messagesToDatasets({
+          blocks: [items],
           path,
+          pathIndex,
           startTime,
           y,
-          pathIndex,
-          blocks: [items],
         });
         outDatasets = outDatasets.concat(newPathDataSets);
       }
@@ -271,7 +294,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       datasets: outDatasets,
       minY: outMinY,
     };
-  }, [startTime, paths, decodedBlocks, newItemsByPath]);
+  }, [decodedBlocks, newItemsByPath, paths, startTime]);
 
   const yScale = useMemo<ScaleOptions<"linear">>(() => {
     return {
@@ -296,6 +319,34 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       },
     };
   }, []);
+
+  const databounds: undefined | Bounds = useMemo(() => {
+    if (
+      (config.xAxisMinValue != undefined || config.xAxisMaxValue != undefined) &&
+      endTimeSinceStart != undefined
+    ) {
+      return {
+        x: {
+          min: config.xAxisMinValue ?? 0,
+          max: config.xAxisMaxValue ?? endTimeSinceStart,
+        },
+        y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
+      };
+    } else if (config.xAxisRange != undefined && currentTimeSinceStart != undefined) {
+      return {
+        x: { min: currentTimeSinceStart - config.xAxisRange, max: currentTimeSinceStart },
+        y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
+      };
+    } else {
+      return undefined;
+    }
+  }, [
+    config.xAxisMaxValue,
+    config.xAxisMinValue,
+    config.xAxisRange,
+    currentTimeSinceStart,
+    endTimeSinceStart,
+  ]);
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.
@@ -359,6 +410,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             width={width ?? 0}
             height={height}
             data={data}
+            dataBounds={databounds}
             type="scatter"
             xAxes={xScale}
             xAxisIsPlaybackTime

@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { produce } from "immer";
 import { cloneDeep, isEqual, merge } from "lodash";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
@@ -24,11 +25,14 @@ import {
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { ALL_SUPPORTED_IMAGE_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
+import { ALL_SUPPORTED_ANNOTATION_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/annotations/ImageAnnotations";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import type {
   FollowMode,
   IRenderer,
+  ImageModeConfig,
   RendererConfig,
   RendererEvents,
   RendererSubscription,
@@ -129,7 +133,9 @@ export function ThreeDeeRender(props: {
       topics: partialConfig?.topics ?? {},
       layers: partialConfig?.layers ?? {},
       publish,
-      imageMode: partialConfig?.imageMode ?? {},
+      // deep partial on config, makes gradient tuple type [string | undefined, string | undefined]
+      // which is incompatible with `Partial<ColorModeSettings>`
+      imageMode: (partialConfig?.imageMode ?? {}) as Partial<ImageModeConfig>,
     };
   });
   const configRef = useLatest(config);
@@ -157,6 +163,37 @@ export function ThreeDeeRender(props: {
     fetchAsset,
     debugPicking,
   ]);
+
+  useEffect(() => {
+    context.EXPERIMENTAL_setMessagePathDropConfig({
+      getDropStatus(path) {
+        if (interfaceMode === "image" && path.rootSchemaName != undefined) {
+          if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
+            return { canDrop: true, effect: "replace" };
+          } else if (ALL_SUPPORTED_ANNOTATION_SCHEMAS.has(path.rootSchemaName)) {
+            return { canDrop: true, effect: "add" };
+          }
+        }
+        return { canDrop: false };
+      },
+      handleDrop(path) {
+        setConfig((prevConfig) =>
+          produce(prevConfig, (draft) => {
+            if (path.rootSchemaName == undefined) {
+              return;
+            }
+            if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
+              draft.imageMode.imageTopic = path.path;
+            } else {
+              draft.imageMode.annotations ??= {};
+              draft.imageMode.annotations[path.path] ??= {};
+              draft.imageMode.annotations[path.path]!.visible = true;
+            }
+          }),
+        );
+      },
+    });
+  }, [context, interfaceMode]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();
@@ -434,6 +471,9 @@ export function ThreeDeeRender(props: {
     schemaHandlers,
     topicHandlers,
     config.imageMode.annotations,
+    // Need to update subscriptions when layers change as URDF layers might subscribe to topics
+    // shouldSubscribe values will be re-evaluated
+    config.layers,
   ]);
 
   // Notify the extension context when our subscription list changes

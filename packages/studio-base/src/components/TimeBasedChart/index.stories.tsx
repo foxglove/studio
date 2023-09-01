@@ -110,7 +110,7 @@ export const CanZoomAndUpdate: StoryObj = {
     const [chartProps, setChartProps] = useImmer(commonProps);
     const hasScrolled = useRef(false);
 
-    const readySignal = useReadySignal({ count: 6 });
+    const readySignal = useReadySignal({ count: 3 });
 
     const doScroll = useCallback(async () => {
       const canvasEl = document.querySelector("canvas");
@@ -127,8 +127,8 @@ export const CanZoomAndUpdate: StoryObj = {
       await delay(100);
 
       setChartProps((draft) => {
-        draft.data.datasets[0]!.data[1] = {
-          ...draft.data.datasets[0]!.data[0]!,
+        draft.data!.datasets[0]!.data[1] = {
+          ...draft.data!.datasets[0]!.data[0]!,
           x: 20,
         };
       });
@@ -164,8 +164,13 @@ export const CanZoomAndUpdate: StoryObj = {
 
 export const CleansUpTooltipOnUnmount: StoryObj = {
   render: function Story() {
-    const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
+    const [state, setState] = useState<"initial" | "tooltip" | "complete">("initial");
+
     const { error } = useAsync(async () => {
+      if (state !== "tooltip") {
+        return;
+      }
+
       const [canvas] = document.getElementsByTagName("canvas");
       const { top, left } = canvas!.getBoundingClientRect();
       // wait for chart to render before triggering tooltip
@@ -183,28 +188,30 @@ export const CleansUpTooltipOnUnmount: StoryObj = {
       if (tooltip == undefined) {
         throw new Error("could not find tooltip");
       }
-      setHasRenderedOnce(true);
-    }, []);
+
+      setState("complete");
+    }, [state]);
 
     const readySignal = useReadySignal();
 
-    useEffect(() => {
-      if (hasRenderedOnce) {
+    const pauseFrame = useCallback(() => {
+      return () => {
         readySignal();
-      }
-    }, [hasRenderedOnce, readySignal]);
+        setState("tooltip");
+      };
+    }, [readySignal]);
 
     if (error) {
       throw error;
     }
 
-    if (hasRenderedOnce) {
+    if (state === "complete") {
       return <></>;
     }
 
     return (
       <div style={{ width: "100%", height: "100%", background: "black" }}>
-        <MockMessagePipelineProvider>
+        <MockMessagePipelineProvider pauseFrame={pauseFrame}>
           <TimeBasedChart {...commonProps} />
         </MockMessagePipelineProvider>
       </div>
@@ -230,7 +237,7 @@ export const CallPauseOnInitialMount: StoryObj = {
     const readySignal = useReadySignal();
 
     useEffect(() => {
-      if (unpauseFrameCount === 3) {
+      if (unpauseFrameCount === 1) {
         readySignal();
       }
     }, [readySignal, unpauseFrameCount]);

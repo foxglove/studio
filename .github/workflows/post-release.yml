@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout release/${{ github.event.release.tag_name }}
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3.6.0
         with:
           ref: release/${{ github.event.release.tag_name }}
           lfs: true
@@ -49,12 +49,12 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3.6.0
         with:
           ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
           lfs: true
 
-      - uses: actions/setup-node@v3.7.0
+      - uses: actions/setup-node@v3.8.1
         with:
           node-version: 16.17
           registry-url: https://registry.npmjs.org
@@ -76,7 +76,7 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3.6.0
         with:
           ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
           lfs: true

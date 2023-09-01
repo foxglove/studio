@@ -45,11 +45,11 @@ jobs:
     name: ${{ matrix.config.name }} (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v3.5.3
+      - uses: actions/checkout@v3.6.0
         with:
           lfs: true
 
-      - uses: actions/setup-node@v3.7.0
+      - uses: actions/setup-node@v3.8.1
         with:
           node-version: 16.17
       - run: corepack enable yarn
@@ -72,12 +72,12 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v3.5.3
+      - uses: actions/checkout@v3.6.0
         with:
           fetch-depth: 0 # Required for Chromatic
           lfs: true
 
-      - uses: actions/setup-node@v3.7.0
+      - uses: actions/setup-node@v3.8.1
         with:
           node-version: 16.17
       - run: corepack enable yarn
@@ -116,11 +116,11 @@ jobs:
     name: integration (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v3.5.3
+      - uses: actions/checkout@v3.6.0
         with:
           lfs: true
 
-      - uses: actions/setup-node@v3.7.0
+      - uses: actions/setup-node@v3.8.1
         with:
           node-version: 16.17
       - run: corepack enable yarn

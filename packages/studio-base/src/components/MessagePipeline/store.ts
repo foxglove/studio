@@ -8,7 +8,11 @@ import shallowequal from "shallowequal";
 import { createStore, StoreApi } from "zustand";
 
 import { Condvar } from "@foxglove/den/async";
-import { MessageEvent } from "@foxglove/studio";
+import { Immutable, MessageEvent } from "@foxglove/studio";
+import {
+  makeSubscriptionMemoizer,
+  mergeSubscriptions,
+} from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
 import {
   AdvertiseOptions,
   Player,
@@ -37,12 +41,16 @@ export function defaultPlayerState(): PlayerState {
 export type MessagePipelineInternalState = {
   dispatch: (action: MessagePipelineStateAction) => void;
 
+  /** Reset public and private state back to initial empty values */
+  reset: () => void;
+
   player?: Player;
 
   /** used to keep track of whether we need to update public.startPlayback/playUntil/etc. */
   lastCapabilities: string[];
-
-  subscriptionsById: Map<string, SubscribePayload[]>;
+  // Preserves reference equality of subscriptions to minimize player subscription churn.
+  subscriptionMemoizer: (sub: SubscribePayload) => SubscribePayload;
+  subscriptionsById: Map<string, Immutable<SubscribePayload[]>>;
   publishersById: { [key: string]: AdvertiseOptions[] };
   allPublishers: AdvertiseOptions[];
   subscriberIdsByTopic: Map<string, string[]>;
@@ -58,7 +66,7 @@ export type MessagePipelineInternalState = {
 type UpdateSubscriberAction = {
   type: "update-subscriber";
   id: string;
-  payloads: SubscribePayload[];
+  payloads: Immutable<SubscribePayload[]>;
 };
 type UpdatePlayerStateAction = {
   type: "update-player-state";
@@ -80,16 +88,45 @@ export function createMessagePipelineStore({
 }): StoreApi<MessagePipelineInternalState> {
   return createStore((set, get) => ({
     player: initialPlayer,
-    dispatch(action) {
-      set((state) => reducer(state, action));
-    },
     publishersById: {},
     allPublishers: [],
+    subscriptionMemoizer: makeSubscriptionMemoizer(),
     subscriptionsById: new Map(),
     subscriberIdsByTopic: new Map(),
     newTopicsBySubscriberId: new Map(),
     lastMessageEventByTopic: new Map(),
     lastCapabilities: [],
+
+    dispatch(action) {
+      set((state) => reducer(state, action));
+    },
+
+    reset() {
+      set((prev) => ({
+        ...prev,
+        publishersById: {},
+        allPublishers: [],
+        subscriptionMemoizer: makeSubscriptionMemoizer(),
+        subscriptionsById: new Map(),
+        subscriberIdsByTopic: new Map(),
+        newTopicsBySubscriberId: new Map(),
+        lastMessageEventByTopic: new Map(),
+        lastCapabilities: [],
+        public: {
+          ...prev.public,
+          playerState: defaultPlayerState(),
+          messageEventsBySubscriberId: new Map(),
+          subscriptions: [],
+          sortedTopics: [],
+          datatypes: new Map(),
+          startPlayback: undefined,
+          playUntil: undefined,
+          pausePlayback: undefined,
+          setPlaybackSpeed: undefined,
+          seekPlayback: undefined,
+        },
+      }));
+    },
 
     public: {
       playerState: defaultPlayerState(),
@@ -135,6 +172,10 @@ export function createMessagePipelineStore({
         }
 
         const response = await fetch(uri, options);
+        if (!response.ok) {
+          const errMsg = response.statusText;
+          throw new Error(`Error ${response.status}${errMsg ? ` (${errMsg})` : ``}`);
+        }
         return {
           uri,
           data: new Uint8Array(await response.arrayBuffer()),
@@ -192,8 +233,6 @@ function updateSubscriberAction(
 
   const subscriberIdsByTopic = new Map<string, string[]>();
 
-  const subscriptions: SubscribePayload[] = [];
-
   // make a map of topics to subscriber ids
   for (const [id, subs] of newSubscriptionsById) {
     for (const subscription of subs) {
@@ -202,9 +241,10 @@ function updateSubscriberAction(
       const ids = subscriberIdsByTopic.get(topic) ?? [];
       ids.push(id);
       subscriberIdsByTopic.set(topic, ids);
-      subscriptions.push(subscription);
     }
   }
+
+  const subscriptions = mergeSubscriptions(Array.from(newSubscriptionsById.values()).flat());
 
   return {
     ...prevState,
@@ -330,6 +370,7 @@ function updatePlayerStateAction(
     renderDone: action.renderDone,
     public: newPublicState,
     lastCapabilities: capabilities,
+    lastMessageEventByTopic,
   };
 }
 

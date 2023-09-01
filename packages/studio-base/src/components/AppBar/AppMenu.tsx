@@ -13,7 +13,6 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
-import { shallow } from "zustand/shallow";
 
 import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
@@ -23,7 +22,7 @@ import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserCon
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   WorkspaceContextStore,
-  useWorkspaceStore,
+  useWorkspaceStoreWithShallowSelector,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
@@ -69,8 +68,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       left: { open: leftSidebarOpen },
       right: { open: rightSidebarOpen },
     },
-  } = useWorkspaceStore(selectWorkspace, shallow);
-  const { sidebarActions, dialogActions } = useWorkspaceActions();
+  } = useWorkspaceStoreWithShallowSelector(selectWorkspace);
+  const { sidebarActions, dialogActions, layoutActions } = useWorkspaceActions();
 
   const handleNestedMenuClose = useCallback(() => {
     setNestedMenu(undefined);
@@ -178,9 +177,31 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           handleNestedMenuClose();
         },
       },
+      {
+        type: "divider",
+      },
+      {
+        type: "item",
+        label: t("importLayoutFromFile"),
+        key: "import-layout",
+        onClick: () => {
+          layoutActions.importFromFile();
+          handleNestedMenuClose();
+        },
+      },
+      {
+        type: "item",
+        label: t("exportLayoutToFile"),
+        key: "export-layout",
+        onClick: () => {
+          layoutActions.exportToFile();
+          handleNestedMenuClose();
+        },
+      },
     ],
     [
       handleNestedMenuClose,
+      layoutActions,
       leftSidebarOpen,
       rightSidebarOpen,
       sidebarActions.left,

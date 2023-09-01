@@ -47,7 +47,6 @@ import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
-import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   LeftSidebarItemKey,
@@ -81,25 +80,12 @@ const useStyles = makeStyles()({
   },
 });
 
-function activeElementIsInput() {
-  return (
-    document.activeElement instanceof HTMLInputElement ||
-    document.activeElement instanceof HTMLTextAreaElement
-  );
-}
-
-function keyboardEventHasModifier(event: KeyboardEvent) {
-  if (navigator.userAgent.includes("Mac")) {
-    return event.metaKey;
-  } else {
-    return event.ctrlKey;
-  }
-}
-
 type WorkspaceProps = CustomWindowControlsProps & {
   deepLinks?: string[];
   appBarLeftInset?: number;
   onAppBarDoubleClick?: () => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+  disablePersistenceForStorybook?: boolean;
 };
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
@@ -117,7 +103,6 @@ const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
 const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
 const selectWorkspaceDataSourceDialog = (store: WorkspaceContextStore) => store.dialogs.dataSource;
-const selectWorkspaceSidebarItem = (store: WorkspaceContextStore) => store.sidebars.legacy.item;
 const selectWorkspaceLeftSidebarItem = (store: WorkspaceContextStore) => store.sidebars.left.item;
 const selectWorkspaceLeftSidebarOpen = (store: WorkspaceContextStore) => store.sidebars.left.open;
 const selectWorkspaceLeftSidebarSize = (store: WorkspaceContextStore) => store.sidebars.left.size;
@@ -132,7 +117,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems);
 
-  const sidebarItem = useWorkspaceStore(selectWorkspaceSidebarItem);
   const dataSourceDialog = useWorkspaceStore(selectWorkspaceDataSourceDialog);
   const leftSidebarItem = useWorkspaceStore(selectWorkspaceLeftSidebarItem);
   const leftSidebarOpen = useWorkspaceStore(selectWorkspaceLeftSidebarOpen);
@@ -227,35 +211,13 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
     }, [dialogActions.preferences]),
   );
 
-  useNativeAppMenuEvent("open-help-docs", () => window.open("https://foxglove.dev/docs", "_blank"));
+  useNativeAppMenuEvent("open-help-docs", () => {
+    window.open("https://foxglove.dev/docs", "_blank");
+  });
 
-  useNativeAppMenuEvent("open-help-slack", () =>
-    window.open("https://foxglove.dev/slack", "_blank"),
-  );
-
-  const nativeAppMenu = useNativeAppMenu();
-
-  const connectionSources = useMemo(() => {
-    return availableSources.filter((source) => source.type === "connection");
-  }, [availableSources]);
-
-  useEffect(() => {
-    if (!nativeAppMenu) {
-      return;
-    }
-
-    for (const item of connectionSources) {
-      nativeAppMenu.addFileEntry(item.displayName, () => {
-        dialogActions.dataSource.open("connection", item);
-      });
-    }
-
-    return () => {
-      for (const item of connectionSources) {
-        nativeAppMenu.removeFileEntry(item.displayName);
-      }
-    };
-  }, [connectionSources, dialogActions.dataSource, nativeAppMenu]);
+  useNativeAppMenuEvent("open-help-slack", () => {
+    window.open("https://foxglove.dev/slack", "_blank");
+  });
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -401,22 +363,10 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const keyDownHandlers = useMemo(() => {
     return {
-      b: (ev: KeyboardEvent) => {
-        if (!keyboardEventHasModifier(ev) || activeElementIsInput() || sidebarItem == undefined) {
-          return;
-        }
-
-        ev.preventDefault();
-        sidebarActions.legacy.selectItem(undefined);
-      },
-      "[": () => {
-        sidebarActions.left.setOpen((oldValue) => !oldValue);
-      },
-      "]": () => {
-        sidebarActions.right.setOpen((oldValue) => !oldValue);
-      },
+      "[": () => sidebarActions.left.setOpen((oldValue) => !oldValue),
+      "]": () => sidebarActions.right.setOpen((oldValue) => !oldValue),
     };
-  }, [sidebarActions.left, sidebarActions.legacy, sidebarActions.right, sidebarItem]);
+  }, [sidebarActions.left, sidebarActions.right]);
 
   const play = useMessagePipeline(selectPlay);
   const playUntil = useMessagePipeline(selectPlayUntil);
@@ -536,6 +486,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
   );
 
+  const { workspaceStoreCreator } = useAppContext();
+
   const isPlayerPresent = useMessagePipeline(selectPlayerIsPresent);
 
   const initialItem: undefined | DataSourceDialogItem =
@@ -556,7 +508,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   };
 
   return (
-    <WorkspaceContextProvider initialState={initialState}>
+    <WorkspaceContextProvider
+      initialState={initialState}
+      workspaceStoreCreator={workspaceStoreCreator}
+      disablePersistenceForStorybook={props.disablePersistenceForStorybook}
+    >
       <WorkspaceContent {...props} />
     </WorkspaceContextProvider>
   );

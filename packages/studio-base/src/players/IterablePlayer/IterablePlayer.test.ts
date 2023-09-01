@@ -12,6 +12,7 @@ import {
   PlayerPresence,
   PlayerState,
 } from "@foxglove/studio-base/players/types";
+import { mockTopicSelection } from "@foxglove/studio-base/test/mocks/mockTopicSelection";
 
 import {
   IIterableSource,
@@ -601,7 +602,7 @@ describe("IterablePlayer", () => {
         {
           start: { sec: 0, nsec: 0 },
           end: { sec: 1, nsec: 0 },
-          topics: ["foo"],
+          topics: mockTopicSelection("foo"),
           consumptionType: "partial",
         },
       ],
@@ -609,7 +610,7 @@ describe("IterablePlayer", () => {
         {
           start: { sec: 0, nsec: 99000001 },
           end: { sec: 1, nsec: 0 },
-          topics: ["bar", "foo"],
+          topics: mockTopicSelection("bar", "foo"),
           consumptionType: "partial",
         },
       ],

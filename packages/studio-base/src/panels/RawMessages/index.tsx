@@ -19,7 +19,7 @@ import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 import { makeStyles } from "tss-react/mui";
 
-import { Immutable } from "@foxglove/studio";
+import { Immutable, SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
@@ -44,9 +44,10 @@ import getDiff, {
   diffLabelsByLabelText,
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 import { Topic } from "@foxglove/studio-base/players/types";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
+import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
-import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { DiffSpan } from "./DiffSpan";
@@ -60,7 +61,7 @@ import {
   getValueActionForValue,
 } from "./getValueActionForValue";
 import { Constants, RawMessagesPanelConfig } from "./types";
-import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths } from "./utils";
+import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths, toggleExpansion } from "./utils";
 
 type Props = {
   config: Immutable<RawMessagesPanelConfig>;
@@ -92,11 +93,6 @@ const useStyles = makeStyles()((theme) => ({
     fontFamily: fonts.SANS_SERIF,
     fontFeatureSettings: `${theme.typography.fontFeatureSettings}, "zero"`,
   },
-  big: {
-    "&.MuiTypography-root": {
-      fontFeatureSettings: `${theme.typography.fontFeatureSettings}, "zero"`,
-    },
-  },
   hoverObserver: {
     display: "inline-flex",
     alignItems: "center",
@@ -113,6 +109,19 @@ function RawMessages(props: Props) {
   const { openSiblingPanel } = usePanelContext();
   const { topicPath, diffMethod, diffTopicPath, diffEnabled, showFullMessageForDiff } = config;
   const { topics, datatypes } = useDataSourceInfo();
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+  const { setMessagePathDropConfig } = usePanelContext();
+
+  useEffect(() => {
+    setMessagePathDropConfig({
+      getDropStatus(_path) {
+        return { canDrop: true, effect: "replace" };
+      },
+      handleDrop(path) {
+        saveConfig({ topicPath: path.path });
+      },
+    });
+  }, [setMessagePathDropConfig, saveConfig]);
 
   const defaultGetItemString = useGetItemStringWithTimezone();
   const getItemString = useMemo(
@@ -130,18 +139,22 @@ function RawMessages(props: Props) {
     () => topicRosPath && topics.find(({ name }) => name === topicRosPath.topicName),
     [topicRosPath, topics],
   );
+
+  const structures = useMemo(() => messagePathStructures(datatypes), [datatypes]);
+
   const rootStructureItem: MessagePathStructureItem | undefined = useMemo(() => {
     if (!topic || !topicRosPath || topic.schemaName == undefined) {
       return;
     }
-    return traverseStructure(
-      messagePathStructures(datatypes)[topic.schemaName],
-      topicRosPath.messagePath,
-    ).structureItem;
-  }, [datatypes, topic, topicRosPath]);
+    return traverseStructure(structures[topic.schemaName], topicRosPath.messagePath).structureItem;
+  }, [structures, topic, topicRosPath]);
 
   const [expansion, setExpansion] = useState(config.expansion);
-  const matchedMessages = useMessageDataItem(topicPath, { historySize: 2 });
+  const [customFontSize, setCustomFontSize] = useState<number | undefined>();
+
+  // Pass an empty path to useMessageDataItem if our path doesn't resolve to a valid topic to avoid
+  // spamming the message pipeline with useless subscription requests.
+  const matchedMessages = useMessageDataItem(topic ? topicPath : "", { historySize: 2 });
   const diffMessages = useMessageDataItem(diffEnabled ? diffTopicPath : "");
 
   const diffTopicObj = diffMessages[0];
@@ -152,7 +165,7 @@ function RawMessages(props: Props) {
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
   const diffItem = inTimetickDiffMode ? currTickObj : diffTopicObj;
 
-  const autoExpandPaths = useMemo(() => {
+  const nodes = useMemo(() => {
     if (baseItem) {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
       return generateDeepKeyPaths(maybeDeepParse(data), 5);
@@ -200,24 +213,9 @@ function RawMessages(props: Props) {
 
   const onLabelClick = useCallback(
     (keypath: (string | number)[]) => {
-      const key = keypath.join("~");
-      setExpansion((old) => {
-        if (old === "all") {
-          return { [key]: "c" };
-        } else if (old === "none") {
-          return { [key]: "e" };
-        } else if (old == undefined) {
-          return { [key]: autoExpandPaths.has(key) ? "c" : "e" };
-        } else {
-          if (old[key]) {
-            return { ...old, [key]: old[key] === "c" ? "e" : "c" };
-          } else {
-            return { ...old, [key]: autoExpandPaths.has(key) ? "c" : "e" };
-          }
-        }
-      });
+      setExpansion((old) => toggleExpansion(old ?? "all", nodes, keypath.join("~")));
     },
-    [autoExpandPaths],
+    [nodes],
   );
 
   useEffect(() => {
@@ -291,6 +289,8 @@ function RawMessages(props: Props) {
     [getValueLabels, onTopicPathChange, openSiblingPanel],
   );
 
+  const enumMapping = useMemo(() => enumValuesByDatatypeAndField(datatypes), [datatypes]);
+
   const valueRenderer = useCallback(
     (
       structureItem: MessagePathStructureItem | undefined,
@@ -324,7 +324,6 @@ function RawMessages(props: Props) {
               const keyPathIndex = keyPath.findIndex((key) => typeof key === "string");
               const field = keyPath[keyPathIndex];
               if (typeof field === "string") {
-                const enumMapping = enumValuesByDatatypeAndField(datatypes);
                 const datatype = childStructureItem.datatype;
                 constantName = enumMapping[datatype]?.[field]?.[String(itemValue)];
               }
@@ -352,7 +351,7 @@ function RawMessages(props: Props) {
         }}
       </ReactHoverObserver>
     ),
-    [classes.hoverObserver, datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
+    [classes.hoverObserver, enumMapping, getValueLabels, onTopicPathChange, openSiblingPanel],
   );
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
@@ -372,7 +371,7 @@ function RawMessages(props: Props) {
         return true;
       }
 
-      return autoExpandPaths.has(joinedPath);
+      return true;
     };
 
     if (topicPath.length === 0) {
@@ -428,10 +427,9 @@ function RawMessages(props: Props) {
         />
         {shouldDisplaySingleVal ? (
           <Typography
-            className={classes.big}
             variant="h1"
-            fontWeight="bold"
-            whiteSpace="pre-line"
+            fontSize={customFontSize}
+            whiteSpace="pre-wrap"
             style={{ wordWrap: "break-word" }}
           >
             <MaybeCollapsedValue itemLabel={String(singleVal)} />
@@ -530,6 +528,7 @@ function RawMessages(props: Props) {
                 nestedNode: ({ style }, keyPath: any) => {
                   const baseStyle = {
                     ...style,
+                    fontSize: customFontSize,
                     paddingTop: 2,
                     paddingBottom: 2,
                     marginTop: 2,
@@ -579,7 +578,11 @@ function RawMessages(props: Props) {
                 }),
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 value: ({ style }, _nodeType, keyPath: any) => {
-                  const baseStyle = { ...style, textDecoration: "inherit" };
+                  const baseStyle = {
+                    ...style,
+                    fontSize: customFontSize,
+                    textDecoration: "inherit",
+                  };
                   if (!diffEnabled) {
                     return { style: baseStyle };
                   }
@@ -615,10 +618,9 @@ function RawMessages(props: Props) {
       </Stack>
     );
   }, [
-    autoExpandPaths,
     baseItem,
-    classes.big,
     classes.topic,
+    customFontSize,
     diffEnabled,
     diffItem,
     diffMethod,
@@ -636,6 +638,43 @@ function RawMessages(props: Props) {
     topicPath,
     valueRenderer,
   ]);
+
+  const actionHandler = useCallback((action: SettingsTreeAction) => {
+    if (action.action === "update") {
+      if (action.payload.path[0] === "general") {
+        if (action.payload.path[1] === "fontSize") {
+          setCustomFontSize(
+            action.payload.value != undefined ? (action.payload.value as number) : undefined,
+          );
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    updatePanelSettingsTree({
+      actionHandler,
+      nodes: {
+        general: {
+          label: "General",
+          fields: {
+            fontSize: {
+              label: "Font size",
+              input: "select",
+              options: [
+                { label: "auto", value: undefined },
+                ...Constants.FONT_SIZE_OPTIONS.map((value) => ({
+                  label: `${value} px`,
+                  value,
+                })),
+              ],
+              value: customFontSize,
+            },
+          },
+        },
+      },
+    });
+  }, [actionHandler, customFontSize, updatePanelSettingsTree]);
 
   return (
     <Stack flex="auto" overflow="hidden" position="relative">

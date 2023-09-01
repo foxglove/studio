@@ -3,13 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as base64 from "@protobufjs/base64";
-import { isEqual, isMatch, uniqWith } from "lodash";
+import { isEqual, uniqWith } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
 import Log from "@foxglove/log";
 import { parseChannel, ParsedChannel } from "@foxglove/mcap-support";
-import { MessageDefinition } from "@foxglove/message-definition";
+import { MessageDefinition, isMsgDefEqual } from "@foxglove/message-definition";
 import CommonRosTypes from "@foxglove/rosmsg-msgs-common";
 import { MessageWriter as Ros1MessageWriter } from "@foxglove/rosmsg-serialization";
 import { MessageWriter as Ros2MessageWriter } from "@foxglove/rosmsg2-serialization";
@@ -31,7 +31,6 @@ import {
   Topic,
   TopicStats,
 } from "@foxglove/studio-base/players/types";
-import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import {
   Channel,
@@ -93,7 +92,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   #closed: boolean = false; // Whether the player has been completely closed using close().
   #topics?: Topic[]; // Topics as published by the WebSocket.
   #topicsStats = new Map<string, TopicStats>(); // Topic names to topic statistics.
-  #datatypes: RosDatatypes = new Map(); // Datatypes as published by the WebSocket.
+  #datatypes: MessageDefinitionMap = new Map(); // Datatypes as published by the WebSocket.
   #parsedMessages: MessageEvent[] = []; // Queue of messages that we'll send in next _emitState() call.
   #receivedBytes: number = 0;
   #metricsCollector: PlayerMetricsCollectorInterface;
@@ -139,6 +138,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   #nextAssetRequestId = 0;
   #fetchAssetRequests = new Map<number, (response: FetchAssetResponse) => void>();
   #fetchedAssets = new Map<string, Promise<Asset>>();
+  #parameterTypeByName = new Map<string, Parameter["type"]>();
 
   public constructor({
     url,
@@ -198,19 +198,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this.#channelsByTopic.clear();
       this.#servicesByName.clear();
       this.#serviceResponseCbs.clear();
-      this.#parameters.clear();
-      this.#profile = undefined;
-      this.#publishedTopics = undefined;
-      this.#subscribedTopics = undefined;
-      this.#advertisedServices = undefined;
       this.#publicationsByTopic.clear();
-      this.#datatypes = new Map();
-
       for (const topic of this.#resolvedSubscriptionsByTopic.keys()) {
         this.#unresolvedSubscriptions.add(topic);
       }
       this.#resolvedSubscriptionsById.clear();
       this.#resolvedSubscriptionsByTopic.clear();
+
+      // Re-assign members that are emitted as player state
+      this.#profile = undefined;
+      this.#publishedTopics = undefined;
+      this.#subscribedTopics = undefined;
+      this.#advertisedServices = undefined;
+      this.#datatypes = new Map();
+      this.#parameters = new Map();
     });
 
     this.#client.on("error", (err) => {
@@ -424,7 +425,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           } else if (
             channel.encoding === "cdr" &&
             (channel.schemaEncoding == undefined ||
-              ["ros2idl", "ros2msg"].includes(channel.schemaEncoding))
+              ["ros2idl", "ros2msg", "omgidl"].includes(channel.schemaEncoding))
           ) {
             schemaEncoding = channel.schemaEncoding ?? "ros2msg";
             schemaData = textEncoder.encode(channel.schema);
@@ -525,12 +526,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
         });
 
         // Update the message count for this topic
-        let stats = this.#topicsStats.get(topic);
+        const topicStats = new Map(this.#topicsStats);
+        let stats = topicStats.get(topic);
         if (!stats) {
           stats = { numMessages: 0 };
-          this.#topicsStats.set(topic, stats);
+          topicStats.set(topic, stats);
         }
         stats.numMessages++;
+        this.#topicsStats = topicStats;
       } catch (error) {
         this.#problems.addProblem(`message:${chanInfo.channel.topic}`, {
           severity: "error",
@@ -565,15 +568,23 @@ export default class FoxgloveWebSocketPlayer implements Player {
             }
           : param;
       });
+      const parameterTypes = parameters.map((p) => [p.name, p.type] as [string, Parameter["type"]]);
+      const parameterTypesMap = new Map<string, Parameter["type"]>(parameterTypes);
 
       const newParameters = mappedParameters.filter((param) => !this.#parameters.has(param.name));
 
       if (id === GET_ALL_PARAMS_REQUEST_ID) {
         // Reset params
         this.#parameters = new Map(mappedParameters.map((param) => [param.name, param.value]));
+        this.#parameterTypeByName = parameterTypesMap;
       } else {
         // Update params
-        mappedParameters.forEach((param) => this.#parameters.set(param.name, param.value));
+        const updatedParameters = new Map(this.#parameters);
+        mappedParameters.forEach((param) => updatedParameters.set(param.name, param.value));
+        this.#parameters = updatedParameters;
+        for (const [paramName, paramType] of parameterTypesMap) {
+          this.#parameterTypeByName.set(paramName, paramType);
+        }
       }
 
       this.#emitState();
@@ -717,12 +728,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
     // Remove stats entries for removed topics
     const topicsSet = new Set<string>(topics.map((topic) => topic.name));
-    for (const topic of this.#topicsStats.keys()) {
+    const topicStats = new Map(this.#topicsStats);
+    for (const topic of topicStats.keys()) {
       if (!topicsSet.has(topic)) {
-        this.#topicsStats.delete(topic);
+        topicStats.delete(topic);
       }
     }
 
+    this.#topicsStats = topicStats;
     this.#topics = topics;
 
     // Update the _datatypes map;
@@ -784,10 +797,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
         speed: 1,
         lastSeekTime: this.#numTimeSeeks,
         topics: this.#topics,
-        // Always copy topic stats since message counts and timestamps are being updated
-        topicStats: new Map(this.#topicsStats),
+        topicStats: this.#topicsStats,
         datatypes: this.#datatypes,
-        parameters: new Map(this.#parameters),
+        parameters: this.#parameters,
         publishedTopics: this.#publishedTopics,
         subscribedTopics: this.#subscribedTopics,
         services: this.#advertisedServices,
@@ -831,6 +843,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
     }
 
+    const topicStats = new Map(this.#topicsStats);
     for (const [topic, subId] of this.#resolvedSubscriptionsByTopic) {
       if (!newTopics.has(topic)) {
         this.#client.unsubscribe(subId);
@@ -839,7 +852,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this.#recentlyCanceledSubscriptions.add(subId);
 
         // Reset the message count for this topic
-        this.#topicsStats.delete(topic);
+        topicStats.delete(topic);
 
         setTimeout(
           () => this.#recentlyCanceledSubscriptions.delete(subId),
@@ -847,6 +860,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
         );
       }
     }
+    this.#topicsStats = topicStats;
+
     for (const topic of this.#unresolvedSubscriptions) {
       if (!newTopics.has(topic)) {
         this.#unresolvedSubscriptions.delete(topic);
@@ -931,7 +946,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         {
           name: key,
           value: paramValueToSent as Parameter["value"],
-          type: isByteArray ? "byte_array" : undefined,
+          type: isByteArray ? "byte_array" : this.#parameterTypeByName.get(key),
         },
       ],
       uuidv4(),
@@ -1121,7 +1136,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
       // Try to retrieve the ROS message definition for this topic
       let msgdef: MessageDefinition[];
       try {
-        const datatypes = (options?.["datatypes"] as RosDatatypes | undefined) ?? this.#datatypes;
+        const datatypes =
+          (options?.["datatypes"] as MessageDefinitionMap | undefined) ?? this.#datatypes;
         if (!(datatypes instanceof Map)) {
           throw new Error("Datatypes option must be a map");
         }
@@ -1180,7 +1196,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#receivedBytes = 0;
     this.#hasReceivedMessage = false;
     this.#problems.clear();
-    this.#parameters.clear();
+    this.#parameters = new Map();
     this.#fetchedAssets.clear();
     for (const [requestId, callback] of this.#fetchAssetRequests) {
       callback({
@@ -1191,14 +1207,15 @@ export default class FoxgloveWebSocketPlayer implements Player {
       });
     }
     this.#fetchAssetRequests.clear();
+    this.#parameterTypeByName.clear();
   }
 
   #updateDataTypes(datatypes: MessageDefinitionMap): void {
-    let updatedDatatypes: RosDatatypes | undefined = undefined;
+    let updatedDatatypes: MessageDefinitionMap | undefined = undefined;
     const maybeRos = ["ros1", "ros2"].includes(this.#profile ?? "");
     for (const [name, types] of datatypes) {
       const knownTypes = this.#datatypes.get(name);
-      if (knownTypes && !isMatch(types, knownTypes)) {
+      if (knownTypes && !isMsgDefEqual(types, knownTypes)) {
         this.#problems.addProblem(`schema-changed-${name}`, {
           message: `Definition of schema '${name}' has changed during the server's runtime`,
           severity: "error",

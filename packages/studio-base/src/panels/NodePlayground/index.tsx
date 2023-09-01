@@ -24,7 +24,7 @@ import {
   Typography,
   inputClasses,
 } from "@mui/material";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
@@ -58,8 +58,11 @@ import { Input, Message } from "./types";
 // Your script can output well-known message types, any of your custom message types, or
 // complete custom message types.
 //
-// Use \`Message\` to access your data source types or well-known types:
+// Use \`Message\` to access types from the schemas defined in your data source:
 // type Twist = Message<"geometry_msgs/Twist">;
+//
+// Import from the @foxglove/schemas package to use foxglove schema types:
+// import { Pose, LocationFix } from "@foxglove/schemas";
 //
 // Conventionally, it's common to make a _type alias_ for your script's output type
 // and use that type name as the return type for your script function.
@@ -321,6 +324,25 @@ function NodePlayground(props: Props) {
     },
     [scriptBackStack],
   );
+
+  const saveOnLeave = useCallback(() => {
+    if (isNodeSaved) {
+      return;
+    }
+    // automatically save script on panel leave
+    saveCurrentNode();
+  }, [isNodeSaved, saveCurrentNode]);
+
+  // The cleanup function below should only run when this component unmounts.
+  // We're using a ref here so that the cleanup useEffect doesn't run whenever one of the callback
+  // dependencies changes, only when the component unmounts and with the most up-to-date callback.
+  const saveOnLeaveRef = useRef(saveOnLeave);
+  saveOnLeaveRef.current = saveOnLeave;
+  useEffect(() => {
+    return () => {
+      saveOnLeaveRef.current();
+    };
+  }, []);
 
   return (
     <Stack fullHeight>

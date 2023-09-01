@@ -212,6 +212,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   #prevResolution = new THREE.Vector2();
   #pickingEnabled = false;
+  #rendering = false;
   #animationFrame?: number;
   #cameraSyncError: undefined | string;
   #devicePixelRatioMediaQuery?: MediaQueryList;
@@ -1028,7 +1029,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
   public animationFrame = (): void => {
     this.#animationFrame = undefined;
-    this.#frameHandler(this.currentTime);
+    if (!this.#rendering) {
+      this.#frameHandler(this.currentTime);
+      this.#rendering = false;
+    }
   };
 
   public queueAnimationFrame(): void {
@@ -1049,6 +1053,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   }
 
   #frameHandler = (currentTime: bigint): void => {
+    this.#rendering = true;
     this.currentTime = currentTime;
     this.#updateFrameErrors();
     this.#updateFixedFrameId();

@@ -7,8 +7,9 @@ import { isEqual, sortedIndexBy } from "lodash";
 
 import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import { subtract, add, toNanoSec, compare } from "@foxglove/rostime";
-import { Time, MessageEvent } from "@foxglove/studio";
+import { add, compare, subtract, toNanoSec } from "@foxglove/rostime";
+import { MessageEvent, Time } from "@foxglove/studio";
+import { TopicSelection } from "@foxglove/studio-base/players/types";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
 import {
@@ -23,6 +24,9 @@ const log = Log.getLogger(__filename);
 
 // An individual cache item represents a continuous range of CacheIteratorItems
 type CacheBlock = {
+  // Unique id of the cache item.
+  id: bigint;
+
   // The start time of the cache item (inclusive).
   //
   // When reading a data source, the first message may come after the requested "start" time.
@@ -69,7 +73,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
   #source: IIterableSource;
 
   // Stores which topics we have been caching. See notes at usage site for why we store this.
-  #cachedTopics: string[] = [];
+  #cachedTopics: TopicSelection = new Map();
 
   // The producer loads results into the cache and the consumer reads from the cache.
   #cache: CacheBlock[] = [];
@@ -87,6 +91,12 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
   // Maximum size per block
   #maxBlockSizeBytes: number;
 
+  // The current read head, used for determining which blocks are evictable
+  #currentReadHead: Time = { sec: 0, nsec: 0 };
+
+  #nextBlockId: bigint = BigInt(0);
+  #evictableBlockCandidates: CacheBlock["id"][] = [];
+
   public constructor(source: IIterableSource, opt?: Options) {
     super();
 
@@ -102,7 +112,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
   public async terminate(): Promise<void> {
     this.#cache.length = 0;
-    this.#cachedTopics.length = 0;
+    this.#cachedTopics.clear();
   }
 
   public loadedRanges(): Range[] {
@@ -119,13 +129,12 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     const maxEnd = args.end ?? this.#initResult.end;
     const maxEndNanos = toNanoSec(maxEnd);
 
-    const newTopics = [...args.topics].sort();
-
     // When the list of topics we want changes we purge the entire cache and start again.
+    //
     // This is heavy-handed but avoids dealing with how to handle disjoint cached ranges across topics.
-    if (!isEqual(newTopics, this.#cachedTopics)) {
+    if (!isEqual(args.topics, this.#cachedTopics)) {
       log.debug("topics changed - clearing cache, resetting range");
-      this.#cachedTopics = newTopics;
+      this.#cachedTopics = args.topics;
       this.#cache.length = 0;
       this.#totalSizeBytes = 0;
       this.#recomputeLoadedRangeCache();
@@ -143,6 +152,12 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
       // Find the first index where readHead is less than an existing start
       return compare(readHead, item.start) < 0;
     };
+
+    this.#currentReadHead = readHead;
+
+    // Compute evictable block candiates such that canReadMore() returns a correct result as the
+    // callee may stop iterating when canReadMore() returns false.
+    this.#evictableBlockCandidates = this.#findEvictableBlockCandidates(this.#currentReadHead);
 
     for (;;) {
       if (compare(readHead, maxEnd) > 0) {
@@ -238,6 +253,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
         // if there is no block, we make a new block
         if (!block) {
           const newBlock: CacheBlock = {
+            id: this.#nextBlockId++,
             start: readHead,
             end: readHead,
             items: [],
@@ -298,7 +314,12 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
         const sizeInBytes =
           iterResult.type === "message-event" ? iterResult.msgEvent.sizeInBytes : 0;
-        if (this.#maybePurgeCache({ activeBlock: block, sizeInBytes })) {
+        if (
+          this.#maybePurgeCache({
+            activeBlock: block,
+            sizeInBytes,
+          })
+        ) {
           this.#recomputeLoadedRangeCache();
         }
 
@@ -335,6 +356,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
         // Since we never loop again we need to insert an empty block from the readHead
         // to sourceReadEnd because we know there's nothing else in that range.
         const newBlock: CacheBlock = {
+          id: this.#nextBlockId++,
           start: readHead,
           end: sourceReadEnd,
           items: pendingIterResults,
@@ -375,7 +397,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     });
 
     const out: MessageEvent[] = [];
-    const needsTopics = new Set(args.topics);
+    const needsTopics = new Map(args.topics);
 
     // Starting at the block we found for args.time, work backwards through blocks until:
     // * we've loaded all the topics
@@ -442,7 +464,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     // fallback to the source for any topics we weren't able to load
     const sourceBackfill = await this.#source.getBackfillMessages({
       ...args,
-      topics: Array.from(needsTopics),
+      topics: needsTopics,
     });
 
     out.push(...sourceBackfill);
@@ -505,7 +527,95 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     this.emit("loadedRangesChange");
   }
 
-  // Purge the oldest cache block if adding sizeInBytes to the cache would exceed the maxTotalSizeBytes
+  /**
+   * Update the current read head, such that the source can determine which blocks are evictable.
+   * @param readHead current read head
+   */
+  public setCurrentReadHead(readHead: Time): void {
+    this.#currentReadHead = readHead;
+  }
+
+  /**
+   * Checks if the current cache size allows reading more messages into the cache or if there are
+   * blocks that can be evicted.
+   * @returns True if more messages can be read, false otherwise.
+   */
+  public canReadMore(): boolean {
+    if (this.#totalSizeBytes < this.#maxTotalSizeBytes) {
+      // Still room for reading new messages from the source.
+      return true;
+    }
+
+    return this.#evictableBlockCandidates.length > 0;
+  }
+
+  /**
+   * Determines which cache blocks can be evicted. A cache block is evictable, if
+   * - its end time is before the given readHead
+   * - it is not part of the continuous block chain starting from the block that contains
+   *   the given readHead
+   * @param readHead current read head
+   * @returns A list of evictable blocks (ordered by most evictable first) or an empty list
+   * if there is no evictable block.
+   */
+  #findEvictableBlockCandidates(readHead: Time): CacheBlock["id"][] {
+    if (this.#cache.length === 0) {
+      return [];
+    }
+
+    // Create a light, mutable copy of the current cache.
+    const mappedCache = this.#cache.map((block) => ({
+      id: block.id,
+      start: block.start,
+      end: block.end,
+    }));
+    // Sort blocks by time (earlier blocks first).
+    mappedCache.sort((a, b) => compare(a.end, b.end));
+    // Find the index of the block that contains the current read head.
+    const readHeadIdx = mappedCache.findIndex(
+      (block) => compare(block.start, readHead) <= 0 && compare(block.end, readHead) >= 0,
+    );
+
+    if (readHeadIdx === -1) {
+      // No block contains current read head, return the oldest cache block.
+      // This can only happen when seeked to a new time and no message has been read yet, as
+      // reading a new message that does not fit in any block will always create a new cache block.
+      const oldestBlockIdx = minIndexBy(this.#cache, (a, b) => a.lastAccess - b.lastAccess);
+      const oldestBlock = this.#cache[oldestBlockIdx];
+      if (!oldestBlock) {
+        // This should never happen as the cache is not empty and the index is valid.
+        throw new Error("Failed to retrieve oldest block from cache");
+      }
+      return [oldestBlock.id];
+    }
+
+    // Blocks that are before the read head can be evicted.
+    const blockIdsBeforeReadHead = mappedCache.splice(0, readHeadIdx).map((item) => item.id);
+
+    // Iterate through remaining blocks until we find a gap in the block chain
+    let prevEnd: bigint | undefined;
+    let idx = 0;
+    for (idx = 0; idx < mappedCache.length; ++idx) {
+      const block = mappedCache[idx]!;
+      const start = toNanoSec(block.start);
+      const end = toNanoSec(block.end);
+      if (prevEnd == undefined || prevEnd + 1n === start) {
+        prevEnd = end;
+      } else {
+        break;
+      }
+    }
+
+    // All blocks that are not part of the first block chain can be considered evictable.
+    const blockIdsAfterGap = mappedCache.splice(idx).map((item) => item.id);
+
+    return [
+      ...blockIdsBeforeReadHead,
+      ...blockIdsAfterGap.reverse(), // Reverse order (furthest away from read head first)
+    ];
+  }
+
+  // Attempt to purge a cache block if adding sizeInBytes to the cache would exceed the maxTotalSizeBytes
   // @return true if a block was purged
   //
   // Throws if the cache block we want to purge is the active block.
@@ -517,16 +627,22 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
       return false;
     }
 
-    // Find the oldest cache item
-    const oldestIdx = minIndexBy(this.#cache, (a, b) => a.lastAccess - b.lastAccess);
+    // Find evictable block candidates
+    this.#evictableBlockCandidates = this.#findEvictableBlockCandidates(this.#currentReadHead);
+    if (this.#evictableBlockCandidates.length === 0) {
+      return false;
+    }
 
-    const oldestBlock = this.#cache[oldestIdx];
-    if (oldestBlock) {
-      if (oldestBlock === activeBlock) {
+    // Evict the first evictable candidate
+    const blockId = this.#evictableBlockCandidates.splice(0, 1)[0];
+    const idx = this.#cache.findIndex((item) => item.id === blockId);
+    const block = this.#cache[idx];
+    if (block) {
+      if (block === activeBlock) {
         throw new Error("Cannot evict the active cache block.");
       }
-      this.#totalSizeBytes -= oldestBlock.size;
-      this.#cache.splice(oldestIdx, 1);
+      this.#totalSizeBytes -= block.size;
+      this.#cache.splice(idx, 1);
       return true;
     }
 

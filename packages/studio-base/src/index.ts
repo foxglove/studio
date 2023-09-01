@@ -21,7 +21,6 @@ export type {
 } from "./context/AppConfigurationContext";
 export { AppContext } from "./context/AppContext";
 export type { IAppContext } from "./context/AppContext";
-export type { LayoutID } from "./context/CurrentLayoutContext";
 export { migratePanelsState } from "./services/migrateLayout";
 export type { INativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
 export { default as NativeWindowContext } from "./context/NativeWindowContext";
@@ -47,3 +46,4 @@ export { default as McapLocalDataSourceFactory } from "./dataSources/McapLocalDa
 export { default as SampleNuscenesDataSourceFactory } from "./dataSources/SampleNuscenesDataSourceFactory";
 export { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
 export { reportError, setReportErrorHandler } from "./reportError";
+export { makeWorkspaceContextInitialState } from "./providers/WorkspaceContextProvider";

@@ -91,7 +91,7 @@ export default {
       await keyboard(keypress);
     });
   },
-} as Meta<Args>;
+} satisfies Meta<Args>;
 
 type Story = StoryObj<Args>;
 

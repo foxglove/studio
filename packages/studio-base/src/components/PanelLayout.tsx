@@ -196,7 +196,6 @@ function LoadingState(): JSX.Element {
   );
 }
 
-const selectedLayoutLoadingSelector = (state: LayoutState) => state.selectedLayout?.loading;
 const selectedLayoutExistsSelector = (state: LayoutState) =>
   state.selectedLayout?.data != undefined;
 const selectedLayoutMosaicSelector = (state: LayoutState) => state.selectedLayout?.data?.layout;
@@ -205,7 +204,6 @@ export default function PanelLayout(): JSX.Element {
   const { layoutEmptyState } = useAppContext();
   const { changePanelLayout } = useCurrentLayoutActions();
   const layoutExists = useCurrentLayoutSelector(selectedLayoutExistsSelector);
-  const layoutLoading = useCurrentLayoutSelector(selectedLayoutLoadingSelector);
   const mosaicLayout = useCurrentLayoutSelector(selectedLayoutMosaicSelector);
   const registeredExtensions = useExtensionCatalog((state) => state.installedExtensions);
 
@@ -224,10 +222,6 @@ export default function PanelLayout(): JSX.Element {
 
   if (layoutExists) {
     return <UnconnectedPanelLayout layout={mosaicLayout} onChange={onChange} />;
-  }
-
-  if (layoutLoading === true) {
-    return <LoadingState />;
   }
 
   if (layoutEmptyState) {

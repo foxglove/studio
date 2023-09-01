@@ -19,14 +19,25 @@ export type ForwardedWindowEvent =
   | "maximize"
   | "unmaximize";
 
-interface NativeMenuBridge {
-  // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
-  addIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void): void;
-  removeIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void): void;
+/** Registering an event listener returns a function that will un-register the listener */
+export type UnregisterFn = () => void;
 
-  // Manage file menu input source menu items
-  menuAddInputSource(name: string, handler: () => void): Promise<void>;
-  menuRemoveInputSource(name: string): Promise<void>;
+interface NativeMenuBridge {
+  /**
+   * Events from the native window are available in the main process but not the renderer, so we
+   * forward them through the bridge.
+   *
+   * Return a function to remove the registered event handler.
+   *
+   * NOTE: We use an unregister function return value because the preload <-> renderer bridge
+   * intercepts the function. This changes the reference value of the _handler_ function and breaks
+   * the conventional event emitter API of using `.off(event, handler)` to unregister an event
+   * handler since the handler function that renderer would provided will get wrapped and won't
+   * resolve to the same instance as the one in the `.on` call.
+   *
+   * https://www.electronjs.org/docs/latest/api/context-bridge#parameter--error--return-type-support
+   */
+  addIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void): UnregisterFn;
 }
 
 // Items suitable for storage
@@ -61,9 +72,7 @@ interface Desktop {
   /** https://www.electronjs.org/docs/tutorial/represented-file */
   setRepresentedFilename(path: string | undefined): Promise<void>;
 
-  // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
-  addIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void): void;
-  removeIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void): void;
+  addIpcEventListener(eventName: ForwardedWindowEvent, handler: () => void): UnregisterFn;
 
   /**
    * Notify the app that the color scheme setting has changed and the native theme may need to be
@@ -73,6 +82,9 @@ interface Desktop {
 
   // Get an array of deep links provided on app launch
   getDeepLinks: () => string[];
+
+  // Reset the deep links. After reset, `getDeepLinks` will return an empty array.
+  resetDeepLinks: () => void;
 
   // Get an array of available extensions and parsed package.json files
   getExtensions: () => Promise<DesktopExtension[]>;
@@ -96,6 +108,9 @@ interface Desktop {
   unmaximizeWindow(): void;
   closeWindow(): void;
   reloadWindow(): void;
+
+  /** Notify the app that the language setting has been changed */
+  updateLanguage(): void;
 }
 
 export type { NativeMenuBridge, Storage, StorageContent, Desktop, DesktopExtension };

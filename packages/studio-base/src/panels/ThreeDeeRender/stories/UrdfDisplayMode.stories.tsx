@@ -78,25 +78,37 @@ export const UrdfDisplayMode: StoryObj = {
     const urdfParamName = "/some_ns/robot_description";
     const urdfDisplays = {
       urdf1: {
-        url: `param://${urdfParamName}`,
+        sourceType: "param",
+        parameter: urdfParamName,
         layerId: "foxglove.Urdf",
         framePrefix: "display_auto/",
         displayMode: "auto",
         translation: { x: -2, y: 0, z: 0 },
       },
       urdf2: {
-        url: `param://${urdfParamName}`,
+        sourceType: "param",
+        parameter: urdfParamName,
         layerId: "foxglove.Urdf",
         framePrefix: "display_visual/",
         displayMode: "visual",
         translation: { x: 0, y: 0, z: 0 },
       },
       urdf3: {
-        url: `param://${urdfParamName}`,
+        sourceType: "param",
+        parameter: urdfParamName,
         layerId: "foxglove.Urdf",
         framePrefix: "display_collision/",
         displayMode: "collision",
         translation: { x: 2, y: 0, z: 0 },
+      },
+      urdf4: {
+        sourceType: "param",
+        parameter: urdfParamName,
+        layerId: "foxglove.Urdf",
+        framePrefix: "display_collision_colored/",
+        displayMode: "collision",
+        translation: { x: 4, y: 0, z: 0 },
+        fallbackColor: "#eb34d8",
       },
     };
 

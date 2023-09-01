@@ -88,7 +88,7 @@ function activateExtension(
   };
 
   try {
-    // eslint-disable-next-line no-new-func
+    // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
     const fn = new Function("module", "require", unwrappedExtensionSource);
 
     // load the extension module exports
@@ -107,7 +107,7 @@ function activateExtension(
   };
 }
 
-export function createExtensionRegistryStore(
+function createExtensionRegistryStore(
   loaders: readonly ExtensionLoader[],
   mockMessageConverters: readonly RegisterMessageConverterArgs<unknown>[] | undefined,
 ): StoreApi<ExtensionCatalog> {
