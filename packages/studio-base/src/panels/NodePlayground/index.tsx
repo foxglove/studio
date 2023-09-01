@@ -31,6 +31,7 @@ import {
   PanelResizeHandle,
   Panel as ResizablePanel,
 } from "react-resizable-panels";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
@@ -118,7 +119,25 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   resizeHandle: {
-    height: 4,
+    position: "relative",
+    height: 10,
+    marginTop: -10,
+
+    ":hover": {
+      backgroundPosition: "50% 0",
+      backgroundSize: "100% 50px",
+      backgroundImage: `radial-gradient(${[
+        "at center center",
+        `${theme.palette.action.focus} 0%`,
+        "transparent 70%",
+        "transparent 100%",
+      ].join(",")})`,
+      boxShadow: `0 2px 0 0 ${
+        theme.palette.mode === "dark"
+          ? tc(theme.palette.divider).lighten().toString()
+          : tc(theme.palette.divider).darken().toString()
+      }`,
+    },
   },
 }));
 
@@ -429,7 +448,7 @@ function NodePlayground(props: Props) {
             </IconButton>
           </Stack>
 
-          <PanelGroup direction="vertical">
+          <PanelGroup direction="vertical" units="pixels">
             {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}
             <ResizablePanel>
               <Suspense
@@ -464,7 +483,13 @@ function NodePlayground(props: Props) {
               </Suspense>
             </ResizablePanel>
             <PanelResizeHandle className={classes.resizeHandle} />
-            <ResizablePanel collapsible collapsedSize={5} defaultSize={5} ref={bottomBarRef}>
+            <ResizablePanel
+              collapsible
+              minSize={38}
+              collapsedSize={38}
+              defaultSize={38}
+              ref={bottomBarRef}
+            >
               <BottomBar
                 diagnostics={selectedNodeDiagnostics}
                 isSaved={isNodeSaved}
