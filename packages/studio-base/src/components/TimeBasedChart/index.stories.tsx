@@ -110,7 +110,7 @@ export const CanZoomAndUpdate: StoryObj = {
     const [chartProps, setChartProps] = useImmer(commonProps);
     const hasScrolled = useRef(false);
 
-    const readySignal = useReadySignal({ count: 6 });
+    const readySignal = useReadySignal({ count: 3 });
 
     const doScroll = useCallback(async () => {
       const canvasEl = document.querySelector("canvas");
