@@ -507,6 +507,7 @@ export default function Panel<
         variant: undefined,
         highlightMode: undefined,
         actions: undefined,
+        dropMessage,
       };
 
       if (isDragging && !isValidTarget) {
@@ -646,7 +647,6 @@ export default function Panel<
                 {!fullscreen && type !== TAB_PANEL_TYPE && (
                   <PanelOverlay
                     {...panelOverlayProps}
-                    dropMessage={dropMessage}
                     ref={(el) => {
                       quickActionsOverlayRef.current = el;
                       // disallow dragging the root panel in a layout
