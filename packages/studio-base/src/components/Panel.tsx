@@ -90,7 +90,7 @@ const useStyles = makeStyles()((theme) => ({
     display: "flex",
     inset: 0,
     textAlign: "center",
-    letterSpacing: "-1px",
+    letterSpacing: "-0.125em",
     // Totally random numbers here to get the text to fit inside the icon
     paddingTop: 1,
     paddingLeft: 5,
@@ -458,9 +458,14 @@ export default function Panel<
           },
           "`": () => setQuickActionsKeyPressed(true),
           "~": () => setQuickActionsKeyPressed(true),
+          Escape: () => {
+            if (numSelectedPanelsIfSelected > 1) {
+              return setSelectedPanelIds([]);
+            }
+          },
         },
       }),
-      [selectAllPanels],
+      [selectAllPanels, numSelectedPanelsIfSelected, setSelectedPanelIds],
     );
 
     const fullScreenKeyHandlers = useMemo(
@@ -517,6 +522,7 @@ export default function Panel<
         overlayProps.variant = "validDropTarget";
       }
       if (isSelected && numSelectedPanelsIfSelected > 1) {
+        overlayProps.onClickAway = () => setSelectedPanelIds([]);
         overlayProps.variant = "selected";
         overlayProps.highlightMode = "all";
         overlayProps.actions = [
@@ -566,6 +572,7 @@ export default function Panel<
     }, [
       classes.tabCount,
       createTabs,
+      dropMessage,
       groupPanels,
       isDragging,
       isOver,
@@ -574,6 +581,7 @@ export default function Panel<
       numSelectedPanelsIfSelected,
       quickActionsKeyPressed,
       removePanel,
+      setSelectedPanelIds,
       splitPanel,
       type,
     ]);

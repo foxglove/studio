@@ -2,7 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Backdrop, Button, ButtonProps, Chip, Paper, buttonClasses } from "@mui/material";
+import {
+  Backdrop,
+  Button,
+  ButtonProps,
+  Chip,
+  ClickAwayListener,
+  Paper,
+  buttonClasses,
+} from "@mui/material";
+import { noop } from "lodash";
 import { forwardRef } from "react";
 import { ReactElement } from "react-markdown/lib/react-markdown";
 import tc from "tinycolor2";
@@ -114,51 +123,54 @@ export type PanelOverlayProps = {
   highlightMode?: "active" | "all";
   open: boolean;
   variant?: "validDropTarget" | "invalidDropTarget" | "selected";
+  onClickAway?: () => void;
 };
 
 export const PanelOverlay = forwardRef<HTMLDivElement, PanelOverlayProps>(function PanelOverlay(
   props,
   ref,
 ): JSX.Element | ReactNull {
-  const { actions, variant, highlightMode, dropMessage, open } = props;
+  const { actions, variant, highlightMode, dropMessage, open, onClickAway } = props;
   const { classes, cx } = useStyles();
 
   return (
-    <Backdrop
-      transitionDuration={0}
-      unmountOnExit
-      ref={ref}
-      open={open}
-      className={cx(classes.backdrop, {
-        [classes.invalidTarget]: variant === "invalidDropTarget",
-        [classes.validTarget]: variant === "validDropTarget",
-        [classes.selected]: variant === "selected",
-        [classes.highlightActive]: highlightMode === "active",
-        [classes.highlightAll]: highlightMode === "all",
-      })}
-    >
-      {dropMessage && variant === "validDropTarget" ? (
-        <Chip size="small" color="primary" label={dropMessage} className={classes.chip} />
-      ) : (
-        actions && (
-          <div className={classes.buttonGroup}>
-            {actions.map((action) => (
-              <Paper key={action.key} elevation={0} className={classes.buttonPaper}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  className={classes.button}
-                  onClick={action.onClick}
-                  startIcon={action.icon}
-                  color={action.color}
-                >
-                  <div className={classes.buttonText}>{action.text}</div>
-                </Button>
-              </Paper>
-            ))}
-          </div>
-        )
-      )}
-    </Backdrop>
+    <ClickAwayListener onClickAway={onClickAway ? onClickAway : noop}>
+      <Backdrop
+        transitionDuration={0}
+        unmountOnExit
+        ref={ref}
+        open={open}
+        className={cx(classes.backdrop, {
+          [classes.invalidTarget]: variant === "invalidDropTarget",
+          [classes.validTarget]: variant === "validDropTarget",
+          [classes.selected]: variant === "selected",
+          [classes.highlightActive]: highlightMode === "active",
+          [classes.highlightAll]: highlightMode === "all",
+        })}
+      >
+        {dropMessage && variant === "validDropTarget" ? (
+          <Chip size="small" color="primary" label={dropMessage} className={classes.chip} />
+        ) : (
+          actions && (
+            <div className={classes.buttonGroup}>
+              {actions.map((action) => (
+                <Paper key={action.key} elevation={0} className={classes.buttonPaper}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    className={classes.button}
+                    onClick={action.onClick}
+                    startIcon={action.icon}
+                    color={action.color}
+                  >
+                    <div className={classes.buttonText}>{action.text}</div>
+                  </Button>
+                </Paper>
+              ))}
+            </div>
+          )
+        )}
+      </Backdrop>
+    </ClickAwayListener>
   );
 });
