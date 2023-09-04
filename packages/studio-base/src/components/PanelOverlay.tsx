@@ -66,12 +66,10 @@ const useStyles = makeStyles<void, "buttonGroup">()((theme, _params, classes) =>
       },
     },
     buttonPaper: {
-      borderRadius: theme.shape.borderRadius * 4,
       flex: "0 0 50%",
       minWidth: "50%",
     },
     button: {
-      borderRadius: theme.shape.borderRadius * 4,
       display: "flex",
       flexDirection: "column",
       justifyContent: "center",
