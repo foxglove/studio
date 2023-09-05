@@ -30,9 +30,7 @@ function parseIDLDefinitionsToDatatypes(
   rootName?: string,
 ) {
   //  The only IDL definition non-conformant-to-MessageDefinition is unions
-  const convertUnionsToMessageDefinition = (
-    definition: IDLMessageDefinition,
-  ): MessageDefinition => {
+  const convertUnionToMessageDefinition = (definition: IDLMessageDefinition): MessageDefinition => {
     if (definition.aggregatedKind === "union") {
       const innerDefs: MessageDefinitionField[] = definition.cases.map((caseDefinition) => ({
         ...caseDefinition.type,
@@ -42,16 +40,16 @@ function parseIDLDefinitionsToDatatypes(
       if (definition.defaultCase != undefined) {
         innerDefs.push(definition.defaultCase);
       }
-      const { cases: _c, defaultCase: _dC, ...rest } = definition;
+      const { name } = definition;
       return {
-        ...rest,
+        name,
         definitions: innerDefs,
       };
     }
     return definition;
   };
 
-  const standardDefs: MessageDefinition[] = parsedDefinitions.map(convertUnionsToMessageDefinition);
+  const standardDefs: MessageDefinition[] = parsedDefinitions.map(convertUnionToMessageDefinition);
   return parsedDefinitionsToDatatypes(standardDefs, rootName);
 }
 
