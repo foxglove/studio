@@ -70,12 +70,12 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const analytics = useAnalytics();
   const user = useCurrentUserType();
 
+  const metaKey = navigator.userAgent.includes("Mac") ? "⌘" : "Ctrl";
+
   const handleAnalytics = useCallback(
     (cta: string) => void analytics.logEvent(AppEvent.APP_MENU_CLICK, { user, cta }),
     [analytics, user],
   );
-
-  const metaKey = navigator.userAgent.includes("Mac") ? "⌘" : "Ctrl";
 
   return (
     <Menu
@@ -105,7 +105,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           <FolderOpen20Regular />
           {t("openLocalFile")}
         </div>
-        <kbd>{`${metaKey} + O`}</kbd>
+        <kbd>{`${metaKey} O`}</kbd>
       </MenuItem>
       <MenuItem
         className={classes.menuItem}
@@ -119,7 +119,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           <Flow20Regular />
           {t("openConnection")}
         </div>
-        <kbd>{`${metaKey} + Shift + O`}</kbd>
+        <kbd>{` ⇧ ${metaKey} O`}</kbd>
       </MenuItem>
       {recentSources.length > 0 && (
         <>
@@ -134,6 +134,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
               onClick={() => {
                 handleAnalytics("open-recent");
                 selectRecent(source.id);
+                handleClose();
               }}
             >
               <div className={classes.menuText}>
