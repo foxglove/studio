@@ -2,8 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ErrorCircle16Filled, Square24Filled, Square24Regular } from "@fluentui/react-icons";
-import { Checkbox, Tooltip, Typography } from "@mui/material";
+import {
+  Dismiss12Regular,
+  ErrorCircle16Filled,
+  Square24Filled,
+  Square24Regular,
+} from "@fluentui/react-icons";
+import { ButtonBase, Checkbox, Tooltip, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
@@ -34,15 +39,12 @@ type PlotLegendRowProps = Immutable<{
 
 const ROW_HEIGHT = 28;
 
-const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
+const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _params, classes) => ({
   root: {
     display: "contents",
     cursor: "pointer",
 
     "&:hover": {
-      "& > *:last-child": {
-        opacity: 1,
-      },
       "& > *": {
         backgroundColor: theme.palette.background.paper,
         backgroundImage: `linear-gradient(${[
@@ -50,6 +52,11 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
           theme.palette.action.focus,
           theme.palette.action.focus,
         ].join(" ,")})`,
+      },
+    },
+    ":not(:hover)": {
+      [`& .${classes.removeButton}`]: {
+        opacity: 0,
       },
     },
   },
@@ -98,6 +105,13 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
   },
   errorIcon: {
     color: theme.palette.error.main,
+  },
+  removeButton: {
+    height: ROW_HEIGHT,
+    width: ROW_HEIGHT,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
 }));
 
@@ -211,6 +225,18 @@ export function PlotLegendRow({
           </Typography>
         </div>
       )}
+      <ButtonBase
+        className={classes.removeButton}
+        onClick={() => {
+          const newPaths = paths.slice();
+          if (newPaths.length > 1) {
+            newPaths.splice(index, 1);
+          }
+          savePaths(newPaths);
+        }}
+      >
+        <Dismiss12Regular />
+      </ButtonBase>
     </div>
   );
 }
