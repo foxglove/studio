@@ -26,7 +26,7 @@ export type TopicListItem =
   | { type: "topic"; item: FzfResultItem<Topic> }
   | { type: "schema"; item: FzfResultItem<MessagePathSearchItem> };
 
-type UseTopicListSearchParams = {
+export type UseTopicListSearchParams = {
   topics: Immutable<Topic[]>;
   datatypes: Immutable<Map<string, MessageDefinition>>;
   filterText: string;
@@ -100,9 +100,17 @@ export function useTopicListSearch(params: UseTopicListSearchParams): TopicListI
       allTopicsToShowByName.set(topic.name, topic);
     }
 
-    const sortedTopics = Array.from(allTopicsToShowByName.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    // Sort topics with matches above topics that are only shown because they have matching paths
+    const sortedTopics = Array.from(allTopicsToShowByName.values()).sort((a, b) => {
+      const aMatched = matchedTopicsByName.has(a.name);
+      const bMatched = matchedTopicsByName.has(b.name);
+      if (aMatched && !bMatched) {
+        return -1;
+      } else if (!aMatched && bMatched) {
+        return 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
 
     for (const topic of sortedTopics) {
       results.push({
