@@ -16,6 +16,7 @@ export type AppBarMenuItem =
       shortcut?: string;
       onClick?: MouseEventHandler<HTMLElement>;
       external?: boolean;
+      icon?: ReactNode;
     }
   | { type: "subheader"; label: ReactNode; key: string }
   | { type: "divider" };

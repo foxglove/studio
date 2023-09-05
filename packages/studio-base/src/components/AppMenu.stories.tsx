@@ -7,6 +7,7 @@ import {
   Grid20Regular,
   RecordStop20Regular,
   LineStyle20Regular,
+  BookStar20Regular,
 } from "@fluentui/react-icons";
 import { Meta, StoryObj } from "@storybook/react";
 import { noop } from "lodash";
@@ -23,6 +24,7 @@ import { AppMenu, AppMenuProps } from "./AppMenu";
 
 type StoryArgs = {
   appBarMenuItems?: AppBarMenuItem[];
+  recentSources?: PlayerSelection["recentSources"];
 } & AppMenuProps;
 
 type Story = StoryObj<StoryArgs>;
@@ -31,15 +33,7 @@ type Story = StoryObj<StoryArgs>;
 const playerSelection: PlayerSelection = {
   selectSource: () => {},
   selectRecent: () => {},
-  recentSources: [
-    // prettier-ignore
-    { id: "1111", title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.bag", },
-    { id: "2222", title: "http://localhost:11311", label: "ROS 1" },
-    { id: "3333", title: "ws://localhost:9090/", label: "Rosbridge (ROS 1 & 2)" },
-    { id: "4444", title: "ws://localhost:8765", label: "Foxglove WebSocket" },
-    { id: "5555", title: "2369", label: "Velodyne Lidar" },
-    { id: "6666", title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS", label: "!!!!!!!!!!!!" },
-  ],
+  recentSources: [],
   availableSources: [],
 };
 
@@ -51,14 +45,14 @@ export default {
     anchorPosition: { top: 0, left: 0 },
     anchorReference: "anchorPosition",
     disablePortal: true,
-    onClose: noop,
+    handleClose: noop,
   },
   decorators: [
-    (Story, { args: { appBarMenuItems, ...args } }): JSX.Element => (
+    (Story, { args: { appBarMenuItems, recentSources = [], ...args } }): JSX.Element => (
       <AppContext.Provider value={{ appBarMenuItems }}>
         <MockCurrentLayoutProvider>
           <WorkspaceContextProvider>
-            <PlayerSelectionContext.Provider value={playerSelection}>
+            <PlayerSelectionContext.Provider value={{ ...playerSelection, recentSources }}>
               <Story {...args} />
             </PlayerSelectionContext.Provider>
           </WorkspaceContextProvider>
@@ -70,54 +64,76 @@ export default {
 
 export const Default: Story = {};
 
+export const DefaultChinese: Story = {
+  parameters: { forceLanguage: "zh" },
+};
+
+export const DefaultJapanese: Story = {
+  parameters: { forceLanguage: "ja" },
+};
+
+export const WithRecents: Story = {
+  args: {
+    recentSources: [
+      // prettier-ignore
+      { id: "1111", title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.bag", },
+      { id: "2222", title: "http://localhost:11311", label: "ROS 1" },
+      { id: "3333", title: "ws://localhost:9090/", label: "Rosbridge (ROS 1 & 2)" },
+      { id: "4444", title: "ws://localhost:8765", label: "Foxglove WebSocket" },
+      { id: "5555", title: "2369", label: "Velodyne Lidar" },
+      { id: "6666", title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS", label: "!!!!!!!!!!!!" },
+    ],
+  },
+};
+
+export const WithRecentsChinese: Story = {
+  ...WithRecents,
+  parameters: { forceLanguage: "zh" },
+};
+
+export const WithRecentsJapanese: Story = {
+  ...WithRecents,
+  parameters: { forceLanguage: "ja" },
+};
+
 export const WithAppContextMenuItens: Story = {
   args: {
     appBarMenuItems: [
+      { type: "subheader", key: "recent", label: "Browse" },
+      { external: true, type: "item", key: "home", icon: <Home20Regular />, label: "Home" },
+      { external: true, type: "item", key: "devices", icon: <Grid20Regular />, label: "Devices" },
       {
-        type: "subheader",
-        key: "recent",
-        label: "Browse",
-      },
-      {
-        type: "item",
-        key: "home",
-        label: (
-          <>
-            <Home20Regular /> Home
-          </>
-        ),
         external: true,
-      },
-      {
-        type: "item",
-        key: "devices",
-        label: (
-          <>
-            <Grid20Regular /> Devices
-          </>
-        ),
-        external: true,
-      },
-      {
         type: "item",
         key: "recordings",
-        label: (
-          <>
-            <RecordStop20Regular /> Recordings
-          </>
-        ),
+        icon: <RecordStop20Regular />,
+        label: "Recordings",
+      },
+      {
         external: true,
+        type: "item",
+        key: "timeline",
+        icon: <LineStyle20Regular />,
+        label: "Timeline",
+      },
+      {
+        type: "divider",
       },
       {
         type: "item",
-        key: "timeline",
-        label: (
-          <>
-            <LineStyle20Regular /> Timeline
-          </>
-        ),
-        external: true,
+        key: "demo",
+        icon: <BookStar20Regular />,
+        label: "Explore Sample Data",
       },
+    ],
+    recentSources: [
+      // prettier-ignore
+      { id: "1111", title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.bag", },
+      { id: "2222", title: "http://localhost:11311", label: "ROS 1" },
+      { id: "3333", title: "ws://localhost:9090/", label: "Rosbridge (ROS 1 & 2)" },
+      { id: "4444", title: "ws://localhost:8765", label: "Foxglove WebSocket" },
+      { id: "5555", title: "2369", label: "Velodyne Lidar" },
+      { id: "6666", title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS", label: "!!!!!!!!!!!!" },
     ],
   },
 };

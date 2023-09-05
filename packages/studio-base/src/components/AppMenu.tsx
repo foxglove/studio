@@ -2,14 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { BookStar20Regular, Document20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
+import { Document20Regular, Flow20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
 import {
   Divider,
   ListSubheader,
   Menu,
   MenuItem,
-  MenuProps,
-  SvgIcon,
+  PopoverPosition,
+  PopoverReference,
   Typography,
 } from "@mui/material";
 import { useCallback } from "react";
@@ -21,27 +21,52 @@ import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles<void>()((theme) => ({
   menuItem: {
     gap: theme.spacing(1),
 
-    svg: { color: theme.palette.primary.main },
+    svg: {
+      color: theme.palette.primary.main,
+      flex: "none",
+    },
+    kbd: {
+      font: "inherit",
+      color: theme.palette.text.disabled,
+    },
+  },
+  menuText: {
+    display: "flex",
+    flex: "auto",
+    overflow: "hidden",
+    maxWidth: "100%",
+    alignItems: "center",
+    gap: theme.spacing(1),
   },
   paper: {
-    maxWidth: 300,
+    minWidth: 240,
+    maxWidth: 280,
   },
 }));
 
-export type AppMenuProps = MenuProps;
+export type AppMenuProps = {
+  handleClose: () => void;
+  anchorEl?: HTMLElement;
+  anchorReference?: PopoverReference;
+  anchorPosition?: PopoverPosition;
+  disablePortal?: boolean;
+  open: boolean;
+};
 
-export function AppMenu(props: MenuProps): JSX.Element {
+export function AppMenu(props: AppMenuProps): JSX.Element {
+  const { handleClose } = props;
   const { classes } = useStyles();
   const { appBarMenuItems } = useAppContext();
   const { recentSources, selectRecent } = usePlayerSelection();
   const { t } = useTranslation("openDialog");
-
+  const { dialogActions } = useWorkspaceActions();
   const analytics = useAnalytics();
   const user = useCurrentUserType();
 
@@ -50,32 +75,75 @@ export function AppMenu(props: MenuProps): JSX.Element {
     [analytics, user],
   );
 
+  const metaKey = navigator.userAgent.includes("Mac") ? "⌘" : "Ctrl";
+
   return (
     <Menu
       {...props}
+      onClose={handleClose}
       anchorOrigin={{
         vertical: "bottom",
         horizontal: "left",
       }}
-      slotProps={{
-        paper: {
-          className: classes.paper,
-        },
+      slotProps={{ paper: { className: classes.paper } }}
+      MenuListProps={{
+        dense: true,
       }}
     >
       <ListSubheader disableSticky>
         <Typography variant="overline">{t("openDataSource")}</Typography>
       </ListSubheader>
-      <MenuItem className={classes.menuItem}>
-        <FolderOpen20Regular />
-        {t("openLocalFile")}
+      <MenuItem
+        className={classes.menuItem}
+        onClick={() => {
+          handleAnalytics("open-file");
+          dialogActions.openFile.open().catch(console.error);
+          handleClose();
+        }}
+      >
+        <div className={classes.menuText}>
+          <FolderOpen20Regular />
+          {t("openLocalFile")}
+        </div>
+        <kbd>{`${metaKey} + O`}</kbd>
       </MenuItem>
-      <MenuItem className={classes.menuItem}>
-        <SvgIcon fontSize="small" color="primary" viewBox="0 0 2048 2048">
-          <path d="M1408 256h640v640h-640V640h-120l-449 896H640v256H0v-640h640v256h120l449-896h199V256zM512 1664v-384H128v384h384zm1408-896V384h-384v384h384z" />
-        </SvgIcon>
-        {t("openConnection")}
+      <MenuItem
+        className={classes.menuItem}
+        onClick={() => {
+          dialogActions.dataSource.open("connection");
+          handleAnalytics("open-connection");
+          handleClose();
+        }}
+      >
+        <div className={classes.menuText}>
+          <Flow20Regular />
+          {t("openConnection")}
+        </div>
+        <kbd>{`${metaKey} + Shift + O`}</kbd>
       </MenuItem>
+      {recentSources.length > 0 && (
+        <>
+          <Divider variant="middle" />
+          <ListSubheader disableSticky>
+            <Typography variant="overline">{t("recentDataSources")}</Typography>
+          </ListSubheader>
+          {recentSources.slice(0, 5).map((source) => (
+            <MenuItem
+              key={source.id}
+              className={classes.menuItem}
+              onClick={() => {
+                handleAnalytics("open-recent");
+                selectRecent(source.id);
+              }}
+            >
+              <div className={classes.menuText}>
+                <Document20Regular style={{ flex: "none" }} />
+                <TextMiddleTruncate text={source.title} />
+              </div>
+            </MenuItem>
+          ))}
+        </>
+      )}
       {appBarMenuItems && <Divider variant="middle" />}
       {(appBarMenuItems ?? []).map((item, idx) => {
         switch (item.type) {
@@ -84,12 +152,14 @@ export function AppMenu(props: MenuProps): JSX.Element {
               <MenuItem
                 onClick={(event) => {
                   item.onClick?.(event);
-                  props.onClose?.({}, "backdropClick");
+                  handleClose();
                 }}
                 key={item.key}
                 className={classes.menuItem}
               >
+                {item.icon}
                 {item.label}
+                {item.shortcut && <kbd>{item.shortcut}</kbd>}
               </MenuItem>
             );
           case "divider":
@@ -102,32 +172,6 @@ export function AppMenu(props: MenuProps): JSX.Element {
             );
         }
       })}
-      <Divider variant="middle" />
-      {recentSources.length > 0 && (
-        <>
-          <ListSubheader disableSticky>
-            <Typography variant="overline">{t("recentDataSources")}</Typography>
-          </ListSubheader>
-          {recentSources.slice(0, 5).map((source) => (
-            <MenuItem
-              className={classes.menuItem}
-              onClick={() => {
-                handleAnalytics("open-recent");
-                selectRecent(source.id);
-              }}
-              key={source.id}
-            >
-              <Document20Regular style={{ flex: "none" }} />
-              <TextMiddleTruncate text={source.title} />
-            </MenuItem>
-          ))}
-        </>
-      )}
-      <Divider variant="middle" />
-      <MenuItem className={classes.menuItem}>
-        <BookStar20Regular />
-        {t("exploreSampleData")}
-      </MenuItem>
     </Menu>
   );
 }
