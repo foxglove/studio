@@ -86,16 +86,15 @@ export const EditableTransformRedInBlueDown: StoryObj = {
 
     const spiralTfs = makeTransformGroup(2, 50);
 
-    const rpyOffsets = spiralTfs.reduce<Record<string, { rpyOffset: [number, number, number] }>>(
-      (acc, tf) => {
-        const tfName = `frame:${tf.message.child_frame_id}`;
-        acc[tfName] = {
-          rpyOffset: [180, 0, 180],
-        };
-        return acc;
-      },
-      {},
-    );
+    const rpyCoefficients = spiralTfs.reduce<
+      Record<string, { rpyCoefficient: [number, number, number] }>
+    >((acc, tf) => {
+      const tfName = `frame:${tf.message.child_frame_id}`;
+      acc[tfName] = {
+        rpyCoefficient: [180, 0, 180],
+      };
+      return acc;
+    }, {});
 
     const fixture = useDelayedFixture({
       topics,
@@ -129,7 +128,7 @@ export const EditableTransformRedInBlueDown: StoryObj = {
               "frame:CAM_BACK_LEFT": {
                 rpyOffset: [180, -43.4, 0],
               },
-              ...rpyOffsets,
+              ...rpyCoefficients,
             },
             cameraState: {
               distance: 6,
