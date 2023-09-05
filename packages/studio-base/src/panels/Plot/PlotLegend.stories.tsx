@@ -46,7 +46,7 @@ const exampleConfig: PlotConfig = {
 };
 
 function Wrapper(Wrapped: StoryFn): JSX.Element {
-  const readySignal = useReadySignal({ count: 3 });
+  const readySignal = useReadySignal({ count: 20 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
   return (
