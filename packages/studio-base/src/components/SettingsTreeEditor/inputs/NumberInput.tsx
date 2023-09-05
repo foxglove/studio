@@ -130,10 +130,6 @@ export function NumberInput(
     event.currentTarget.releasePointerCapture(event.pointerId);
   }, []);
 
-  const onPointerLeave = useCallback(() => {
-    isDragging.current = false;
-  }, []);
-
   const onPointerMove = useCallback(
     (event: React.PointerEvent<HTMLInputElement>) => {
       if (event.buttons !== 1 || !isDragging.current) {
@@ -172,7 +168,6 @@ export function NumberInput(
         onPointerDown,
         onPointerUp,
         onPointerMove,
-        onPointerLeave,
       }}
       InputProps={{
         readOnly,
