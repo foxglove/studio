@@ -19,16 +19,29 @@ function itemToString(topicListItem: TopicListItem): string {
 describe("useTopicListSearch", () => {
   it("sorts topics with matches above matching paths", () => {
     const topics: UseTopicListSearchParams["topics"] = [
-      { name: "abc", schemaName: "ABC" },
-      { name: "xyz", schemaName: "XYZ" },
+      { name: "abc", schemaName: "ABCD" },
+      { name: "xyz", schemaName: "XYZW" },
     ];
     const datatypes: UseTopicListSearchParams["datatypes"] = new Map([
-      ["ABC", { definitions: [{ name: "xyz", type: "string" }] }],
-      ["XYZ", { definitions: [{ name: "abc", type: "string" }] }],
+      ["ABCD", { definitions: [{ name: "xyz", type: "string" }] }],
+      ["XYZW", { definitions: [{ name: "abcd", type: "string" }] }],
     ]);
     const { result } = renderHook(() =>
       useTopicListSearch({ topics, datatypes, filterText: "xyz" }),
     );
     expect(result.current.map(itemToString)).toEqual(["xyz", "abc", "abc.xyz"]);
+  });
+
+  it("sorts topics with matching schema names above matching paths", () => {
+    const topics: UseTopicListSearchParams["topics"] = [
+      { name: "abc", schemaName: "ABCD" },
+      { name: "xyz", schemaName: "XYZW" },
+    ];
+    const datatypes: UseTopicListSearchParams["datatypes"] = new Map([
+      ["ABCD", { definitions: [{ name: "xyz", type: "string" }] }],
+      ["XYZW", { definitions: [{ name: "abcd", type: "string" }] }],
+    ]);
+    const { result } = renderHook(() => useTopicListSearch({ topics, datatypes, filterText: "d" }));
+    expect(result.current.map(itemToString)).toEqual(["abc", "xyz", "xyz.abcd"]);
   });
 });
