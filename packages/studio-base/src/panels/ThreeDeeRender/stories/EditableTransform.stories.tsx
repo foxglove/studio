@@ -125,9 +125,6 @@ export const EditableTransformRedInBlueDown: StoryObj = {
               },
             },
             transforms: {
-              "frame:CAM_BACK_LEFT": {
-                rpyOffset: [180, -43.4, 0],
-              },
               ...rpyCoefficients,
             },
             cameraState: {
