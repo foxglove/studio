@@ -5,5 +5,6 @@
 module.exports = {
   rules: {
     "link-target": require("./link-target"),
+    "lodash-default-import": require("./lodash-default-import"),
   },
 };

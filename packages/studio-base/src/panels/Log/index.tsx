@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { produce } from "immer";
-import { set } from "lodash";
+import _ from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -85,7 +85,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
       }
 
       const { path, value } = action.payload;
-      saveConfig(produce<Config>((draft) => set(draft, path.slice(1), value)));
+      saveConfig(produce<Config>((draft) => _.set(draft, path.slice(1), value)));
     },
     [saveConfig],
   );

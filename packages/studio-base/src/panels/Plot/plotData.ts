@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { isEmpty } from "lodash";
+import _ from "lodash";
 import * as R from "ramda";
 
 import { Time } from "@foxglove/rostime";
@@ -173,7 +173,7 @@ export function reducePlotData(data: PlotData[]): PlotData {
   const sorted = data.slice().sort(compare);
 
   const reduced = sorted.reduce((acc, item) => {
-    if (isEmpty(acc)) {
+    if (_.isEmpty(acc)) {
       return item;
     }
     return mergePlotData(acc, item);

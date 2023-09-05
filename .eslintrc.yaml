@@ -29,6 +29,7 @@ rules:
   "@foxglove/license-header": error
   "@foxglove/prefer-hash-private": error
   "@foxglove/studio/link-target": error
+  "@foxglove/studio/lodash-default-import": error
 
   tss-unused-classes/unused-classes: error
 

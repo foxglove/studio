@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
-import { noop } from "lodash";
+import _ from "lodash";
 import React, { ReactNode } from "react";
 
 import { ToolbarTab } from "@foxglove/studio-base/panels/Tab/ToolbarTab";
@@ -24,10 +24,10 @@ const baseProps = {
   isActive: false,
   isDragging: false,
   actions: {
-    addTab: noop,
-    removeTab: noop,
-    selectTab: noop,
-    setTabTitle: noop,
+    addTab: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
+    removeTab: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
+    selectTab: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
+    setTabTitle: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
   },
   tabCount: 1,
   tabIndex: 0,
