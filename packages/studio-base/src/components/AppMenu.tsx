@@ -65,7 +65,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const { classes } = useStyles();
   const { appBarMenuItems } = useAppContext();
   const { recentSources, selectRecent } = usePlayerSelection();
-  const { t } = useTranslation("openDialog");
+  const { t } = useTranslation("appBar");
   const { dialogActions } = useWorkspaceActions();
   const analytics = useAnalytics();
   const user = useCurrentUserType();
@@ -121,30 +121,28 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         </div>
         <kbd>{` ⇧ ${metaKey} O`}</kbd>
       </MenuItem>
+      {recentSources.length > 0 && <Divider variant="middle" />}
       {recentSources.length > 0 && (
-        <>
-          <Divider variant="middle" />
-          <ListSubheader disableSticky>
-            <Typography variant="overline">{t("recentDataSources")}</Typography>
-          </ListSubheader>
-          {recentSources.slice(0, 5).map((source) => (
-            <MenuItem
-              key={source.id}
-              className={classes.menuItem}
-              onClick={() => {
-                handleAnalytics("open-recent");
-                selectRecent(source.id);
-                handleClose();
-              }}
-            >
-              <div className={classes.menuText}>
-                <Document20Regular style={{ flex: "none" }} />
-                <TextMiddleTruncate text={source.title} />
-              </div>
-            </MenuItem>
-          ))}
-        </>
+        <ListSubheader disableSticky>
+          <Typography variant="overline">{t("recentDataSources")}</Typography>
+        </ListSubheader>
       )}
+      {recentSources.slice(0, 5).map((source) => (
+        <MenuItem
+          key={source.id}
+          className={classes.menuItem}
+          onClick={() => {
+            handleAnalytics("open-recent");
+            selectRecent(source.id);
+            handleClose();
+          }}
+        >
+          <div className={classes.menuText}>
+            <Document20Regular style={{ flex: "none" }} />
+            <TextMiddleTruncate text={source.title} />
+          </div>
+        </MenuItem>
+      ))}
       {appBarMenuItems && <Divider variant="middle" />}
       {(appBarMenuItems ?? []).map((item, idx) => {
         switch (item.type) {

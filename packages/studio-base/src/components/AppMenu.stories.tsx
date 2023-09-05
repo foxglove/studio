@@ -72,17 +72,19 @@ export const DefaultJapanese: Story = {
   parameters: { forceLanguage: "ja" },
 };
 
+const mockSources = [
+  // prettier-ignore
+  { id: "1111", title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.mcap", },
+  { id: "2222", title: "http://localhost:11311", label: "ROS 1" },
+  { id: "3333", title: "ws://localhost:9090/", label: "Rosbridge (ROS 1 & 2)" },
+  { id: "4444", title: "ws://localhost:8765", label: "Foxglove WebSocket" },
+  { id: "5555", title: "2369", label: "Velodyne Lidar" },
+  { id: "6666", title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS", label: "!!!!!!!!!!!!" },
+];
+
 export const WithRecents: Story = {
   args: {
-    recentSources: [
-      // prettier-ignore
-      { id: "1111", title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.bag", },
-      { id: "2222", title: "http://localhost:11311", label: "ROS 1" },
-      { id: "3333", title: "ws://localhost:9090/", label: "Rosbridge (ROS 1 & 2)" },
-      { id: "4444", title: "ws://localhost:8765", label: "Foxglove WebSocket" },
-      { id: "5555", title: "2369", label: "Velodyne Lidar" },
-      { id: "6666", title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS", label: "!!!!!!!!!!!!" },
-    ],
+    recentSources: mockSources,
   },
 };
 
@@ -126,14 +128,6 @@ export const WithAppContextMenuItens: Story = {
         label: "Explore Sample Data",
       },
     ],
-    recentSources: [
-      // prettier-ignore
-      { id: "1111", title: "NuScenes-v1.0-mini-scene-0655-reallllllllly-long-name-8829908290831091.bag", },
-      { id: "2222", title: "http://localhost:11311", label: "ROS 1" },
-      { id: "3333", title: "ws://localhost:9090/", label: "Rosbridge (ROS 1 & 2)" },
-      { id: "4444", title: "ws://localhost:8765", label: "Foxglove WebSocket" },
-      { id: "5555", title: "2369", label: "Velodyne Lidar" },
-      { id: "6666", title: "THIS ITEM SHOULD BE HIDDEN IN STORYBOOKS", label: "!!!!!!!!!!!!" },
-    ],
+    recentSources: mockSources,
   },
 };
