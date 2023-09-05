@@ -2,35 +2,56 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Document20Regular, Flow20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
 import {
   Divider,
+  ListSubheader,
   Menu,
-  MenuItem as MuiMenuItem,
-  PaperProps,
+  MenuItem,
   PopoverPosition,
   PopoverReference,
   Typography,
 } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  WorkspaceContextStore,
-  useWorkspaceStoreWithShallowSelector,
-} from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-import { NestedMenuItem } from "./NestedMenuItem";
+const useStyles = makeStyles<void>()((theme) => ({
+  menuItem: {
+    gap: theme.spacing(1),
 
-type AppMenuProps = {
+    svg: {
+      color: theme.palette.primary.main,
+      flex: "none",
+    },
+    kbd: {
+      font: "inherit",
+      color: theme.palette.text.disabled,
+    },
+  },
+  menuText: {
+    display: "flex",
+    flex: "auto",
+    overflow: "hidden",
+    maxWidth: "100%",
+    alignItems: "center",
+    gap: theme.spacing(1),
+  },
+  paper: {
+    minWidth: 240,
+    maxWidth: 280,
+  },
+}));
+
+export type AppMenuProps = {
   handleClose: () => void;
   anchorEl?: HTMLElement;
   anchorReference?: PopoverReference;
@@ -39,293 +60,117 @@ type AppMenuProps = {
   open: boolean;
 };
 
-const useStyles = makeStyles()({
-  menuList: {
-    minWidth: 180,
-    maxWidth: 220,
-  },
-  truncate: {
-    alignSelf: "center !important",
-  },
-});
-
-const selectWorkspace = (store: WorkspaceContextStore) => store;
-
 export function AppMenu(props: AppMenuProps): JSX.Element {
-  const { open, handleClose, anchorEl, anchorReference, anchorPosition, disablePortal } = props;
+  const { handleClose } = props;
   const { classes } = useStyles();
-  const { t } = useTranslation("appBar");
-
   const { appBarMenuItems } = useAppContext();
-
-  const [nestedMenu, setNestedMenu] = useState<string | undefined>();
-
-  const currentUserType = useCurrentUserType();
-  const analytics = useAnalytics();
-
   const { recentSources, selectRecent } = usePlayerSelection();
-  const {
-    sidebars: {
-      left: { open: leftSidebarOpen },
-      right: { open: rightSidebarOpen },
-    },
-  } = useWorkspaceStoreWithShallowSelector(selectWorkspace);
-  const { sidebarActions, dialogActions, layoutActions } = useWorkspaceActions();
+  const { t } = useTranslation("appBar");
+  const { dialogActions } = useWorkspaceActions();
+  const analytics = useAnalytics();
+  const user = useCurrentUserType();
 
-  const handleNestedMenuClose = useCallback(() => {
-    setNestedMenu(undefined);
-    handleClose();
-  }, [handleClose]);
-
-  const handleItemPointerEnter = useCallback((id: string) => {
-    setNestedMenu(id);
-  }, []);
+  const metaKey = navigator.userAgent.includes("Mac") ? "⌘" : "Ctrl";
 
   const handleAnalytics = useCallback(
-    (cta: string) => {
-      void analytics.logEvent(AppEvent.APP_MENU_CLICK, {
-        user: currentUserType,
-        cta,
-      });
-    },
-    [analytics, currentUserType],
-  );
-
-  // FILE
-
-  const fileItems = useMemo(() => {
-    const items: AppBarMenuItem[] = [
-      {
-        type: "item",
-        label: t("open"),
-        key: "open",
-        onClick: () => {
-          dialogActions.dataSource.open("start");
-          handleAnalytics("open-data-source-dialog");
-          handleNestedMenuClose();
-        },
-      },
-      {
-        type: "item",
-        label: t("openLocalFile"),
-        key: "open-file",
-        onClick: () => {
-          handleAnalytics("open-file");
-          handleNestedMenuClose();
-          dialogActions.openFile.open().catch(console.error);
-        },
-      },
-      {
-        type: "item",
-        label: t("openConnection"),
-        key: "open-connection",
-        onClick: () => {
-          dialogActions.dataSource.open("connection");
-          handleAnalytics("open-connection");
-          handleNestedMenuClose();
-        },
-      },
-      { type: "divider" },
-      { type: "item", label: t("recentDataSources"), key: "recent-sources", disabled: true },
-    ];
-
-    recentSources.slice(0, 5).map((recent) => {
-      items.push({
-        type: "item",
-        key: recent.id,
-        onClick: () => {
-          handleAnalytics("open-recent");
-          selectRecent(recent.id);
-          handleNestedMenuClose();
-        },
-        label: <TextMiddleTruncate text={recent.title} className={classes.truncate} />,
-      });
-    });
-
-    return items;
-  }, [
-    classes.truncate,
-    dialogActions.dataSource,
-    dialogActions.openFile,
-    handleAnalytics,
-    handleNestedMenuClose,
-    recentSources,
-    selectRecent,
-    t,
-  ]);
-
-  // VIEW
-
-  const viewItems = useMemo<AppBarMenuItem[]>(
-    () => [
-      {
-        type: "item",
-        label: leftSidebarOpen ? t("hideLeftSidebar") : t("showLeftSidebar"),
-        key: "left-sidebar",
-        shortcut: "[",
-        onClick: () => {
-          sidebarActions.left.setOpen(!leftSidebarOpen);
-          handleNestedMenuClose();
-        },
-      },
-      {
-        type: "item",
-        label: rightSidebarOpen ? t("hideRightSidebar") : t("showRightSidebar"),
-        key: "right-sidebar",
-        shortcut: "]",
-        onClick: () => {
-          sidebarActions.right.setOpen(!rightSidebarOpen);
-          handleNestedMenuClose();
-        },
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "item",
-        label: t("importLayoutFromFile"),
-        key: "import-layout",
-        onClick: () => {
-          layoutActions.importFromFile();
-          handleNestedMenuClose();
-        },
-      },
-      {
-        type: "item",
-        label: t("exportLayoutToFile"),
-        key: "export-layout",
-        onClick: () => {
-          layoutActions.exportToFile();
-          handleNestedMenuClose();
-        },
-      },
-    ],
-    [
-      handleNestedMenuClose,
-      layoutActions,
-      leftSidebarOpen,
-      rightSidebarOpen,
-      sidebarActions.left,
-      sidebarActions.right,
-      t,
-    ],
-  );
-
-  // HELP
-
-  const onAboutClick = useCallback(() => {
-    dialogActions.preferences.open("about");
-    handleAnalytics("about");
-    handleNestedMenuClose();
-  }, [dialogActions.preferences, handleAnalytics, handleNestedMenuClose]);
-
-  const onDocsClick = useCallback(() => {
-    handleAnalytics("docs");
-    window.open("https://foxglove.dev/docs", "_blank");
-    handleNestedMenuClose();
-  }, [handleAnalytics, handleNestedMenuClose]);
-
-  const onSlackClick = useCallback(() => {
-    handleAnalytics("join-slack");
-    window.open("https://foxglove.dev/slack", "_blank");
-    handleNestedMenuClose();
-  }, [handleAnalytics, handleNestedMenuClose]);
-
-  const onDemoClick = useCallback(() => {
-    dialogActions.dataSource.open("demo");
-    handleAnalytics("demo");
-    handleNestedMenuClose();
-  }, [dialogActions.dataSource, handleAnalytics, handleNestedMenuClose]);
-
-  const helpItems = useMemo<AppBarMenuItem[]>(
-    () => [
-      { type: "item", key: "about", label: t("about"), onClick: onAboutClick },
-      { type: "divider" },
-      { type: "item", key: "docs", label: t("viewOurDocs"), onClick: onDocsClick, external: true },
-      {
-        type: "item",
-        key: "join-slack",
-        label: t("joinOurSlack"),
-        onClick: onSlackClick,
-        external: true,
-      },
-      { type: "divider" },
-      { type: "item", key: "demo", label: t("exploreSampleData"), onClick: onDemoClick },
-    ],
-    [onAboutClick, onDemoClick, onDocsClick, onSlackClick, t],
+    (cta: string) => void analytics.logEvent(AppEvent.APP_MENU_CLICK, { user, cta }),
+    [analytics, user],
   );
 
   return (
-    <>
-      <Menu
-        anchorEl={anchorEl}
-        anchorReference={anchorReference}
-        anchorPosition={anchorPosition}
-        disablePortal={disablePortal}
-        id="app-menu"
-        open={open}
-        disableAutoFocusItem
-        onClose={handleNestedMenuClose}
-        MenuListProps={{
-          "aria-labelledby": "app-menu-button",
-          dense: true,
-          className: classes.menuList,
+    <Menu
+      {...props}
+      onClose={handleClose}
+      anchorOrigin={{
+        vertical: "bottom",
+        horizontal: "left",
+      }}
+      slotProps={{ paper: { className: classes.paper } }}
+      MenuListProps={{
+        dense: true,
+      }}
+    >
+      <ListSubheader disableSticky>
+        <Typography variant="overline">{t("openDataSource")}</Typography>
+      </ListSubheader>
+      <MenuItem
+        className={classes.menuItem}
+        onClick={() => {
+          handleAnalytics("open-file");
+          dialogActions.openFile.open().catch(console.error);
+          handleClose();
         }}
-        PaperProps={
-          {
-            "data-tourid": "app-menu",
-          } as Partial<PaperProps & { "data-tourid"?: string }>
-        }
       >
-        {(appBarMenuItems ?? []).map((item, idx) => {
-          switch (item.type) {
-            case "item":
-              return (
-                <MuiMenuItem
-                  key={item.key}
-                  onClick={(event) => {
-                    item.onClick?.(event);
-                    handleClose();
-                  }}
-                >
-                  {item.label}
-                </MuiMenuItem>
-              );
-            case "divider":
-              return <Divider variant="middle" key={`divider${idx}`} />;
-            case "subheader":
-              return (
-                <MuiMenuItem disabled key={item.key}>
-                  <Typography variant="overline">{item.label}</Typography>
-                </MuiMenuItem>
-              );
-          }
-        })}
-        <NestedMenuItem
-          onPointerEnter={handleItemPointerEnter}
-          items={fileItems}
-          open={nestedMenu === "app-menu-file"}
-          id="app-menu-file"
+        <div className={classes.menuText}>
+          <FolderOpen20Regular />
+          {t("openLocalFile")}
+        </div>
+        <kbd>{`${metaKey} O`}</kbd>
+      </MenuItem>
+      <MenuItem
+        className={classes.menuItem}
+        onClick={() => {
+          dialogActions.dataSource.open("connection");
+          handleAnalytics("open-connection");
+          handleClose();
+        }}
+      >
+        <div className={classes.menuText}>
+          <Flow20Regular />
+          {t("openConnection")}
+        </div>
+        <kbd>{` ⇧ ${metaKey} O`}</kbd>
+      </MenuItem>
+      {recentSources.length > 0 && <Divider variant="middle" />}
+      {recentSources.length > 0 && (
+        <ListSubheader disableSticky>
+          <Typography variant="overline">{t("recentDataSources")}</Typography>
+        </ListSubheader>
+      )}
+      {recentSources.slice(0, 5).map((source) => (
+        <MenuItem
+          key={source.id}
+          className={classes.menuItem}
+          onClick={() => {
+            handleAnalytics("open-recent");
+            selectRecent(source.id);
+            handleClose();
+          }}
         >
-          {t("file")}
-        </NestedMenuItem>
-        <NestedMenuItem
-          onPointerEnter={handleItemPointerEnter}
-          items={viewItems}
-          open={nestedMenu === "app-menu-view"}
-          id="app-menu-view"
-        >
-          {t("view")}
-        </NestedMenuItem>
-        <NestedMenuItem
-          onPointerEnter={handleItemPointerEnter}
-          items={helpItems}
-          open={nestedMenu === "app-menu-help"}
-          id="app-menu-help"
-        >
-          {t("help")}
-        </NestedMenuItem>
-      </Menu>
-    </>
+          <div className={classes.menuText}>
+            <Document20Regular style={{ flex: "none" }} />
+            <TextMiddleTruncate text={source.title} />
+          </div>
+        </MenuItem>
+      ))}
+      {appBarMenuItems && <Divider variant="middle" />}
+      {(appBarMenuItems ?? []).map((item, idx) => {
+        switch (item.type) {
+          case "item":
+            return (
+              <MenuItem
+                onClick={(event) => {
+                  item.onClick?.(event);
+                  handleClose();
+                }}
+                key={item.key}
+                className={classes.menuItem}
+              >
+                {item.icon}
+                {item.label}
+                {item.shortcut && <kbd>{item.shortcut}</kbd>}
+              </MenuItem>
+            );
+          case "divider":
+            return <Divider variant="middle" key={`divider${idx}`} />;
+          case "subheader":
+            return (
+              <ListSubheader key={item.key} disableSticky>
+                <Typography variant="overline">{item.label}</Typography>
+              </ListSubheader>
+            );
+        }
+      })}
+    </Menu>
   );
 }

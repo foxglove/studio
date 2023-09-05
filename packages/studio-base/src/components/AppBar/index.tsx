@@ -22,7 +22,6 @@ import {
   CustomWindowControls,
   CustomWindowControlsProps,
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
-import { AppMenu } from "@foxglove/studio-base/components/AppMenu";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -44,6 +43,7 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { AddPanelMenu } from "./AddPanelMenu";
 import { AppBarContainer } from "./AppBarContainer";
+import { AppMenu } from "./AppMenu";
 import { DataSource } from "./DataSource";
 import { UserMenu } from "./UserMenu";
 
