@@ -88,7 +88,7 @@ function activateExtension(
   };
 
   try {
-    // eslint-disable-next-line no-new-func
+    // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
     const fn = new Function("module", "require", unwrappedExtensionSource);
 
     // load the extension module exports
@@ -200,7 +200,9 @@ export default function ExtensionCatalogProvider({
   // Request an initial refresh on first mount
   const refreshExtensions = store.getState().refreshExtensions;
   useEffect(() => {
-    refreshExtensions().catch((err) => log.error(err));
+    refreshExtensions().catch((err) => {
+      log.error(err);
+    });
   }, [refreshExtensions]);
 
   return (

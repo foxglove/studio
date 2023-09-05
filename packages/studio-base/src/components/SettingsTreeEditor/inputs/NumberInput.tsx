@@ -5,12 +5,16 @@
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton, TextFieldProps, TextField } from "@mui/material";
-import { clamp, isFinite } from "lodash";
+import { clamp, isFinite, round } from "lodash";
 import { ReactNode, useCallback, useRef } from "react";
 import { useLatest } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+
+const Constants = {
+  ScrubPrecision: 4,
+} as const;
 
 const useStyles = makeStyles()((theme) => ({
   iconButton: {
@@ -81,7 +85,7 @@ export function NumberInput(
     onChange,
     disabled,
     readOnly,
-    precision = 2,
+    precision = 100,
   } = props;
 
   const inputRef = useRef<HTMLInputElement>(ReactNull);
@@ -105,7 +109,7 @@ export function NumberInput(
         newValue == undefined
           ? undefined
           : clamp(newValue, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
-      onChange(clampedValue != undefined ? Number(clampedValue.toFixed(precision)) : clampedValue);
+      onChange(clampedValue != undefined ? round(clampedValue, precision) : clampedValue);
     },
     [disabled, readOnly, min, max, onChange, precision],
   );
@@ -135,7 +139,7 @@ export function NumberInput(
           0.1 *
           step *
           scale;
-        scrubValue.current += delta;
+        scrubValue.current = round(scrubValue.current + delta, Constants.ScrubPrecision);
         updateValue(scrubValue.current);
       }
     },
@@ -143,15 +147,19 @@ export function NumberInput(
   );
 
   const displayValue =
-    inputRef.current === document.activeElement ? value : value?.toFixed(precision);
+    inputRef.current === document.activeElement
+      ? value
+      : value != undefined
+      ? round(value, precision)
+      : undefined;
 
   return (
     <TextField
       {...props}
       value={displayValue ?? ""}
-      onChange={(event) =>
-        updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined)
-      }
+      onChange={(event) => {
+        updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined);
+      }}
       type="number"
       className={cx(classes.textField, { [classes.textFieldReadonly]: readOnly })}
       inputProps={{
@@ -169,9 +177,9 @@ export function NumberInput(
             size="small"
             edge="start"
             tabIndex={-1} // Disable tabbing to the step buttons.
-            onClick={(event: React.MouseEvent) =>
-              updateValue((value ?? placeHolderValue ?? 0) - (event.shiftKey ? step * 10 : step))
-            }
+            onClick={(event: React.MouseEvent) => {
+              updateValue((value ?? placeHolderValue ?? 0) - (event.shiftKey ? step * 10 : step));
+            }}
           >
             {iconDown ?? <ChevronLeftIcon fontSize="small" />}
           </IconButton>
@@ -182,9 +190,9 @@ export function NumberInput(
             size="small"
             edge="end"
             tabIndex={-1} // Disable tabbing to the step buttons.
-            onClick={(event: React.MouseEvent) =>
-              updateValue((value ?? placeHolderValue ?? 0) + (event.shiftKey ? step * 10 : step))
-            }
+            onClick={(event: React.MouseEvent) => {
+              updateValue((value ?? placeHolderValue ?? 0) + (event.shiftKey ? step * 10 : step));
+            }}
           >
             {iconUp ?? <ChevronRightIcon fontSize="small" />}
           </IconButton>

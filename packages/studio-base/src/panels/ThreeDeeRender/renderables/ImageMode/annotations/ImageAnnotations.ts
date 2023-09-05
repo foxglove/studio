@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
 import { Immutable, MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
+import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import {
   ImageMarker as RosImageMarker,
   ImageMarkerArray as RosImageMarkerArray,
@@ -24,6 +25,8 @@ import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema"
 import { sortPrefixMatchesToFront } from "../../Images/topicPrefixMatching";
 import { MessageHandler, MessageRenderState } from "../MessageHandler";
 
+const MISSING_SYNCHRONIZED_ANNOTATION = "MISSING_SYNCHRONIZED_ANNOTATION";
+
 type TopicName = string & { __brand: "TopicName" };
 
 interface ImageAnnotationsContext {
@@ -37,6 +40,8 @@ interface ImageAnnotationsContext {
   updateSettingsTree(): void;
   labelPool: LabelPool;
   messageHandler: MessageHandler;
+  addSettingsError(path: Path, errorId: string, errorMessage: string): void;
+  removeSettingsError(path: Path, errorId: string): void;
 }
 
 /** For backwards compatibility with previously published type definitions, older studio versions, and webviz */
@@ -48,7 +53,7 @@ const LEGACY_ANNOTATION_SCHEMAS = new Set([
   "webviz_msgs/ImageMarkerArray",
 ]);
 
-const ALL_SUPPORTED_SCHEMAS = new Set([
+export const ALL_SUPPORTED_ANNOTATION_SCHEMAS = new Set([
   ...IMAGE_ANNOTATIONS_DATATYPES,
   ...IMAGE_MARKER_DATATYPES,
   ...IMAGE_MARKER_ARRAY_DATATYPES,
@@ -83,7 +88,7 @@ export class ImageAnnotations extends THREE.Object3D {
     return [
       {
         type: "schema",
-        schemaNames: ALL_SUPPORTED_SCHEMAS,
+        schemaNames: ALL_SUPPORTED_ANNOTATION_SCHEMAS,
         subscription: { handler: this.#context.messageHandler.handleAnnotations },
       },
     ];
@@ -134,7 +139,27 @@ export class ImageAnnotations extends THREE.Object3D {
     if (newState.annotationsByTopic != undefined) {
       for (const { originalMessage, annotations } of newState.annotationsByTopic.values()) {
         this.#handleMessage(originalMessage, annotations);
+
+        // Hide any remaining errors for annotations we are able to render
+        this.#context.removeSettingsError(
+          ["imageAnnotations", originalMessage.topic],
+          MISSING_SYNCHRONIZED_ANNOTATION,
+        );
       }
+    }
+    for (const topic of newState.presentAnnotationTopics ?? []) {
+      // Even if a full synchronized set is not found, hide errors for annotations that were present
+      this.#context.removeSettingsError(
+        ["imageAnnotations", topic],
+        MISSING_SYNCHRONIZED_ANNOTATION,
+      );
+    }
+    for (const topic of newState.missingAnnotationTopics ?? []) {
+      this.#context.addSettingsError(
+        ["imageAnnotations", topic],
+        MISSING_SYNCHRONIZED_ANNOTATION,
+        "Waiting for annotation message with timestamp matching image. Turn off “Sync annotations” to display annotations regardless of timestamp.",
+      );
     }
   };
 
@@ -201,7 +226,7 @@ export class ImageAnnotations extends THREE.Object3D {
 
     const annotationTopics = this.#context
       .topics()
-      .filter((topic) => topicIsConvertibleToSchema(topic, ALL_SUPPORTED_SCHEMAS));
+      .filter((topic) => topicIsConvertibleToSchema(topic, ALL_SUPPORTED_ANNOTATION_SCHEMAS));
 
     // Sort annotation topics with prefixes matching the image topic to the top.
     if (config.imageTopic) {

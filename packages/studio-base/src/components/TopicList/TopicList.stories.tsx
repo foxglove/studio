@@ -4,7 +4,10 @@
 
 import { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
+import { ros2humble } from "@foxglove/rosmsg-msgs-common";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { PlayerCapabilities, TopicStats } from "@foxglove/studio-base/players/types";
 
@@ -39,12 +42,15 @@ export default {
   args: {
     capabilities: [PlayerCapabilities.playbackControl],
     topics,
+    datatypes: new Map(Object.entries(ros2humble)),
     topicStats,
   },
   render: (args) => (
-    <MockMessagePipelineProvider {...args}>
-      <TopicList />
-    </MockMessagePipelineProvider>
+    <DndProvider backend={HTML5Backend}>
+      <MockMessagePipelineProvider {...args}>
+        <TopicList />
+      </MockMessagePipelineProvider>
+    </DndProvider>
   ),
 } as Meta<typeof MockMessagePipelineProvider>;
 
@@ -70,6 +76,28 @@ export const FilterBySchemaName: Story = {
 
     for (const input of filterInputs) {
       await userEvent.type(input, "std_msgs/String");
+    }
+  },
+};
+
+export const FilterByFieldName: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const filterInputs = await canvas.findAllByPlaceholderText("Filter by topic or schema name…");
+
+    for (const input of filterInputs) {
+      await userEvent.type(input, "data");
+    }
+  },
+};
+
+export const FilterByMessagePath: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const filterInputs = await canvas.findAllByPlaceholderText("Filter by topic or schema name…");
+
+    for (const input of filterInputs) {
+      await userEvent.type(input, "to1da");
     }
   },
 };

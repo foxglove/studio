@@ -149,15 +149,12 @@ overrides:
 
       "@typescript-eslint/no-inferrable-types": off # It's sometimes useful to explicitly name to guard against future changes
       "@typescript-eslint/no-empty-function": off
-      "@typescript-eslint/no-implied-eval": off # We need to use `new Function()`
 
       # These are related to `any` types, which we generally don't have except from imports
       "@typescript-eslint/no-unsafe-member-access": off
       "@typescript-eslint/no-unsafe-return": off
       "@typescript-eslint/no-unsafe-assignment": off
       "@typescript-eslint/no-unsafe-call": off
-
-      "@typescript-eslint/require-await": off # Async functions without await are used to satisfy interface requirements
 
       # These could theoretically be turned on (or merit investigation) but are currently noisy
       "@typescript-eslint/no-misused-promises": off # Often used with e.g. useCallback(async () => {})

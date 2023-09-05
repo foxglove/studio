@@ -38,10 +38,6 @@ interface NativeMenuBridge {
    * https://www.electronjs.org/docs/latest/api/context-bridge#parameter--error--return-type-support
    */
   addIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void): UnregisterFn;
-
-  // Manage file menu input source menu items
-  menuAddInputSource(name: string, handler: () => void): Promise<void>;
-  menuRemoveInputSource(name: string): Promise<void>;
 }
 
 // Items suitable for storage
@@ -87,6 +83,9 @@ interface Desktop {
   // Get an array of deep links provided on app launch
   getDeepLinks: () => string[];
 
+  // Reset the deep links. After reset, `getDeepLinks` will return an empty array.
+  resetDeepLinks: () => void;
+
   // Get an array of available extensions and parsed package.json files
   getExtensions: () => Promise<DesktopExtension[]>;
 
@@ -109,6 +108,9 @@ interface Desktop {
   unmaximizeWindow(): void;
   closeWindow(): void;
   reloadWindow(): void;
+
+  /** Notify the app that the language setting has been changed */
+  updateLanguage(): void;
 }
 
 export type { NativeMenuBridge, Storage, StorageContent, Desktop, DesktopExtension };

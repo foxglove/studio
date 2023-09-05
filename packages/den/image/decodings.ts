@@ -270,7 +270,7 @@ export function decodeMono16(
   },
 ): void {
   if (step < width * 2) {
-    throw new Error(`RGBA8 image row step (${step}) must be at least 2*width (${width * 2})`);
+    throw new Error(`Uint16 image row step (${step}) must be at least 2*width (${width * 2})`);
   }
   const view = new DataView(mono16.buffer, mono16.byteOffset);
 
@@ -340,7 +340,7 @@ function makeSpecializedDecodeBayer(
   //
   // We'll do something much simpler.  For each group of 2x2, we're replicate the R and B values for all pixels.
   // For the two row, we'll replicate G0 for the green channels, and replicate G1 for the bottom row.
-  // eslint-disable-next-line no-new-func
+  // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
   return new Function(
     "data",
     "width",

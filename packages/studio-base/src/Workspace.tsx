@@ -47,7 +47,6 @@ import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
-import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   LeftSidebarItemKey,
@@ -85,6 +84,8 @@ type WorkspaceProps = CustomWindowControlsProps & {
   deepLinks?: string[];
   appBarLeftInset?: number;
   onAppBarDoubleClick?: () => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+  disablePersistenceForStorybook?: boolean;
 };
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
@@ -170,32 +171,44 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   useNativeAppMenuEvent(
     "open",
-    useCallback(async () => dialogActions.dataSource.open("start"), [dialogActions.dataSource]),
+    useCallback(async () => {
+      dialogActions.dataSource.open("start");
+    }, [dialogActions.dataSource]),
   );
 
   useNativeAppMenuEvent(
     "open-file",
-    useCallback(async () => await dialogActions.openFile.open(), [dialogActions.openFile]),
+    useCallback(async () => {
+      await dialogActions.openFile.open();
+    }, [dialogActions.openFile]),
   );
 
   useNativeAppMenuEvent(
     "open-connection",
-    useCallback(() => dialogActions.dataSource.open("connection"), [dialogActions.dataSource]),
+    useCallback(() => {
+      dialogActions.dataSource.open("connection");
+    }, [dialogActions.dataSource]),
   );
 
   useNativeAppMenuEvent(
     "open-demo",
-    useCallback(() => dialogActions.dataSource.open("demo"), [dialogActions.dataSource]),
+    useCallback(() => {
+      dialogActions.dataSource.open("demo");
+    }, [dialogActions.dataSource]),
   );
 
   useNativeAppMenuEvent(
     "open-help-about",
-    useCallback(() => dialogActions.preferences.open("about"), [dialogActions.preferences]),
+    useCallback(() => {
+      dialogActions.preferences.open("about");
+    }, [dialogActions.preferences]),
   );
 
   useNativeAppMenuEvent(
     "open-help-general",
-    useCallback(() => dialogActions.preferences.open("general"), [dialogActions.preferences]),
+    useCallback(() => {
+      dialogActions.preferences.open("general");
+    }, [dialogActions.preferences]),
   );
 
   useNativeAppMenuEvent("open-help-docs", () => {
@@ -205,30 +218,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   useNativeAppMenuEvent("open-help-slack", () => {
     window.open("https://foxglove.dev/slack", "_blank");
   });
-
-  const nativeAppMenu = useNativeAppMenu();
-
-  const connectionSources = useMemo(() => {
-    return availableSources.filter((source) => source.type === "connection");
-  }, [availableSources]);
-
-  useEffect(() => {
-    if (!nativeAppMenu) {
-      return;
-    }
-
-    for (const item of connectionSources) {
-      nativeAppMenu.addFileEntry(item.displayName, () => {
-        dialogActions.dataSource.open("connection", item);
-      });
-    }
-
-    return () => {
-      for (const item of connectionSources) {
-        nativeAppMenu.removeFileEntry(item.displayName);
-      }
-    };
-  }, [connectionSources, dialogActions.dataSource, nativeAppMenu]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -374,8 +363,12 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const keyDownHandlers = useMemo(() => {
     return {
-      "[": () => sidebarActions.left.setOpen((oldValue) => !oldValue),
-      "]": () => sidebarActions.right.setOpen((oldValue) => !oldValue),
+      "[": () => {
+        sidebarActions.left.setOpen((oldValue) => !oldValue);
+      },
+      "]": () => {
+        sidebarActions.right.setOpen((oldValue) => !oldValue);
+      },
     };
   }, [sidebarActions.left, sidebarActions.right]);
 
@@ -522,6 +515,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     <WorkspaceContextProvider
       initialState={initialState}
       workspaceStoreCreator={workspaceStoreCreator}
+      disablePersistenceForStorybook={props.disablePersistenceForStorybook}
     >
       <WorkspaceContent {...props} />
     </WorkspaceContextProvider>

@@ -54,6 +54,16 @@ export default function Root(props: {
     };
   }, [appConfiguration]);
 
+  useEffect(() => {
+    const handler = () => {
+      desktopBridge.updateLanguage();
+    };
+    appConfiguration.addChangeListener(AppSetting.LANGUAGE, handler);
+    return () => {
+      appConfiguration.removeChangeListener(AppSetting.LANGUAGE, handler);
+    };
+  }, [appConfiguration]);
+
   const [extensionLoaders] = useState(() => [
     new IdbExtensionLoader("org"),
     new DesktopExtensionLoader(desktopBridge),
@@ -96,22 +106,32 @@ export default function Root(props: {
   const [isFullScreen, setFullScreen] = useState(false);
   const [isMaximized, setMaximized] = useState(nativeWindow.isMaximized());
 
-  const onMinimizeWindow = useCallback(() => nativeWindow.minimize(), [nativeWindow]);
-  const onMaximizeWindow = useCallback(() => nativeWindow.maximize(), [nativeWindow]);
-  const onUnmaximizeWindow = useCallback(() => nativeWindow.unmaximize(), [nativeWindow]);
-  const onCloseWindow = useCallback(() => nativeWindow.close(), [nativeWindow]);
+  const onMinimizeWindow = useCallback(() => {
+    nativeWindow.minimize();
+  }, [nativeWindow]);
+  const onMaximizeWindow = useCallback(() => {
+    nativeWindow.maximize();
+  }, [nativeWindow]);
+  const onUnmaximizeWindow = useCallback(() => {
+    nativeWindow.unmaximize();
+  }, [nativeWindow]);
+  const onCloseWindow = useCallback(() => {
+    nativeWindow.close();
+  }, [nativeWindow]);
 
   useEffect(() => {
-    const unregisterFull = desktopBridge.addIpcEventListener("enter-full-screen", () =>
-      setFullScreen(true),
-    );
-    const unregisterLeave = desktopBridge.addIpcEventListener("leave-full-screen", () =>
-      setFullScreen(false),
-    );
-    const unregisterMax = desktopBridge.addIpcEventListener("maximize", () => setMaximized(true));
-    const unregisterUnMax = desktopBridge.addIpcEventListener("unmaximize", () =>
-      setMaximized(false),
-    );
+    const unregisterFull = desktopBridge.addIpcEventListener("enter-full-screen", () => {
+      setFullScreen(true);
+    });
+    const unregisterLeave = desktopBridge.addIpcEventListener("leave-full-screen", () => {
+      setFullScreen(false);
+    });
+    const unregisterMax = desktopBridge.addIpcEventListener("maximize", () => {
+      setMaximized(true);
+    });
+    const unregisterUnMax = desktopBridge.addIpcEventListener("unmaximize", () => {
+      setMaximized(false);
+    });
     return () => {
       unregisterFull();
       unregisterLeave();
@@ -131,7 +151,9 @@ export default function Root(props: {
         nativeWindow={nativeWindow}
         enableGlobalCss
         appBarLeftInset={ctxbridge?.platform === "darwin" && !isFullScreen ? 72 : undefined}
-        onAppBarDoubleClick={() => nativeWindow.handleTitleBarDoubleClick()}
+        onAppBarDoubleClick={() => {
+          nativeWindow.handleTitleBarDoubleClick();
+        }}
         showCustomWindowControls={ctxbridge?.platform === "linux"}
         isMaximized={isMaximized}
         onMinimizeWindow={onMinimizeWindow}

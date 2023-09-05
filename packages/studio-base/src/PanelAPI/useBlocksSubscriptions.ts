@@ -15,16 +15,15 @@ import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { useShallowMemo } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
 import {
-  useMessagePipeline,
   MessagePipelineContext,
+  useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import {
-  SubscribePayload,
   MessageEvent,
   MessageBlock as PlayerMessageBlock,
+  SubscribePayload,
 } from "@foxglove/studio-base/players/types";
 
 export type MessageBlock = Immutable<{
@@ -35,28 +34,33 @@ export type MessageBlock = Immutable<{
 // That said, MessageBlock identity will change when the set of topics changes, so consumers should
 // prefer to use the identity of topic-block message arrays where possible.
 const filterBlockByTopics = memoizeWeak(
-  (block: Immutable<PlayerMessageBlock> | undefined, topics: readonly string[]): MessageBlock => {
+  (
+    block: Immutable<PlayerMessageBlock> | undefined,
+    topics: readonly string[] | SubscribePayload[],
+  ): MessageBlock => {
     if (!block) {
       // For our purposes, a missing MemoryCacheBlock just means "no topics have been cached for
       // this block". This is semantically different to an empty array per topic, but not different
       // to a MemoryCacheBlock with no per-topic arrays.
       return {};
     }
+
     const ret: Record<string, readonly MessageEvent[]> = {};
     for (const topic of topics) {
+      const topicName = typeof topic === "string" ? topic : topic.topic;
       // Don't include an empty array when the data has not been cached for this topic for this
       // block. The missing entry means "we don't know the message for this topic in this block", as
       // opposed to "we know there are no messages for this topic in this block".
-      const blockMessages = block.messagesByTopic[topic];
+      const blockMessages = block.messagesByTopic[topicName];
       if (blockMessages) {
-        ret[topic] = blockMessages;
+        ret[topicName] = blockMessages;
       }
     }
     return ret;
   },
 );
 
-const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
+const useSubscriptionsForBlocks = (subscriptions: Immutable<SubscribePayload[]>) => {
   const [id] = useState(() => uuidv4());
 
   const setSubscriptions = useMessagePipeline(
@@ -66,10 +70,10 @@ const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
       [],
     ),
   );
-  const subscriptions: SubscribePayload[] = useMemo(() => {
-    return topics.map((topic) => ({ topic, preloadType: "full" }));
-  }, [topics]);
-  useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
+
+  useEffect(() => {
+    setSubscriptions(id, subscriptions);
+  }, [id, setSubscriptions, subscriptions]);
 
   useEffect(() => {
     return () => {
@@ -89,10 +93,12 @@ const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
 //   - Each block represents the same duration of time
 //   - The number of blocks is consistent for the data source
 //   - Blocks are stored in increasing order of time
-export function useBlocksByTopic(topics: readonly string[]): readonly MessageBlock[] {
-  const requestedTopics = useShallowMemo(topics);
+export function useBlocksSubscriptions(
+  subscriptions: Immutable<SubscribePayload[]>,
+): readonly MessageBlock[] {
+  const requestedTopics = useMemo(() => subscriptions.map((sub) => sub.topic), [subscriptions]);
 
-  useSubscribeToTopicsForBlocks(requestedTopics);
+  useSubscriptionsForBlocks(subscriptions);
 
   const allBlocks = useMessagePipeline<Immutable<(PlayerMessageBlock | undefined)[] | undefined>>(
     useCallback((ctx) => ctx.playerState.progress.messageCache?.blocks, []),

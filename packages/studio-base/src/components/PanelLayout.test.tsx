@@ -32,7 +32,18 @@ class MockPanelCatalog implements PanelCatalog {
 }
 
 describe("UnconnectedPanelLayout", () => {
+  beforeEach(() => {
+    // jsdom can't parse our @container CSS so we have to silence console.error for this test.
+    jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    (console.error as jest.Mock).mockRestore();
+  });
+
   it("does not remount panels when changing split percentage", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+
     const renderA = jest.fn().mockReturnValue(<>A</>);
     const moduleA = jest.fn().mockResolvedValue({
       default: Panel(Object.assign(renderA, { panelType: "a", defaultConfig: {} })),
@@ -87,7 +98,9 @@ describe("UnconnectedPanelLayout", () => {
       },
     );
 
-    await waitFor(() => expect(renderA).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(renderA).toHaveBeenCalled();
+    });
     // Each panel module should have only been loaded once
     expect(moduleA).toHaveBeenCalledTimes(1);
     expect(moduleB).toHaveBeenCalledTimes(1);
@@ -102,7 +115,9 @@ describe("UnconnectedPanelLayout", () => {
         onChange={onChange}
       />,
     );
-    await waitFor(() => expect(renderC).toHaveBeenCalledTimes(4));
+    await waitFor(() => {
+      expect(renderC).toHaveBeenCalledTimes(4);
+    });
     // Each panel module should have only been loaded once; panels A and B should not render again
     expect(moduleA).toHaveBeenCalledTimes(1);
     expect(moduleB).toHaveBeenCalledTimes(1);

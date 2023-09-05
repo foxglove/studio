@@ -369,7 +369,9 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               value={settings.label}
               onBlur={toggleEditing}
               onKeyDown={onLabelKeyDown}
-              onFocus={(event) => event.target.select()}
+              onFocus={(event) => {
+                event.target.select();
+              }}
               InputProps={{
                 endAdornment: (
                   <IconButton
@@ -425,11 +427,12 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           )}
           {inlineActions.map((action) => {
             const Icon = action.icon ? icons[action.icon] : undefined;
-            const handler = () =>
+            const handler = () => {
               actionHandler({
                 action: "perform-node-action",
                 payload: { id: action.id, path: props.path },
               });
+            };
             return Icon ? (
               <IconButton
                 key={action.id}
@@ -479,12 +482,15 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
         </>
       )}
       {state.open && selectVisibilityFilterEnabled && hasChildren && (
-        <FieldEditor
-          key="visibilityFilter"
-          field={{ ...getSelectVisibilityFilterField(t), value: state.visibilityFilter }}
-          path={makeStablePath(props.path, "visibilityFilter")}
-          actionHandler={selectVisibilityFilter}
-        />
+        <>
+          <Stack paddingBottom={0.5} style={{ gridColumn: "span 2" }} />
+          <FieldEditor
+            key="visibilityFilter"
+            field={{ ...getSelectVisibilityFilterField(t), value: state.visibilityFilter }}
+            path={makeStablePath(props.path, "visibilityFilter")}
+            actionHandler={selectVisibilityFilter}
+          />
+        </>
       )}
       {state.open && childNodes}
       {indent === 1 && <Divider style={{ gridColumn: "span 2" }} />}

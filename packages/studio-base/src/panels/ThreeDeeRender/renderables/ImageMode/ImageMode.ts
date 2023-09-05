@@ -9,6 +9,7 @@ import { filterMap } from "@foxglove/den/collection";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { toNanoSec } from "@foxglove/rostime";
 import { Immutable, SettingsTreeAction, SettingsTreeFields, Topic } from "@foxglove/studio";
+import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import {
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
@@ -65,7 +66,7 @@ const REMOVE_IMAGE_TIMEOUT_MS = 50;
 
 type ImageModeEvent = { type: "hasModifiedViewChanged" };
 
-const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
+export const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
   ...ROS_IMAGE_DATATYPES,
   ...ROS_COMPRESSED_IMAGE_DATATYPES,
   ...RAW_IMAGE_DATATYPES,
@@ -157,13 +158,21 @@ export class ImageMode
       topics: () => renderer.topics ?? [],
       config: () => this.#getImageModeSettings(),
       updateConfig: (updateHandler) => {
-        renderer.updateConfig((draft) => updateHandler(draft.imageMode));
+        renderer.updateConfig((draft) => {
+          updateHandler(draft.imageMode);
+        });
       },
       updateSettingsTree: () => {
         this.updateSettingsTree();
       },
       labelPool: renderer.labelPool,
       messageHandler: this.#messageHandler,
+      addSettingsError(path: Path, errorId: string, errorMessage: string) {
+        renderer.settings.errors.add(path, errorId, errorMessage);
+      },
+      removeSettingsError(path: Path, errorId: string) {
+        renderer.settings.errors.remove(path, errorId);
+      },
     });
     this.add(this.#annotations);
 

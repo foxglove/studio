@@ -10,7 +10,7 @@ export function merge<K, V1, V2, V3>(
   b: ReadonlyMap<K, V2>,
   fn: (aval: V1, bval: V2, key: K) => V3,
 ): Map<K, V1 | V2 | V3> {
-  const dest: Map<K, V1 | V2 | V3> = new Map();
+  const dest = new Map<K, V1 | V2 | V3>();
 
   for (const [key, aVal] of a) {
     const bVal = b.get(key);
@@ -35,20 +35,6 @@ export function merge<K, V1, V2, V3>(
   }
 
   return dest;
-}
-
-/**
- * Generates a new map from input with the same keys but with fn applied to each value.
- */
-export function mapValues<K, V, V2>(
-  input: ReadonlyMap<K, V>,
-  fn: (val: V, key: K) => V2,
-): Map<K, V2> {
-  const newEntries: [K, V2][] = [];
-  for (const [key, value] of input) {
-    newEntries.push([key, fn(value, key)]);
-  }
-  return new Map(newEntries);
 }
 
 /**

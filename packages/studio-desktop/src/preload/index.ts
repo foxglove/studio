@@ -22,6 +22,14 @@ import {
 } from "../common/types";
 import { FOXGLOVE_PRODUCT_NAME, FOXGLOVE_PRODUCT_VERSION } from "../common/webpackDefines";
 
+// Since we have no way of modifying `window.process.argv` we use a sentinel cookie and reload
+// hack to reset the page without deep links. By setting a session cookie and reloading
+// we allow this preload script to read the cookie and ignore deep links in `getDeepLinks`
+const ignoreDeepLinks = document.cookie.includes("fox.ignoreDeepLinks=true");
+document.cookie = "fox.ignoreDeepLinks=;max-age=0;";
+
+const deepLinks = ignoreDeepLinks ? [] : decodeRendererArg("deepLinks", window.process.argv) ?? [];
+
 export function main(): void {
   const log = Logger.getLogger(__filename);
 
@@ -32,9 +40,6 @@ export function main(): void {
   window.onerror = (ev) => {
     console.error(ev);
   };
-
-  type IpcListener = (ev: unknown, ...args: unknown[]) => void;
-  const menuClickListeners = new Map<string, IpcListener>();
 
   // Initialize the RPC channel for electron-socket asynchronously
   PreloaderSockets.Create().catch((err) => {
@@ -105,8 +110,20 @@ export function main(): void {
     async updateNativeColorScheme() {
       await ipcRenderer.invoke("updateNativeColorScheme");
     },
+    async updateLanguage() {
+      await ipcRenderer.invoke("updateLanguage");
+    },
     getDeepLinks(): string[] {
-      return decodeRendererArg("deepLinks", window.process.argv) ?? [];
+      return deepLinks;
+    },
+    resetDeepLinks(): void {
+      // See `ignoreDeepLinks` comment above for why we do this hack to reset deep links
+
+      // set a session cookie called "fox.ignoreDeepLinks"
+      document.cookie = "fox.ignoreDeepLinks=true;";
+
+      // Reload the window so the new preloader script can read the cookie
+      window.location.reload();
     },
     async getExtensions() {
       const homePath = (await ipcRenderer.invoke("getHomePath")) as string;
@@ -174,30 +191,6 @@ export function main(): void {
       return () => {
         ipcRenderer.off(eventName, handler);
       };
-    },
-    async menuAddInputSource(name: string, handler: () => void) {
-      if (menuClickListeners.has(name)) {
-        throw new Error(`Menu input source ${name} already exists`);
-      }
-
-      const listener: IpcListener = (_ev, ...args) => {
-        if (args[0] === name) {
-          handler();
-        }
-      };
-
-      menuClickListeners.set(name, listener);
-      ipcRenderer.on("menu.click-input-source", listener);
-      await ipcRenderer.invoke("menu.add-input-source", name);
-    },
-    async menuRemoveInputSource(name: string) {
-      const listener = menuClickListeners.get(name);
-      if (listener == undefined) {
-        return;
-      }
-      menuClickListeners.delete(name);
-      ipcRenderer.off("menu.click-input-source", listener);
-      await ipcRenderer.invoke("menu.remove-input-source", name);
     },
   };
 
