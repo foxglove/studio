@@ -91,12 +91,16 @@ const makeRootSeriesNode = memoizeWeak(
 
 function buildSettingsTree(config: PlotConfig, t: TFunction<"plot">): SettingsTreeNodes {
   const maxYError =
-    _.isNumber(config.minYValue) && _.isNumber(config.maxYValue) && config.minYValue >= config.maxYValue
+    _.isNumber(config.minYValue) &&
+    _.isNumber(config.maxYValue) &&
+    config.minYValue >= config.maxYValue
       ? t("maxYError")
       : undefined;
 
   const maxXError =
-    _.isNumber(config.minXValue) && _.isNumber(config.maxXValue) && config.minXValue >= config.maxXValue
+    _.isNumber(config.minXValue) &&
+    _.isNumber(config.maxXValue) &&
+    config.minXValue >= config.maxXValue
       ? t("maxXError")
       : undefined;
 

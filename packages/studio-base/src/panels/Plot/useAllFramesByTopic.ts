@@ -136,7 +136,9 @@ export function useAllFramesByTopic(
   }
 
   // Stablize the flattened messages by shallow memoing the whole set after excluding empty topics.
-  const stableMessagesWithData = useShallowMemo(_.pickBy(state.messages, (msgs) => msgs.length > 0));
+  const stableMessagesWithData = useShallowMemo(
+    _.pickBy(state.messages, (msgs) => msgs.length > 0),
+  );
 
   return stableMessagesWithData;
 }

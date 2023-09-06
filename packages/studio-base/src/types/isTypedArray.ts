@@ -18,5 +18,5 @@ type TypedArray =
   | Uint8ClampedArray;
 
 export function isTypedArray(value: unknown): value is TypedArray {
-  return _.lodashIsTypedArray(value);
+  return _.isTypedArray(value);
 }

@@ -263,7 +263,9 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
           // Find where we need to insert our new block.
           // It should come before any blocks with a start time > than new block start time.
-          const insertIndex = _.sortedIndexBy(this.#cache, newBlock, (item) => toNanoSec(item.start));
+          const insertIndex = _.sortedIndexBy(this.#cache, newBlock, (item) =>
+            toNanoSec(item.start),
+          );
           this.#cache.splice(insertIndex, 0, newBlock);
 
           block = newBlock;

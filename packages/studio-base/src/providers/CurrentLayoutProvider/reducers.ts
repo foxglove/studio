@@ -78,7 +78,9 @@ function changePanelLayout(
   state: LayoutData,
   { layout, trimConfigById = true }: ChangePanelLayoutPayload,
 ): LayoutData {
-  const panelIds: string[] = getLeaves(layout ?? ReactNull).filter((panelId) => !_.isEmpty(panelId));
+  const panelIds: string[] = getLeaves(layout ?? ReactNull).filter(
+    (panelId) => !_.isEmpty(panelId),
+  );
   const panelIdsInsideTabPanels = getPanelIdsInsideTabPanels(panelIds, state.configById);
   // Filter configById in case a panel was removed from the layout
   // We don't want its configById hanging around forever
@@ -129,7 +131,10 @@ function savePanelConfigs(state: LayoutData, payload: SaveConfigsPayload): Layou
     const panelIdsInsideTabPanels = getPanelIdsInsideTabPanels(panelIds, newConfigById);
     // Filter savedProps in case a panel was removed from a Tab layout
     // We don't want its savedProps hanging around forever
-    return { ...state, configById: _.pick(newConfigById, [...panelIdsInsideTabPanels, ...panelIds]) };
+    return {
+      ...state,
+      configById: _.pick(newConfigById, [...panelIdsInsideTabPanels, ...panelIds]),
+    };
   }
 
   // if none of the configs changed, then we keep the same state object
@@ -748,7 +753,11 @@ const endDrag = (panelsState: LayoutData, dragPayload: EndDragPayload): LayoutDa
     });
   }
 
-  if (position != undefined && destinationPath != undefined && !_.isEqual(destinationPath, ownPath)) {
+  if (
+    position != undefined &&
+    destinationPath != undefined &&
+    !_.isEqual(destinationPath, ownPath)
+  ) {
     const updates = createDragToUpdates(originalLayout, ownPath, destinationPath, position);
     const newLayout = updateTree(originalLayout, updates);
     return changePanelLayout(panelsState, { layout: newLayout, trimConfigById: false });
