@@ -14,7 +14,7 @@ import {
   Map as LeafMap,
   TileLayer,
 } from "leaflet";
-import _ from "lodash";
+import * as _ from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";

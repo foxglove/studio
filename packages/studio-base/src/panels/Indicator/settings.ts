@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { produce } from "immer";
-import _ from "lodash";
+import * as _ from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useMemo } from "react";
 

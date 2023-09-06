@@ -13,7 +13,7 @@
 
 import { Autocomplete, TextField } from "@mui/material";
 import { produce } from "immer";
-import _ from "lodash";
+import * as _ from "lodash";
 import { useCallback, useMemo, useEffect } from "react";
 
 import { SettingsTreeAction } from "@foxglove/studio";

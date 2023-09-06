@@ -18,7 +18,7 @@ import {
   Tooltip,
   InputBase,
 } from "@mui/material";
-import _ from "lodash";
+import * as _ from "lodash";
 import { useMemo, useCallback, useState, useRef } from "react";
 import { makeStyles } from "tss-react/mui";
 

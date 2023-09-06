@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Mutex } from "async-mutex";
-import _ from "lodash";
+import * as _ from "lodash";
 import memoizeWeak from "memoize-weak";
 import ReactDOM from "react-dom";
 import shallowequal from "shallowequal";

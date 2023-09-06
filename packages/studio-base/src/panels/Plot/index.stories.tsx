@@ -14,7 +14,7 @@
 import { StoryObj } from "@storybook/react";
 import { screen, userEvent, waitFor } from "@storybook/testing-library";
 import { produce } from "immer";
-import _ from "lodash";
+import * as _ from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 

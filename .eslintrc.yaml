@@ -93,13 +93,6 @@ rules:
           importNames: [Box]
           message: "@mui/Box has performance implications. Use tss-react/mui instead."
 
-        - name: "lodash"
-          importNames: [get]
-          message: "Use optional chaining instead of lodash.get."
-
-        - name: "lodash/get"
-          message: "Use optional chaining instead of lodash.get."
-
   no-restricted-syntax:
     - error
     - selector: "MethodDefinition[kind='get'], Property[kind='get']"

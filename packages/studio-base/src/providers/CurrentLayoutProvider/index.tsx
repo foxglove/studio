@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import _ from "lodash";
+import * as _ from "lodash";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { getNodeAtPath } from "react-mosaic-component";
 import shallowequal from "shallowequal";

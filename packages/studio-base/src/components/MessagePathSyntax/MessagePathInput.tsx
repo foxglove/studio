@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
-import _ from "lodash";
+import * as _ from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
 import { MessageDefinitionField } from "@foxglove/message-definition";

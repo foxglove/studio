@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Typography } from "@mui/material";
-import _ from "lodash";
+import * as _ from "lodash";
 import { ReactElement } from "react";
 
 import { subtract as subtractTimes, toSec } from "@foxglove/rostime";

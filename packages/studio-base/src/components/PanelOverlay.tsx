@@ -11,7 +11,7 @@ import {
   Paper,
   buttonClasses,
 } from "@mui/material";
-import _ from "lodash";
+import * as _ from "lodash";
 import { forwardRef } from "react";
 import { ReactElement } from "react-markdown/lib/react-markdown";
 import tc from "tinycolor2";

@@ -4,7 +4,7 @@
 
 import { StoryFn, StoryContext, StoryObj } from "@storybook/react";
 import { userEvent } from "@storybook/testing-library";
-import _ from "lodash";
+import * as _ from "lodash";
 import { useState } from "react";
 import { useTimeoutFn } from "react-use";
 

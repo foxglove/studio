@@ -19,7 +19,7 @@ import {
   IconButton,
   ButtonGroup,
 } from "@mui/material";
-import _ from "lodash";
+import * as _ from "lodash";
 import { KeyboardEvent, useCallback } from "react";
 import { useAsyncFn } from "react-use";
 import { keyframes } from "tss-react";

@@ -14,7 +14,7 @@
 import { Button, Fade, Tooltip, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
-import _ from "lodash";
+import * as _ from "lodash";
 import * as R from "ramda";
 import React, {
   ComponentProps,

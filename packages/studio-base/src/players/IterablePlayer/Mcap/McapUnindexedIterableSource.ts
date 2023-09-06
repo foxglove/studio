@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { McapStreamReader, McapTypes } from "@mcap/core";
-import _ from "lodash";
+import * as _ from "lodash";
 
 import { loadDecompressHandlers, parseChannel, ParsedChannel } from "@foxglove/mcap-support";
 import {

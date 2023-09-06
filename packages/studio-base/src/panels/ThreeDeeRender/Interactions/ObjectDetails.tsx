@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import _ from "lodash";
+import * as _ from "lodash";
 import Tree from "react-json-tree";
 
 import Stack from "@foxglove/studio-base/components/Stack";

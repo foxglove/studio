@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { set as idbSet, get as idbGet, createStore as idbCreateStore } from "idb-keyval";
-import _ from "lodash";
+import * as _ from "lodash";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAsync } from "react-use";
 import { v4 as uuid } from "uuid";

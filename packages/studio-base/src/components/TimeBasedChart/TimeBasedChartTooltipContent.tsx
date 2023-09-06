@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Square24Filled } from "@fluentui/react-icons";
-import _ from "lodash";
+import * as _ from "lodash";
 import { Fragment, PropsWithChildren, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 

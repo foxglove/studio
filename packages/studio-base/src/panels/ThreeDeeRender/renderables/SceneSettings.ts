@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { t } from "i18next";
-import _ from "lodash";
+import * as _ from "lodash";
 
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 

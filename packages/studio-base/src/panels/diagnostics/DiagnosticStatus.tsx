@@ -24,7 +24,7 @@ import {
   tableRowClasses,
   iconButtonClasses,
 } from "@mui/material";
-import _ from "lodash";
+import * as _ from "lodash";
 import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { createSelector } from "reselect";
 import sanitizeHtml from "sanitize-html";

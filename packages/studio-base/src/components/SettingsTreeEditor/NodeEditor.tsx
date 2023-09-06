@@ -9,7 +9,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import ErrorIcon from "@mui/icons-material/Error";
 import { Button, Divider, IconButton, TextField, Tooltip, Typography } from "@mui/material";
 import { TFunction } from "i18next";
-import _ from "lodash";
+import * as _ from "lodash";
 import memoizeWeak from "memoize-weak";
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";

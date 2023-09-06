@@ -13,7 +13,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { renderHook } from "@testing-library/react-hooks";
-import _ from "lodash";
+import * as _ from "lodash";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
