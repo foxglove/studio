@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { StoryObj } from "@storybook/react";
-import { userEvent, within } from "@storybook/testing-library";
 import { range } from "lodash";
 
 import Log from "@foxglove/studio-base/panels/Log";
