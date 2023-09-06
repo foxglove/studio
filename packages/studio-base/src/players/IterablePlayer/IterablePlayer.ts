@@ -173,8 +173,8 @@ export class IterablePlayer implements Player {
   #untilTime?: Time;
 
   /** Promise that resolves when the player is closed. Only used for testing currently */
-  public readonly isClosed: Promise<unknown>;
-  #resolveIsClosed: (value?: unknown) => void = () => {};
+  public readonly isClosed: Promise<void>;
+  #resolveIsClosed: () => void = () => {};
 
   public constructor(options: IterablePlayerOptions) {
     const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
@@ -1063,7 +1063,7 @@ export class IterablePlayer implements Player {
     await this.#playbackIterator?.return?.();
     this.#playbackIterator = undefined;
     await this.#iterableSource.terminate?.();
-    this.#resolveIsClosed(true);
+    this.#resolveIsClosed();
   }
 
   async #startBlockLoading() {
