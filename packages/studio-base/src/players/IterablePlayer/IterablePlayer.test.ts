@@ -75,7 +75,6 @@ class PlayerStateStore {
   public async add(state: PlayerState): Promise<void> {
     const { playerId: _playerId, ...rest } = state;
     this.#playerStates.push(rest);
-    console.log("playerStates", this.#playerStates);
     if (this.#playerStates.length === this.#expected) {
       this.#resolve(this.#playerStates);
     }
@@ -180,6 +179,7 @@ describe("IterablePlayer", () => {
     ]);
 
     player.close();
+    await player.isClosed;
   });
 
   it("when seeking during a seek backfill, start another seek after the current one exits", async () => {
@@ -283,6 +283,7 @@ describe("IterablePlayer", () => {
     expect(playerStates).toEqual([withMessages, baseState]);
 
     player.close();
+    await player.isClosed;
   });
 
   it("sets buffering presence when backfill takes too long", async () => {
@@ -363,6 +364,7 @@ describe("IterablePlayer", () => {
     expect(playerStates).toEqual([bufferingState, baseState, baseState]);
 
     player.close();
+    await player.isClosed;
   });
 
   it("startPlayback emits when seek-backfill state is active", async () => {
@@ -412,7 +414,15 @@ describe("IterablePlayer", () => {
       source.getBackfillMessages = originalMethod;
       backfillStarted.resolve();
       await backfillPromise;
-      return [];
+      return [
+        {
+          topic: "foo",
+          receiveTime: { sec: 0, nsec: 1 },
+          message: undefined,
+          sizeInBytes: 0,
+          schemaName: "foo",
+        },
+      ];
     };
 
     // Reset store to get state from the seeks
@@ -435,11 +445,9 @@ describe("IterablePlayer", () => {
 
     playerStates = await store.done;
     expect(playerStates.map(getIsPlaying)).toEqual([true]);
-    store.reset(1);
-    player.pausePlayback();
-    await store.done;
 
     player.close();
+    await player.isClosed;
   });
 
   it("pausePlayback emits when seek-backfill state is active", async () => {
@@ -531,6 +539,8 @@ describe("IterablePlayer", () => {
     expect(playerStates.map(getIsPlaying)).toEqual([false, false]);
 
     player.close();
+
+    await player.isClosed;
   });
 
   it("provides error message for inconsistent topic datatypes", async () => {
@@ -642,6 +652,7 @@ describe("IterablePlayer", () => {
     ]);
 
     player.close();
+    await player.isClosed;
   });
 
   it("should start a new iterator mid-tick when old iterator finishes", async () => {
@@ -690,6 +701,7 @@ describe("IterablePlayer", () => {
     }
 
     player.close();
+    await player.isClosed;
   });
 
   it("should not override seek-backfill state when setPlayback speed is called", async () => {
@@ -740,6 +752,7 @@ describe("IterablePlayer", () => {
     }
 
     player.close();
+    await player.isClosed;
   });
   it("should make a new message iterator when topic subscriptions change", async () => {
     const source = new TestSource();
@@ -786,5 +799,6 @@ describe("IterablePlayer", () => {
     ]);
 
     player.close();
+    await player.isClosed;
   });
 });
