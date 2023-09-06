@@ -144,8 +144,7 @@ const memoizedCellRenderer = memoizeWeak((accessorPath: string, id: string) => {
       return JSON.stringify(value);
     }
 
-    // eslint-disable-next-line no-restricted-syntax
-    if (typeof value === "object" && value != null) {
+    if (typeof value === "object" && value != undefined) {
       return (
         <TableCell row={row} accessorPath={id}>
           <Table value={value} accessorPath={accessorPath} />
