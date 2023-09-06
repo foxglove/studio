@@ -376,7 +376,9 @@ describe("IterablePlayer", () => {
     });
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state)
+    });
 
     // Wait for initial setup
     await store.done;
@@ -459,7 +461,9 @@ describe("IterablePlayer", () => {
     });
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
-    player.setListener(async (state) => await store.add(state));
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
 
     // Wait for initial setup
     await store.done;
