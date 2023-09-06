@@ -2369,6 +2369,9 @@ __metadata:
 "@foxglove/eslint-plugin-studio@workspace:*, @foxglove/eslint-plugin-studio@workspace:packages/eslint-plugin-studio":
   version: 0.0.0-use.local
   resolution: "@foxglove/eslint-plugin-studio@workspace:packages/eslint-plugin-studio"
+  dependencies:
+    "@typescript-eslint/rule-tester": 6.6.0
+    "@typescript-eslint/utils": 6.6.0
   languageName: unknown
   linkType: soft
 
@@ -7130,6 +7133,22 @@ __metadata:
     typescript:
       optional: true
   checksum: b2d0082b6acc1a85997ebbb60fc73a43f3fe5e5028cb4130938a2cffddc94872c8e0d00a1742be8f8b755bc1994d43b55b7e4660dc88946744094ff2aca4ffd3
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/rule-tester@npm:6.6.0":
+  version: 6.6.0
+  resolution: "@typescript-eslint/rule-tester@npm:6.6.0"
+  dependencies:
+    "@typescript-eslint/typescript-estree": 6.6.0
+    "@typescript-eslint/utils": 6.6.0
+    ajv: ^6.10.0
+    lodash.merge: 4.6.2
+    semver: ^7.5.4
+  peerDependencies:
+    "@eslint/eslintrc": ">=2"
+    eslint: ">=8"
+  checksum: 6d0690b43527ea8324f6f528e467de2a019782228187c9d752e3903b0d796ef819a8388a043ef1b84db9227dda6934719814ad789c3c4484c58dc4be60fe2294
   languageName: node
   linkType: hard
 
@@ -15500,7 +15519,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.merge@npm:^4.6.2":
+"lodash.merge@npm:4.6.2, lodash.merge@npm:^4.6.2":
   version: 4.6.2
   resolution: "lodash.merge@npm:4.6.2"
   checksum: ad580b4bdbb7ca1f7abf7e1bce63a9a0b98e370cf40194b03380a46b4ed799c9573029599caebc1b14e3f24b111aef72b96674a56cfa105e0f5ac70546cdc005

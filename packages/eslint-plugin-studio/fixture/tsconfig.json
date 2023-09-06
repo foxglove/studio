@@ -1,0 +1,11 @@
+// -*- jsonc -*-
+{
+  "extends": "@foxglove/tsconfig/base",
+  "compilerOptions": {
+    "lib": ["es2020", "dom"],
+    "noEmit": true
+  },
+  // eslint RuleTester uses fake files named "file.ts", which need to be included in the project
+  // See https://typescript-eslint.io/packages/rule-tester/
+  "files": ["file.ts"]
+}
