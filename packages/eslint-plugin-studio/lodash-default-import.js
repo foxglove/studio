@@ -3,6 +3,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 /**
+ * Support renamed imports, e.g. return `"get"` for `import { get as lodashGet } from "lodash";`.
+ * @param {import("eslint").Scope.Variable} variable
+ */
+function getImportedName(variable) {
+  for (const def of variable.defs) {
+    if (def.type === "ImportBinding" && def.node.type === "ImportSpecifier") {
+      return def.node.imported.name;
+    }
+  }
+  return variable.name;
+}
+
+/**
  * Replace `import { x } from "lodash";` with `import _ from "lodash";` and usage sites with `_.x`.
  * @type {import("eslint").Rule.RuleModule}
  */
@@ -24,7 +37,7 @@ module.exports = {
             const variables = context.getDeclaredVariables(node);
             for (const variable of variables) {
               for (const reference of variable.references) {
-                yield fixer.insertTextBefore(reference.identifier, "_.");
+                yield fixer.replaceText(reference.identifier, `_.${getImportedName(variable)}`);
               }
             }
             yield fixer.replaceText(node, `import _ from "lodash";`);
