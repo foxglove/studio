@@ -23,6 +23,7 @@ import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserCon
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import { formatKeyboardShortcut } from "@foxglove/studio-base/util/formatKeyboardShortcut";
 
 const useStyles = makeStyles<void>()((theme) => ({
   menuItem: {
@@ -70,8 +71,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const analytics = useAnalytics();
   const user = useCurrentUserType();
 
-  const metaKey = navigator.userAgent.includes("Mac") ? "⌘" : "Ctrl";
-
   const handleAnalytics = useCallback(
     (cta: string) => void analytics.logEvent(AppEvent.APP_MENU_CLICK, { user, cta }),
     [analytics, user],
@@ -105,7 +104,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           <FolderOpen20Regular />
           {t("openLocalFile")}
         </div>
-        <kbd>{`${metaKey} O`}</kbd>
+        <kbd>{formatKeyboardShortcut("O", ["Meta"])}</kbd>
       </MenuItem>
       <MenuItem
         className={classes.menuItem}
@@ -119,7 +118,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           <Flow20Regular />
           {t("openConnection")}
         </div>
-        <kbd>{` ⇧ ${metaKey} O`}</kbd>
+        <kbd>{formatKeyboardShortcut("O", ["Shift", "Meta"])}</kbd>
       </MenuItem>
       {recentSources.length > 0 && <Divider variant="middle" />}
       {recentSources.length > 0 && (
