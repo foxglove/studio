@@ -72,7 +72,7 @@ export function NumberInput(
     step?: number;
     value?: number;
     onChange: (value: undefined | number) => void;
-  } & Omit<TextFieldProps, "onChange">,
+  } & Omit<TextFieldProps, "onChange">
 ): JSX.Element {
   const { classes, cx } = useStyles();
   const {
@@ -111,39 +111,39 @@ export function NumberInput(
           : _.clamp(newValue, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
       onChange(clampedValue != undefined ? _.round(clampedValue, precision) : clampedValue);
     },
-    [disabled, readOnly, min, max, onChange, precision],
+    [disabled, readOnly, min, max, onChange, precision]
   );
 
+  const isDragging = useRef(false);
   const onPointerDown = useCallback(
     (event: React.PointerEvent) => {
+      isDragging.current = true;
       event.currentTarget.setPointerCapture(event.pointerId);
       const scrubStart = latestValue.current ?? placeHolderValue ?? 0;
       scrubValue.current = _.isFinite(scrubStart) ? scrubStart : 0;
     },
-    [latestValue, placeHolderValue],
+    [latestValue, placeHolderValue]
   );
 
   const onPointerUp = useCallback((event: React.PointerEvent) => {
+    isDragging.current = false;
     event.currentTarget.releasePointerCapture(event.pointerId);
   }, []);
 
   const onPointerMove = useCallback(
     (event: React.PointerEvent<HTMLInputElement>) => {
-      if (event.buttons === 1) {
-        event.preventDefault();
-        event.currentTarget.blur();
-        const scale = event.shiftKey ? 10 : 1;
-        const delta =
-          Math.sign(event.movementX) *
-          Math.pow(Math.abs(event.movementX), 1.5) *
-          0.1 *
-          step *
-          scale;
-        scrubValue.current = _.round(scrubValue.current + delta, Constants.ScrubPrecision);
-        updateValue(scrubValue.current);
+      if (event.buttons !== 1 || !isDragging.current) {
+        return;
       }
+      event.preventDefault();
+      event.currentTarget.blur();
+      const scale = event.shiftKey ? 10 : 1;
+      const delta =
+        Math.sign(event.movementX) * Math.pow(Math.abs(event.movementX), 1.5) * 0.1 * step * scale;
+      scrubValue.current = _.round(scrubValue.current + delta, Constants.ScrubPrecision);
+      updateValue(scrubValue.current);
     },
-    [step, updateValue],
+    [step, updateValue]
   );
 
   const displayValue =
