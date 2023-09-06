@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Typography } from "@mui/material";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { FixedSizeList, ListChildComponentProps } from "react-window";
 
 const Constants = Object.freeze({

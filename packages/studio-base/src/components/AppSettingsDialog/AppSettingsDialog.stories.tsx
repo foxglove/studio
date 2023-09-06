@@ -4,7 +4,7 @@
 
 import { StoryFn, StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 
 import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
 import ExtensionMarketplaceContext, {

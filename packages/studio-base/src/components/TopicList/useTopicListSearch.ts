@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Fzf, FzfResultItem, basicMatch } from "fzf";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { useMemo } from "react";
 
 import { MessageDefinition } from "@foxglove/message-definition";

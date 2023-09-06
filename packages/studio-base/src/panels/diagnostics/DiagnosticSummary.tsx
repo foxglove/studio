@@ -27,7 +27,7 @@ import {
   Typography,
 } from "@mui/material";
 import { produce } from "immer";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { CSSProperties, useCallback, useEffect, useMemo } from "react";
 import { AutoSizer } from "react-virtualized";
 import { FixedSizeList as List } from "react-window";

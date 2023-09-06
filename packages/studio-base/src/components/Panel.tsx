@@ -17,7 +17,7 @@ import {
   TabDesktopMultiple20Regular,
   TableSimple20Regular,
 } from "@fluentui/react-icons";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import React, {
   ComponentType,
   MouseEventHandler,

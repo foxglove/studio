@@ -16,7 +16,7 @@ function getImportedName(variable) {
 }
 
 /**
- * Replace `import { x } from "lodash";` with `import * as _ from "lodash";` and usage sites with `_.x`.
+ * Replace `import { x } from "lodash";` with `import * as _ from "lodash-es";` and usage sites with `_.x`.
  * @type {import("eslint").Rule.RuleModule}
  */
 module.exports = {
@@ -24,7 +24,7 @@ module.exports = {
     type: "problem",
     fixable: "code",
     messages: {
-      useDefaultImport: `Use 'import * as _ from "lodash"' instead`,
+      useDefaultImport: `Use 'import * as _ from "lodash-es"' instead`,
     },
   },
   create: (context) => {
@@ -40,7 +40,7 @@ module.exports = {
                 yield fixer.replaceText(reference.identifier, `_.${getImportedName(variable)}`);
               }
             }
-            yield fixer.replaceText(node, `import * as _ from "lodash";`);
+            yield fixer.replaceText(node, `import * as _ from "lodash-es";`);
           },
         });
       },

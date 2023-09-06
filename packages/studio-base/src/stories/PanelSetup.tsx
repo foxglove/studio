@@ -13,7 +13,7 @@
 
 import { useTheme } from "@mui/material";
 import { TFunction } from "i18next";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { ComponentProps, ReactNode, useLayoutEffect, useMemo, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";

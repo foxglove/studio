@@ -11,7 +11,7 @@ import {
   ArrowMinimize24Filled,
 } from "@fluentui/react-icons";
 import { IconButton } from "@mui/material";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { useCallback, useMemo, useRef } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";

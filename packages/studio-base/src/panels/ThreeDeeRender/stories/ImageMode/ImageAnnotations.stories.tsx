@@ -4,7 +4,7 @@
 
 import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { useEffect, useState } from "react";
 
 import { ImageAnnotations, PointsAnnotationType } from "@foxglove/schemas";

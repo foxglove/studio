@@ -13,7 +13,7 @@
 
 import { StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 
 import Log from "@foxglove/studio-base/panels/Log";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";

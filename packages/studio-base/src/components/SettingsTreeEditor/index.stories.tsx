@@ -6,7 +6,7 @@ import { useTheme } from "@mui/material";
 import { StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/testing-library";
 import { produce } from "immer";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { useCallback, useMemo, useState, useEffect } from "react";
 
 import Logger from "@foxglove/log";

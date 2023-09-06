@@ -4,7 +4,7 @@
 
 import { keyframes } from "@emotion/react";
 import { simplify } from "intervals-fn";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";

@@ -14,7 +14,7 @@
 import ErrorIcon from "@mui/icons-material/Error";
 import { Typography } from "@mui/material";
 import CodeEditor from "@uiw/react-textarea-code-editor";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";

@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { diff } from "jest-diff";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 
 import { initI18n } from "@foxglove/studio-base/i18n";
 import {

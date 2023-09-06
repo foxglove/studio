@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 
 import { Immutable } from "@foxglove/studio";
 import { MessagePathFilter } from "@foxglove/studio-base/components/MessagePathSyntax/constants";

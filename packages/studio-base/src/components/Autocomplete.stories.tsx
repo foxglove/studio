@@ -13,7 +13,7 @@
 
 import { Meta, StoryFn, StoryObj } from "@storybook/react";
 import { fireEvent, within } from "@storybook/testing-library";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import Stack from "@foxglove/studio-base/components/Stack";

@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { produce } from "immer";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 

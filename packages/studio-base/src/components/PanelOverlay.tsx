@@ -11,7 +11,7 @@ import {
   Paper,
   buttonClasses,
 } from "@mui/material";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { forwardRef } from "react";
 import { ReactElement } from "react-markdown/lib/react-markdown";
 import tc from "tinycolor2";
@@ -134,7 +134,6 @@ export const PanelOverlay = forwardRef<HTMLDivElement, PanelOverlayProps>(functi
   const { classes, cx } = useStyles();
 
   return (
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     <ClickAwayListener onClickAway={onClickAway ? onClickAway : _.noop}>
       <Backdrop
         transitionDuration={0}

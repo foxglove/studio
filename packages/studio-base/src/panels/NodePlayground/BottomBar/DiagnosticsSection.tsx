@@ -7,7 +7,7 @@ import HelpIcon from "@mui/icons-material/Help";
 import InfoIcon from "@mui/icons-material/Info";
 import WarningIcon from "@mui/icons-material/Warning";
 import { List, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { ReactElement } from "react";
 import { makeStyles } from "tss-react/mui";
 

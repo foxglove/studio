@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Immutable } from "immer";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import { useEffect, useRef, useState } from "react";
 import shallowequal from "shallowequal";
 import { Writable } from "ts-essentials";

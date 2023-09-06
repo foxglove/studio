@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 
 // toggles an item in an array based on reference equality
 // or an optional predicate to determine if the item should be toggled in/out

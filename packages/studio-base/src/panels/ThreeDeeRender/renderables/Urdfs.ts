@@ -4,7 +4,7 @@
 
 import { vec3 } from "gl-matrix";
 import i18next from "i18next";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import * as THREE from "three";
 import { v4 as uuidv4 } from "uuid";
 

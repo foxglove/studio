@@ -4,7 +4,7 @@
 
 import { TFunction } from "i18next";
 import { produce } from "immer";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
