@@ -80,7 +80,6 @@ export function parseAppURLState(url: URL): AppURLState | undefined {
       ds,
       dsParams: _.isEmpty(dsParams) ? undefined : dsParams,
     },
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     _.isEmpty,
   );
 

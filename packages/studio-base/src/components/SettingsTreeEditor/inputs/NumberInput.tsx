@@ -72,7 +72,7 @@ export function NumberInput(
     step?: number;
     value?: number;
     onChange: (value: undefined | number) => void;
-  } & Omit<TextFieldProps, "onChange">
+  } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
   const { classes, cx } = useStyles();
   const {
@@ -111,7 +111,7 @@ export function NumberInput(
           : _.clamp(newValue, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
       onChange(clampedValue != undefined ? _.round(clampedValue, precision) : clampedValue);
     },
-    [disabled, readOnly, min, max, onChange, precision]
+    [disabled, readOnly, min, max, onChange, precision],
   );
 
   const isDragging = useRef(false);
@@ -122,7 +122,7 @@ export function NumberInput(
       const scrubStart = latestValue.current ?? placeHolderValue ?? 0;
       scrubValue.current = _.isFinite(scrubStart) ? scrubStart : 0;
     },
-    [latestValue, placeHolderValue]
+    [latestValue, placeHolderValue],
   );
 
   const onPointerUp = useCallback((event: React.PointerEvent) => {
@@ -143,7 +143,7 @@ export function NumberInput(
       scrubValue.current = _.round(scrubValue.current + delta, Constants.ScrubPrecision);
       updateValue(scrubValue.current);
     },
-    [step, updateValue]
+    [step, updateValue],
   );
 
   const displayValue =

@@ -24,10 +24,10 @@ const baseProps = {
   isActive: false,
   isDragging: false,
   actions: {
-    addTab: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
-    removeTab: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
-    selectTab: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
-    setTabTitle: _.noop, // eslint-disable-line @typescript-eslint/unbound-method
+    addTab: _.noop,
+    removeTab: _.noop,
+    selectTab: _.noop,
+    setTabTitle: _.noop,
   },
   tabCount: 1,
   tabIndex: 0,

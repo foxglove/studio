@@ -57,7 +57,6 @@ export function useStateToURLSynchronization(): void {
           ...stablePlayerUrlState.parameters,
           eventId: selectedEventId,
         },
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         _.isString,
       ),
     });

@@ -889,7 +889,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
   public setPublishers(publishers: AdvertiseOptions[]): void {
     // Filter out duplicates.
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const uniquePublications = _.uniqWith(publishers, _.isEqual);
 
     // Save publications and return early if we are not connected or the advertise capability is missing.
