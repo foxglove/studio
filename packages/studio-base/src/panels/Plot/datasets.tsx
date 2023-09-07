@@ -340,8 +340,8 @@ function sliceSingle(slice: TypedData, start: number, end?: number): TypedData {
     if (xVal == undefined || yVal == undefined) {
       continue;
     }
-    x[i] = xVal;
-    y[i] = yVal;
+    x[i - i0] = xVal;
+    y[i - i0] = yVal;
   }
 
   return {
