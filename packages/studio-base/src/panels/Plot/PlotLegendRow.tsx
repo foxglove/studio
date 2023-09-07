@@ -239,7 +239,7 @@ export function PlotLegendRow({
           className={classes.removeButton}
           onClick={() => {
             const newPaths = paths.slice();
-            if (newPaths.length > 1) {
+            if (newPaths.length > 0) {
               newPaths.splice(index, 1);
             }
             savePaths(newPaths);
