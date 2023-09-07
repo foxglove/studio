@@ -25,7 +25,7 @@ import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/use
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { formatKeyboardShortcut } from "@foxglove/studio-base/util/formatKeyboardShortcut";
 
-const useStyles = makeStyles<void>()((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   menuItem: {
     gap: theme.spacing(1),
 
@@ -123,7 +123,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       {recentSources.length > 0 && <Divider variant="middle" />}
       {recentSources.length > 0 && (
         <ListSubheader disableSticky>
-          <Typography variant="overline">{t("recentDataSources")}</Typography>
+          <Typography variant="overline">{t("recentlyViewed")}</Typography>
         </ListSubheader>
       )}
       {recentSources.slice(0, 5).map((source) => (
