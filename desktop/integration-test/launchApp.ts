@@ -1,6 +1,9 @@
 import electronPath from "electron";
 import { ConsoleMessage, _electron as electron, ElectronApplication, Page } from "playwright";
 import { appPath } from "./build";
+import { mkdtemp } from "fs/promises";
+import * as os from "os";
+import * as path from "path";
 
 import Logger from "@foxglove/log";
 import { signal } from "@foxglove/den/async";
@@ -21,10 +24,12 @@ export async function launchApp(): Promise<
     renderer: Page;
   } & AsyncDisposable
 > {
-  // In node.js the electron import gives us the path to the electron binary
-  // Our type definitions don't realize this so cast the variable to a string
+  // Create a new user data directory for each test, which bypasses the `app.requestSingleInstanceLock()`
+  const userDataDir = await mkdtemp(path.join(os.tmpdir(), "integration-test-"));
   const electronApp = await electron.launch({
-    args: [appPath],
+    args: [appPath, "--user-data-dir", userDataDir],
+    // In node.js the electron import gives us the path to the electron binary
+    // Our type definitions don't realize this so cast the variable to a string
     executablePath: electronPath as unknown as string,
   });
 
