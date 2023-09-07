@@ -3,7 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { info, warning, error } from "@actions/core";
+import { parse } from "@babel/parser";
 import depcheck, { Detector } from "depcheck";
+import fs from "fs/promises";
 import glob from "glob";
 import path from "path";
 import { promisify } from "util";
@@ -37,11 +39,77 @@ const tripleSlashDetector: Detector = (node) => {
   return results;
 };
 
+/**
+ * Clone of https://github.com/depcheck/depcheck/blob/main/src/parser/typescript.js
+ * but with the addition of the `explicitResourceManagement` plugin
+ */
+async function parseTypeScript(filename: string) {
+  const content = await fs.readFile(filename, { encoding: "utf-8" });
+  // Enable all known compatible @babel/parser plugins at the time of writing.
+  // Because we only parse them, not evaluate any code, it is safe to do so.
+  // note that babel/parser 7+ does not support *, due to plugin incompatibilities
+  return parse(content, {
+    sourceType: "module",
+    plugins: [
+      "typescript",
+      "jsx",
+      "asyncGenerators",
+      "bigInt",
+      "classProperties",
+      "classPrivateProperties",
+      "classPrivateMethods",
+      // ['decorators', { decoratorsBeforeExport: true }],
+      "decorators-legacy",
+      "doExpressions",
+      "dynamicImport",
+      "exportDefaultFrom",
+      "exportNamespaceFrom",
+      "functionBind",
+      "functionSent",
+      "importMeta",
+      "logicalAssignment",
+      "nullishCoalescingOperator",
+      "numericSeparator",
+      "objectRestSpread",
+      "optionalCatchBinding",
+      "optionalChaining",
+      ["pipelineOperator", { proposal: "minimal" }],
+      "throwExpressions",
+      "importAssertions",
+      "explicitResourceManagement",
+    ],
+  });
+}
+
 async function run(rootPath: string) {
   info(`Linting dependencies in ${rootPath}...`);
   const options: depcheck.Options = {
     detectors: [...Object.values(depcheck.detector), commentDetector, tripleSlashDetector],
+    // parsers: {
+    //   "**/*.js": depcheck.parser.jsx,
+    //   "**/*.mjs": depcheck.parser.jsx,
+    //   "**/*.cjs": depcheck.parser.jsx,
+    //   "**/*.jsx": depcheck.parser.jsx,
+    //   "**/*.coffee": depcheck.parser.coffee,
+    //   "**/*.litcoffee": depcheck.parser.coffee,
+    //   "**/*.coffee.md": depcheck.parser.coffee,
+    //   "**/*.graphql": depcheck.parser.graphql,
+    //   "**/.storybook/main.js": depcheck.parser.storybook,
+    //   "**/tsconfig*.json": depcheck.parser.tsconfig,
+    //   "**/*.cts": depcheck.parser.typescript,
+    //   "**/*.mts": depcheck.parser.typescript,
+    //   // '**/*.ts': depcheck.parser.typescript,
+    //   // '**/*.tsx': depcheck.parser.typescript,
+    //   "**/*.sass": depcheck.parser.sass,
+    //   "**/*.scss": depcheck.parser.sass,
+    //   "**/*.vue": depcheck.parser.vue,
+    //   "**/*.svelte": depcheck.parser.svelte,
+    //   // "**/tsconfig*.json": depcheck.parser.tsconfig,
+    //   "**/*.ts": parseTypeScript,
+    //   "**/*.tsx": parseTypeScript,
+    // },
   };
+  void parseTypeScript;
   return await depcheck(rootPath, options);
 }
 
