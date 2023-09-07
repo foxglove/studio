@@ -7,6 +7,7 @@ import { launchApp } from "./launchApp";
 describe("startup", () => {
   it("should start the application", async () => {
     expect.assertions(0); // just needs to complete without error
-    await using _app = await launchApp();
+    await using app = await launchApp();
+    void app;
   }, 10_000);
 });

@@ -60,6 +60,12 @@ export async function main(): Promise<void> {
   await initI18n({ context: "electron-main" });
   await updateLanguage();
 
+  // Allow integration tests to override the userData directory
+  const userDataOverride = process.argv.find((arg) => arg.startsWith("--user-data-dir="));
+  if (userDataOverride != undefined) {
+    app.setPath("userData", userDataOverride.split("=")[1]!);
+  }
+
   // https://github.com/electron/electron/issues/28422#issuecomment-987504138
   app.commandLine.appendSwitch("enable-experimental-web-platform-features");
 
