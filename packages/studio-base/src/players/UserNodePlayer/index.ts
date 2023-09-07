@@ -14,6 +14,7 @@
 import { Mutex } from "async-mutex";
 import * as _ from "lodash-es";
 import memoizeWeak from "memoize-weak";
+import * as R from "ramda";
 import ReactDOM from "react-dom";
 import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
@@ -1044,10 +1045,32 @@ export default class UserNodePlayer implements Player {
     const nodeSubscriptions: Record<string, SubscribePayload> = {};
     const realTopicSubscriptions: SubscribePayload[] = [];
 
+    const mergedSubscriptions = R.pipe(
+      R.groupBy((v: SubscribePayload) => v.topic),
+      // Combine subscriptions to the same topic (but different fields)
+      R.mapObjIndexed(
+        (payloads: SubscribePayload[] | undefined, topic: string): SubscribePayload => ({
+          topic,
+
+          // Aggregate all fields
+          fields: R.pipe(
+            R.chain((payload: SubscribePayload): string[] => payload.fields ?? []),
+            R.uniq,
+          )(payloads ?? []),
+
+          preloadType:
+            R.find((v: SubscribePayload) => v.preloadType === "full", payloads ?? []) != undefined
+              ? "full"
+              : "partial",
+        }),
+      ),
+      R.values,
+    )(subscriptions);
+
     // For each subscription, identify required input topics by looking up the subscribed topic in
     // the map of output topics -> inputs. Add these required input topics to the set of topic
     // subscriptions to the underlying player.
-    for (const subscription of subscriptions) {
+    for (const subscription of mergedSubscriptions) {
       const inputs = state.inputsByOutputTopic.get(subscription.topic);
       if (!inputs) {
         nodeSubscriptions[subscription.topic] = subscription;
@@ -1072,8 +1095,7 @@ export default class UserNodePlayer implements Player {
     this.#nodeSubscriptions = nodeSubscriptions;
 
     // Merge subscriptions we pass on to the underlying player.
-    const mergedSubscriptions = mergeSubscriptions(realTopicSubscriptions);
-    this.#player.setSubscriptions(mergedSubscriptions);
+    this.#player.setSubscriptions(mergeSubscriptions(realTopicSubscriptions));
   }
 
   public close = (): void => {
