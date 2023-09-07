@@ -252,6 +252,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
       },
       { type: "separator" },
       {
+        id: "open",
         label: t("appBar:open"),
         click: async () => {
           await simulateUserClick(browserWindow);
@@ -259,6 +260,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         },
       },
       {
+        id: "openLocalFile",
         label: t("appBar:openLocalFile"),
         click: async () => {
           await simulateUserClick(browserWindow);
@@ -266,6 +268,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         },
       },
       {
+        id: "openConnection",
         label: t("appBar:openConnection"),
         click: async () => {
           await simulateUserClick(browserWindow);

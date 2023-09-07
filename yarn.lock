@@ -453,6 +453,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/plugin-proposal-explicit-resource-management@npm:7.22.6":
+  version: 7.22.6
+  resolution: "@babel/plugin-proposal-explicit-resource-management@npm:7.22.6"
+  dependencies:
+    "@babel/helper-plugin-utils": ^7.22.5
+    "@babel/plugin-syntax-explicit-resource-management": ^7.22.5
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: 293f7d6b3fdae20dcd3328499797d1fe44675f0b23ae118bb696746966b3912ee8a488cfe86337ae159b2c1f06257bca06278417518a32354cf9ed3b6c920209
+  languageName: node
+  linkType: hard
+
 "@babel/plugin-proposal-nullish-coalescing-operator@npm:^7.13.8":
   version: 7.18.6
   resolution: "@babel/plugin-proposal-nullish-coalescing-operator@npm:7.18.6"
@@ -539,6 +551,17 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0-0
   checksum: ce307af83cf433d4ec42932329fad25fa73138ab39c7436882ea28742e1c0066626d224e0ad2988724c82644e41601cef607b36194f695cb78a1fcdc959637bd
+  languageName: node
+  linkType: hard
+
+"@babel/plugin-syntax-explicit-resource-management@npm:^7.22.5":
+  version: 7.22.5
+  resolution: "@babel/plugin-syntax-explicit-resource-management@npm:7.22.5"
+  dependencies:
+    "@babel/helper-plugin-utils": ^7.22.5
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: ab7d1ad1220cfe10fa37b970585c159b7a2f82bced76b78e1f0f37a379ff26816e0bde2660c1dbfeb2ef349a0788d7f2f73c1f7a3e304ab61054b1d054ff1ed9
   languageName: node
   linkType: hard
 
@@ -12459,6 +12482,7 @@ __metadata:
     "@actions/exec": 1.1.1
     "@actions/tool-cache": 2.0.1
     "@babel/core": 7.22.15
+    "@babel/plugin-proposal-explicit-resource-management": 7.22.6
     "@babel/preset-env": 7.22.15
     "@babel/preset-typescript": 7.22.15
     "@foxglove/eslint-plugin": 1.0.0
