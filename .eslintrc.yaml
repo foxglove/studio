@@ -161,6 +161,14 @@ overrides:
       # https://eslint.org/docs/latest/rules/no-loop-func
       "no-loop-func": error
 
+      # unused vars must have `_` prefix, but `_` alone is not ignored (see @foxglove/studio/lodash-imports)
+      "@typescript-eslint/no-unused-vars":
+        - error
+        - vars: all
+          args: after-used
+          varsIgnorePattern: "^_."
+          argsIgnorePattern: "^_."
+
   - rules:
       "@typescript-eslint/no-explicit-any": off
     files:
