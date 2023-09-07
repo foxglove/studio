@@ -107,7 +107,7 @@ export function NestedMenuItem(
                   disabled={item.disabled}
                 >
                   {item.label}
-                  {item.shortcut ? <kbd>{item.shortcut}</kbd> : undefined}
+                  {item.shortcut && <kbd>{item.shortcut}</kbd>}
                 </MenuItem>
               );
             case "divider":

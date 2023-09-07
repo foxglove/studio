@@ -18,6 +18,7 @@ import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
+import { AppMenu } from "@foxglove/studio-base/components/AppBar/AppMenu";
 import {
   CustomWindowControls,
   CustomWindowControlsProps,
@@ -43,7 +44,6 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { AddPanelMenu } from "./AddPanelMenu";
 import { AppBarContainer } from "./AppBarContainer";
-import { AppMenu } from "./AppMenu";
 import { DataSource } from "./DataSource";
 import { UserMenu } from "./UserMenu";
 
