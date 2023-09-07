@@ -49,8 +49,8 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
         backgroundColor: theme.palette.background.paper,
         backgroundImage: `linear-gradient(${[
           "0deg",
-          theme.palette.action.focus,
-          theme.palette.action.focus,
+          theme.palette.action.hover,
+          theme.palette.action.hover,
         ].join(" ,")})`,
       },
     },
@@ -72,6 +72,7 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
     position: "sticky",
     height: ROW_HEIGHT,
     left: 0,
+    boxShadow: `1px 0 0 ${theme.palette.background.paper}`,
   },
   checkbox: {
     fontSize: "1em",
@@ -81,6 +82,9 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
     "svg:not(.MuiSvgIcon-root)": {
       fontSize: "1em",
     },
+    ":hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
   },
   disabledPathLabel: {
     opacity: 0.5,
@@ -89,7 +93,7 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
     display: "flex",
     alignItems: "center",
     height: ROW_HEIGHT,
-    padding: theme.spacing(0, 2.5, 0, 0.5),
+    paddingInline: theme.spacing(0.75, 2.5),
     gridColumn: "span 2",
     fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
 
@@ -112,6 +116,11 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    boxShadow: `-1px 0 0 ${theme.palette.background.paper}`,
+
+    ":hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
   },
 }));
 
@@ -225,18 +234,22 @@ export function PlotLegendRow({
           </Typography>
         </div>
       )}
-      <ButtonBase
-        className={classes.removeButton}
-        onClick={() => {
-          const newPaths = paths.slice();
-          if (newPaths.length > 1) {
-            newPaths.splice(index, 1);
-          }
-          savePaths(newPaths);
-        }}
-      >
-        <Dismiss12Regular />
-      </ButtonBase>
+      <div>
+        <ButtonBase
+          title="Delete series"
+          aria-label="Delete series"
+          className={classes.removeButton}
+          onClick={() => {
+            const newPaths = paths.slice();
+            if (newPaths.length > 1) {
+              newPaths.splice(index, 1);
+            }
+            savePaths(newPaths);
+          }}
+        >
+          <Dismiss12Regular />
+        </ButtonBase>
+      </div>
     </div>
   );
 }

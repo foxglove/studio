@@ -60,6 +60,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
       alignItems: "flex-start",
       height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px - ${spacing(5.25)})`,
       overflow: "hidden",
+      minWidth: 200,
 
       [`.${classes.container}`]: {
         pointerEvents: "auto",
