@@ -109,6 +109,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
       overflow: "auto",
       display: "grid",
       gridTemplateColumns: "auto minmax(0, 1fr) auto auto",
+      columnGap: 1,
     },
     dragHandle: {
       userSelect: "none",

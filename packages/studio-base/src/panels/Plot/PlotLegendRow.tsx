@@ -72,7 +72,6 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
     position: "sticky",
     height: ROW_HEIGHT,
     left: 0,
-    boxShadow: `1px 0 0 ${theme.palette.background.paper}`,
   },
   checkbox: {
     fontSize: "1em",
@@ -116,7 +115,6 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    boxShadow: `-1px 0 0 ${theme.palette.background.paper}`,
 
     ":hover": {
       backgroundColor: theme.palette.action.hover,
