@@ -177,8 +177,8 @@ describe("UserNodePlayer", () => {
       userNodePlayer.setSubscriptions([{ topic: "/studio/test" }, { topic: "/input/baz" }]);
       await Promise.resolve(); // wait for subscriptions to take effect
       expect(fakePlayer.subscriptions).toEqual([
-        { topic: "/studio/test" },
-        { topic: "/input/baz" },
+        { topic: "/studio/test", preloadType: "partial" },
+        { topic: "/input/baz", preloadType: "partial" },
       ]);
     });
 
@@ -601,21 +601,7 @@ describe("UserNodePlayer", () => {
       });
       userNodePlayer.setSubscriptions(topicNames.map((topic) => ({ topic })));
       await delay(10); // wait for subscriptions to take effect
-      expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input" }]);
-    });
-
-    it("passes through sliced subscriptions", async () => {
-      const fakePlayer = new FakePlayer();
-      const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
-      const topicNames = ["/np_input"];
-      void userNodePlayer.setUserNodes({
-        nodeId: { name: "someNodeName", sourceCode: nodeUserCode },
-      });
-      userNodePlayer.setSubscriptions(topicNames.map((topic) => ({ topic, fields: ["a"] })));
-      await delay(10); // wait for subscriptions to take effect
-
-      // A direct subscription to a topic should maintain the requested fields.
-      expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input", fields: ["a"] }]);
+      expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input", preloadType: "partial" }]);
     });
 
     it("requests full subscriptions for input topics", async () => {

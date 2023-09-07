@@ -23,7 +23,7 @@ import { MutexLocked } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
-import { ParameterValue } from "@foxglove/studio";
+import { Immutable, ParameterValue } from "@foxglove/studio";
 import { mergeSubscriptions } from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
 import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -49,6 +49,7 @@ import {
   PlayerStateActiveData,
   PublishPayload,
   SubscribePayload,
+  SubscriptionPreloadType,
   Topic,
   MessageEvent,
   PlayerProblem,
@@ -1045,35 +1046,37 @@ export default class UserNodePlayer implements Player {
     const nodeSubscriptions: Record<string, SubscribePayload> = {};
     const realTopicSubscriptions: SubscribePayload[] = [];
 
-    const mergedSubscriptions = R.pipe(
-      R.groupBy((v: SubscribePayload) => v.topic),
+    // We need a list of all of the topics used and their preload mode,
+    // regardless of the fields they subscribe to
+    const mergedSubscriptions: [string, SubscriptionPreloadType][] = R.pipe(
+      // First, make sure these are as reduced as possible
+      mergeSubscriptions,
+      R.groupBy((v: Immutable<SubscribePayload>) => v.topic),
       // Combine subscriptions to the same topic (but different fields)
       R.mapObjIndexed(
-        (payloads: SubscribePayload[] | undefined, topic: string): SubscribePayload => ({
-          topic,
-
-          // Aggregate all fields
-          fields: R.pipe(
-            R.chain((payload: SubscribePayload): string[] => payload.fields ?? []),
-            R.uniq,
-          )(payloads ?? []),
-
-          preloadType:
-            R.find((v: SubscribePayload) => v.preloadType === "full", payloads ?? []) != undefined
-              ? "full"
-              : "partial",
-        }),
+        (payloads: Immutable<SubscribePayload[]> | undefined): SubscriptionPreloadType => {
+          return R.find(
+            (v: Immutable<SubscribePayload>) => v.preloadType === "full",
+            payloads ?? [],
+          ) != undefined
+            ? "full"
+            : "partial";
+        },
       ),
-      R.values,
+      (v) => R.toPairs(v),
     )(subscriptions);
 
     // For each subscription, identify required input topics by looking up the subscribed topic in
     // the map of output topics -> inputs. Add these required input topics to the set of topic
     // subscriptions to the underlying player.
-    for (const subscription of mergedSubscriptions) {
-      const inputs = state.inputsByOutputTopic.get(subscription.topic);
+    for (const [topic, preloadType] of mergedSubscriptions) {
+      const inputs = state.inputsByOutputTopic.get(topic);
+      const subscription = {
+        topic,
+        preloadType,
+      };
       if (!inputs) {
-        nodeSubscriptions[subscription.topic] = subscription;
+        nodeSubscriptions[topic] = subscription;
         realTopicSubscriptions.push(subscription);
         continue;
       }
@@ -1083,11 +1086,11 @@ export default class UserNodePlayer implements Player {
         continue;
       }
 
-      nodeSubscriptions[subscription.topic] = subscription;
+      nodeSubscriptions[topic] = subscription;
       for (const inputTopic of inputs) {
         realTopicSubscriptions.push({
           topic: inputTopic,
-          preloadType: subscription.preloadType ?? "partial",
+          preloadType,
         });
       }
     }
