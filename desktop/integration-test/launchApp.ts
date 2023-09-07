@@ -44,8 +44,7 @@ export async function launchApp(): Promise<
   const appRendered = signal();
   electronWindow.on("console", (message: ConsoleMessage) => {
     if (message.type() === "error") {
-      // eslint-disable-next-line jest/no-jasmine-globals
-      fail(new Error(message.text()));
+      throw new Error(message.text());
     }
     log.info(message.text());
 

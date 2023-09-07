@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { signal } from "@foxglove/den/async";
+
 import { launchApp } from "./launchApp";
 
 describe("menus", () => {
@@ -38,7 +40,14 @@ describe("menus", () => {
 
   it("should open the file chooser when clicking File > Open Local File", async () => {
     await using app = await launchApp();
-    const fileChooserPromise = app.renderer.waitForEvent("filechooser");
+
+    // The page is loaded as a file:// URL in the test, so showOpenFilePicker is not available and we need to mock it.
+    // If it were available we could use `app.renderer.waitForEvent("filechooser")` instead.
+    const openFilePickerCalled = signal<boolean>();
+    await app.renderer.exposeFunction("showOpenFilePicker", async () => {
+      openFilePickerCalled.resolve(true);
+      return [];
+    });
 
     // Click "File > Open Connection" and the Open Connection screen should appear
     await app.main.evaluate(async ({ Menu }) => {
@@ -46,6 +55,6 @@ describe("menus", () => {
       menu?.getMenuItemById("fileMenu")?.submenu?.getMenuItemById("openLocalFile")?.click();
     });
 
-    await expect(fileChooserPromise).resolves.not.toBeUndefined();
+    await expect(openFilePickerCalled).resolves.toBe(true);
   }, 15_000);
 });

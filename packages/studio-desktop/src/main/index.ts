@@ -298,6 +298,7 @@ export async function main(): Promise<void> {
     });
 
     initialWindow.load();
+    Menu.setApplicationMenu(initialWindow.getMenu()); // When the app is launching for the first time we don't receive the browser-window-focus event.
   });
 
   // Quit when all windows are closed, except on macOS. There, it's common
