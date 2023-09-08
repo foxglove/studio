@@ -23,7 +23,7 @@ import { MutexLocked } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
-import { Immutable, ParameterValue } from "@foxglove/studio";
+import { ParameterValue } from "@foxglove/studio";
 import { mergeSubscriptions } from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
 import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -49,7 +49,6 @@ import {
   PlayerStateActiveData,
   PublishPayload,
   SubscribePayload,
-  SubscriptionPreloadType,
   Topic,
   MessageEvent,
   PlayerProblem,
@@ -1043,62 +1042,88 @@ export default class UserNodePlayer implements Player {
   }
 
   #setSubscriptionsUnlocked(subscriptions: SubscribePayload[], state: ProtectedState): void {
-    const nodeSubscriptions: Record<string, SubscribePayload> = {};
-    const realTopicSubscriptions: SubscribePayload[] = [];
+    // A mapping from the subscription to the input topics needed to satisfy
+    // that request.
+    type SubscriberInputs = [SubscribePayload, readonly string[] | undefined];
 
-    // We need a list of all of the topics used and their preload mode,
-    // regardless of the fields they subscribe to
-    const mergedSubscriptions: [string, SubscriptionPreloadType][] = R.pipe(
-      // First, make sure these are as reduced as possible
+    // Check all subscriptions against the list of topics this UserNodePlayer
+    // can provide
+    const inputs = R.pipe(
       mergeSubscriptions,
-      R.groupBy((v: Immutable<SubscribePayload>) => v.topic),
-      // Combine subscriptions to the same topic (but different fields)
-      R.mapObjIndexed(
-        (payloads: Immutable<SubscribePayload[]> | undefined): SubscriptionPreloadType => {
-          return R.find(
-            (v: Immutable<SubscribePayload>) => v.preloadType === "full",
-            payloads ?? [],
-          ) != undefined
-            ? "full"
-            : "partial";
-        },
-      ),
-      (v) => R.toPairs(v),
+      R.map((v): InputMapping => [v as SubscribePayload, state.inputsByOutputTopic.get(v.topic)]),
     )(subscriptions);
 
-    // For each subscription, identify required input topics by looking up the subscribed topic in
-    // the map of output topics -> inputs. Add these required input topics to the set of topic
-    // subscriptions to the underlying player.
-    for (const [topic, preloadType] of mergedSubscriptions) {
-      const inputs = state.inputsByOutputTopic.get(topic);
-      const subscription = {
-        topic,
-        preloadType,
-      };
-      if (!inputs) {
-        nodeSubscriptions[topic] = subscription;
-        realTopicSubscriptions.push(subscription);
-        continue;
-      }
+    // An array of all of the input topics used by the user nodes referenced by
+    // `subscriptions`
+    const neededInputTopics = R.pipe(
+      R.chain(([, v]: SubscriberInputs): readonly string[] => v ?? []),
+      R.uniq,
+    )(payloadInputsPairs);
 
-      // If the inputs array is empty then we don't have anything to subscribe to for this output
-      if (inputs.length === 0) {
-        continue;
-      }
+    this.#nodeSubscriptions = R.pipe(
+      // Ignore all subscriptions that resolved to empty (but not undefined)
+      // inputs
+      R.chain(([subscription, topics]: InputMapping): SubscribePayload[] =>
+        topics?.length !== 0 ? [subscription] : [],
+      ),
+      // Gather all of the payloads into subscriptions for the same topic
+      R.groupBy((v: SubscribePayload) => v.topic),
+      // Consolidate subscriptions to the same topic down to a single payload
+      // and ignore `fields`
+      R.mapObjIndexed((payloads: SubscribePayload[] | undefined, topic): SubscribePayload => {
+        // If at least one preloadType is explicitly "full", we need "full",
+        // but default to "partial"
+        const hasFull = R.any((v: SubscribePayload) => v.preloadType === "full", payloads ?? []);
 
-      nodeSubscriptions[topic] = subscription;
-      for (const inputTopic of inputs) {
-        realTopicSubscriptions.push({
-          topic: inputTopic,
-          preloadType,
-        });
-      }
-    }
-
-    this.#nodeSubscriptions = nodeSubscriptions;
+        return {
+          topic,
+          preloadType: hasFull ? "full" : "partial",
+        };
+      }),
+    )(payloadInputsPairs);
 
     // Merge subscriptions we pass on to the underlying player.
-    this.#player.setSubscriptions(mergeSubscriptions(realTopicSubscriptions));
+    this.#player.setSubscriptions(
+      R.pipe(
+        R.chain(([subscription, topics]: InputMapping): SubscribePayload[] => {
+          const preloadType = subscription.preloadType ?? "partial";
+
+          // Leave the subscription unmodified if it is not a user script topic
+          if (topics == undefined) {
+            // If this is an input to a user script, we need to upgrade it to a
+            // subscription of all the fields
+            if (inputTopics.includes(subscription.topic)) {
+              return [
+                {
+                  topic: subscription.topic,
+                  preloadType,
+                },
+              ];
+            }
+
+            return [subscription];
+          }
+
+          // If the inputs array is empty then we don't have anything to
+          // subscribe to for this output
+          if (topics.length === 0) {
+            return [];
+          }
+
+          // Subscribe to all fields for all topics used by this user script
+          // because we can't know what fields the user script actually uses
+          // (for now)
+          return R.map(
+            (v) => ({
+              topic: v,
+              preloadType,
+            }),
+            topics,
+          );
+        }),
+        mergeSubscriptions,
+      )(inputs),
+    );
   }
 
   public close = (): void => {

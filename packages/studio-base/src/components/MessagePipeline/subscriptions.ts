@@ -63,18 +63,15 @@ function denormalizeSubscriptions(
       );
     }),
     // Now reduce them down to a single payload for each topic
-    R.map((payloads: Immutable<SubscribePayload[]> | undefined): Immutable<SubscribePayload> => {
-      const first = payloads?.[0];
-      if (first == undefined) {
-        // by definition, we can only get here iff there is at least one
-        // payload
-        return {
-          topic: "/impossible",
-        };
-      }
-
-      return R.reduce(mergeSubscription, first, payloads ?? []);
-    }),
+    R.chain(
+      (payloads: Immutable<SubscribePayload[]> | undefined): Immutable<SubscribePayload>[] => {
+        const first = payloads?.[0];
+        if (payloads == undefined || first == undefined || payloads.length === 0) {
+          return [];
+        }
+        return [R.reduce(mergeSubscription, first, payloads)];
+      },
+    ),
   )(subscriptions);
 }
 
