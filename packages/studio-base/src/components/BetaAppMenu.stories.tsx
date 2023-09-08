@@ -10,7 +10,7 @@ import {
   BookStar20Regular,
 } from "@fluentui/react-icons";
 import { Meta, StoryObj } from "@storybook/react";
-import { noop } from "lodash";
+import * as _ from "lodash-es";
 
 import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
 import { AppContext } from "@foxglove/studio-base/context/AppContext";
@@ -45,7 +45,7 @@ export default {
     anchorPosition: { top: 0, left: 0 },
     anchorReference: "anchorPosition",
     disablePortal: true,
-    handleClose: noop,
+    handleClose: _.noop,
   },
   decorators: [
     (Story, { args: { appBarMenuItems, recentSources = [], ...args } }): JSX.Element => (
