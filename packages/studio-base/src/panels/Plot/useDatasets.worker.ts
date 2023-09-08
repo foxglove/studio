@@ -5,7 +5,6 @@
 import * as Comlink from "comlink";
 import * as R from "ramda";
 
-import { compare as compareTimes, subtract as subtractTimes, fromSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
