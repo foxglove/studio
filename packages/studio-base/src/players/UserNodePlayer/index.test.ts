@@ -604,7 +604,7 @@ describe("UserNodePlayer", () => {
       expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input" }]);
     });
 
-    it("passes through sliced subscriptions", async () => {
+    it("does not subscribe to all fields when user node is unused", async () => {
       const fakePlayer = new FakePlayer();
       const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
       const topicNames = ["/np_input"];
