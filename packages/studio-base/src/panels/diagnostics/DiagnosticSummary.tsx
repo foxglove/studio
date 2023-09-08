@@ -13,55 +13,50 @@
 
 import PushPinIcon from "@mui/icons-material/PushPin";
 import {
+  IconButton,
+  InputBase,
   ListItem,
-  ListItemText,
   ListItemButton,
+  ListItemText,
   MenuItem,
   Select,
-  InputBase,
-  IconButton,
+  Typography,
   iconButtonClasses,
+  inputBaseClasses,
   listItemTextClasses,
   selectClasses,
-  inputBaseClasses,
-  Typography,
 } from "@mui/material";
 import { produce } from "immer";
 import * as _ from "lodash-es";
-import { CSSProperties, useCallback, useEffect, useMemo, useState } from "react";
-import { useInterval } from "react-use";
+import { CSSProperties, useCallback, useEffect, useMemo } from "react";
 import { AutoSizer } from "react-virtualized";
 import { FixedSizeList as List } from "react-window";
 import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
-import { Time, subtract } from "@foxglove/rostime";
 import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import useDiagnostics from "@foxglove/studio-base/panels/diagnostics/useDiagnostics";
+import useStaleTime from "@foxglove/studio-base/panels/diagnostics/useStaleTime";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import toggle from "@foxglove/studio-base/util/toggle";
 
 import { buildSummarySettingsTree } from "./settings";
 import {
-  DiagnosticSummaryConfig,
+  DEFAULT_SECONDS_UNTIL_STALE,
   DiagnosticInfo,
   DiagnosticStatusConfig,
-  getDiagnosticsByLevel,
-  filterAndSortDiagnostics,
-  LEVEL_NAMES,
+  DiagnosticSummaryConfig,
   KNOWN_LEVELS,
-  DEFAULT_SECONDS_UNTIL_STALE,
+  LEVEL_NAMES,
+  filterAndSortDiagnostics,
+  getDiagnosticsByLevel,
   getDiagnosticsWithStales as markOldDiagnosticsAsStales,
 } from "./util";
 
@@ -162,8 +157,6 @@ const ALLOWED_DATATYPES: string[] = [
   "ros.diagnostic_msgs.DiagnosticArray",
 ];
 
-const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
-
 function DiagnosticSummary(props: Props): JSX.Element {
   const { config, saveConfig } = props;
   const { classes } = useStyles();
@@ -178,17 +171,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   } = config;
   const { openSiblingPanel } = usePanelContext();
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
-  const currentTime = useMessagePipeline(selectCurrentTime);
-
-  // The stale time marks the point in time a diagnostic message is considered stale when its timestamp is older.
-  const newStaleTime =
-    currentTime && secondsUntilStale >= 1
-      ? subtract(currentTime, { sec: Math.floor(secondsUntilStale), nsec: 0 })
-      : undefined;
-  const [staleTime, setStaleTime] = useState<Time | undefined>(newStaleTime);
-  useInterval(() => {
-    setStaleTime(newStaleTime);
-  }, 1000);
+  const staleTime = useStaleTime(secondsUntilStale);
 
   const togglePinned = useCallback(
     (info: DiagnosticInfo) => {

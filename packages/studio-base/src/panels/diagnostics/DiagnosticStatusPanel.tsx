@@ -14,21 +14,17 @@
 import { Autocomplete, TextField } from "@mui/material";
 import { produce } from "immer";
 import * as _ from "lodash-es";
-import { useCallback, useMemo, useEffect, useState } from "react";
-import { useInterval } from "react-use";
+import { useCallback, useEffect, useMemo } from "react";
 
-import { Time, subtract, compare } from "@foxglove/rostime";
+import { compare } from "@foxglove/rostime";
 import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
+import useStaleTime from "@foxglove/studio-base/panels/diagnostics/useStaleTime";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
@@ -54,14 +50,11 @@ const ALLOWED_DATATYPES: string[] = [
   "ros.diagnostic_msgs.DiagnosticArray",
 ];
 
-const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
-
 // component to display a single diagnostic status from list
 function DiagnosticStatusPanel(props: Props) {
   const { saveConfig, config } = props;
   const { topics } = useDataSourceInfo();
   const { openSiblingPanel } = usePanelContext();
-  const currentTime = useMessagePipeline(selectCurrentTime);
   const {
     selectedHardwareId,
     selectedName,
@@ -71,15 +64,7 @@ function DiagnosticStatusPanel(props: Props) {
     secondsUntilStale = DEFAULT_SECONDS_UNTIL_STALE,
   } = config;
 
-  // The stale time marks the point in time a diagnostic message is considered stale when its timestamp is older.
-  const newStaleTime =
-    currentTime && secondsUntilStale >= 1
-      ? subtract(currentTime, { sec: Math.floor(secondsUntilStale), nsec: 0 })
-      : undefined;
-  const [staleTime, setStaleTime] = useState<Time | undefined>(newStaleTime);
-  useInterval(() => {
-    setStaleTime(newStaleTime);
-  }, 1000);
+  const staleTime = useStaleTime(secondsUntilStale);
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 

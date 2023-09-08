@@ -1,0 +1,39 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { Time, subtract } from "@foxglove/rostime";
+import { useMessagePipelineGetter } from "@foxglove/studio-base/components/MessagePipeline";
+
+const DEFAULT_UPDATE_INTERVAL_MS = 1_000;
+
+// Returns a time which specifies from when diagnostic messages are considered stale.
+export default function useStaleTime(
+  secondsUntilStale: number,
+  updateIntervalMillis?: number,
+): Time | undefined {
+  const messagePipeline = useMessagePipelineGetter();
+  const getCurrentTime = useCallback(() => {
+    const { playerState } = messagePipeline();
+    return playerState.activeData?.currentTime;
+  }, [messagePipeline]);
+
+  const [currentTime, setCurrentTime] = useState<Time | undefined>(getCurrentTime());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(getCurrentTime());
+    }, updateIntervalMillis ?? DEFAULT_UPDATE_INTERVAL_MS);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [getCurrentTime, updateIntervalMillis]);
+
+  return useMemo(() => {
+    return currentTime && secondsUntilStale >= 1
+      ? subtract(currentTime, { sec: Math.floor(secondsUntilStale), nsec: 0 })
+      : undefined;
+  }, [currentTime, secondsUntilStale]);
+}
