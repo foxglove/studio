@@ -2412,6 +2412,8 @@ __metadata:
 "@foxglove/eslint-plugin-studio@workspace:*, @foxglove/eslint-plugin-studio@workspace:packages/eslint-plugin-studio":
   version: 0.0.0-use.local
   resolution: "@foxglove/eslint-plugin-studio@workspace:packages/eslint-plugin-studio"
+  dependencies:
+    "@foxglove/tsconfig": 2.0.0
   languageName: unknown
   linkType: soft
 

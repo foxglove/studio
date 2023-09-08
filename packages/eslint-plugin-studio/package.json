@@ -14,5 +14,8 @@
   "main": "./index.js",
   "files": [
     "src"
-  ]
+  ],
+  "devDependencies": {
+    "@foxglove/tsconfig": "2.0.0"
+  }
 }
