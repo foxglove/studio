@@ -604,6 +604,20 @@ describe("UserNodePlayer", () => {
       expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input" }]);
     });
 
+    it("passes through sliced subscriptions", async () => {
+      const fakePlayer = new FakePlayer();
+      const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
+      const topicNames = ["/np_input"];
+      void userNodePlayer.setUserNodes({
+        nodeId: { name: "someNodeName", sourceCode: nodeUserCode },
+      });
+      userNodePlayer.setSubscriptions(topicNames.map((topic) => ({ topic, fields: ["a"] })));
+      await delay(10); // wait for subscriptions to take effect
+
+      // A direct subscription to a topic should maintain the requested fields.
+      expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input", fields: ["a"] }]);
+    });
+
     it("requests full subscriptions for input topics", async () => {
       const fakePlayer = new FakePlayer();
       const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
@@ -636,20 +650,6 @@ describe("UserNodePlayer", () => {
       // The underlying player subscription should not be sliced since we don't know which fields of
       // the message the script will use.
       expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input", preloadType: "partial" }]);
-    });
-
-    it("passes through sliced subscriptions", async () => {
-      const fakePlayer = new FakePlayer();
-      const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
-      const topicNames = ["/np_input"];
-      void userNodePlayer.setUserNodes({
-        nodeId: { name: "someNodeName", sourceCode: nodeUserCode },
-      });
-      userNodePlayer.setSubscriptions(topicNames.map((topic) => ({ topic, fields: ["a"] })));
-      await delay(10); // wait for subscriptions to take effect
-
-      // A direct subscription to a topic should maintain the requested fields.
-      expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input", fields: ["a"] }]);
     });
 
     it("subscribes to underlying topics even when user script has a compilation error", async () => {
