@@ -1046,11 +1046,10 @@ export default class UserNodePlayer implements Player {
     // that request.
     type SubscriberInputs = [SubscribePayload, readonly string[] | undefined];
 
-    // Check all subscriptions against the list of topics this UserNodePlayer
-    // can provide
-    const inputs = R.pipe(
-      mergeSubscriptions,
-      R.map((v): InputMapping => [v as SubscribePayload, state.inputsByOutputTopic.get(v.topic)]),
+    // Pair all subscriptions with their user script input topics (if any)
+    const payloadInputsPairs = R.pipe(
+      R.map((v: SubscribePayload): SubscriberInputs => [v, state.inputsByOutputTopic.get(v.topic)]),
+      R.filter(([, topics]: SubscriberInputs) => topics?.length !== 0),
     )(subscriptions);
 
     // An array of all of the input topics used by the user nodes referenced by
@@ -1060,12 +1059,11 @@ export default class UserNodePlayer implements Player {
       R.uniq,
     )(payloadInputsPairs);
 
+    // #nodeSubscriptions is a mapping from topic name to a SubscribePayload
+    // that contains the resolved preloadType--in other words, the kind of data
+    // (current or block) that this subscription needs
     this.#nodeSubscriptions = R.pipe(
-      // Ignore all subscriptions that resolved to empty (but not undefined)
-      // inputs
-      R.chain(([subscription, topics]: InputMapping): SubscribePayload[] =>
-        topics?.length !== 0 ? [subscription] : [],
-      ),
+      R.map(([subscription]: SubscriberInputs) => subscription),
       // Gather all of the payloads into subscriptions for the same topic
       R.groupBy((v: SubscribePayload) => v.topic),
       // Consolidate subscriptions to the same topic down to a single payload
@@ -1082,48 +1080,42 @@ export default class UserNodePlayer implements Player {
       }),
     )(payloadInputsPairs);
 
+    const resolvedSubscriptions = R.pipe(
+      R.chain(([subscription, topics]: SubscriberInputs): SubscribePayload[] => {
+        const preloadType = subscription.preloadType ?? "partial";
+
+        // Leave the subscription unmodified if it is not a user script topic
+        if (topics == undefined) {
+          // If this is an input to a user script, we need to upgrade it to a
+          // subscription of all the fields
+          if (neededInputTopics.includes(subscription.topic)) {
+            return [
+              {
+                topic: subscription.topic,
+                preloadType,
+              },
+            ];
+          }
+
+          return [subscription];
+        }
+
+        // Subscribe to all fields for all topics used by this user script
+        // because we can't know what fields the user script actually uses
+        // (for now)
+        return R.map(
+          (v) => ({
+            topic: v,
+            preloadType,
+          }),
+          topics,
+        );
+      }),
+      mergeSubscriptions,
+    )(payloadInputsPairs);
+
     // Merge subscriptions we pass on to the underlying player.
-    this.#player.setSubscriptions(
-      R.pipe(
-        R.chain(([subscription, topics]: InputMapping): SubscribePayload[] => {
-          const preloadType = subscription.preloadType ?? "partial";
-
-          // Leave the subscription unmodified if it is not a user script topic
-          if (topics == undefined) {
-            // If this is an input to a user script, we need to upgrade it to a
-            // subscription of all the fields
-            if (inputTopics.includes(subscription.topic)) {
-              return [
-                {
-                  topic: subscription.topic,
-                  preloadType,
-                },
-              ];
-            }
-
-            return [subscription];
-          }
-
-          // If the inputs array is empty then we don't have anything to
-          // subscribe to for this output
-          if (topics.length === 0) {
-            return [];
-          }
-
-          // Subscribe to all fields for all topics used by this user script
-          // because we can't know what fields the user script actually uses
-          // (for now)
-          return R.map(
-            (v) => ({
-              topic: v,
-              preloadType,
-            }),
-            topics,
-          );
-        }),
-        mergeSubscriptions,
-      )(inputs),
-    );
+    this.#player.setSubscriptions(resolvedSubscriptions);
   }
 
   public close = (): void => {
