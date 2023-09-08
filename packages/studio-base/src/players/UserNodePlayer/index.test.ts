@@ -641,7 +641,8 @@ describe("UserNodePlayer", () => {
       // Subscribe to a slice of the output topic and a slice of the input topic.
       userNodePlayer.setSubscriptions([
         { topic: "/np_input", fields: ["a"] },
-        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, fields: ["a"] },
+        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, fields: ["a"], preloadType: "partial" },
+        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, fields: ["a"], preloadType: "full" },
       ]);
 
       // Wait for subscriptions to take effect.
@@ -649,7 +650,10 @@ describe("UserNodePlayer", () => {
 
       // The underlying player subscription should not be sliced since we don't know which fields of
       // the message the script will use.
-      expect(fakePlayer.subscriptions).toEqual([{ topic: "/np_input", preloadType: "partial" }]);
+      expect(fakePlayer.subscriptions).toEqual([
+        { topic: "/np_input", preloadType: "full" },
+        { topic: "/np_input", preloadType: "partial" },
+      ]);
     });
 
     it("subscribes to underlying topics even when user script has a compilation error", async () => {
