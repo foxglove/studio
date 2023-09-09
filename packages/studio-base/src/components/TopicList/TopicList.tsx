@@ -21,9 +21,11 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { MessagePathDragProvider } from "@foxglove/studio-base/services/messagePathDragging/MessagePathDragProvider";
 
 import { MessagePathRow } from "./MessagePathRow";
 import { TopicRow } from "./TopicRow";
+import { useMultiSelection } from "./useMultiSelection";
 import { useTopicListSearch } from "./useTopicListSearch";
 
 const useStyles = makeStyles<void, "dragHandle">()((theme, _params, classes) => ({
@@ -89,6 +91,7 @@ export function TopicList(): JSX.Element {
     datatypes,
     filterText: debouncedFilterText,
   });
+  const { selectedIndexes, onSelect } = useMultiSelection(treeItems);
 
   useEffect(() => {
     // Discard cached row heights when the filter results change
@@ -135,75 +138,100 @@ export function TopicList(): JSX.Element {
   }
 
   return (
-    <div className={classes.root}>
-      <header className={classes.appBar}>
-        <TextField
-          id="topic-filter"
-          variant="filled"
-          disabled={playerPresence !== PlayerPresence.PRESENT}
-          onChange={(event) => {
-            setFilterText(event.target.value);
-          }}
-          value={undebouncedFilterText}
-          fullWidth
-          placeholder={t("searchBarPlaceholder")}
-          InputProps={{
-            inputProps: { "data-testid": "topic-filter" },
-            size: "small",
-            startAdornment: (
-              <label className={classes.startAdornment} htmlFor="topic-filter">
-                <SearchIcon fontSize="small" />
-              </label>
-            ),
-            endAdornment: undebouncedFilterText && (
-              <IconButton
-                size="small"
-                title={t("clearFilter")}
-                onClick={() => {
-                  setFilterText("");
-                }}
-                edge="end"
-              >
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            ),
-          }}
-        />
-      </header>
-      {treeItems.length > 0 ? (
-        <div style={{ flex: "1 1 100%" }}>
-          <AutoSizer>
-            {({ width, height }) => (
-              <VariableSizeList
-                ref={listRef}
-                width={width}
-                height={height}
-                itemCount={treeItems.length}
-                itemSize={(index) => (treeItems[index]?.type === "topic" ? 50 : 28)}
-                overscanCount={10}
-              >
-                {({ index, style }) => {
-                  const treeItem = treeItems[index]!;
-                  switch (treeItem.type) {
-                    case "topic":
-                      return <TopicRow style={style} topicResult={treeItem.item} />;
-                    case "schema":
-                      return <MessagePathRow style={style} messagePathResult={treeItem.item} />;
-                  }
-                }}
-              </VariableSizeList>
-            )}
-          </AutoSizer>
-        </div>
-      ) : (
-        <EmptyState>
-          {playerPresence === PlayerPresence.PRESENT && undebouncedFilterText
-            ? `${t("noTopicsOrDatatypesMatching")} \n “${undebouncedFilterText}”`
-            : t("noTopicsAvailable")}
-          {playerPresence === PlayerPresence.RECONNECTING && t("waitingForConnection")}
-        </EmptyState>
-      )}
-      <DirectTopicStatsUpdater interval={6} />
-    </div>
+    <MessagePathDragProvider>
+      <div className={classes.root}>
+        <header className={classes.appBar}>
+          <TextField
+            id="topic-filter"
+            variant="filled"
+            disabled={playerPresence !== PlayerPresence.PRESENT}
+            onChange={(event) => {
+              setFilterText(event.target.value);
+            }}
+            value={undebouncedFilterText}
+            fullWidth
+            placeholder={t("searchBarPlaceholder")}
+            InputProps={{
+              inputProps: { "data-testid": "topic-filter" },
+              size: "small",
+              startAdornment: (
+                <label className={classes.startAdornment} htmlFor="topic-filter">
+                  <SearchIcon fontSize="small" />
+                </label>
+              ),
+              endAdornment: undebouncedFilterText && (
+                <IconButton
+                  size="small"
+                  title={t("clearFilter")}
+                  onClick={() => {
+                    setFilterText("");
+                  }}
+                  edge="end"
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ),
+            }}
+          />
+        </header>
+        {treeItems.length > 0 ? (
+          <div style={{ flex: "1 1 100%" }}>
+            <AutoSizer>
+              {({ width, height }) => (
+                <VariableSizeList
+                  ref={listRef}
+                  width={width}
+                  height={height}
+                  itemCount={treeItems.length}
+                  itemSize={(index) => (treeItems[index]?.type === "topic" ? 50 : 28)}
+                  overscanCount={10}
+                >
+                  {({ index, style }) => {
+                    const treeItem = treeItems[index]!;
+                    const selected = selectedIndexes.has(index);
+                    const onClick = (event: React.MouseEvent) => {
+                      event.preventDefault();
+                      onSelect({
+                        index,
+                        modKey: event.metaKey || event.ctrlKey,
+                        shiftKey: event.shiftKey,
+                      });
+                    };
+                    switch (treeItem.type) {
+                      case "topic":
+                        return (
+                          <TopicRow
+                            style={style}
+                            topicResult={treeItem.item}
+                            selected={selected}
+                            onClick={onClick}
+                          />
+                        );
+                      case "schema":
+                        return (
+                          <MessagePathRow
+                            style={style}
+                            messagePathResult={treeItem.item}
+                            selected={selected}
+                            onClick={onClick}
+                          />
+                        );
+                    }
+                  }}
+                </VariableSizeList>
+              )}
+            </AutoSizer>
+          </div>
+        ) : (
+          <EmptyState>
+            {playerPresence === PlayerPresence.PRESENT && undebouncedFilterText
+              ? `${t("noTopicsOrDatatypesMatching")} \n “${undebouncedFilterText}”`
+              : t("noTopicsAvailable")}
+            {playerPresence === PlayerPresence.RECONNECTING && t("waitingForConnection")}
+          </EmptyState>
+        )}
+        <DirectTopicStatsUpdater interval={6} />
+      </div>
+    </MessagePathDragProvider>
   );
 }

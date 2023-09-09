@@ -9,7 +9,7 @@
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-type TreeClasses = "dragHandle" | "isDragging";
+type TreeClasses = "dragHandle" | "isDragging" | "selected";
 
 /* eslint-disable tss-unused-classes/unused-classes */
 export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, classes) => ({
@@ -46,6 +46,11 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
     backgroundColor: theme.palette.background.paper,
     borderTop: `1px solid ${theme.palette.action.selected}`,
 
+    [`&.${classes.selected}`]: {
+      backgroundColor: tc(theme.palette.primary.main)
+        .setAlpha(theme.palette.action.selectedOpacity)
+        .toRgbString(),
+    },
     [`&.${classes.isDragging}:active`]: {
       backgroundColor: tc(theme.palette.primary.main)
         .setAlpha(theme.palette.action.hoverOpacity)
@@ -65,5 +70,6 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
     cursor: "grab",
   },
   isDragging: {},
+  selected: {},
 }));
 /* eslint-enable tss-unused-classes/unused-classes */

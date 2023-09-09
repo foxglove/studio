@@ -5,7 +5,9 @@
 import { ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
 import { Typography } from "@mui/material";
 import { FzfResultItem } from "fzf";
+import { useMemo } from "react";
 
+import { DraggedMessagePath } from "@foxglove/studio";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -17,26 +19,41 @@ import { useTopicListStyles } from "./useTopicListStyles";
 export function TopicRow({
   topicResult,
   style,
+  selected,
+  onClick,
 }: {
   topicResult: FzfResultItem<Topic>;
   style: React.CSSProperties;
+  selected: boolean;
+  onClick: React.MouseEventHandler<HTMLDivElement>;
 }): JSX.Element {
   const { cx, classes } = useTopicListStyles();
 
   const topic = topicResult.item;
 
+  const item: DraggedMessagePath = useMemo(
+    () => ({
+      path: topic.name,
+      rootSchemaName: topic.schemaName,
+      isTopic: true,
+      isLeaf: false,
+    }),
+    [topic.name, topic.schemaName],
+  );
   const { connectDragSource, connectDragPreview, cursor, isDragging } = useMessagePathDrag({
-    path: topic.name,
-    rootSchemaName: topic.schemaName,
-    isTopic: true,
-    isLeaf: false,
+    item,
+    selected,
   });
 
   return (
     <div
       ref={connectDragPreview}
-      className={cx(classes.row, { [classes.isDragging]: isDragging })}
+      className={cx(classes.row, {
+        [classes.isDragging]: isDragging,
+        [classes.selected]: selected,
+      })}
       style={style}
+      onClick={onClick}
     >
       <Stack flex="auto" overflow="hidden">
         <Typography variant="body2" noWrap>

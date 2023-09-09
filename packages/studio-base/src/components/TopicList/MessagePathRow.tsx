@@ -5,7 +5,9 @@
 import { ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
 import { Typography } from "@mui/material";
 import { FzfResultItem } from "fzf";
+import { useMemo } from "react";
 
+import { DraggedMessagePath } from "@foxglove/studio";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
@@ -16,9 +18,13 @@ import { useTopicListStyles } from "./useTopicListStyles";
 export function MessagePathRow({
   messagePathResult,
   style,
+  selected,
+  onClick,
 }: {
   messagePathResult: FzfResultItem<MessagePathSearchItem>;
   style: React.CSSProperties;
+  selected: boolean;
+  onClick: React.MouseEventHandler<HTMLDivElement>;
 }): JSX.Element {
   const { cx, classes } = useTopicListStyles();
 
@@ -28,18 +34,30 @@ export function MessagePathRow({
     topic,
   } = messagePathResult.item;
 
+  const item: DraggedMessagePath = useMemo(
+    () => ({
+      path: fullPath,
+      rootSchemaName: topic.schemaName,
+      isTopic: false,
+      isLeaf,
+    }),
+    [fullPath, isLeaf, topic.schemaName],
+  );
+
   const { connectDragSource, cursor, isDragging } = useMessagePathDrag({
-    path: fullPath,
-    rootSchemaName: topic.schemaName,
-    isTopic: false,
-    isLeaf,
+    item,
+    selected,
   });
 
   return (
     <div
       ref={connectDragSource}
-      className={cx(classes.row, classes.fieldRow, { [classes.isDragging]: isDragging })}
+      className={cx(classes.row, classes.fieldRow, {
+        [classes.isDragging]: isDragging,
+        [classes.selected]: selected,
+      })}
       style={{ ...style, cursor }}
+      onClick={onClick}
     >
       <Stack flex="auto" direction="row" gap={2} overflow="hidden">
         <Typography variant="body2" noWrap>

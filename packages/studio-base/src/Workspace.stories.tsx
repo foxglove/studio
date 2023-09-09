@@ -61,14 +61,16 @@ class MockPanelCatalog implements PanelCatalog {
           Object.assign(
             function DroppablePanel() {
               const { setMessagePathDropConfig } = usePanelContext();
-              const [droppedPath, setDroppedPath] = useState<DraggedMessagePath | undefined>();
+              const [droppedPaths, setDroppedPaths] = useState<
+                readonly DraggedMessagePath[] | undefined
+              >();
               useEffect(() => {
                 setMessagePathDropConfig({
-                  getDropStatus(_path) {
+                  getDropStatus(_paths) {
                     return { canDrop: true, message: "Example drop message" };
                   },
-                  handleDrop(path) {
-                    setDroppedPath(path);
+                  handleDrop(paths) {
+                    setDroppedPaths(paths);
                   },
                 });
               }, [setMessagePathDropConfig]);
@@ -76,7 +78,7 @@ class MockPanelCatalog implements PanelCatalog {
                 <>
                   <PanelToolbar />
                   <div>Drop here!</div>
-                  {droppedPath && <pre>{JSON.stringify(droppedPath, undefined, 2)}</pre>}
+                  {droppedPaths && <pre>{JSON.stringify(droppedPaths, undefined, 2)}</pre>}
                 </>
               );
             },
