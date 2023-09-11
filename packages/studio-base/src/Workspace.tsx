@@ -366,15 +366,20 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const keyDownHandlers = useMemo(() => {
     return {
-      "[": () => { sidebarActions.left.setOpen((oldValue) => !oldValue); },
-      "]": () => { sidebarActions.right.setOpen((oldValue) => !oldValue); },
+      "[": () => {
+        sidebarActions.left.setOpen((oldValue) => !oldValue);
+      },
+      "]": () => {
+        sidebarActions.right.setOpen((oldValue) => !oldValue);
+      },
       o: (ev: KeyboardEvent) => {
         if (!keyboardEventHasModifier(ev)) {
           return;
         }
         ev.preventDefault();
         if (ev.shiftKey) {
-          dialogActions.dataSource.open("connection"); return;
+          dialogActions.dataSource.open("connection");
+          return;
         }
         void dialogActions.openFile.open().catch(console.error);
       },

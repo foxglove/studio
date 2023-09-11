@@ -36,4 +36,6 @@ export const appSettings = {
   restartTheAppForChangesToTakeEffect: " Restart the app for changes to take effect.",
   layoutDebugging: "Layout debugging",
   layoutDebuggingDescription: "Show extra controls for developing and debugging layout storage.",
+  newAppMenu: "Enable new app menu",
+  newAppMenuDescription: "Show the new app menu.",
 };

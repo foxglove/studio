@@ -45,6 +45,11 @@ function useFeatures(): Feature[] {
 
   const features: Feature[] = [
     {
+      key: AppSetting.ENABLE_NEW_APP_MENU,
+      name: t("newAppMenu"),
+      description: <>{t("newAppMenuDescription")}</>,
+    },
+    {
       key: AppSetting.SHOW_DEBUG_PANELS,
       name: t("studioDebugPanels"),
       description: <>{t("studioDebugPanelsDescription")}</>,
