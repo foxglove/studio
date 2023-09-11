@@ -5,7 +5,7 @@
 import { ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
 import { Typography } from "@mui/material";
 import { FzfResultItem } from "fzf";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { DraggedMessagePath } from "@foxglove/studio";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
@@ -44,14 +44,23 @@ export function MessagePathRow({
     [fullPath, isLeaf, topic.schemaName],
   );
 
-  const { connectDragSource, cursor, isDragging } = useMessagePathDrag({
-    item,
-    selected,
-  });
+  const { connectDragSource, connectDragPreview, cursor, isDragging, draggedItemCount } =
+    useMessagePathDrag({
+      item,
+      selected,
+    });
+
+  const combinedRef: React.Ref<HTMLDivElement> = useCallback(
+    (el) => {
+      connectDragSource(el);
+      connectDragPreview(el);
+    },
+    [connectDragPreview, connectDragSource],
+  );
 
   return (
     <div
-      ref={connectDragSource}
+      ref={combinedRef}
       className={cx(classes.row, classes.fieldRow, {
         [classes.isDragging]: isDragging,
         [classes.selected]: selected,
@@ -59,6 +68,7 @@ export function MessagePathRow({
       style={{ ...style, cursor }}
       onClick={onClick}
     >
+      {draggedItemCount > 1 && <div className={classes.countBadge}>{draggedItemCount}</div>}
       <Stack flex="auto" direction="row" gap={2} overflow="hidden">
         <Typography variant="body2" noWrap>
           <HighlightChars

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { CSSProperties, useContext, useEffect, useRef, useState } from "react";
+import { CSSProperties, useCallback, useContext, useLayoutEffect, useRef, useState } from "react";
 import {
   ConnectDragPreview,
   ConnectDragSource,
@@ -12,10 +12,13 @@ import {
   useDrop,
 } from "react-dnd";
 
+import Logger from "@foxglove/log";
 import { DraggedMessagePath, MessagePathDropConfig, MessagePathDropStatus } from "@foxglove/studio";
-import { MessagePathDragContextInternal } from "@foxglove/studio-base/services/messagePathDragging/MessagePathDragProvider";
+import { MessagePathSelectionContextInternal } from "@foxglove/studio-base/services/messagePathDragging/MessagePathSelectionProvider";
 
 import { MessagePathDragParams } from "./types";
+
+const log = Logger.getLogger(__filename);
 
 const MESSAGE_PATH_DRAG_TYPE = Symbol("MESSAGE_PATH_DRAG_TYPE");
 
@@ -51,36 +54,27 @@ export function useMessagePathDrag({ item, selected }: MessagePathDragParams): {
   connectDragPreview: ConnectDragPreview;
   cursor?: CSSProperties["cursor"];
   isDragging: boolean;
+  draggedItemCount: number;
 } {
   const [dropStatus, setDropStatus] = useState<MessagePathDropStatus | undefined>();
 
   // Add this item to the list of selected items when it is selected
-  //FIXME: this needs to be hoisted out of the virtualized list so items aren't removed when they go offscreen
-  const context = useContext(MessagePathDragContextInternal);
-  useEffect(() => {
-    const selectedItems = context?.selectedItems.current;
-    if (!selectedItems) {
-      return undefined;
-    }
-    if (selected) {
-      selectedItems.push(item);
-      return () => {
-        const idx = selectedItems.indexOf(item);
-        if (idx !== -1) {
-          selectedItems.splice(idx, 1);
-        }
-      };
-    }
-    return undefined;
-  }, [item, selected, context]);
+  const context = useContext(MessagePathSelectionContextInternal);
 
-  const overDropTargets = useRef(new Set<string | symbol>()); //TODO: should this move into the context?
-  const [{ isDragging }, connectDragSource, connectDragPreview] = useDrag({
+  const overDropTargets = useRef(new Set<string | symbol>());
+  const [
+    { isDragging, draggedItemCount: actualDraggedItemCount },
+    connectDragSource,
+    connectDragPreview,
+  ] = useDrag({
     type: MESSAGE_PATH_DRAG_TYPE,
     item(_monitor: DragSourceMonitor<MessagePathDragObject>): MessagePathDragObject {
-      const items = context?.selectedItems.current;
+      const selectedItems = context?.getSelectedItems();
+      const items = selected && selectedItems && selectedItems.length > 0 ? selectedItems : [item];
+      log.debug("Starting message path drag:", items);
       return {
-        items: items && items.length > 0 ? items : [item],
+        // If this item is being dragged but wasn't selected, drag only this item and not the other selected items
+        items,
         setDropStatus,
         overDropTargets: overDropTargets.current,
       };
@@ -89,9 +83,14 @@ export function useMessagePathDrag({ item, selected }: MessagePathDragParams): {
       // Avoid the browser automatically using the "copy" cursor; we manage the cursor ourselves below
       dropEffect: "move",
     },
+    previewOptions: {
+      // Allow the draggedItemCount badge to be shown as part of the drag preview
+      captureDraggingState: true,
+    },
     collect(monitor) {
       return {
         isDragging: monitor.isDragging(),
+        draggedItemCount: monitor.isDragging() ? monitor.getItem().items.length : 0,
       };
     },
   });
@@ -109,7 +108,35 @@ export function useMessagePathDrag({ item, selected }: MessagePathDragParams): {
     }
   }
 
-  return { connectDragSource, connectDragPreview, cursor, isDragging };
+  // To allow the draggedItemCount to be shown in the drag preview, we have to breifly render with
+  // the actual count, then re-render with the count at 0 to avoid showing the item count in the
+  // page itself.
+  const [displayedDraggedItemCount, setDisplayedDraggedItemCount] = useState(0);
+  useLayoutEffect(() => {
+    if (!isDragging) {
+      return undefined;
+    }
+    setDisplayedDraggedItemCount(actualDraggedItemCount);
+    const timeout = setTimeout(() => {
+      setDisplayedDraggedItemCount(0);
+    }, 0);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [actualDraggedItemCount, isDragging]);
+
+  const connectDragPreviewWithCaptureDraggingState: ConnectDragPreview = useCallback(
+    (el) => connectDragPreview(el, { captureDraggingState: true }),
+    [connectDragPreview],
+  );
+
+  return {
+    connectDragSource,
+    connectDragPreview: connectDragPreviewWithCaptureDraggingState,
+    cursor,
+    isDragging,
+    draggedItemCount: displayedDraggedItemCount,
+  };
 }
 
 /**

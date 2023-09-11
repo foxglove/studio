@@ -5,14 +5,13 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { IconButton, List, ListItem, ListItemText, Skeleton, TextField } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AutoSizer } from "react-virtualized";
-import { VariableSizeList } from "react-window";
-import tc from "tinycolor2";
-import { makeStyles } from "tss-react/mui";
+import { ListChildComponentProps, VariableSizeList } from "react-window";
 import { useDebounce } from "use-debounce";
 
+import { DraggedMessagePath } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
@@ -21,63 +20,19 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { MessagePathDragProvider } from "@foxglove/studio-base/services/messagePathDragging/MessagePathDragProvider";
+import { MessagePathSelectionProvider } from "@foxglove/studio-base/services/messagePathDragging/MessagePathSelectionProvider";
 
 import { MessagePathRow } from "./MessagePathRow";
 import { TopicRow } from "./TopicRow";
 import { useMultiSelection } from "./useMultiSelection";
 import { useTopicListSearch } from "./useTopicListSearch";
-
-const useStyles = makeStyles<void, "dragHandle">()((theme, _params, classes) => ({
-  root: {
-    width: "100%",
-    height: "100%",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-  },
-  appBar: {
-    top: 0,
-    zIndex: theme.zIndex.appBar,
-    padding: theme.spacing(0.5),
-    position: "sticky",
-    backgroundColor: theme.palette.background.paper,
-  },
-  listItem: {
-    backgroundColor: theme.palette.background.paper,
-    containerType: "inline-size",
-    paddingRight: 0,
-
-    "&.isDragging:active": {
-      backgroundColor: tc(theme.palette.primary.main)
-        .setAlpha(theme.palette.action.hoverOpacity)
-        .toRgbString(),
-      outline: `1px solid ${theme.palette.primary.main}`,
-      outlineOffset: -1,
-      borderRadius: theme.shape.borderRadius,
-    },
-    [`:not(:hover) .${classes.dragHandle}`]: {
-      visibility: "hidden",
-    },
-  },
-  listItemText: {
-    marginTop: theme.spacing(0.5),
-    marginBottom: theme.spacing(0.5),
-  },
-  startAdornment: {
-    display: "flex",
-  },
-  dragHandle: {
-    opacity: 0.6,
-    cursor: "grab",
-  },
-}));
+import { useTopicListStyles } from "./useTopicListStyles";
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 export function TopicList(): JSX.Element {
   const { t } = useTranslation("topicList");
-  const { classes, cx } = useStyles();
+  const { classes } = useTopicListStyles();
   const [undebouncedFilterText, setFilterText] = useState<string>("");
   const [debouncedFilterText] = useDebounce(undebouncedFilterText, 50);
 
@@ -93,10 +48,74 @@ export function TopicList(): JSX.Element {
   });
   const { selectedIndexes, onSelect } = useMultiSelection(treeItems);
 
+  const getItemAtIndex = useCallback(
+    (index: number): DraggedMessagePath | undefined => {
+      const treeItem = treeItems[index];
+      if (!treeItem) {
+        return undefined;
+      }
+      switch (treeItem.type) {
+        case "topic":
+          return {
+            path: treeItem.item.item.name,
+            rootSchemaName: treeItem.item.item.schemaName,
+            isTopic: true,
+            isLeaf: false,
+          };
+        case "schema":
+          return {
+            path: treeItem.item.item.fullPath,
+            rootSchemaName: treeItem.item.item.topic.schemaName,
+            isTopic: false,
+            isLeaf: treeItem.item.item.suffix.isLeaf,
+          };
+      }
+    },
+    [treeItems],
+  );
+
   useEffect(() => {
     // Discard cached row heights when the filter results change
     listRef.current?.resetAfterIndex(0);
   }, [treeItems]);
+
+  const itemData = useMemo(() => ({ treeItems, selectedIndexes }), [selectedIndexes, treeItems]);
+
+  const renderRow: React.FC<ListChildComponentProps<typeof itemData>> = useCallback(
+    ({ index, style, data }) => {
+      const treeItem = data.treeItems[index]!;
+      const selected = data.selectedIndexes.has(index);
+      const onClick = (event: React.MouseEvent) => {
+        event.preventDefault();
+        onSelect({
+          index,
+          modKey: event.metaKey || event.ctrlKey,
+          shiftKey: event.shiftKey,
+        });
+      };
+      switch (treeItem.type) {
+        case "topic":
+          return (
+            <TopicRow
+              style={style}
+              topicResult={treeItem.item}
+              selected={selected}
+              onClick={onClick}
+            />
+          );
+        case "schema":
+          return (
+            <MessagePathRow
+              style={style}
+              messagePathResult={treeItem.item}
+              selected={selected}
+              onClick={onClick}
+            />
+          );
+      }
+    },
+    [onSelect],
+  );
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
     return <EmptyState>{t("noDataSourceSelected")}</EmptyState>;
@@ -109,7 +128,7 @@ export function TopicList(): JSX.Element {
   if (playerPresence === PlayerPresence.INITIALIZING) {
     return (
       <>
-        <header className={classes.appBar}>
+        <header className={classes.filterBar}>
           <TextField
             disabled
             variant="filled"
@@ -121,11 +140,11 @@ export function TopicList(): JSX.Element {
             }}
           />
         </header>
-        <List key="loading" dense disablePadding>
+        <List dense disablePadding>
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => (
-            <ListItem className={cx(classes.listItem, "loading")} divider key={i}>
+            <ListItem divider key={i}>
               <ListItemText
-                className={classes.listItemText}
+                className={classes.skeletonText}
                 primary={<Skeleton animation={false} width="20%" />}
                 secondary={<Skeleton animation="wave" width="55%" />}
                 secondaryTypographyProps={{ variant: "caption" }}
@@ -138,9 +157,9 @@ export function TopicList(): JSX.Element {
   }
 
   return (
-    <MessagePathDragProvider>
+    <MessagePathSelectionProvider selectedIndexes={selectedIndexes} getItemAtIndex={getItemAtIndex}>
       <div className={classes.root}>
-        <header className={classes.appBar}>
+        <header className={classes.filterBar}>
           <TextField
             id="topic-filter"
             variant="filled"
@@ -155,7 +174,7 @@ export function TopicList(): JSX.Element {
               inputProps: { "data-testid": "topic-filter" },
               size: "small",
               startAdornment: (
-                <label className={classes.startAdornment} htmlFor="topic-filter">
+                <label className={classes.filterStartAdornment} htmlFor="topic-filter">
                   <SearchIcon fontSize="small" />
                 </label>
               ),
@@ -184,40 +203,10 @@ export function TopicList(): JSX.Element {
                   height={height}
                   itemCount={treeItems.length}
                   itemSize={(index) => (treeItems[index]?.type === "topic" ? 50 : 28)}
+                  itemData={itemData}
                   overscanCount={10}
                 >
-                  {({ index, style }) => {
-                    const treeItem = treeItems[index]!;
-                    const selected = selectedIndexes.has(index);
-                    const onClick = (event: React.MouseEvent) => {
-                      event.preventDefault();
-                      onSelect({
-                        index,
-                        modKey: event.metaKey || event.ctrlKey,
-                        shiftKey: event.shiftKey,
-                      });
-                    };
-                    switch (treeItem.type) {
-                      case "topic":
-                        return (
-                          <TopicRow
-                            style={style}
-                            topicResult={treeItem.item}
-                            selected={selected}
-                            onClick={onClick}
-                          />
-                        );
-                      case "schema":
-                        return (
-                          <MessagePathRow
-                            style={style}
-                            messagePathResult={treeItem.item}
-                            selected={selected}
-                            onClick={onClick}
-                          />
-                        );
-                    }
-                  }}
+                  {renderRow}
                 </VariableSizeList>
               )}
             </AutoSizer>
@@ -232,6 +221,6 @@ export function TopicList(): JSX.Element {
         )}
         <DirectTopicStatsUpdater interval={6} />
       </div>
-    </MessagePathDragProvider>
+    </MessagePathSelectionProvider>
   );
 }

@@ -5,7 +5,7 @@
 import { ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
 import { Typography } from "@mui/material";
 import { FzfResultItem } from "fzf";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { DraggedMessagePath } from "@foxglove/studio";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
@@ -40,23 +40,45 @@ export function TopicRow({
     }),
     [topic.name, topic.schemaName],
   );
-  const { connectDragSource, connectDragPreview, cursor, isDragging } = useMessagePathDrag({
-    item,
-    selected,
-  });
+  const { connectDragSource, connectDragPreview, cursor, isDragging, draggedItemCount } =
+    useMessagePathDrag({
+      item,
+      selected,
+    });
+
+  const combinedRef: React.Ref<HTMLDivElement> = useCallback(
+    (el) => {
+      connectDragSource(el);
+      connectDragPreview(el);
+    },
+    [connectDragPreview, connectDragSource],
+  );
+
+  const cancelDragEvent = useCallback((event: React.DragEvent<HTMLSpanElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+  }, []);
 
   return (
     <div
-      ref={connectDragPreview}
+      ref={combinedRef}
       className={cx(classes.row, {
         [classes.isDragging]: isDragging,
         [classes.selected]: selected,
       })}
-      style={style}
+      style={{ ...style, cursor }}
       onClick={onClick}
     >
-      <Stack flex="auto" overflow="hidden">
-        <Typography variant="body2" noWrap>
+      {draggedItemCount > 1 && <div className={classes.countBadge}>{draggedItemCount}</div>}
+      {/* Extra Stack wrapper to enable growing without the  */}
+      <Stack flex="auto" alignItems="flex-start" overflow="hidden">
+        <Typography
+          variant="body2"
+          noWrap
+          draggable
+          onDragStart={cancelDragEvent}
+          className={classes.textContent}
+        >
           <HighlightChars str={topic.name} indices={topicResult.positions} />
           {topic.aliasedFromName != undefined && (
             <Typography variant="caption" className={classes.aliasedTopicName}>
@@ -64,7 +86,14 @@ export function TopicRow({
             </Typography>
           )}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          noWrap
+          draggable
+          onDragStart={cancelDragEvent}
+          className={classes.textContent}
+        >
           {topic.schemaName == undefined ? (
             "—"
           ) : (
@@ -77,12 +106,7 @@ export function TopicRow({
         </Typography>
       </Stack>
       <TopicStatsChip topicName={topic.name} />
-      <div
-        data-testid="TopicListDragHandle"
-        ref={connectDragSource}
-        style={{ cursor }}
-        className={classes.dragHandle}
-      >
+      <div data-testid="TopicListDragHandle" className={classes.dragHandle}>
         <ReOrderDotsVertical16Regular />
       </div>
     </div>
