@@ -90,7 +90,7 @@ export function BetaAppMenu(props: BetaAppMenuProps): JSX.Element {
       }}
     >
       <ListSubheader disableSticky>
-        <Typography variant="overline">{t("openDataSources")}</Typography>
+        <Typography variant="overline">{t("viewData")}</Typography>
       </ListSubheader>
       <MenuItem
         className={classes.menuItem}
