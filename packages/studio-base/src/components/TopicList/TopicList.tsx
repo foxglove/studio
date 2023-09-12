@@ -82,6 +82,7 @@ export function TopicList(): JSX.Element {
   const itemData = useMemo(() => ({ treeItems, selectedIndexes }), [selectedIndexes, treeItems]);
 
   const renderRow: React.FC<ListChildComponentProps<typeof itemData>> = useCallback(
+    // `data` comes from the `itemData` we pass to the VariableSizeList below
     ({ index, style, data }) => {
       const treeItem = data.treeItems[index]!;
       const selected = data.selectedIndexes.has(index);
