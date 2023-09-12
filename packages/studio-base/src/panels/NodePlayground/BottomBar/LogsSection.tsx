@@ -19,6 +19,7 @@ const useStyles = makeStyles()({
 });
 
 const LogsSection = ({ logs }: { logs: readonly UserNodeLog[] }): JSX.Element => {
+  // Manage auto-scroll behavior when user is also manually scrolling the list.
   const [autoScroll, setAutoScroll] = useState(true);
 
   const { classes } = useStyles();

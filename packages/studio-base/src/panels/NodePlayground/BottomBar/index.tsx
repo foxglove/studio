@@ -36,6 +36,12 @@ type BottomBarModes = "logs" | "diagnostics";
 const TAB_HEIGHT = 36;
 
 const useStyles = makeStyles()((theme) => ({
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    overflowY: "hidden",
+  },
   badge: {
     alignItems: "center",
 
@@ -90,10 +96,7 @@ const BottomBar = ({
 
   return (
     <>
-      <Paper
-        elevation={0}
-        style={{ height: "100%", overflowY: "hidden", display: "flex", flexDirection: "column" }}
-      >
+      <Paper elevation={0} className={classes.root}>
         <Divider />
         <Stack
           direction="row"
