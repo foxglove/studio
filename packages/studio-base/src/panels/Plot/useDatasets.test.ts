@@ -36,4 +36,10 @@ describe("getPayload", () => {
       fields: ["baz", "fox", "bar", "header"],
     });
   });
+  it("should ignore filters that come later", () => {
+    expect(call("/foo{fox==3}.bar{blah==2}")).toEqual({
+      topic: "/foo",
+      fields: ["fox", "bar", "header"],
+    });
+  });
 });

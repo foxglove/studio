@@ -86,8 +86,8 @@ export function pathToPayload(path: RosPath): SubscribePayload | undefined {
 
   // We want to take _all_ of the filters that start the path, since these can
   // be chained
-  const [filters, rest] = R.partition((part: MessagePathPart) => part.type === "filter", parts);
-  const firstField = rest[0];
+  const filters = R.takeWhile((part: MessagePathPart) => part.type === "filter", parts);
+  const firstField = R.find((part: MessagePathPart) => part.type === "name", parts);
   if (firstField == undefined || firstField.type !== "name") {
     return undefined;
   }
