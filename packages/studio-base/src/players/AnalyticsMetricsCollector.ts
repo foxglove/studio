@@ -17,6 +17,7 @@ type EventData = { [key: string]: string | number | boolean };
 export default class AnalyticsMetricsCollector implements PlayerMetricsCollectorInterface {
   #metadata: EventData = {};
   #analytics: IAnalytics;
+  #intervalID: number | undefined;
 
   public constructor(analytics: IAnalytics) {
     log.debug("New AnalyticsMetricsCollector");
@@ -25,6 +26,10 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
 
   public setProperty(key: string, value: string | number | boolean): void {
     this.#metadata[key] = value;
+  }
+
+  public getProperty(key: string): string | number | boolean | undefined {
+    return this.#metadata[key];
   }
 
   public logEvent(event: AppEvent, data?: EventData): void {
@@ -36,10 +41,19 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
   }
 
   public play(speed: number): void {
+    this.#intervalID = window.setInterval(() => {
+      const playbackDuration = this.getProperty("playbackDuration");
+      this.setProperty(
+        "playbackDuration",
+        typeof playbackDuration === "number" ? Number(playbackDuration) + 1 : 0,
+      );
+    }, 1000);
+
     this.logEvent(AppEvent.PLAYER_PLAY, { speed });
   }
 
   public seek(_time: Time): void {
+    clearInterval(this.#intervalID);
     // NOTE: This event fires in more cases than user interaction
   }
 
@@ -48,10 +62,13 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
   }
 
   public pause(): void {
+    clearInterval(this.#intervalID);
     this.logEvent(AppEvent.PLAYER_PAUSE);
   }
 
   public close(): void {
+    clearInterval(this.#intervalID);
+    this.#metadata.playbackDuration = 0;
     this.logEvent(AppEvent.PLAYER_CLOSE);
   }
 
