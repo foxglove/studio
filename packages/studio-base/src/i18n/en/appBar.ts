@@ -20,6 +20,7 @@ export const appBar = {
   open: "Open…",
   openConnection: "Open connection…",
   openLocalFile: "Open local file…",
+  recentDataSources: "Recent data sources",
   recentlyViewed: "Recently viewed",
   settings: "Settings",
   showLeftSidebar: "Show left sidebar",
