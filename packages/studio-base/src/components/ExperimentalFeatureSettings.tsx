@@ -23,14 +23,10 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles()({
   checkbox: {
-    "&.MuiCheckbox-root": {
-      paddingTop: 0,
-    },
+    paddingTop: 0,
   },
   formControlLabel: {
-    "&.MuiFormControlLabel-root": {
-      alignItems: "start",
-    },
+    alignItems: "start",
   },
 });
 
