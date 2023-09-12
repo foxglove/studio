@@ -116,8 +116,7 @@ export function pathToPayload(path: RosPath): SubscribePayload | undefined {
 
 function getPayloadsFromPaths(paths: readonly string[]): SubscribePayload[] {
   return R.pipe(
-    // Parse all of the paths
-    R.chain((path: string) => {
+    R.chain((path: string): SubscribePayload[] => {
       const parsed = parseRosPath(path);
       if (parsed == undefined) {
         return [];
