@@ -546,8 +546,12 @@ export class IterablePlayer implements Player {
 
       this.#blockLoader?.setTopics(this.#preloadTopics);
 
-      // Block loadings is constantly running and tries to keep the preloaded messages in memory
-      this.#blockLoadingProcess = this.#startBlockLoading();
+      try {
+        // Block loadings is constantly running and tries to keep the preloaded messages in memory
+        this.#blockLoadingProcess = this.#startBlockLoading();
+      } catch (err) {
+        this.#setError((err as Error).message, err);
+      }
 
       this.#setState("start-play");
     }
@@ -1067,24 +1071,20 @@ export class IterablePlayer implements Player {
   }
 
   async #startBlockLoading() {
-    try {
-      await this.#blockLoader?.startLoading({
-        progress: async (progress) => {
-          this.#progress = {
-            fullyLoadedFractionRanges: this.#progress.fullyLoadedFractionRanges,
-            messageCache: progress.messageCache,
-          };
+    await this.#blockLoader?.startLoading({
+      progress: async (progress) => {
+        this.#progress = {
+          fullyLoadedFractionRanges: this.#progress.fullyLoadedFractionRanges,
+          messageCache: progress.messageCache,
+        };
 
-          // If we are in playback, we will let playback queue state updates
-          if (this.#state === "play") {
-            return;
-          }
+        // If we are in playback, we will let playback queue state updates
+        if (this.#state === "play") {
+          return;
+        }
 
-          this.#queueEmitState();
-        },
-      });
-    } catch (err) {
-      this.#setError((err as Error).message, err);
-    }
+        this.#queueEmitState();
+      },
+    });
   }
 }
