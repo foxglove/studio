@@ -79,7 +79,10 @@ function activateExtension(
       log.debug(
         `Extension ${extension.qualifiedName} registering message converter from: ${args.fromSchemaName} to: ${args.toSchemaName}`,
       );
-      messageConverters.push(args as RegisterMessageConverterArgs<unknown>);
+      messageConverters.push({
+        ...args,
+        extensionNamespace: extension.namespace,
+      } as RegisterMessageConverterArgs<unknown>);
     },
 
     registerTopicAliases: (aliasFunction: TopicAliasFunction) => {
