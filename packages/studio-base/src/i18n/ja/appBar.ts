@@ -19,6 +19,7 @@ export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   noDataSource: undefined,
   open: "を開く",
   openConnection: "接続を開く",
+  openDataSources: undefined,
   openLocalFile: "ローカルファイルを開く",
   recentDataSources: "最近のデータソース",
   settings: undefined,

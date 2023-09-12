@@ -19,6 +19,7 @@ export const appBar = {
   noDataSource: "No data source",
   open: "Open…",
   openConnection: "Open connection…",
+  openDataSources: "Open data sources",
   openLocalFile: "Open local file…",
   recentDataSources: "Recent data sources",
   recentlyViewed: "Recently viewed",
