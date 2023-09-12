@@ -1067,20 +1067,24 @@ export class IterablePlayer implements Player {
   }
 
   async #startBlockLoading() {
-    await this.#blockLoader?.startLoading({
-      progress: async (progress) => {
-        this.#progress = {
-          fullyLoadedFractionRanges: this.#progress.fullyLoadedFractionRanges,
-          messageCache: progress.messageCache,
-        };
+    try {
+      await this.#blockLoader?.startLoading({
+        progress: async (progress) => {
+          this.#progress = {
+            fullyLoadedFractionRanges: this.#progress.fullyLoadedFractionRanges,
+            messageCache: progress.messageCache,
+          };
 
-        // If we are in playback, we will let playback queue state updates
-        if (this.#state === "play") {
-          return;
-        }
+          // If we are in playback, we will let playback queue state updates
+          if (this.#state === "play") {
+            return;
+          }
 
-        this.#queueEmitState();
-      },
-    });
+          this.#queueEmitState();
+        },
+      });
+    } catch (err) {
+      this.#setError((err as Error).message, err);
+    }
   }
 }
