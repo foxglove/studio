@@ -38,7 +38,7 @@ const playerSelection: PlayerSelection = {
 };
 
 export default {
-  title: "beta/components/AppBar/AppMenu",
+  title: "beta/components/AppMenu",
   component: BetaAppMenu,
   args: {
     open: true,
