@@ -6,6 +6,8 @@ import { TypeOptions } from "i18next";
 
 export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   about: "关于",
+  addPanel: "添加面板",
+  documentation: "文档",
   exploreSampleData: "探索样本数据",
   open: "打开……",
   openDataSource: "打开数据源……",
@@ -16,12 +18,15 @@ export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   recentDataSources: "最近使用的数据源",
   hideLeftSidebar: "隐藏左侧边栏",
   hideRightSidebar: "隐藏右侧边栏",
+  importLayoutFromFile: "通过文件导入布局……",
+  joinSlackCommunity: "加入 Slack 社区",
+  settings: "设置",
   showLeftSidebar: "显示左侧边栏",
   showRightSidebar: "显示右侧边栏",
-  viewOurDocs: "查看我们的文档",
-  file: "文件",
-  view: "查看",
-  help: "帮助",
   signIn: "登录",
+  signOut: "登出",
   unknown: "未知",
+  userProfile: "用户资料",
+  view: "查看",
+  viewOurDocs: "查看我们的文档",
 };

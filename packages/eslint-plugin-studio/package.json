@@ -16,7 +16,8 @@
     "src"
   ],
   "devDependencies": {
-    "@typescript-eslint/rule-tester": "6.6.0",
-    "@typescript-eslint/utils": "6.6.0"
+    "@foxglove/tsconfig": "2.0.0",
+    "@typescript-eslint/rule-tester": "6.7.0",
+    "@typescript-eslint/utils": "6.7.0"
   }
 }
