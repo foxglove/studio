@@ -163,7 +163,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
         !this.#positionBuffer ||
         // Because `LineGeometry.setPosition` iterates through the positionBuffer to create an interleaved buffer of positions,
         // we can't simply reuse the float32array with a larger length, we need to recreate it or we will get segments beyond the new length
-        this.#positionBuffer.length !== necessaryPositionBufferSize;
+        this.#positionBuffer.length < necessaryPositionBufferSize;
       if (geometryNeedsRecreated) {
         if (this.#geometry != undefined) {
           this.#geometry.dispose();
@@ -204,11 +204,7 @@ class LinePrimitiveRenderable extends THREE.Object3D {
       // depend on the key iteration order, since three.js derives the count from the first
       // instanced interleaved attribute it sees).
       // this represent the number of _lines_ to render
-      this.#geometry.instanceCount = isSegments
-        ? numVertices >>> 1
-        : isLoop
-        ? numVertices
-        : Math.max(numVertices - 1, 0);
+      this.#geometry.instanceCount = isSegments ? numVertices >>> 1 : Math.max(numVertices - 1, 0);
 
       if (useIndices) {
         serializePositionsWithIndices(this.#positionBuffer, this.#primitive);

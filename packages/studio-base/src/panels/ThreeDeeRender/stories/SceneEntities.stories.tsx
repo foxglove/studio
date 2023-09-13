@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter";
 import { TeapotGeometry } from "three/examples/jsm/geometries/TeapotGeometry";
@@ -439,6 +439,10 @@ export const BasicEntities: StoryObj = {
   parameters: { colorScheme: "light", chromatic: { delay: 100 } },
 };
 
+// Sample data across two frames for testing `LINE_LOOP` primitives
+// each message contains two loops, one has points that make it a closed square
+// the other has points that make it an open square. They should both render as squares however
+// because we always close `LINE_LOOP` point arrays.
 const lineLoopSampleData = [
   {
     deletions: [
@@ -764,28 +768,33 @@ const lineLoopSampleData = [
   },
 ];
 
-const frame1: MessageEvent<Partial<SceneUpdate>> = {
-  topic: "scene",
-  schemaName: "foxglove.SceneUpdate",
-  sizeInBytes: 0,
-  receiveTime: { sec: 10, nsec: 0 },
-  message: lineLoopSampleData[0]!,
-};
-const frame2: MessageEvent<Partial<SceneUpdate>> = {
-  topic: "scene",
-  schemaName: "foxglove.SceneUpdate",
-  sizeInBytes: 0,
-  receiveTime: { sec: 11, nsec: 0 },
-  message: lineLoopSampleData[1]!,
-};
-
 function LineLoops(): JSX.Element {
   const readySignal = useReadySignal();
+
+  // We're testing a Line loop using a position buffer bigger than it needs from a previous frame
+  // So we need to test across multiple frames
+  const frames = useMemo(() => {
+    const frame1: MessageEvent<Partial<SceneUpdate>> = {
+      topic: "scene",
+      schemaName: "foxglove.SceneUpdate",
+      sizeInBytes: 0,
+      receiveTime: { sec: 10, nsec: 0 },
+      message: lineLoopSampleData[0]!,
+    };
+    const frame2: MessageEvent<Partial<SceneUpdate>> = {
+      topic: "scene",
+      schemaName: "foxglove.SceneUpdate",
+      sizeInBytes: 0,
+      receiveTime: { sec: 11, nsec: 0 },
+      message: lineLoopSampleData[1]!,
+    };
+    return [frame1, frame2];
+  }, []);
 
   const [fixture, setFixture] = useState({
     topics: [{ name: "scene", schemaName: "foxglove.SceneUpdate" }],
     frame: {
-      scene: [frame1],
+      scene: [frames[0]!],
     },
     capabilities: [],
     activeData: {
@@ -801,7 +810,7 @@ function LineLoops(): JSX.Element {
       setFixture((oldFixture) => {
         const newFixture = { ...oldFixture };
         newFixture.frame = {
-          scene: [frame2],
+          scene: [frames[1]!],
         };
         newFixture.activeData = {
           currentTime: { sec: 11, nsec: 0 },
@@ -818,7 +827,7 @@ function LineLoops(): JSX.Element {
       clearTimeout(timeOutID);
       clearTimeout(timeOutID2);
     };
-  }, [readySignal]);
+  }, [readySignal, frames]);
 
   return (
     <PanelSetup fixture={fixture}>
@@ -849,7 +858,9 @@ function LineLoops(): JSX.Element {
     </PanelSetup>
   );
 }
-
+// Tests `LinePrimitives` reusing of larger `#positionBuffers`. These squares move across frames and test
+// that we correctly handle the case where the `#positionBuffer` in `RenderableLines/LinePrimitiveRenderable` is bigger than
+// the number of points after a `SceneUpdate`
 export const LineLoopsDontConnect: StoryObj = {
   parameters: {
     useReadySignal: true,
