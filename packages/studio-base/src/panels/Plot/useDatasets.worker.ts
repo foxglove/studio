@@ -396,7 +396,7 @@ function addBlock(block: Messages, resetTopics: string[]): void {
 
   blocks = R.pipe(
     // Remove data for any topics that have been reset
-    R.pick(R.difference(R.keys(blocks), resetTopics)),
+    R.omit(resetTopics),
     // Merge the new block into the existing blocks
     (newBlocks) => R.mergeWith(R.concat, newBlocks, block),
   )(blocks);

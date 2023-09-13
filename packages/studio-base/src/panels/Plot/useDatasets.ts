@@ -215,7 +215,7 @@ function useData(id: string, topics: SubscribePayload[]) {
       const messages: Messages = {};
       // Make a note of any topics that had new data so we can clear out
       // accumulated points in the worker
-      const resetData: Record<string, boolean> = {};
+      const resetData: Set<string> = new Set<string>();
       const status: BlockStatus = blockStatus[index] ?? {};
       for (const payload of subscribed) {
         const ref = getPayloadString(payload);
@@ -233,7 +233,7 @@ function useData(id: string, topics: SubscribePayload[]) {
         // we already had a message in this block, meaning the data itself has
         // changed; we have to rebuild the plots
         if (existing != undefined && wasReset[ref] == undefined) {
-          resetData[payload.topic] = true;
+          resetData.add(payload.topic);
           wasReset[ref] = true;
         }
 
@@ -246,7 +246,7 @@ function useData(id: string, topics: SubscribePayload[]) {
         continue;
       }
 
-      void service?.addBlock(messages, R.keys(resetData));
+      void service?.addBlock(messages, Array.from(resetData));
     }
   }, [subscribed, blocks]);
 }
