@@ -454,7 +454,6 @@ export type RegisterMessageConverterArgs<Src> = {
   fromSchemaName: string;
   toSchemaName: string;
   converter: (msg: Src, event: Immutable<MessageEvent<Src>>) => unknown;
-  extensionNamespace?: string;
 };
 
 type BaseTopic = { name: string; schemaName?: string };

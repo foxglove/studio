@@ -11,12 +11,15 @@ import {
   Subscription,
 } from "@foxglove/studio";
 import { Topic as PlayerTopic } from "@foxglove/studio-base/players/types";
+import { ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 // Branded string to ensure that users go through the `converterKey` function to compute a lookup key
 type Brand<K, T> = K & { __brand: T };
 type ConverterKey = Brand<string, "ConverterKey">;
 
-type MessageConverter = RegisterMessageConverterArgs<unknown>;
+type MessageConverter = RegisterMessageConverterArgs<unknown> & {
+  extensionNamespace?: ExtensionNamespace;
+};
 
 type TopicSchemaConverterMap = Map<ConverterKey, MessageConverter[]>;
 
@@ -135,16 +138,13 @@ export function collateTopicSchemaConversions(
     }
 
     // Find a converter that can go from the original topic schema to the target schema
-    // Note: We only support one converter per unique from/to pair so this _find_ only needs to
-    //       find one converter rather than multiple converters. Local message converters are
-    //       preferred over org provided converters.
-    const converters = (messageConverters ?? [])
-      .filter(
-        (conv) =>
-          conv.fromSchemaName === subscriberTopic.schemaName &&
-          conv.toSchemaName === subscription.convertTo,
-      )
-      .sort((conv) => (conv.extensionNamespace === "local" ? -1 : 0));
+    let converters = (messageConverters ?? []).filter(
+      (conv) =>
+        conv.fromSchemaName === subscriberTopic.schemaName &&
+        conv.toSchemaName === subscription.convertTo,
+    );
+    // Sort by extension namespace to prefer 'local' converters over 'org' provided ones
+    converters = _.sortBy(converters, (conv) => conv.extensionNamespace ?? "unknown");
     const converter = converters[0];
 
     if (converter) {
