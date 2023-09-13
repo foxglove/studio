@@ -174,7 +174,7 @@ describe("useCachedGetMessagePathDataItems", () => {
     });
     describe("JSON", () => {
       it("traverses JSON fields", () => {
-        const messages: MessageEvent<unknown>[] = [
+        const messages: MessageEvent[] = [
           {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
@@ -218,7 +218,7 @@ describe("useCachedGetMessagePathDataItems", () => {
       });
 
       it("traverses nested JSON arrays", () => {
-        const messages: MessageEvent<unknown>[] = [
+        const messages: MessageEvent[] = [
           {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
@@ -242,7 +242,7 @@ describe("useCachedGetMessagePathDataItems", () => {
       });
 
       it("filters JSON arrays", () => {
-        const messages: MessageEvent<unknown>[] = [
+        const messages: MessageEvent[] = [
           {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
@@ -264,7 +264,7 @@ describe("useCachedGetMessagePathDataItems", () => {
       });
 
       it("traverses arrays of JSON", () => {
-        const messages: MessageEvent<unknown>[] = [
+        const messages: MessageEvent[] = [
           {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
@@ -286,7 +286,7 @@ describe("useCachedGetMessagePathDataItems", () => {
       });
 
       it("gracefully handles non-existent JSON fields", () => {
-        const messages: MessageEvent<unknown>[] = [
+        const messages: MessageEvent[] = [
           {
             topic: "/some/topic",
             receiveTime: { sec: 0, nsec: 0 },
