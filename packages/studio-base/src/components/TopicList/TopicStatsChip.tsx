@@ -8,14 +8,17 @@ import { makeStyles } from "tss-react/mui";
 const useStyles = makeStyles()((theme) => ({
   root: {
     display: "flex",
-    borderColor: theme.palette.action.selected,
     borderRadius: "1em",
-    color: theme.palette.text.secondary,
+    color: theme.palette.action.selected,
+    borderColor: "currentColor",
     backgroundColor: theme.palette.background.paper,
 
     [`@container (max-width: 320px)`]: {
       display: "none",
     },
+    ...(theme.palette.mode === "dark" && {
+      ".isSelected &": { color: theme.palette.primary.main },
+    }),
   },
   stat: {
     whiteSpace: "nowrap",
@@ -34,7 +37,7 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   divider: {
-    borderColor: theme.palette.action.selected,
+    borderColor: "currentColor",
     marginInline: theme.spacing(0.5),
   },
 }));

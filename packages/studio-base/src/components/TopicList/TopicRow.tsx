@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
-import { Typography } from "@mui/material";
+import { Badge, Typography } from "@mui/material";
 import { FzfResultItem } from "fzf";
 import { useCallback, useMemo } from "react";
 
@@ -62,14 +62,13 @@ export function TopicRow({
   return (
     <div
       ref={combinedRef}
-      className={cx(classes.row, {
-        [classes.isDragging]: isDragging,
-        [classes.selected]: selected,
-      })}
+      className={cx(classes.row, { isDragging, isSelected: selected })}
       style={{ ...style, cursor }}
       onClick={onClick}
     >
-      {draggedItemCount > 1 && <div className={classes.countBadge}>{draggedItemCount}</div>}
+      {draggedItemCount > 1 && (
+        <Badge color="primary" className={classes.countBadge} badgeContent={draggedItemCount} />
+      )}
       {/* Extra Stack wrapper to enable growing without the  */}
       <Stack flex="auto" alignItems="flex-start" overflow="hidden">
         <Typography

@@ -6,10 +6,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { badgeClasses } from "@mui/material";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-type TreeClasses = "dragHandle" | "isDragging" | "selected";
+type TreeClasses = "dragHandle" | "row";
 
 /* eslint-disable tss-unused-classes/unused-classes */
 export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, classes) => ({
@@ -41,8 +42,18 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
     textAlign: "start",
   },
   row: {
+    display: "flex",
+    alignItems: "center",
     whiteSpace: "nowrap",
     boxSizing: "border-box",
+    position: "relative",
+    height: "100%",
+    gap: theme.spacing(0.75),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(0.75),
+    backgroundColor: theme.palette.background.paper,
+    borderTop: `1px solid ${theme.palette.action.selected}`,
+    marginRight: 1,
 
     [`:not(:hover) .${classes.dragHandle}`]: {
       visibility: "hidden",
@@ -55,17 +66,29 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
         visibility: "visible",
       },
     },
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    height: "100%",
-    gap: theme.spacing(0.75),
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(0.75),
-    backgroundColor: theme.palette.background.paper,
-    borderTop: `1px solid ${theme.palette.action.selected}`,
+    [`&.isSelected`]: {
+      // use opaque color for better drag preview
+      backgroundColor: tc
+        .mix(
+          theme.palette.background.paper,
+          theme.palette.primary.main,
+          100 * theme.palette.action.selectedOpacity,
+        )
+        .toString(),
 
-    [`&.${classes.selected}`]: {
+      ...(theme.palette.mode === "dark" && {
+        ":after": {
+          content: "''",
+          position: "absolute",
+          inset: "-1px 0 -1px 0",
+          border: `1px solid ${theme.palette.primary.main}`,
+        },
+      }),
+      [`& + .${classes.row}`]: {
+        borderTop: `1px solid ${theme.palette.primary.main}`,
+      },
+    },
+    [`&.isDragging:active`]: {
       // use opaque color for better drag preview
       backgroundColor: tc
         .mix(
@@ -74,19 +97,18 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
           100 * theme.palette.action.selectedOpacity,
         )
         .toRgbString(),
-    },
-    [`&.${classes.isDragging}:active`]: {
-      // use opaque color for better drag preview
-      backgroundColor: tc
-        .mix(
-          theme.palette.background.paper,
-          theme.palette.primary.main,
-          100 * theme.palette.action.hoverOpacity,
-        )
-        .toRgbString(),
-      outline: `1px solid ${theme.palette.primary.main}`,
-      outlineOffset: -1,
-      borderRadius: theme.shape.borderRadius,
+
+      ...(theme.palette.mode === "dark" && {
+        ":after": {
+          content: "''",
+          position: "absolute",
+          inset: "-1px 0 -1px 0",
+          border: `1px solid ${theme.palette.primary.main}`,
+        },
+      }),
+      [`& + .${classes.row}`]: {
+        borderTop: `1px solid ${theme.palette.primary.main}`,
+      },
     },
   },
   fieldRow: {
@@ -97,22 +119,20 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
   dragHandle: {
     opacity: 0.6,
     cursor: "grab",
-  },
-  isDragging: {},
-  selected: {},
 
+    ".isSelected &": {
+      color: theme.palette.primary.main,
+      opacity: 1,
+    },
+  },
   countBadge: {
-    padding: theme.spacing(0.25, 0.5),
-    borderRadius: "1em",
-    minWidth: theme.spacing(2),
-    backgroundColor: theme.palette.error.main,
-    color: theme.palette.error.contrastText,
-    fontWeight: "bold",
-    fontSize: theme.typography.caption.fontSize,
-    textAlign: "center",
-    marginLeft: theme.spacing(-1),
-  },
+    marginLeft: theme.spacing(-0.5),
 
+    [`.${badgeClasses.badge}`]: {
+      position: "relative",
+      transform: "none",
+    },
+  },
   textContent: {
     maxWidth: "100%",
     userSelect: "text",
