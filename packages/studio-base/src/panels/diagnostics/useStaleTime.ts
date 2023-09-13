@@ -5,9 +5,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Time, clampTime, subtract } from "@foxglove/rostime";
-import { useMessagePipelineGetter } from "@foxglove/studio-base/components/MessagePipeline";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+  useMessagePipelineGetter,
+} from "@foxglove/studio-base/components/MessagePipeline";
 
 const DEFAULT_UPDATE_INTERVAL_MS = 1_000;
+
+const selectLastSeekTime = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.lastSeekTime;
 
 // Returns a time which specifies from when diagnostic messages are considered stale.
 export default function useStaleTime(
@@ -30,6 +37,11 @@ export default function useStaleTime(
       clearInterval(interval);
     };
   }, [getCurrentTime, updateIntervalMillis]);
+
+  const lastSeekTime = useMessagePipeline(selectLastSeekTime);
+  useEffect(() => {
+    setCurrentTime(getCurrentTime());
+  }, [getCurrentTime, lastSeekTime]);
 
   return useMemo(() => {
     const timeUntilStale: Time = { sec: Math.floor(secondsUntilStale), nsec: 0 };
