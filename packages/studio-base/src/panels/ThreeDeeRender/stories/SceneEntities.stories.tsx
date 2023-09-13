@@ -861,7 +861,7 @@ function LineLoops(): JSX.Element {
 // Tests `LinePrimitives` reusing of larger `#positionBuffers`. These squares move across frames and test
 // that we correctly handle the case where the `#positionBuffer` in `RenderableLines/LinePrimitiveRenderable` is bigger than
 // the number of points after a `SceneUpdate`
-export const LineLoopsDontConnect: StoryObj = {
+export const UpdatedLineLoopsDontHaveExtraLines: StoryObj = {
   parameters: {
     useReadySignal: true,
     colorScheme: "dark",
