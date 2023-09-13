@@ -161,8 +161,6 @@ class LinePrimitiveRenderable extends THREE.Object3D {
         this.#geometry == undefined ||
         this.#lineType !== this.#primitive.type ||
         !this.#positionBuffer ||
-        // Because `LineGeometry.setPosition` iterates through the positionBuffer to create an interleaved buffer of positions,
-        // we can't simply reuse the float32array with a larger length, we need to recreate it or we will get segments beyond the new length
         this.#positionBuffer.length < necessaryPositionBufferSize;
       if (geometryNeedsRecreated) {
         if (this.#geometry != undefined) {
