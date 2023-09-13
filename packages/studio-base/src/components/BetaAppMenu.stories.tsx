@@ -98,7 +98,7 @@ export const WithRecentsJapanese: Story = {
   parameters: { forceLanguage: "ja" },
 };
 
-export const WithAppContextMenuItens: Story = {
+export const WithAppContextMenuItems: Story = {
   args: {
     appBarMenuItems: [
       { type: "subheader", key: "recent", label: "Browse" },
