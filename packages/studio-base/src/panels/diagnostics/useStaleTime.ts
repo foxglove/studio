@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Time, subtract } from "@foxglove/rostime";
+import { Time, clampTime, subtract } from "@foxglove/rostime";
 import { useMessagePipelineGetter } from "@foxglove/studio-base/components/MessagePipeline";
 
 const DEFAULT_UPDATE_INTERVAL_MS = 1_000;
@@ -20,7 +20,7 @@ export default function useStaleTime(
     return playerState.activeData?.currentTime;
   }, [messagePipeline]);
 
-  const [currentTime, setCurrentTime] = useState<Time | undefined>(getCurrentTime());
+  const [currentTime, setCurrentTime] = useState<Time | undefined>(() => getCurrentTime());
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -32,8 +32,9 @@ export default function useStaleTime(
   }, [getCurrentTime, updateIntervalMillis]);
 
   return useMemo(() => {
+    const timeUntilStale: Time = { sec: Math.floor(secondsUntilStale), nsec: 0 };
     return currentTime && secondsUntilStale >= 1
-      ? subtract(currentTime, { sec: Math.floor(secondsUntilStale), nsec: 0 })
+      ? subtract(clampTime(currentTime, timeUntilStale, currentTime), timeUntilStale)
       : undefined;
   }, [currentTime, secondsUntilStale]);
 }

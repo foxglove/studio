@@ -57,7 +57,7 @@ import {
   LEVEL_NAMES,
   filterAndSortDiagnostics,
   getDiagnosticsByLevel,
-  getDiagnosticsWithStales as markOldDiagnosticsAsStales,
+  getDiagnosticsWithStales,
 } from "./util";
 
 type NodeRowProps = {
@@ -235,7 +235,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   const diagnostics = useDiagnostics(diagnosticTopic);
 
   const diagnosticsWithOldMarkedAsStales = useMemo(() => {
-    return staleTime ? markOldDiagnosticsAsStales(diagnostics, staleTime) : diagnostics;
+    return staleTime ? getDiagnosticsWithStales(diagnostics, staleTime) : diagnostics;
   }, [diagnostics, staleTime]);
 
   const summary = useMemo(() => {
