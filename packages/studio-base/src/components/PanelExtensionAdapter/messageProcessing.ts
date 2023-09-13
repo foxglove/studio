@@ -138,14 +138,13 @@ export function collateTopicSchemaConversions(
     }
 
     // Find a converter that can go from the original topic schema to the target schema
-    let converters = (messageConverters ?? []).filter(
+    const converters = (messageConverters ?? []).filter(
       (conv) =>
         conv.fromSchemaName === subscriberTopic.schemaName &&
         conv.toSchemaName === subscription.convertTo,
     );
-    // Sort by extension namespace to prefer 'local' converters over 'org' provided ones
-    converters = _.sortBy(converters, (conv) => conv.extensionNamespace ?? "unknown");
-    const converter = converters[0];
+    // Prefer 'local' converters over 'org' provided ones
+    const converter = _.minBy(converters, (conv) => conv.extensionNamespace ?? "unknown");
 
     if (converter) {
       existingConverters ??= [];
