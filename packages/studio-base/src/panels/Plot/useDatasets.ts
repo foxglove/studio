@@ -136,12 +136,21 @@ function chooseClient() {
       const isOnlyCurrent = isBounded(params) || isSingleMessage(params);
       return R.pipe(
         getPayloadsFromPaths,
-        R.map(
-          (v): SubscribePayload => ({
+        R.chain((v): SubscribePayload[] => {
+          const partial: SubscribePayload = {
             ...v,
-            preloadType: isOnlyCurrent ? "partial" : "full",
-          }),
-        ),
+            preloadType: "partial",
+          };
+
+          if (isOnlyCurrent) {
+            return [partial];
+          }
+
+          // Subscribe to both "partial" and "full" when using "full" In
+          // theory, "full" should imply "partial" but not doing this breaks
+          // MockMessagePipelineProvider
+          return [partial, { ...partial, preloadType: "full" }];
+        }),
       )(getPaths(yAxisPaths, xAxisPath));
     }),
     (v) => mergeSubscriptions(v) as SubscribePayload[],
