@@ -31,6 +31,7 @@ import {
   useMessagePipeline,
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { ObservationMetricGatherer } from "@foxglove/studio-base/components/ObservationMetricGatherer";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
@@ -464,6 +465,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
         )}
       </div>
       {workspaceExtensions}
+      <ObservationMetricGatherer />
       <WorkspaceDialogs />
     </PanelStateContextProvider>
   );

@@ -1,0 +1,60 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { useState } from "react";
+
+import { toSec } from "@foxglove/rostime";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+
+/**
+"play 5 sec or more" – Have this number updating correctly in the metrics collector, but having trouble accessing in the message pipeline code
+"is not sample data" - :white_check_mark:
+"has at least one subscription" (and by extension, a panel subscribing to that topic) - :white_check_mark:
+"has no player errors" - :white_check_mark:
+"has no panel errors" - wrote some placeholder code to verify this, but needs to be moved into the panel context / reported to analytics somehow
+ */
+
+const selectHasNoPlayerErrors = (ctx: MessagePipelineContext) =>
+  ctx.playerState.problems?.find((prob) => prob.severity === "error") == undefined;
+
+const selectHasAtLeastOneSubscription = (ctx: MessagePipelineContext) =>
+  ctx.subscriptions.length > 0;
+
+const selectIsSampleData = (ctx: MessagePipelineContext) =>
+  ctx.playerState.urlState?.sourceId === "sample-nuscenes";
+
+const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
+
+const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
+
+/**
+ * Gathers and reports observation metrics.
+ */
+export function ObservationMetricGatherer(): ReactNull {
+  const [hasReported, setHasReported] = useState(false);
+
+  const analytics = useAnalytics();
+  const isSampleData = useMessagePipeline(selectIsSampleData);
+  const hasAtLeastOneSubscription = useMessagePipeline(selectHasAtLeastOneSubscription);
+  const hasNoPlayerErrors = useMessagePipeline(selectHasNoPlayerErrors);
+  const startTime = useMessagePipeline(selectStartTime);
+  const currentTime = useMessagePipeline(selectCurrentTime);
+
+  const played5SecOrMore =
+    startTime != undefined && currentTime != undefined && toSec(currentTime) - toSec(startTime) > 5;
+
+  if (played5SecOrMore && hasAtLeastOneSubscription && hasNoPlayerErrors && !hasReported) {
+    console.log("LOGGING OBSERVATIONS");
+    void analytics.logEvent(AppEvent.USER_OBSERVATION, { isSampleData });
+    void analytics.logEvent(AppEvent.USER_ACTIVATION, { isSampleData });
+    setHasReported(true);
+  }
+
+  return ReactNull;
+}
