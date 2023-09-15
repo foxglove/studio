@@ -23,7 +23,7 @@ type PanelProps = {
 };
 
 export default function PanelCatalogProvider(
-  props: PropsWithChildren<unknown>,
+  props: PropsWithChildren,
 ): React.ReactElement {
   const [showDebugPanels = false] = useAppConfigurationValue<boolean>(AppSetting.SHOW_DEBUG_PANELS);
   const { t } = useTranslation("panels");

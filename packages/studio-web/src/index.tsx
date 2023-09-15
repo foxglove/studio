@@ -14,7 +14,7 @@ import { canRenderApp } from "./canRenderApp";
 
 const log = Logger.getLogger(__filename);
 
-function LogAfterRender(props: React.PropsWithChildren<unknown>): JSX.Element {
+function LogAfterRender(props: React.PropsWithChildren): JSX.Element {
   useEffect(() => {
     // Integration tests look for this console log to indicate the app has rendered once
     // We use console.debug to bypass our logging library which hides some log levels in prod builds

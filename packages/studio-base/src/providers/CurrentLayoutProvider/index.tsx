@@ -48,7 +48,7 @@ export const MAX_SUPPORTED_LAYOUT_VERSION = 1;
  */
 export default function CurrentLayoutProvider({
   children,
-}: React.PropsWithChildren<unknown>): JSX.Element {
+}: React.PropsWithChildren): JSX.Element {
   const analytics = useAnalytics();
 
   const [mosaicId] = useState(() => uuidv4());

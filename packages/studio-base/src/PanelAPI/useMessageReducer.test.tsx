@@ -348,7 +348,7 @@ describe("useMessageReducer", () => {
   });
 
   function makeWrapper(player: Player) {
-    function Wrapper({ children }: PropsWithChildren<unknown>) {
+    function Wrapper({ children }: PropsWithChildren) {
       const [config] = useState(() => makeMockAppConfiguration());
       return (
         <AppConfigurationContext.Provider value={config}>

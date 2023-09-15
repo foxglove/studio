@@ -59,7 +59,7 @@ function makeMessagePipelineWrapper(initialProps?: WrapperProps) {
   let datatypes: RosDatatypes = initialProps?.datatypes ?? new Map();
   let messages = initialProps?.messages ?? [];
   let activeData = initialProps?.activeData;
-  const wrapper = ({ children }: PropsWithChildren<unknown>) => (
+  const wrapper = ({ children }: PropsWithChildren) => (
     <MockCurrentLayoutProvider initialState={{ globalVariables: initialProps?.globalVariables }}>
       <MockMessagePipelineProvider
         topics={topics}

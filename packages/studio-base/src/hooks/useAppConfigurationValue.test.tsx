@@ -25,7 +25,7 @@ class FakeProvider implements IAppConfiguration {
 
 describe("useAppConfigurationValue", () => {
   it("should have the value on first mount", async () => {
-    const wrapper = ({ children }: PropsWithChildren<unknown>) => {
+    const wrapper = ({ children }: PropsWithChildren) => {
       return (
         <AppConfigurationContext.Provider value={new FakeProvider()}>
           {children}
@@ -43,7 +43,7 @@ describe("useAppConfigurationValue", () => {
   });
 
   it("should treat empty string value as undefined", async () => {
-    const wrapper = ({ children }: PropsWithChildren<unknown>) => {
+    const wrapper = ({ children }: PropsWithChildren) => {
       return (
         <AppConfigurationContext.Provider value={new FakeProvider()}>
           {children}
