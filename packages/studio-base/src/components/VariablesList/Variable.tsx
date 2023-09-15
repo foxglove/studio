@@ -159,7 +159,7 @@ export default function Variable(props: {
     setEditedName(undefined);
   };
 
-  const rootRef = useRef<HTMLDivElement>(ReactNull);
+  const rootRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   const activeElementIsChild = rootRef.current?.contains(document.activeElement) === true;
 

@@ -42,7 +42,7 @@ export function DirectTopicStatsUpdater({ interval = 1 }: { interval?: number })
 
   const latestStats = useLatest(topicStats);
   const updateCount = useRef(0);
-  const rootRef = useRef<HTMLDivElement>(ReactNull);
+  const rootRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
   const samplesByTopic = useRef<Record<string, StatSample>>({});
 
   const frequenciesByTopic = useTopicPublishFrequencies();

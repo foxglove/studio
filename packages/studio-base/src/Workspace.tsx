@@ -113,7 +113,7 @@ const selectWorkspaceRightSidebarSize = (store: WorkspaceContextStore) => store.
 
 function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const { classes } = useStyles();
-  const containerRef = useRef<HTMLDivElement>(ReactNull);
+  const containerRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
   const { availableSources, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems);

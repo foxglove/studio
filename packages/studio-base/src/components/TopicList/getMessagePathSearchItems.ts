@@ -10,7 +10,7 @@ import {
   quoteFieldNameIfNeeded,
   quoteTopicNameIfNeeded,
 } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-import { Topic } from "@foxglove/studio-base/src/players/types";
+import { Topic } from "@foxglove/studio-base/players/types";
 
 /**
  * Represents a message path inside a specific schema

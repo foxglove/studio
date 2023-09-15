@@ -151,7 +151,7 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const loading = presence === PlayerPresence.INITIALIZING || presence === PlayerPresence.BUFFERING;
 
-  const popperRef = React.useRef<Instance>(ReactNull);
+  const popperRef = React.useRef<Instance | ReactNull>(ReactNull);
 
   const isHovered = hoverInfo != undefined;
   const popperProps: Partial<PopperProps> = useMemo(

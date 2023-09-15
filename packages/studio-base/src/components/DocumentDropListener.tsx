@@ -11,6 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+/// <reference types="@types/wicg-file-system-access" />
+
 import { useSnackbar } from "notistack";
 import { extname } from "path";
 import { useCallback, useLayoutEffect, useState } from "react";

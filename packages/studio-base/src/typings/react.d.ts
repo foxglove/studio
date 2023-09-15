@@ -7,10 +7,6 @@
 
 declare global {
   namespace React {
-    // Add an extra overload so that call sites can use `useRef<T>(ReactNull)` instead of
-    // `useRef<T | ReactNull>(ReactNull)`.
-    function useRef<T>(_: ReactNull): MutableRefObject<T | ReactNull>;
-
     // @types/react uses `any` here, which silences helpful TypeScript errors
     // https://github.com/microsoft/TypeScript/issues/37595
     function useCallback<T extends (...args: never[]) => unknown>(

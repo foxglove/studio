@@ -189,7 +189,7 @@ function PanelActionsDropdownComponent({ isUnknownPanel }: Props): JSX.Element {
     t,
   ]);
 
-  const buttonRef = useRef<HTMLDivElement>(ReactNull);
+  const buttonRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
   const type = getPanelType();
 
   if (type == undefined) {

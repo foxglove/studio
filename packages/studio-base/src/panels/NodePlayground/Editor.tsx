@@ -87,7 +87,7 @@ const Editor = ({
   rosLib,
   typesLib,
 }: Props): ReactElement | ReactNull => {
-  const editorRef = React.useRef<CodeEditor>(ReactNull);
+  const editorRef = React.useRef<CodeEditor | ReactNull>(ReactNull);
   const autoFormatOnSaveRef = React.useRef(autoFormatOnSave);
   autoFormatOnSaveRef.current = autoFormatOnSave;
 

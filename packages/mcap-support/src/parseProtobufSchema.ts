@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+/// <reference types="@types/protobufjs" />
+
 import protobufjs from "protobufjs";
 import { FileDescriptorSet } from "protobufjs/ext/descriptor";
 

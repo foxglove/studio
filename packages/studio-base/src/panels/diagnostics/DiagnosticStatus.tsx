@@ -175,7 +175,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
     splitFraction = 0.5,
   } = props;
   const { classes } = useStyles();
-  const tableRef = useRef<HTMLTableElement>(ReactNull);
+  const tableRef = useRef<HTMLTableElement | ReactNull>(ReactNull);
 
   const resizeMouseDown = useCallback((event: React.MouseEvent) => {
     setResizing(true);

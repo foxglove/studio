@@ -533,7 +533,7 @@ function PanelExtensionAdapter(
     setMessagePathDropConfig,
   ]);
 
-  const panelContainerRef = useRef<HTMLDivElement>(ReactNull);
+  const panelContainerRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   useValueChangedDebugLog(initPanel, "initPanel");
   useValueChangedDebugLog(panelId, "panelId");

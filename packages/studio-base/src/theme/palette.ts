@@ -2,30 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PaletteOptions } from "@mui/material/styles";
-import { CSSProperties } from "react";
+/// <reference types="../typings/theme" />
 
-declare module "@mui/material/styles" {
-  interface Palette {
-    name: string;
-    appBar: {
-      main: CSSProperties["color"];
-      primary: CSSProperties["color"];
-      text: CSSProperties["color"];
-    };
-  }
-  interface PaletteOptions {
-    name: string;
-    appBar: {
-      main: CSSProperties["color"];
-      primary: CSSProperties["color"];
-      text: CSSProperties["color"];
-    };
-  }
-  interface TypeBackground {
-    menu: CSSProperties["color"];
-  }
-}
+import { PaletteOptions } from "@mui/material/styles";
 
 export const dark: PaletteOptions = {
   name: "dark",

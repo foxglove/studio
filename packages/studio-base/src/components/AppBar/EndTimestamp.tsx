@@ -21,7 +21,7 @@ export function EndTimestamp(): JSX.Element | ReactNull {
   const [timezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
   const { timeFormat } = useAppTimeFormat();
 
-  const timeRef = useRef<HTMLDivElement>(ReactNull);
+  const timeRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   // We bypass react and update the DOM elements directly for better performance here.
   useEffect(() => {

@@ -249,7 +249,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const hasChildren = children != undefined && Object.keys(children).length > 0;
   const hasProperties = fields != undefined || hasChildren;
 
-  const rootRef = useRef<HTMLDivElement>(ReactNull);
+  const rootRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   const fieldEditors = filterMap(Object.entries(fields ?? {}), ([key, field]) => {
     return field ? (

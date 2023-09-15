@@ -44,7 +44,7 @@ import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutCo
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
-import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
+import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/components/Chart";
 import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";

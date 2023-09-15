@@ -39,7 +39,7 @@ export function TopicList(): JSX.Element {
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const { topics, datatypes } = useDataSourceInfo();
 
-  const listRef = useRef<VariableSizeList>(ReactNull);
+  const listRef = useRef<VariableSizeList | ReactNull>(ReactNull);
 
   const treeItems = useTopicListSearch({
     topics,

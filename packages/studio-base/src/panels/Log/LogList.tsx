@@ -45,7 +45,7 @@ type ListItemData = {
 
 function Row(props: { data: ListItemData; index: number; style: CSSProperties }): JSX.Element {
   const { timeFormat, timeZone } = useAppTimeFormat();
-  const ref = useRef<HTMLDivElement>(ReactNull);
+  const ref = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   useEffect(() => {
     if (ref.current) {
@@ -70,10 +70,10 @@ function LogList({ items }: Props): JSX.Element {
   const { classes } = useStyles();
 
   // Reference to the list item itself.
-  const listRef = useRef<List>(ReactNull);
+  const listRef = useRef<List | ReactNull>(ReactNull);
 
   // Reference to the outer list div. Needed for autoscroll determination.
-  const outerRef = useRef<HTMLDivElement>(ReactNull);
+  const outerRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   const latestItems = useLatest(items);
 

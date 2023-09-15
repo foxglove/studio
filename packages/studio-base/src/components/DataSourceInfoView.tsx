@@ -142,8 +142,8 @@ export function DataSourceInfoView({ disableSource }: { disableSource?: boolean 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const seek = useMessagePipeline(selectSeek);
 
-  const durationRef = useRef<HTMLDivElement>(ReactNull);
-  const endTimeRef = useRef<HTMLDivElement>(ReactNull);
+  const durationRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
+  const endTimeRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
   const { formatDate, formatTime } = useAppTimeFormat();
 
   // We bypass react and update the DOM elements directly for better performance here.

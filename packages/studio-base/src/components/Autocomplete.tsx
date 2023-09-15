@@ -161,7 +161,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   props: AutocompleteProps<T>,
   ref: React.ForwardedRef<IAutocomplete>,
 ): JSX.Element {
-  const inputRef = useRef<HTMLInputElement>(ReactNull);
+  const inputRef = useRef<HTMLInputElement | ReactNull>(ReactNull);
 
   const { classes, cx } = useStyles();
 

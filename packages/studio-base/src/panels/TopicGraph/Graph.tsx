@@ -31,7 +31,7 @@ type Props = {
 
 export default function Graph(props: Props): JSX.Element {
   const cy = useRef<Cytoscape.Core>();
-  const graphRef = useRef<HTMLDivElement>(ReactNull);
+  const graphRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   // indicates that a user has manually panned/zoomed the viewport
   // we avoid performing actions like automatic fit when this happens.

@@ -5,8 +5,9 @@
 // Custom types available globally and required when using app components as dependencies
 
 import "./extensions";
-import "./react";
-import "./overrides";
-import "./webpack-defines";
 import "./i18next";
 import "./leaflet-ellipse";
+import "./overrides";
+import "./react";
+import "./theme";
+import "./webpack-defines";

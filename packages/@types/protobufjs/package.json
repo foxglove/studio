@@ -1,4 +1,7 @@
 {
   "name": "@types/protobufjs",
-  "types": "index.d.ts"
+  "types": "index.d.ts",
+  "devDependencies": {
+    "protobufjs": "patch:protobufjs@7.2.4#../../../patches/protobufjs.patch"
+  }
 }

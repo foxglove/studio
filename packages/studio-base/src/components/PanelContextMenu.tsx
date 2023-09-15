@@ -43,7 +43,7 @@ type PanelContextMenuProps = {
 function PanelContextMenuComponent(props: PanelContextMenuProps): JSX.Element {
   const { getItems } = props;
 
-  const rootRef = useRef<HTMLDivElement>(ReactNull);
+  const rootRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   const [position, setPosition] = useState<undefined | { x: number; y: number }>();
 

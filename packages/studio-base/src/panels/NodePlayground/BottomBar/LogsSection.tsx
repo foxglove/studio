@@ -24,7 +24,7 @@ const LogsSection = ({ logs }: { logs: readonly UserNodeLog[] }): JSX.Element =>
 
   const { classes } = useStyles();
 
-  const listRef = useRef<HTMLUListElement>(ReactNull);
+  const listRef = useRef<HTMLUListElement | ReactNull>(ReactNull);
 
   useEffect(() => {
     if (autoScroll) {

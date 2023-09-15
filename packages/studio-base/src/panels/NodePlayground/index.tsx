@@ -372,7 +372,7 @@ function NodePlayground(props: Props) {
     };
   }, []);
 
-  const bottomBarRef = useRef<ImperativePanelHandle>(ReactNull);
+  const bottomBarRef = useRef<ImperativePanelHandle | ReactNull>(ReactNull);
 
   const onChangeBottomBarTab = useCallback(() => {
     bottomBarRef.current?.expand();

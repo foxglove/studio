@@ -201,7 +201,7 @@ export function RendererOverlay(props: {
     renderer?.setSelectedRenderable(selectedRenderable);
   }, [renderer, selectedRenderable]);
 
-  const publickClickButtonRef = useRef<HTMLButtonElement>(ReactNull);
+  const publickClickButtonRef = useRef<HTMLButtonElement | ReactNull>(ReactNull);
   const [publishMenuExpanded, setPublishMenuExpanded] = useState(false);
   const selectedPublishClickIcon = PublishClickIcons[props.publishClickType];
 
@@ -375,7 +375,7 @@ export function RendererOverlay(props: {
     [doDownloadImage, renderer],
   );
 
-  const mousePresenceRef = useRef<HTMLDivElement>(ReactNull);
+  const mousePresenceRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
   const mousePresent = usePanelMousePresence(mousePresenceRef);
 
   return (

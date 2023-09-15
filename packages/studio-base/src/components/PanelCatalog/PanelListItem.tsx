@@ -65,7 +65,7 @@ export function PanelListItem(props: Props): JSX.Element {
     mosaicId,
   } = props;
   const { classes } = useStyles();
-  const scrollRef = useRef<HTMLElement>(ReactNull);
+  const scrollRef = useRef<HTMLElement | ReactNull>(ReactNull);
   const [, connectDragSource] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
     // mosaicId is needed for react-mosaic to accept the drop

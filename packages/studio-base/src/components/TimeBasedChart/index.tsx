@@ -219,7 +219,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   const { classes, cx } = useStyles();
   const componentId = useMemo(() => uuidv4(), []);
   const isMounted = useMountedState();
-  const canvasContainer = useRef<HTMLDivElement>(ReactNull);
+  const canvasContainer = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   const [hasUserPannedOrZoomed, setHasUserPannedOrZoomed] = useState<boolean>(false);
 

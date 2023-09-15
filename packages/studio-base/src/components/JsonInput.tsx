@@ -73,7 +73,7 @@ function ValidatedInputBase({
   const [error, setError] = useState<string>("");
   const [inputStr, setInputStr] = useState<string>("");
   const prevIncomingVal = useRef<unknown>("");
-  const inputRef = useRef<HTMLTextAreaElement>(ReactNull);
+  const inputRef = useRef<HTMLTextAreaElement | ReactNull>(ReactNull);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   // validate the input string, and setError or call onChange if needed

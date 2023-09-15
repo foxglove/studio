@@ -38,7 +38,7 @@ import PanelToolbar, {
 } from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { ChartDefaultView } from "@foxglove/studio-base/components/TimeBasedChart";
-import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
+import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 

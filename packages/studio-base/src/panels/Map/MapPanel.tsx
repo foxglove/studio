@@ -57,7 +57,7 @@ const memoizedFilterMessages = memoizeWeak((msgs: readonly MessageEvent[]) =>
 function MapPanel(props: MapPanelProps): JSX.Element {
   const { context } = props;
 
-  const mapContainerRef = useRef<HTMLDivElement>(ReactNull);
+  const mapContainerRef = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   const [config, setConfig] = useState<Config>(() => {
     const initialConfig = props.context.initialState as Partial<Config>;

@@ -44,7 +44,7 @@ function callHandlers(handlers: KeyHandlers | undefined, event: KeyboardEvent): 
 }
 
 export default function KeyListener(props: Props): ReactElement {
-  const element = useRef<HTMLDivElement>(ReactNull);
+  const element = useRef<HTMLDivElement | ReactNull>(ReactNull);
 
   const handleEvent = useCallback(
     (event: Event) => {
