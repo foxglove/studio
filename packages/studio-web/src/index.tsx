@@ -54,6 +54,7 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
   );
 
   if (!canRender) {
+    // eslint-disable-next-line react/no-deprecated
     ReactDOM.render(
       <StrictMode>
         <LogAfterRender>
@@ -77,6 +78,7 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
   const { Root } = await import("./Root");
   const params = await getParams();
 
+  // eslint-disable-next-line react/no-deprecated
   ReactDOM.render(
     <StrictMode>
       <LogAfterRender>

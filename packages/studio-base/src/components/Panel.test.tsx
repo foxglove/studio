@@ -13,7 +13,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { render } from "@testing-library/react";
-import { renderHook, act } from "@testing-library/react-hooks";
+import { renderHook, act } from "@testing-library/react";
 import { useEffect } from "react";
 
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -61,6 +61,7 @@ describe("Panel", () => {
     expect(renderFn.mock.calls).toEqual([
       [{ config: { someString: "hello world" }, saveConfig: expect.any(Function) }],
       [{ config: { someString: "hello world" }, saveConfig: expect.any(Function) }],
+      [{ config: { someString: "hello world" }, saveConfig: expect.any(Function) }],
     ]);
 
     expect(actions).toEqual([
@@ -91,6 +92,7 @@ describe("Panel", () => {
 
     expect(renderFn.mock.calls).toEqual([
       [{ config: { someString }, saveConfig: expect.any(Function) }],
+      [{ config: { someString }, saveConfig: expect.any(Function) }],
     ]);
 
     expect(actions).toEqual([
@@ -118,6 +120,7 @@ describe("Panel", () => {
     );
 
     expect(renderFn.mock.calls).toEqual([
+      [{ config: { someNumber: 42, someString: "hello world" }, saveConfig: expect.any(Function) }],
       [{ config: { someNumber: 42, someString: "hello world" }, saveConfig: expect.any(Function) }],
       [{ config: { someNumber: 42, someString: "hello world" }, saveConfig: expect.any(Function) }],
     ]);
@@ -155,6 +158,7 @@ describe("Panel", () => {
 
     expect(renderFn.mock.calls).toEqual([
       [{ config: { someNumber: 42, someString }, saveConfig: expect.any(Function) }],
+      [{ config: { someNumber: 42, someString }, saveConfig: expect.any(Function) }],
     ]);
 
     expect(actions).toEqual([
@@ -183,10 +187,10 @@ describe("Panel", () => {
       },
     });
 
-    expect(renderFn.mock.calls.length).toEqual(2);
+    expect(renderFn.mock.calls.length).toEqual(3);
     act(() => {
       actions.current.savePanelConfigs({ configs: [{ id: "someOtherId", config: {} }] });
     });
-    expect(renderFn.mock.calls.length).toEqual(2);
+    expect(renderFn.mock.calls.length).toEqual(3);
   });
 });

@@ -58,6 +58,7 @@ export async function main(params: MainParams): Promise<void> {
   await waitForFonts();
   await initI18n();
 
+  // eslint-disable-next-line react/no-deprecated
   ReactDOM.render(
     <StrictMode>
       <LogAfterRender>
