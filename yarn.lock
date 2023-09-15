@@ -2741,6 +2741,7 @@ __metadata:
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.41
     "@types/leaflet": 1.9.4
+    "@types/lodash-es": ^4
     "@types/memoize-weak": "workspace:*"
     "@types/moment-duration-format": 2.2.3
     "@types/nearley": 2.11.2
@@ -2878,6 +2879,8 @@ __metadata:
     "@types/electron-devtools-installer": 2.2.2
     "@types/plist": ^3.0.2
     "@types/pngjs": ^6.0.1
+    "@types/react": 17.0.53
+    "@types/react-dom": 17.0.18
     "@types/tinycolor2": 1.4.4
     "@types/utif": ^3.0.1
     "@xmldom/xmldom": 0.8.10
@@ -2924,6 +2927,8 @@ __metadata:
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.11
     "@storybook/react": 7.4.1
     "@types/copy-webpack-plugin": 10.1.0
+    "@types/react": 17.0.53
+    "@types/react-dom": 17.0.18
     clean-webpack-plugin: 4.0.0
     copy-webpack-plugin: 11.0.0
     html-webpack-plugin: 5.5.3
