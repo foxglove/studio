@@ -12,8 +12,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { render } from "@testing-library/react";
-import { renderHook, act } from "@testing-library/react";
+import { render, renderHook, act } from "@testing-library/react";
 import { useEffect } from "react";
 
 import Panel from "@foxglove/studio-base/components/Panel";
