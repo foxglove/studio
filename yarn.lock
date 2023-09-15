@@ -2447,6 +2447,7 @@ __metadata:
     "@testing-library/react-hooks": 8.0.1
     "@types/foxglove__web": "workspace:*"
     "@types/lodash-es": ^4
+    "@types/shallowequal": 1.1.1
     lodash-es: 4.17.21
     shallowequal: 1.1.0
     typescript: 5.2.2
@@ -6479,6 +6480,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/glob@npm:8.1.0":
+  version: 8.1.0
+  resolution: "@types/glob@npm:8.1.0"
+  dependencies:
+    "@types/minimatch": ^5.1.2
+    "@types/node": "*"
+  checksum: 9101f3a9061e40137190f70626aa0e202369b5ec4012c3fabe6f5d229cce04772db9a94fa5a0eb39655e2e4ad105c38afbb4af56a56c0996a8c7d4fc72350e3d
+  languageName: node
+  linkType: hard
+
 "@types/glob@npm:^7.1.1":
   version: 7.2.0
   resolution: "@types/glob@npm:7.2.0"
@@ -6698,7 +6709,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/minimatch@npm:*":
+"@types/minimatch@npm:*, @types/minimatch@npm:^5.1.2":
   version: 5.1.2
   resolution: "@types/minimatch@npm:5.1.2"
   checksum: 0391a282860c7cb6fe262c12b99564732401bdaa5e395bee9ca323c312c1a0f45efbf34dce974682036e857db59a5c9b1da522f3d6055aeead7097264c8705a8
@@ -12646,6 +12657,7 @@ __metadata:
     "@types/babel__core": ^7.20.1
     "@types/babel__preset-env": ^7.9.2
     "@types/case-sensitive-paths-webpack-plugin": 2.1.7
+    "@types/glob": 8.1.0
     "@types/jest": 29.5.4
     "@types/license-checker": ^25.0.4
     "@types/semver": ^7.5.1
