@@ -21,6 +21,7 @@ import {
   IconButton,
   Input,
   Link,
+  Paper,
   Typography,
   inputClasses,
 } from "@mui/material";
@@ -141,8 +142,6 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export type Explorer = undefined | "nodes" | "utils" | "templates";
-
 function buildSettingsTree(config: Config): SettingsTreeNodes {
   return {
     general: {
@@ -203,8 +202,6 @@ function NodePlayground(props: Props) {
   const { classes, theme } = useStyles();
   const { autoFormatOnSave = false, selectedNodeId, editorForStorybook } = config;
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
-
-  const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
 
   const userNodes = useCurrentLayoutSelector(userNodeSelector);
   const {
@@ -384,15 +381,13 @@ function NodePlayground(props: Props) {
       <Divider />
       <Stack direction="row" fullHeight overflow="hidden">
         <Sidebar
-          explorer={explorer}
-          updateExplorer={updateExplorer}
           selectNode={(nodeId) => {
             saveCurrentNode();
             saveConfig({ selectedNodeId: nodeId });
           }}
           deleteNode={(nodeId) => {
             setUserNodes({ ...userNodes, [nodeId]: undefined });
-            saveConfig({ selectedNodeId: undefined });
+            saveConfig({ selectedNodeId: Object.keys(userNodes)[0] });
           }}
           selectedNodeId={selectedNodeId}
           userNodes={userNodes}
@@ -408,45 +403,18 @@ function NodePlayground(props: Props) {
             backgroundColor: theme.palette.background[prefersDarkMode ? "paper" : "default"],
           }}
         >
-          <Stack direction="row" alignItems="center">
-            {scriptBackStack.length > 1 && (
-              <IconButton title="Go back" data-testid="go-back" size="small" onClick={goBack}>
-                <ArrowBackIcon />
-              </IconButton>
-            )}
-            {selectedNodeId != undefined && selectedNode && (
-              <div style={{ position: "relative" }}>
-                <Input
-                  className={classes.input}
-                  size="small"
-                  disableUnderline
-                  placeholder="script name"
-                  value={inputTitle}
-                  disabled={!currentScript || currentScript.readOnly}
-                  onChange={(ev) => {
-                    const newNodeName = ev.target.value;
-                    setInputTitle(newNodeName);
-                    setUserNodes({
-                      ...userNodes,
-                      [selectedNodeId]: { ...selectedNode, name: newNodeName },
-                    });
-                  }}
-                  inputProps={{ spellCheck: false, style: inputStyle }}
-                />
-                {!isNodeSaved && <div className={classes.unsavedDot} />}
-              </div>
-            )}
-            <IconButton
-              title="New node"
-              data-testid="new-node"
-              size="small"
-              onClick={() => {
-                addNewNode();
-              }}
-            >
-              <AddIcon />
-            </IconButton>
-          </Stack>
+          {scriptBackStack.length > 1 && (
+            <Stack direction="row" alignItems="center" gap={1}>
+              {scriptBackStack.length > 1 && (
+                <IconButton title="Go back" data-testid="go-back" size="small" onClick={goBack}>
+                  <ArrowBackIcon />
+                </IconButton>
+              )}
+              {selectedNodeId != undefined && selectedNode && (
+                <div style={{ position: "relative" }}>{inputTitle}</div>
+              )}
+            </Stack>
+          )}
 
           <PanelGroup direction="vertical" units="pixels">
             {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}

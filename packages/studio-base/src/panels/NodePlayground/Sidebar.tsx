@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -31,11 +32,10 @@ import {
   tabClasses,
 } from "@mui/material";
 import * as monacoApi from "monaco-editor/esm/vs/editor/editor.api";
-import { ReactNode, useCallback, useMemo } from "react";
+import { ReactNode, SyntheticEvent, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
-import { Explorer } from "@foxglove/studio-base/panels/NodePlayground";
 import { Script } from "@foxglove/studio-base/panels/NodePlayground/script";
 import { getUserScriptProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
 import templates from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/templates";
@@ -55,6 +55,8 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
+export type TabOption = false | "addNode" | "nodes" | "utils" | "templates";
+
 type NodesListProps = {
   nodes: UserNodes;
   selectNode: (id: string) => void;
@@ -63,7 +65,8 @@ type NodesListProps = {
   selectedNodeId?: string;
 };
 
-const NodesList = ({ nodes, selectNode, deleteNode, collapse, selectedNodeId }: NodesListProps) => {
+const NodesList = (props: NodesListProps): JSX.Element => {
+  const { nodes, selectNode, deleteNode, collapse, selectedNodeId } = props;
   return (
     <Stack flex="auto">
       <SidebarHeader title="Scripts" collapse={collapse} />
@@ -112,8 +115,6 @@ type Props = {
   deleteNode: (nodeId: string) => void;
   userNodes: UserNodes;
   selectedNodeId?: string;
-  explorer: Explorer;
-  updateExplorer: (explorer: Explorer) => void;
   setScriptOverride: (script: Script, maxDepth?: number) => void;
   script?: Script;
   addNewNode: (sourceCode?: string) => void;
@@ -154,16 +155,13 @@ const Sidebar = ({
   selectNode,
   deleteNode,
   selectedNodeId,
-  explorer,
-  updateExplorer,
   setScriptOverride,
   script,
   addNewNode,
 }: Props): React.ReactElement => {
   const { classes } = useStyles();
-  const nodesSelected = explorer === "nodes";
-  const utilsSelected = explorer === "utils";
-  const templatesSelected = explorer === "templates";
+
+  const [activeTab, setActiveTab] = useState<TabOption>(false);
 
   const gotoUtils = useCallback(
     (filePath: string) => {
@@ -185,39 +183,42 @@ const Sidebar = ({
     [setScriptOverride],
   );
 
-  const activeExplorerTab = useMemo(() => {
-    switch (explorer) {
-      case undefined:
-        return false;
-      case "nodes":
-        return "nodes";
-      case "templates":
-        return "templates";
-      case "utils":
-        return "utils";
-    }
-    return false;
-  }, [explorer]);
+  const handleClose = () => {
+    setActiveTab(false);
+  };
 
-  const explorers = useMemo(
+  const handleChange = useCallback(
+    (_event: SyntheticEvent, newValue: TabOption) => {
+      if (activeTab === newValue) {
+        setActiveTab(false);
+        return;
+      }
+      if (newValue === "addNode") {
+        setActiveTab("nodes");
+        addNewNode();
+        return;
+      }
+      setActiveTab(newValue);
+    },
+    [activeTab, addNewNode],
+  );
+
+  const tabPanels = useMemo(
     () => ({
+      addNode: undefined,
       nodes: (
         <NodesList
           nodes={userNodes}
           selectNode={selectNode}
           deleteNode={deleteNode}
-          collapse={() => {
-            updateExplorer(undefined);
-          }}
+          collapse={handleClose}
           selectedNodeId={selectedNodeId}
         />
       ),
       utils: (
         <Stack flex="auto" position="relative">
           <SidebarHeader
-            collapse={() => {
-              updateExplorer(undefined);
-            }}
+            collapse={handleClose}
             title="Utilities"
             subheader={
               <Typography variant="body2" color="text.secondary">
@@ -228,13 +229,8 @@ const Sidebar = ({
           />
           <List dense>
             {utilityFiles.map(({ fileName, filePath }) => (
-              <ListItem
-                disablePadding
-                key={filePath}
-                onClick={gotoUtils.bind(undefined, filePath)}
-                selected={script ? filePath === script.filePath : false}
-              >
-                <ListItemButton>
+              <ListItem disablePadding key={filePath} onClick={gotoUtils.bind(undefined, filePath)}>
+                <ListItemButton selected={script ? filePath === script.filePath : undefined}>
                   <ListItemText primary={fileName} primaryTypographyProps={{ variant: "body1" }} />
                 </ListItemButton>
               </ListItem>
@@ -242,7 +238,7 @@ const Sidebar = ({
             <ListItem
               disablePadding
               onClick={gotoUtils.bind(undefined, "/studio_script/generatedTypes.ts")}
-              selected={script ? script.filePath === "/studio_script/generatedTypes.ts" : false}
+              selected={script ? script.filePath === "/studio_script/generatedTypes.ts" : undefined}
             >
               <ListItemButton>
                 <ListItemText
@@ -259,9 +255,7 @@ const Sidebar = ({
           <SidebarHeader
             title="Templates"
             subheader="Create scripts from these templates, click a template to create a new script."
-            collapse={() => {
-              updateExplorer(undefined);
-            }}
+            collapse={handleClose}
           />
           <List dense>
             {templates.map(({ name, description, template }) => (
@@ -285,31 +279,32 @@ const Sidebar = ({
         </Stack>
       ),
     }),
-    [
-      addNewNode,
-      deleteNode,
-      gotoUtils,
-      script,
-      selectNode,
-      selectedNodeId,
-      updateExplorer,
-      userNodes,
-    ],
+    [addNewNode, deleteNode, gotoUtils, script, selectNode, selectedNodeId, userNodes],
   );
 
   return (
     <Paper elevation={0}>
       <Stack direction="row" fullHeight>
-        <Tabs className={classes.tabs} orientation="vertical" value={activeExplorerTab}>
+        <Tabs
+          className={classes.tabs}
+          orientation="vertical"
+          value={activeTab}
+          onChange={handleChange}
+        >
+          <Tab
+            disableRipple
+            title="Add node"
+            value="addNode"
+            icon={<AddIcon fontSize="large" />}
+            data-testid="node-explorer"
+          />
           <Tab
             disableRipple
             value="nodes"
             title="Scripts"
             icon={<NoteIcon fontSize="large" />}
             data-testid="node-explorer"
-            onClick={() => {
-              updateExplorer(nodesSelected ? undefined : "nodes");
-            }}
+            onClick={activeTab === "nodes" ? handleClose : undefined}
           />
           <Tab
             disableRipple
@@ -317,9 +312,7 @@ const Sidebar = ({
             title="Utilities"
             icon={<ConstructionOutlinedIcon fontSize="large" />}
             data-testid="utils-explorer"
-            onClick={() => {
-              updateExplorer(utilsSelected ? undefined : "utils");
-            }}
+            onClick={activeTab === "utils" ? handleClose : undefined}
           />
           <Tab
             disableRipple
@@ -327,15 +320,13 @@ const Sidebar = ({
             title="Templates"
             icon={<TemplateIcon fontSize="large" />}
             data-testid="templates-explorer"
-            onClick={() => {
-              updateExplorer(templatesSelected ? undefined : "templates");
-            }}
+            onClick={activeTab === "templates" ? handleClose : undefined}
           />
         </Tabs>
-        {explorer != undefined && (
+        {activeTab !== false && (
           <>
             <Divider flexItem orientation="vertical" />
-            <div className={classes.explorerWrapper}>{explorers[explorer]}</div>
+            <div className={classes.explorerWrapper}>{tabPanels[activeTab]}</div>
           </>
         )}
         <Divider flexItem orientation="vertical" />
