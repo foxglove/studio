@@ -16,6 +16,7 @@ import { screen, userEvent, waitFor } from "@storybook/testing-library";
 import { produce } from "immer";
 import * as _ from "lodash-es";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAsync } from "react-use";
 import { makeStyles } from "tss-react/mui";
 
 import { fromSec } from "@foxglove/rostime";
@@ -356,9 +357,16 @@ function PlotWrapper(props: {
   pauseFrame: (_arg: string) => () => void;
   config: PlotConfig;
 }): JSX.Element {
+  // HACK: when the fixture was provided immediately on first render, we encountered an ordering
+  // issue where useProvider/useDatasets would process block messages before the chart was
+  // registered, thus `evictCache()` would clear out all the data (since no topics were registered
+  // yet).
+  const { value: delayedFixture } = useAsync(async () => {
+    return props.fixture ?? fixture;
+  }, [props.fixture]);
   return (
     <PanelSetup
-      fixture={props.fixture ?? fixture}
+      fixture={delayedFixture}
       pauseFrame={props.pauseFrame}
       includeSettings={props.includeSettings}
       style={{ ...props.style }}
