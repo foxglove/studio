@@ -11,12 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import {
+  AddSquare24Filled,
+  Delete20Regular,
+  Dismiss20Filled,
+  DocumentOnePageSparkle24Regular,
+  Script24Regular,
+  Toolbox24Regular,
+} from "@fluentui/react-icons";
 import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
-import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import TemplateIcon from "@mui/icons-material/PhotoFilter";
-import NoteIcon from "@mui/icons-material/StickyNote2Outlined";
 import {
   List,
   ListItem,
@@ -27,12 +30,15 @@ import {
   Tab,
   Paper,
   CardHeader,
-  Typography,
   Divider,
   tabClasses,
+  Badge,
+  Button,
+  tabsClasses,
 } from "@mui/material";
 import * as monacoApi from "monaco-editor/esm/vs/editor/editor.api";
 import { ReactNode, SyntheticEvent, useCallback, useMemo, useState } from "react";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -42,10 +48,27 @@ import templates from "@foxglove/studio-base/players/UserNodePlayer/nodeTransfor
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 
 const useStyles = makeStyles()((theme) => ({
+  buttonRow: {
+    backgroundColor: theme.palette.background.paper,
+    padding: theme.spacing(1, 1.125),
+  },
   tabs: {
+    padding: theme.spacing(0.75),
+
     [`.${tabClasses.root}`]: {
       minWidth: "auto",
-      padding: theme.spacing(1, 1.125),
+      minHeight: 44,
+      padding: theme.spacing(1, 1.25),
+    },
+    [`.${tabsClasses.indicator}`]: {
+      backgroundColor: tc(theme.palette.primary.main)
+        .setAlpha(theme.palette.action.selectedOpacity)
+        .toString(),
+      right: 0,
+      width: "100%",
+      borderRadius: theme.shape.borderRadius,
+      transition: "none",
+      pointerEvents: "none",
     },
   },
   explorerWrapper: {
@@ -57,67 +80,92 @@ const useStyles = makeStyles()((theme) => ({
 
 export type TabOption = false | "addNode" | "nodes" | "utils" | "templates";
 
+function NodeListItem({
+  onClick,
+  onDelete,
+  title,
+  selected,
+}: {
+  onClick: () => void;
+  onDelete: () => void;
+  title?: string;
+  selected?: boolean;
+}): JSX.Element {
+  return (
+    <ListItem
+      disablePadding
+      secondaryAction={
+        <IconButton
+          size="small"
+          onClick={onDelete}
+          edge="end"
+          aria-title="delete"
+          title="Delete"
+          color="error"
+        >
+          <Delete20Regular />
+        </IconButton>
+      }
+    >
+      <ListItemButton selected={selected} onClick={onClick}>
+        <ListItemText primary={title} primaryTypographyProps={{ variant: "body2" }} />
+      </ListItemButton>
+    </ListItem>
+  );
+}
+
 type NodesListProps = {
   nodes: UserNodes;
+  addNewNode: () => void;
   selectNode: (id: string) => void;
   deleteNode: (id: string) => void;
   collapse: () => void;
   selectedNodeId?: string;
 };
 
-const NodesList = (props: NodesListProps): JSX.Element => {
-  const { nodes, selectNode, deleteNode, collapse, selectedNodeId } = props;
+const NodesList = ({
+  nodes,
+  addNewNode,
+  selectNode,
+  deleteNode,
+  collapse,
+  selectedNodeId,
+}: NodesListProps): JSX.Element => {
+  const { classes } = useStyles();
+
   return (
     <Stack flex="auto">
       <SidebarHeader title="Scripts" collapse={collapse} />
-      <List dense>
+      <List>
         {Object.keys(nodes).map((nodeId) => {
           return (
-            <ListItem
-              disablePadding
+            <NodeListItem
               key={nodeId}
-              secondaryAction={
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    deleteNode(nodeId);
-                  }}
-                  edge="end"
-                  aria-label="delete"
-                  title="Delete"
-                  color="error"
-                >
-                  <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
-              }
-            >
-              <ListItemButton
-                selected={selectedNodeId === nodeId}
-                onClick={() => {
-                  selectNode(nodeId);
-                }}
-              >
-                <ListItemText
-                  primary={nodes[nodeId]?.name}
-                  primaryTypographyProps={{ variant: "body1" }}
-                />
-              </ListItemButton>
-            </ListItem>
+              title={nodes[nodeId]?.name}
+              selected={selectedNodeId === nodeId}
+              onClick={() => {
+                selectNode(nodeId);
+              }}
+              onDelete={() => {
+                deleteNode(nodeId);
+              }}
+            />
           );
         })}
+        <li className={classes.buttonRow}>
+          <Button
+            fullWidth
+            startIcon={<AddIcon />}
+            variant="contained"
+            color="inherit"
+            onClick={addNewNode}
+          >
+            New script
+          </Button>
+        </li>
       </List>
     </Stack>
   );
-};
-
-type Props = {
-  selectNode: (nodeId: string) => void;
-  deleteNode: (nodeId: string) => void;
-  userNodes: UserNodes;
-  selectedNodeId?: string;
-  setScriptOverride: (script: Script, maxDepth?: number) => void;
-  script?: Script;
-  addNewNode: (sourceCode?: string) => void;
 };
 
 const { utilityFiles } = getUserScriptProjectConfig();
@@ -134,8 +182,8 @@ const SidebarHeader = ({
   <CardHeader
     title={title}
     titleTypographyProps={{
-      variant: "h5",
-      gutterBottom: true,
+      variant: "subtitle1",
+      fontWeight: "600",
     }}
     subheader={subheader}
     subheaderTypographyProps={{
@@ -144,11 +192,21 @@ const SidebarHeader = ({
     }}
     action={
       <IconButton size="small" onClick={collapse} title="Collapse">
-        <CloseIcon />
+        <Dismiss20Filled />
       </IconButton>
     }
   />
 );
+
+type SidebarProps = {
+  addNewNode: (sourceCode?: string) => void;
+  selectNode: (nodeId: string) => void;
+  deleteNode: (nodeId: string) => void;
+  setScriptOverride: (script: Script, maxDepth?: number) => void;
+  userNodes: UserNodes;
+  selectedNodeId?: string;
+  script?: Script;
+};
 
 const Sidebar = ({
   userNodes,
@@ -158,7 +216,7 @@ const Sidebar = ({
   setScriptOverride,
   script,
   addNewNode,
-}: Props): React.ReactElement => {
+}: SidebarProps): React.ReactElement => {
   const { classes } = useStyles();
 
   const [activeTab, setActiveTab] = useState<TabOption>(false);
@@ -187,7 +245,7 @@ const Sidebar = ({
     setActiveTab(false);
   };
 
-  const handleChange = useCallback(
+  const handleTabSelection = useCallback(
     (_event: SyntheticEvent, newValue: TabOption) => {
       if (activeTab === newValue) {
         setActiveTab(false);
@@ -211,6 +269,7 @@ const Sidebar = ({
           nodes={userNodes}
           selectNode={selectNode}
           deleteNode={deleteNode}
+          addNewNode={addNewNode}
           collapse={handleClose}
           selectedNodeId={selectedNodeId}
         />
@@ -221,30 +280,30 @@ const Sidebar = ({
             collapse={handleClose}
             title="Utilities"
             subheader={
-              <Typography variant="body2" color="text.secondary">
+              <>
                 You can import any of these modules into your script using the following syntax:{" "}
                 <pre>{`import { ... } from "./pointClouds.ts".`}</pre>
-              </Typography>
+              </>
             }
           />
           <List dense>
             {utilityFiles.map(({ fileName, filePath }) => (
               <ListItem disablePadding key={filePath} onClick={gotoUtils.bind(undefined, filePath)}>
                 <ListItemButton selected={script ? filePath === script.filePath : undefined}>
-                  <ListItemText primary={fileName} primaryTypographyProps={{ variant: "body1" }} />
+                  <ListItemText primary={fileName} primaryTypographyProps={{ variant: "body2" }} />
                 </ListItemButton>
               </ListItem>
             ))}
             <ListItem
               disablePadding
               onClick={gotoUtils.bind(undefined, "/studio_script/generatedTypes.ts")}
-              selected={script ? script.filePath === "/studio_script/generatedTypes.ts" : undefined}
             >
-              <ListItemButton>
-                <ListItemText
-                  primary="generatedTypes.ts"
-                  primaryTypographyProps={{ variant: "body1" }}
-                />
+              <ListItemButton
+                selected={
+                  script ? script.filePath === "/studio_script/generatedTypes.ts" : undefined
+                }
+              >
+                <ListItemText primary="generatedTypes.ts" />
               </ListItemButton>
             </ListItem>
           </List>
@@ -269,8 +328,8 @@ const Sidebar = ({
                 <ListItemButton>
                   <ListItemText
                     primary={name}
-                    primaryTypographyProps={{ variant: "body1" }}
                     secondary={description}
+                    secondaryTypographyProps={{ variant: "caption" }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -289,20 +348,32 @@ const Sidebar = ({
           className={classes.tabs}
           orientation="vertical"
           value={activeTab}
-          onChange={handleChange}
+          onChange={handleTabSelection}
         >
           <Tab
+            className="Mui-selected"
             disableRipple
             title="Add node"
             value="addNode"
-            icon={<AddIcon fontSize="large" />}
+            icon={<AddSquare24Filled />}
             data-testid="node-explorer"
           />
           <Tab
             disableRipple
             value="nodes"
-            title="Scripts"
-            icon={<NoteIcon fontSize="large" />}
+            title={`Scripts (${Object.keys(userNodes).length})`}
+            icon={
+              <Badge
+                badgeContent={Object.keys(userNodes).length}
+                color="primary"
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }}
+              >
+                <Script24Regular />
+              </Badge>
+            }
             data-testid="node-explorer"
             onClick={activeTab === "nodes" ? handleClose : undefined}
           />
@@ -310,7 +381,7 @@ const Sidebar = ({
             disableRipple
             value="utils"
             title="Utilities"
-            icon={<ConstructionOutlinedIcon fontSize="large" />}
+            icon={<Toolbox24Regular />}
             data-testid="utils-explorer"
             onClick={activeTab === "utils" ? handleClose : undefined}
           />
@@ -318,7 +389,7 @@ const Sidebar = ({
             disableRipple
             value="templates"
             title="Templates"
-            icon={<TemplateIcon fontSize="large" />}
+            icon={<DocumentOnePageSparkle24Regular />}
             data-testid="templates-explorer"
             onClick={activeTab === "templates" ? handleClose : undefined}
           />
