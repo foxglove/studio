@@ -200,6 +200,7 @@ function useData(id: string, params: PlotParams) {
       ...clients,
       [id]: { ...client, params },
     };
+    chooseClient();
   }, [id, params]);
 
   const isLive = useMessagePipeline<boolean>(getIsLive);
