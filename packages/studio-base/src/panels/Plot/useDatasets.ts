@@ -37,7 +37,7 @@ type Service = Comlink.Remote<(typeof import("./useDatasets.worker"))["service"]
 // mapping from topic -> the first message on that topic in the block
 type BlockStatus = Record<string, unknown>;
 type Client = {
-  params: PlotParams;
+  params: PlotParams | undefined;
   setter: (topics: SubscribePayload[]) => void;
 };
 
@@ -131,6 +131,10 @@ function chooseClient() {
   const subscriptions = R.pipe(
     R.chain((client: Client): SubscribePayload[] => {
       const { params } = client;
+      if (params == undefined) {
+        return [];
+      }
+
       const { xAxisPath, paths: yAxisPaths } = params;
 
       const isOnlyCurrent = isBounded(params) || isSingleMessage(params);
@@ -174,7 +178,7 @@ function useData(id: string, params: PlotParams) {
     clients = {
       ...clients,
       [id]: {
-        params,
+        params: undefined,
         setter: setSubscribed,
       },
     };
@@ -183,6 +187,18 @@ function useData(id: string, params: PlotParams) {
       const { [id]: _client, ...rest } = clients;
       clients = rest;
       chooseClient();
+    };
+  }, [id]);
+
+  useEffect(() => {
+    const { [id]: client } = clients;
+    if (client == undefined) {
+      return;
+    }
+
+    clients = {
+      ...clients,
+      [id]: { ...client, params },
     };
   }, [id, params]);
 
