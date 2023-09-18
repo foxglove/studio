@@ -271,12 +271,7 @@ function useData(id: string, params: PlotParams) {
 
         // we already had a message in this block, meaning the data itself has
         // changed; we have to rebuild the plots
-        if (
-          existing != undefined &&
-          existing != first &&
-          lastSent != undefined &&
-          index < lastSent
-        ) {
+        if (existing != undefined && lastSent != undefined && index < lastSent) {
           resetData.add(payload.topic);
         }
 
