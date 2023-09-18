@@ -174,6 +174,7 @@ function chooseClient() {
 // messages to the worker as they arrive.
 function useData(id: string, params: PlotParams) {
   const [subscriptions, setSubscribed] = React.useState<SubscribePayload[]>([]);
+  // Register client when the panel mounts and unregister when it unmounts
   useEffect(() => {
     clients = {
       ...clients,
@@ -190,6 +191,7 @@ function useData(id: string, params: PlotParams) {
     };
   }, [id]);
 
+  // Update registration when params change
   useEffect(() => {
     const { [id]: client } = clients;
     if (client == undefined) {
