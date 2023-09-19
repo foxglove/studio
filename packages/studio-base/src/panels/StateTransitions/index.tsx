@@ -51,7 +51,7 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
-import { stateTransitionPathDisplayName } from "./shared";
+import { DEFAULT_PATH, stateTransitionPathDisplayName } from "./shared";
 import { StateTransitionConfig } from "./types";
 
 export const transitionableRosTypes = [
@@ -205,9 +205,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           paths: [
             // If there was only a single series and its path was empty (the default state of the
             // panel), replace the series rather than adding to it
-            ...(prevConfig.paths.length === 1 && prevConfig.paths[0]?.value === ""
-              ? []
-              : prevConfig.paths),
+            ...prevConfig.paths,
             ...draggedPaths.map((path) => ({
               value: path.path,
               enabled: true,
@@ -449,7 +447,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           />
 
           <Stack className={classes.chartOverlay} position="absolute" paddingTop={0.5}>
-            {paths.map((path, index) => (
+            {(paths.length === 0 ? [DEFAULT_PATH] : paths).map((path, index) => (
               <div className={classes.row} key={index} style={{ height: heightPerTopic }}>
                 <Button
                   size="small"
@@ -464,7 +462,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
                   }}
                 >
                   <Typography variant="inherit" noWrap>
-                    {stateTransitionPathDisplayName(path, index)}
+                    {stateTransitionPathDisplayName(path, "Click to add a series")}
                   </Typography>
                 </Button>
               </div>
@@ -477,7 +475,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 });
 
 const defaultConfig: StateTransitionConfig = {
-  paths: [{ value: "", timestampMethod: "receiveTime" }],
+  paths: [],
   isSynced: true,
 };
 export default Panel(
