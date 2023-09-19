@@ -158,14 +158,19 @@ export class SceneExtension<
     void backgroundColor;
   }
 
-  /** Returns a drop status if the Scene Extension can handle a message path drop, undefined if it cannot */
-  public getDropStatusForPath = (path: DraggedMessagePath): "add" | "replace" | undefined => {
+  /** Returns a drop effect if the Scene Extension can handle a message path drop, undefined if it cannot */
+  public getDropEffectForPath = (path: DraggedMessagePath): "add" | "replace" | undefined => {
     void path;
     return undefined;
   };
 
-  /** Called when a Message Path is dropped on the panel */
-  public handleDropForPath = (draft: Writable<RendererConfig>, path: DraggedMessagePath): void => {
+  /** Called when a Message Path is dropped on the panel. Allows the scene extension to update the config in response.
+   * All updates across all SceneExtensions will occur in one `updateConfig` call on the Renderer
+   */
+  public updateConfigForDropPath = (
+    draft: Writable<RendererConfig>,
+    path: DraggedMessagePath,
+  ): void => {
     void draft;
     void path;
   };

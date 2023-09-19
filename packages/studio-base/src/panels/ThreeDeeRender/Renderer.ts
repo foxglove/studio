@@ -1364,7 +1364,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     for (const path of paths) {
       let effect;
       for (const extension of this.sceneExtensions.values()) {
-        const maybeEffect = extension.getDropStatusForPath(path);
+        const maybeEffect = extension.getDropEffectForPath(path);
         if (maybeEffect) {
           effect = maybeEffect;
           break;
@@ -1377,12 +1377,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       effects.push(effect);
     }
     // prioritize replace effect over add
-    const finalEffect = effects.reduce((acc, cur) => {
-      if (cur === "replace") {
-        return "replace";
-      }
-      return acc;
-    }, "add");
+    const finalEffect = effects.includes("replace") ? "replace" : "add";
 
     return {
       canDrop: true,
@@ -1394,7 +1389,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.updateConfig((draft) => {
       for (const path of paths) {
         for (const extension of this.sceneExtensions.values()) {
-          extension.handleDropForPath(draft, path);
+          extension.updateConfigForDropPath(draft, path);
         }
       }
     });
