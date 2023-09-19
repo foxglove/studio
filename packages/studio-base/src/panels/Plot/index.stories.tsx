@@ -903,7 +903,7 @@ export const WithMinAndMaxYValues: StoryObj = {
 
 export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useReadySignal({ count: 5 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -937,7 +937,7 @@ export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
 
 export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useReadySignal({ count: 5 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -971,7 +971,7 @@ export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
 
 export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useReadySignal({ count: 5 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1005,7 +1005,7 @@ export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
 
 export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useReadySignal({ count: 5 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
