@@ -361,12 +361,19 @@ function PlotWrapper(props: {
   // issue where useProvider/useDatasets would process block messages before the chart was
   // registered, thus `evictCache()` would clear out all the data (since no topics were registered
   // yet).
+  const finalFixture = props.fixture ?? fixture;
   const { value: delayedFixture } = useAsync(async () => {
-    return props.fixture ?? fixture;
-  }, [props.fixture]);
+    // another tick is needed to allow the useDatasets worker to process metadata & registrations
+    // before messages are delivered
+    await Promise.resolve();
+    return finalFixture;
+  }, [finalFixture]);
   return (
     <PanelSetup
-      fixture={delayedFixture}
+      fixture={
+        // Topics and datatypes need to be present before messages are received for plots to render
+        delayedFixture ?? { topics: finalFixture.topics, datatypes: finalFixture.datatypes }
+      }
       pauseFrame={props.pauseFrame}
       includeSettings={props.includeSettings}
       style={{ ...props.style }}
