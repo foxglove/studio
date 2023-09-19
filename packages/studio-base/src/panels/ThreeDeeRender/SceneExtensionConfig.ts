@@ -27,7 +27,6 @@ import { MeasurementTool } from "./renderables/MeasurementTool";
 import { PublishClickTool } from "./renderables/PublishClickTool";
 import { InterfaceMode } from "./types";
 
-
 export type SceneExtensionConfig = {
   reserved: ReservedSceneExtensionConfig;
   extensionsById: Record<AvailableNames, ExtensionOverride<SceneExtension>>;
