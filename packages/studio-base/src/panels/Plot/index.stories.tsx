@@ -366,6 +366,7 @@ function PlotWrapper(props: {
     // another tick is needed to allow the useDatasets worker to process metadata & registrations
     // before messages are delivered
     await Promise.resolve();
+    await Promise.resolve();
     return finalFixture;
   }, [finalFixture]);
   return (
