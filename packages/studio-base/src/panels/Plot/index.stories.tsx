@@ -350,6 +350,23 @@ const exampleConfig: PlotConfig = {
   sidebarDimension: 0,
 };
 
+function useDelayedFixture(customFixture?: Fixture) {
+  // HACK: when the fixture was provided immediately on first render, we encountered an ordering
+  // issue where useProvider/useDatasets would process block messages before the chart was
+  // registered, thus `evictCache()` would clear out all the data (since no topics were registered
+  // yet).
+  const finalFixture = customFixture ?? fixture;
+  const { value: delayedFixture } = useAsync(async () => {
+    // another tick is needed to allow the useDatasets worker to process metadata & registrations
+    // before messages are delivered
+    await Promise.resolve();
+    return finalFixture;
+  }, [finalFixture]);
+
+  // Topics and datatypes need to be present before messages are received for plots to render
+  return delayedFixture ?? { topics: finalFixture.topics, datatypes: finalFixture.datatypes };
+}
+
 function PlotWrapper(props: {
   style?: { [key: string]: string | number };
   includeSettings?: boolean;
@@ -357,24 +374,10 @@ function PlotWrapper(props: {
   pauseFrame: (_arg: string) => () => void;
   config: PlotConfig;
 }): JSX.Element {
-  // HACK: when the fixture was provided immediately on first render, we encountered an ordering
-  // issue where useProvider/useDatasets would process block messages before the chart was
-  // registered, thus `evictCache()` would clear out all the data (since no topics were registered
-  // yet).
-  const finalFixture = props.fixture ?? fixture;
-  const { value: delayedFixture } = useAsync(async () => {
-    // another tick is needed to allow the useDatasets worker to process metadata & registrations
-    // before messages are delivered
-    await Promise.resolve();
-    await Promise.resolve();
-    return finalFixture;
-  }, [finalFixture]);
+  const delayedFixture = useDelayedFixture(props.fixture);
   return (
     <PanelSetup
-      fixture={
-        // Topics and datatypes need to be present before messages are received for plots to render
-        delayedFixture ?? { topics: finalFixture.topics, datatypes: finalFixture.datatypes }
-      }
+      fixture={delayedFixture}
       pauseFrame={props.pauseFrame}
       includeSettings={props.includeSettings}
       style={{ ...props.style }}
@@ -588,8 +591,9 @@ export const InALineGraphWithMultiplePlotsXAxesAreSynced: StoryObj = {
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     const { classes } = useStyles();
 
+    const delayedFixture = useDelayedFixture();
     return (
-      <PanelSetup fixture={fixture} pauseFrame={pauseFrame} className={classes.PanelSetup}>
+      <PanelSetup fixture={delayedFixture} pauseFrame={pauseFrame} className={classes.PanelSetup}>
         <Plot
           overrideConfig={{
             ...exampleConfig,
