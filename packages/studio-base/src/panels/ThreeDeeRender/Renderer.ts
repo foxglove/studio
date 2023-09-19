@@ -28,7 +28,7 @@ import {
   BuiltinPanelExtensionContext,
 } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
-import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
+import { SceneExtensionConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
 import { dark, light } from "@foxglove/studio-base/theme/palette";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -60,7 +60,6 @@ import {
   normalizeTransformStamped,
 } from "./normalizeMessages";
 import { CameraStateSettings } from "./renderables/CameraStateSettings";
-import { Cameras } from "./renderables/Cameras";
 import { ImageMode } from "./renderables/ImageMode/ImageMode";
 import { DownloadImageInfo } from "./renderables/Images/ImageTypes";
 import { MeasurementTool } from "./renderables/MeasurementTool";
@@ -79,7 +78,6 @@ import {
 import { SelectEntry } from "./settings";
 import { AddTransformResult, CoordinateFrame, Transform, TransformTree } from "./transforms";
 import { InterfaceMode } from "./types";
-import { SceneExtensionConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 
 const log = Logger.getLogger(__filename);
 

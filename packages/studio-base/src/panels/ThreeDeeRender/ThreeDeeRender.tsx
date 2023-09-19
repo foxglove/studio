@@ -25,6 +25,10 @@ import {
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import {
+  DEFAULT_SCENE_EXTENSION_CONFIG,
+  SceneExtensionConfig,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 import { ALL_SUPPORTED_IMAGE_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
 import { ALL_SUPPORTED_ANNOTATION_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/annotations/ImageAnnotations";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
@@ -54,10 +58,6 @@ import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent } from "./renderables/PublishClickTool";
 import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/PublishSettings";
 import { InterfaceMode } from "./types";
-import {
-  DEFAULT_SCENE_EXTENSION_CONFIG,
-  SceneExtensionConfig,
-} from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 
 const log = Logger.getLogger(__filename);
 
@@ -176,6 +176,7 @@ export function ThreeDeeRender(props: {
     canvas,
     configRef,
     config.scene.transforms?.enablePreloading,
+    sceneExtensionConfigOverrides,
     interfaceMode,
     fetchAsset,
     debugPicking,

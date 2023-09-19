@@ -2,9 +2,19 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Cameras } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Cameras";
+import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
+import { FrameAxes } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FrameAxes";
+import { Grids } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Grids";
 import { ImageMode } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
 import { Images } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images";
+import { LaserScans } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/LaserScans";
 import { Markers } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Markers";
+import { OccupancyGrids } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/OccupancyGrids";
+import { PointClouds } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PointClouds";
+import { Polygons } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Polygons";
+import { PoseArrays } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PoseArrays";
+import { Poses } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Poses";
 import { PublishSettings } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PublishSettings";
 
 import { IRenderer } from "./IRenderer";
@@ -13,19 +23,9 @@ import { MeasurementTool } from "./renderables/MeasurementTool";
 import { PublishClickTool } from "./renderables/PublishClickTool";
 import { InterfaceMode } from "./types";
 import { SceneSettings } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/SceneSettings";
-import { FrameAxes } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FrameAxes";
-import { Grids } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Grids";
 import { FoxgloveSceneEntities } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/SceneEntities";
-import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
-import { LaserScans } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/LaserScans";
-import { PointClouds } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PointClouds";
-import { OccupancyGrids } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/OccupancyGrids";
-import { Polygons } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Polygons";
-import { Poses } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Poses";
-import { PoseArrays } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PoseArrays";
 import { VelodyneScans } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/VelodyneScans";
 import { Urdfs } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Urdfs";
-import { Cameras } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Cameras";
 
 export type SceneExtensionConfig = {
   reserved: ReservedSceneExtensionConfig;
