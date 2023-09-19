@@ -74,6 +74,8 @@ export class ImageAnnotations extends THREE.Object3D {
   #canvasHeight: number;
   #pixelRatio: number;
 
+  public supportedAnnotationSchemas = ALL_SUPPORTED_ANNOTATION_SCHEMAS;
+
   public constructor(context: ImageAnnotationsContext) {
     super();
     this.#context = context;
