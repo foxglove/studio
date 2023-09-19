@@ -46,11 +46,12 @@ const useStyles = makeStyles<{ buttonColor?: string }>()((theme, { buttonColor }
       height: "100%",
 
       [`.${inputBaseClasses.root}`]: {
-        width: "100%",
+        backgroundColor: theme.palette.background.paper,
         height: "100%",
-        textAlign: "left",
         overflow: "hidden",
         padding: theme.spacing(1, 0.5),
+        textAlign: "left",
+        width: "100%",
 
         [`.${inputBaseClasses.input}`]: {
           height: "100% !important",
