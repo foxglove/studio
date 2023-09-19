@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Edit16Filled } from "@fluentui/react-icons";
+import { Add16Filled, Edit16Filled } from "@fluentui/react-icons";
 import { Button, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import * as _ from "lodash-es";
@@ -454,7 +454,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
                   color="inherit"
                   data-testid="edit-topic-button"
                   className={classes.button}
-                  endIcon={<Edit16Filled />}
+                  endIcon={paths.length === 0 ? <Add16Filled /> : <Edit16Filled />}
                   onClick={() => {
                     setSelectedPanelIds([panelId]);
                     openPanelSettings();
