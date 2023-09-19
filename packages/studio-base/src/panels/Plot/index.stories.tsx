@@ -359,7 +359,7 @@ function useDelayedFixture(customFixture?: Fixture) {
   const { value: delayedFixture } = useAsync(async () => {
     // another tick is needed to allow the useDatasets worker to process metadata & registrations
     // before messages are delivered
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
     return finalFixture;
   }, [finalFixture]);
 
