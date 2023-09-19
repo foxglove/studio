@@ -11,8 +11,6 @@ import { TopicListItem } from "@foxglove/studio-base/components/TopicList/useTop
 
 type ContextMenuItemProps = { key: string } & Partial<MenuItemProps>;
 
-const kebabCase = (str: string) => str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-
 export function ContextMenu(
   props: MenuProps & { treeItems: TopicListItem[]; selectedIndexes: Set<number> },
 ): JSX.Element {
@@ -51,30 +49,29 @@ export function ContextMenu(
             event,
             selectedListItems
               .map(({ item, type }) => (type === "topic" ? item.item.name : item.item.fullPath))
-              .join(",\n"),
+              .join(","),
           );
         },
       },
     ];
     if (selectedListItems.length === 1) {
       items.push({
-        key: "show-type-definition",
-        children: "Jump to message schema",
+        key: "copy-field-schema-name",
+        children: `Copy schema name`,
         onClick: (event) => {
-          handleClose(event);
-          // doesn't work yet
-          window.open(
-            `https://foxglove.dev/docs/studio/messages${
-              selectedListItems[0]?.type === "topic"
-                ? `/${kebabCase(selectedListItems[0]?.item?.item?.schemaName ?? "")}`
-                : `/${kebabCase(selectedListItems[0]?.item?.item?.topic?.schemaName ?? "")}`
-            }`,
-          );
+          const schemaName =
+            selectedListItems[0]?.type === "topic"
+              ? selectedListItems[0]?.item?.item?.schemaName
+              : selectedListItems[0]?.item?.item?.suffix?.type;
+
+          if (schemaName != undefined) {
+            handleCopy(event, schemaName);
+          }
         },
       });
     }
     return items;
-  }, [handleClose, handleCopy, selectedListItems]);
+  }, [handleCopy, selectedListItems]);
 
   return (
     <Menu
