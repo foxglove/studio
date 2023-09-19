@@ -20,11 +20,13 @@ export function MessagePathRow({
   style,
   selected,
   onClick,
+  onContextMenu,
 }: {
   messagePathResult: FzfResultItem<MessagePathSearchItem>;
   style: React.CSSProperties;
   selected: boolean;
   onClick: React.MouseEventHandler<HTMLDivElement>;
+  onContextMenu: React.MouseEventHandler<HTMLDivElement>;
 }): JSX.Element {
   const { cx, classes } = useTopicListStyles();
 
@@ -64,6 +66,7 @@ export function MessagePathRow({
       className={cx(classes.row, classes.fieldRow, { isDragging, isSelected: selected })}
       style={{ ...style, cursor }}
       onClick={onClick}
+      onContextMenu={onContextMenu}
     >
       {draggedItemCount > 1 && (
         <Badge color="primary" className={classes.countBadge} badgeContent={draggedItemCount} />

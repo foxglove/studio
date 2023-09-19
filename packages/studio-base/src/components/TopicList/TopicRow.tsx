@@ -21,11 +21,13 @@ export function TopicRow({
   style,
   selected,
   onClick,
+  onContextMenu,
 }: {
   topicResult: FzfResultItem<Topic>;
   style: React.CSSProperties;
   selected: boolean;
   onClick: React.MouseEventHandler<HTMLDivElement>;
+  onContextMenu: React.MouseEventHandler<HTMLDivElement>;
 }): JSX.Element {
   const { cx, classes } = useTopicListStyles();
 
@@ -65,6 +67,7 @@ export function TopicRow({
       className={cx(classes.row, { isDragging, isSelected: selected })}
       style={{ ...style, cursor }}
       onClick={onClick}
+      onContextMenu={onContextMenu}
     >
       {draggedItemCount > 1 && (
         <Badge color="primary" className={classes.countBadge} badgeContent={draggedItemCount} />
@@ -85,24 +88,22 @@ export function TopicRow({
             </Typography>
           )}
         </Typography>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          noWrap
-          draggable
-          onDragStart={cancelDragEvent}
-          className={classes.textContent}
-        >
-          {topic.schemaName == undefined ? (
-            "—"
-          ) : (
+        {topic.schemaName != undefined && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            noWrap
+            draggable
+            onDragStart={cancelDragEvent}
+            className={classes.textContent}
+          >
             <HighlightChars
               str={topic.schemaName}
               indices={topicResult.positions}
               offset={topic.name.length + 1}
             />
-          )}
-        </Typography>
+          </Typography>
+        )}
       </Stack>
       <TopicStatsChip topicName={topic.name} />
       <div data-testid="TopicListDragHandle" className={classes.dragHandle}>

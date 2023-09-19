@@ -5,10 +5,11 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { IconButton, List, ListItem, ListItemText, Skeleton, TextField } from "@mui/material";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AutoSizer } from "react-virtualized";
 import { ListChildComponentProps, VariableSizeList } from "react-window";
+import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
 import { DraggedMessagePath } from "@foxglove/studio";
@@ -19,6 +20,7 @@ import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { ContextMenu } from "@foxglove/studio-base/components/TopicList/ContextMenu";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { MessagePathSelectionProvider } from "@foxglove/studio-base/services/messagePathDragging/MessagePathSelectionProvider";
 
@@ -26,13 +28,37 @@ import { MessagePathRow } from "./MessagePathRow";
 import { TopicRow } from "./TopicRow";
 import { useMultiSelection } from "./useMultiSelection";
 import { useTopicListSearch } from "./useTopicListSearch";
-import { useTopicListStyles } from "./useTopicListStyles";
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    containerType: "inline-size",
+  },
+  filterBar: {
+    top: 0,
+    zIndex: theme.zIndex.appBar,
+    padding: theme.spacing(0.5),
+    position: "sticky",
+    backgroundColor: theme.palette.background.paper,
+  },
+  filterStartAdornment: {
+    display: "flex",
+  },
+  skeletonText: {
+    marginTop: theme.spacing(0.5),
+    marginBottom: theme.spacing(0.5),
+  },
+}));
+
 export function TopicList(): JSX.Element {
   const { t } = useTranslation("topicList");
-  const { classes } = useTopicListStyles();
+  const { classes } = useStyles();
   const [undebouncedFilterText, setFilterText] = useState<string>("");
   const [debouncedFilterText] = useDebounce(undebouncedFilterText, 50);
 
@@ -47,6 +73,33 @@ export function TopicList(): JSX.Element {
     filterText: debouncedFilterText,
   });
   const { selectedIndexes, onSelect } = useMultiSelection(treeItems);
+
+  const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | undefined>(
+    undefined,
+  );
+
+  const handleContextMenu = useCallback(
+    (event: MouseEvent, index: number) => {
+      event.preventDefault();
+      if (selectedIndexes.size <= 1) {
+        onSelect({
+          index,
+          modKey: event.metaKey || event.ctrlKey,
+          shiftKey: event.shiftKey,
+        });
+      }
+      setContextMenu(
+        contextMenu == undefined
+          ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 }
+          : undefined,
+      );
+    },
+    [contextMenu, onSelect, selectedIndexes.size],
+  );
+
+  const handleContextMenuClose = () => {
+    setContextMenu(undefined);
+  };
 
   const getItemAtIndex = useCallback(
     (index: number): DraggedMessagePath | undefined => {
@@ -102,6 +155,9 @@ export function TopicList(): JSX.Element {
               topicResult={treeItem.item}
               selected={selected}
               onClick={onClick}
+              onContextMenu={(event) => {
+                handleContextMenu(event, index);
+              }}
             />
           );
         case "schema":
@@ -111,11 +167,14 @@ export function TopicList(): JSX.Element {
               messagePathResult={treeItem.item}
               selected={selected}
               onClick={onClick}
+              onContextMenu={(event) => {
+                handleContextMenu(event, index);
+              }}
             />
           );
       }
     },
-    [onSelect],
+    [handleContextMenu, onSelect],
   );
 
   if (playerPresence === PlayerPresence.NOT_PRESENT) {
@@ -222,6 +281,19 @@ export function TopicList(): JSX.Element {
         )}
         <DirectTopicStatsUpdater interval={6} />
       </div>
+      {selectedIndexes.size > 0 && (
+        <ContextMenu
+          treeItems={treeItems}
+          selectedIndexes={selectedIndexes}
+          open={contextMenu != undefined}
+          onClose={handleContextMenuClose}
+          anchorPosition={
+            contextMenu != undefined
+              ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+              : undefined
+          }
+        />
+      )}
     </MessagePathSelectionProvider>
   );
 }
