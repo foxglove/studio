@@ -58,7 +58,7 @@ import { UserNode, UserNodes } from "@foxglove/studio-base/types/panels";
 import Rpc from "@foxglove/studio-base/util/Rpc";
 import { basicDatatypes } from "@foxglove/studio-base/util/basicDatatypes";
 
-import { simplifySubscriptions } from "./subscriptions";
+import { remapVirtualSubscriptions, getPreloadTypes } from "./subscriptions";
 
 const log = Log.getLogger(__filename);
 
@@ -1042,13 +1042,10 @@ export default class UserNodePlayer implements Player {
   }
 
   #setSubscriptionsUnlocked(subscriptions: SubscribePayload[], state: ProtectedState): void {
-    const [nodeSubscriptions, resolvedSubscriptions] = simplifySubscriptions(
-      subscriptions,
-      state.inputsByOutputTopic,
+    this.#nodeSubscriptions = getPreloadTypes(subscriptions);
+    this.#player.setSubscriptions(
+      remapVirtualSubscriptions(subscriptions, state.inputsByOutputTopic),
     );
-
-    this.#nodeSubscriptions = nodeSubscriptions;
-    this.#player.setSubscriptions(resolvedSubscriptions);
   }
 
   public close = (): void => {

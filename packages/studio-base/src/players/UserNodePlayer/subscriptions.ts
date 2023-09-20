@@ -13,36 +13,13 @@ import { SubscribePayload } from "@foxglove/studio-base/players/types";
 type SubscriberInputs = [SubscribePayload, readonly string[] | undefined];
 
 /**
- * simplifySubscriptions takes an array of SubscribePayload[] representing the user's current subscriptions and does the following:
- * 1. Calculates the minimum set of subscriptions that are necessary to
- *    satisfy the user's request and their `preloadType`, along with any
- *    subscriptions the user made to topics that are not inputs.
- * 2. Rewrites the provided array of subscriptions to omit subscriptions to
- *    virtual topics and subscribe only to the inputs to those topics, then
- *    deduplicates.
+ * Calculates a mapping from topic name to a SubscribePayload containing the
+ * minimum `preloadType` necessary to fulfill that request.
  */
-export function simplifySubscriptions(
+export function getPreloadTypes(
   subscriptions: SubscribePayload[],
-  inputsByOutputTopic: Map<string, readonly string[]>,
-): [Record<string, SubscribePayload>, Immutable<SubscribePayload[]>] {
-  // Pair all subscriptions with their user script input topics (if any)
-  const payloadInputsPairs = R.pipe(
-    R.map((v: SubscribePayload): SubscriberInputs => [v, inputsByOutputTopic.get(v.topic)]),
-    R.filter(([, topics]: SubscriberInputs) => topics?.length !== 0),
-  )(subscriptions);
-
-  // An array of all of the input topics used by the user nodes referenced by
-  // `subscriptions`
-  const neededInputTopics = R.pipe(
-    R.chain(([, v]: SubscriberInputs): readonly string[] => v ?? []),
-    R.uniq,
-  )(payloadInputsPairs);
-
-  // #nodeSubscriptions is a mapping from topic name to a SubscribePayload
-  // that contains the resolved preloadType--in other words, the kind of data
-  // (current or block) that this subscription needs
-  const nodeSubscriptions = R.pipe(
-    R.map(([subscription]: SubscriberInputs) => subscription),
+): Record<string, SubscribePayload> {
+  return R.pipe(
     // Gather all of the payloads into subscriptions for the same topic
     R.groupBy((v: SubscribePayload) => v.topic),
     // Consolidate subscriptions to the same topic down to a single payload
@@ -57,9 +34,32 @@ export function simplifySubscriptions(
         preloadType: hasFull ? "full" : "partial",
       };
     }),
+  )(subscriptions);
+}
+
+/**
+ * Rewrites the provided array of subscriptions to omit subscriptions to
+ * virtual topics and subscribe only to the inputs to those topics, then
+ * deduplicates.
+ */
+export function remapVirtualSubscriptions(
+  subscriptions: SubscribePayload[],
+  inputsByOutputTopic: Map<string, readonly string[]>,
+): Immutable<SubscribePayload[]> {
+  // Pair all subscriptions with their user script input topics (if any)
+  const payloadInputsPairs = R.pipe(
+    R.map((v: SubscribePayload): SubscriberInputs => [v, inputsByOutputTopic.get(v.topic)]),
+    R.filter(([, topics]: SubscriberInputs) => topics?.length !== 0),
+  )(subscriptions);
+
+  // An array of all of the input topics used by the user nodes referenced by
+  // `subscriptions`
+  const neededInputTopics = R.pipe(
+    R.chain(([, v]: SubscriberInputs): readonly string[] => v ?? []),
+    R.uniq,
   )(payloadInputsPairs);
 
-  const resolvedSubscriptions = R.pipe(
+  return R.pipe(
     R.chain(([subscription, topics]: SubscriberInputs): SubscribePayload[] => {
       const preloadType = subscription.preloadType ?? "partial";
 
@@ -89,6 +89,4 @@ export function simplifySubscriptions(
     }),
     mergeSubscriptions,
   )(payloadInputsPairs);
-
-  return [nodeSubscriptions, resolvedSubscriptions];
 }

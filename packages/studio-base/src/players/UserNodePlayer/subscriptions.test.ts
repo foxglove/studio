@@ -4,13 +4,51 @@
 
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
 
-import { simplifySubscriptions } from "./subscriptions";
+import { remapVirtualSubscriptions, getPreloadTypes } from "./subscriptions";
 
-describe("simplifySubscriptions", () => {
+describe("getPreloadTypes", () => {
+  it("leave a partial subscription in place", () => {
+    expect(
+      getPreloadTypes([
+        {
+          topic: "/test",
+          preloadType: "partial",
+        },
+      ]),
+    ).toEqual({
+      "/test": {
+        topic: "/test",
+        preloadType: "partial",
+      },
+    });
+  });
+
+  it("upgrades to a full subscription from partial", () => {
+    expect(
+      getPreloadTypes([
+        {
+          topic: "/test",
+          preloadType: "full",
+        },
+        {
+          topic: "/test",
+          preloadType: "partial",
+        },
+      ]),
+    ).toEqual({
+      "/test": {
+        topic: "/test",
+        preloadType: "full",
+      },
+    });
+  });
+});
+
+describe("remapVirtualSubscriptions", () => {
   const call = (
     subscriptions: SubscribePayload[],
     inputsByOutputTopic: Record<string, readonly string[]>,
-  ) => simplifySubscriptions(subscriptions, new Map(Object.entries(inputsByOutputTopic)));
+  ) => remapVirtualSubscriptions(subscriptions, new Map(Object.entries(inputsByOutputTopic)));
 
   it("ignores unrelated subscriptions", () => {
     expect(
@@ -24,16 +62,8 @@ describe("simplifySubscriptions", () => {
       ),
     ).toEqual([
       {
-        "/test": {
-          topic: "/test",
-          preloadType: "partial",
-        },
+        topic: "/test",
       },
-      [
-        {
-          topic: "/test",
-        },
-      ],
     ]);
   });
 
@@ -49,7 +79,7 @@ describe("simplifySubscriptions", () => {
           "/test": [],
         },
       ),
-    ).toEqual([{}, []]);
+    ).toEqual([]);
   });
 
   it("upgrades to a full subscription from partial", () => {
@@ -71,21 +101,13 @@ describe("simplifySubscriptions", () => {
       ),
     ).toEqual([
       {
-        "/test": {
-          topic: "/test",
-          preloadType: "full",
-        },
+        topic: "/test2",
+        preloadType: "full",
       },
-      [
-        {
-          topic: "/test2",
-          preloadType: "full",
-        },
-        {
-          topic: "/test2",
-          preloadType: "partial",
-        },
-      ],
+      {
+        topic: "/test2",
+        preloadType: "partial",
+      },
     ]);
   });
 
@@ -104,17 +126,9 @@ describe("simplifySubscriptions", () => {
       ),
     ).toEqual([
       {
-        "/test": {
-          topic: "/test",
-          preloadType: "partial",
-        },
+        topic: "/test2",
+        preloadType: "partial",
       },
-      [
-        {
-          topic: "/test2",
-          preloadType: "partial",
-        },
-      ],
     ]);
   });
 
@@ -137,21 +151,9 @@ describe("simplifySubscriptions", () => {
       ),
     ).toEqual([
       {
-        "/test": {
-          topic: "/test",
-          preloadType: "partial",
-        },
-        "/test2": {
-          topic: "/test2",
-          preloadType: "partial",
-        },
+        topic: "/test2",
+        preloadType: "partial",
       },
-      [
-        {
-          topic: "/test2",
-          preloadType: "partial",
-        },
-      ],
     ]);
   });
 });
