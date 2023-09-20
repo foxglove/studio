@@ -108,7 +108,7 @@ export function TopicRow({
           </Typography>
         )}
       </Stack>
-      <TopicStatsChip topicName={topic.name} />
+      <TopicStatsChip selected={selected} topicName={topic.name} />
       <div data-testid="TopicListDragHandle" className={classes.dragHandle}>
         <ReOrderDotsVertical16Regular />
       </div>

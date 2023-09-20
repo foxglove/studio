@@ -5,7 +5,8 @@
 import { Divider, Paper } from "@mui/material";
 import { makeStyles } from "tss-react/mui";
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles<void, "selected">()((theme, _props, classes) => ({
+  selected: {},
   root: {
     display: "flex",
     borderRadius: "1em",
@@ -17,7 +18,7 @@ const useStyles = makeStyles()((theme) => ({
       display: "none",
     },
     ...(theme.palette.mode === "dark" && {
-      ".isSelected &": { color: theme.palette.primary.main },
+      [`&.${classes.selected}`]: { color: theme.palette.primary.main },
     }),
   },
   stat: {
@@ -42,11 +43,17 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function TopicStatsChip({ topicName }: { topicName: string }): JSX.Element {
-  const { classes } = useStyles();
+export function TopicStatsChip({
+  topicName,
+  selected,
+}: {
+  topicName: string;
+  selected: boolean;
+}): JSX.Element {
+  const { classes, cx } = useStyles();
 
   return (
-    <Paper variant="outlined" className={classes.root}>
+    <Paper variant="outlined" className={cx(classes.root, { [classes.selected]: selected })}>
       <div className={classes.stat} data-topic={topicName} data-topic-stat="frequency">
         &ndash;
       </div>
