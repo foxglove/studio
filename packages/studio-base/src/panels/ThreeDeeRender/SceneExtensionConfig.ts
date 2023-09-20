@@ -60,7 +60,7 @@ export const DEFAULT_SCENE_EXTENSION_CONFIG: SceneExtensionConfig = {
   extensionsById: {
     [Images.extensionId]: {
       init: (renderer: IRenderer) => new Images(renderer),
-      supportedInterfaceModes: ["image"],
+      supportedInterfaceModes: ["3d"],
     },
     [Cameras.extensionId]: {
       init: (renderer: IRenderer) => new Cameras(renderer),
