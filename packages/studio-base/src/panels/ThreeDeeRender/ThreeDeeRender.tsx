@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { produce } from "immer";
 import * as _ from "lodash-es";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
@@ -25,8 +24,10 @@ import {
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import { ALL_SUPPORTED_IMAGE_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
-import { ALL_SUPPORTED_ANNOTATION_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/annotations/ImageAnnotations";
+import {
+  DEFAULT_SCENE_EXTENSION_CONFIG,
+  SceneExtensionConfig,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import type {
@@ -102,10 +103,12 @@ export function ThreeDeeRender(props: {
   interfaceMode: InterfaceMode;
   /** Override default downloading behavior, used for Storybook */
   onDownloadImage?: (blob: Blob, fileName: string) => void;
+  /** Allow for injection or overriding of default extensions by custom extensions */
+  customSceneExtensions?: DeepPartial<SceneExtensionConfig>;
   /** Enable hitmap debugging by default, used for picking stories */
   debugPicking?: boolean;
 }): JSX.Element {
-  const { context, interfaceMode, onDownloadImage, debugPicking } = props;
+  const { context, interfaceMode, onDownloadImage, debugPicking, customSceneExtensions } = props;
   const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
 
   // Load and save the persisted panel configuration
@@ -147,7 +150,18 @@ export function ThreeDeeRender(props: {
   const rendererRef = useRef<IRenderer | undefined>(undefined);
   useEffect(() => {
     const newRenderer = canvas
-      ? new Renderer({ canvas, config: configRef.current, interfaceMode, fetchAsset, debugPicking })
+      ? new Renderer({
+          canvas,
+          config: configRef.current,
+          interfaceMode,
+          fetchAsset,
+          sceneExtensionConfig: _.merge(
+            {},
+            DEFAULT_SCENE_EXTENSION_CONFIG,
+            customSceneExtensions ?? {},
+          ),
+          debugPicking,
+        })
       : undefined;
     setRenderer(newRenderer);
     rendererRef.current = newRenderer;
@@ -159,52 +173,22 @@ export function ThreeDeeRender(props: {
     canvas,
     configRef,
     config.scene.transforms?.enablePreloading,
+    customSceneExtensions,
     interfaceMode,
     fetchAsset,
     debugPicking,
   ]);
 
   useEffect(() => {
-    context.EXPERIMENTAL_setMessagePathDropConfig({
-      getDropStatus(paths) {
-        if (interfaceMode !== "image") {
-          return { canDrop: false };
-        }
-        let effect: "add" | "replace" = "add";
-        for (const path of paths) {
-          if (!path.isTopic || path.rootSchemaName == undefined) {
-            return { canDrop: false };
+    context.EXPERIMENTAL_setMessagePathDropConfig(
+      renderer
+        ? {
+            getDropStatus: renderer.getDropStatus,
+            handleDrop: renderer.handleDrop,
           }
-          if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
-            effect = "replace";
-          } else if (ALL_SUPPORTED_ANNOTATION_SCHEMAS.has(path.rootSchemaName)) {
-            // nothing to do
-          } else {
-            return { canDrop: false };
-          }
-        }
-        return { canDrop: true, effect };
-      },
-      handleDrop(paths) {
-        setConfig((prevConfig) =>
-          produce(prevConfig, (draft) => {
-            for (const path of paths) {
-              if (path.rootSchemaName == undefined) {
-                continue;
-              }
-              if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
-                draft.imageMode.imageTopic = path.path;
-              } else {
-                draft.imageMode.annotations ??= {};
-                draft.imageMode.annotations[path.path] ??= {};
-                draft.imageMode.annotations[path.path]!.visible = true;
-              }
-            }
-          }),
-        );
-      },
-    });
-  }, [context, interfaceMode]);
+        : undefined,
+    );
+  }, [context, renderer]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();

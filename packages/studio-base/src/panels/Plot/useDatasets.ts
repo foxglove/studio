@@ -37,7 +37,7 @@ type Service = Comlink.Remote<(typeof import("./useDatasets.worker"))["service"]
 // mapping from topic -> the first message on that topic in the block
 type BlockStatus = Record<string, unknown>;
 type Client = {
-  params: PlotParams;
+  params: PlotParams | undefined;
   setter: (topics: SubscribePayload[]) => void;
 };
 
@@ -45,6 +45,7 @@ let worker: Worker | undefined;
 let service: Service | undefined;
 let numClients: number = 0;
 let blockStatus: BlockStatus[] = [];
+let lastBlockSent: Record<string, number> = {};
 let clients: Record<string, Client> = {};
 
 const pending: ((service: Service) => void)[] = [];
@@ -131,6 +132,10 @@ function chooseClient() {
   const subscriptions = R.pipe(
     R.chain((client: Client): SubscribePayload[] => {
       const { params } = client;
+      if (params == undefined) {
+        return [];
+      }
+
       const { xAxisPath, paths: yAxisPaths } = params;
 
       const isOnlyCurrent = isBounded(params) || isSingleMessage(params);
@@ -164,17 +169,19 @@ function chooseClient() {
 
   // Also clear the status of any topics we're no longer using
   blockStatus = blockStatus.map((block) => R.pick(blockTopics, block));
+  lastBlockSent = R.pick(blockTopics, lastBlockSent);
 }
 
 // Subscribe to "current" messages (those near the seek head) and forward new
 // messages to the worker as they arrive.
 function useData(id: string, params: PlotParams) {
   const [subscriptions, setSubscribed] = React.useState<SubscribePayload[]>([]);
+  // Register client when the panel mounts and unregister when it unmounts
   useEffect(() => {
     clients = {
       ...clients,
       [id]: {
-        params,
+        params: undefined,
         setter: setSubscribed,
       },
     };
@@ -184,6 +191,20 @@ function useData(id: string, params: PlotParams) {
       clients = rest;
       chooseClient();
     };
+  }, [id]);
+
+  // Update registration when params change
+  useEffect(() => {
+    const { [id]: client } = clients;
+    if (client == undefined) {
+      return;
+    }
+
+    clients = {
+      ...clients,
+      [id]: { ...client, params },
+    };
+    chooseClient();
   }, [id, params]);
 
   const isLive = useMessagePipeline<boolean>(getIsLive);
@@ -209,7 +230,27 @@ function useData(id: string, params: PlotParams) {
     }, []),
     addMessages: React.useCallback(
       (_: number | undefined, messages: readonly MessageEvent[]): number => {
-        void service?.addCurrent(messages);
+        void service?.addCurrent(
+          messages.map((event) => {
+            const { message } = event;
+
+            // Handle LazyMessageReader messages, which cannot be
+            // `postMessage`d otherwise
+            // https://github.com/foxglove/rosmsg-serialization/blob/2c15caf4f344012737f5aab01103e3c525889f2e/src/__snapshots__/LazyMessageReader.test.ts.snap#L304
+            if (
+              typeof message === "object" &&
+              message != undefined &&
+              "toObject" in message &&
+              typeof message.toObject === "function"
+            ) {
+              return {
+                ...event,
+                message: (message as { toObject: () => unknown }).toObject(),
+              };
+            }
+            return event;
+          }),
+        );
         return 1;
       },
       [],
@@ -218,8 +259,6 @@ function useData(id: string, params: PlotParams) {
 
   const blocks = useBlocks(blockSubscriptions);
   useEffect(() => {
-    const wasReset: Record<string, boolean> = {};
-
     for (const [index, block] of blocks.entries()) {
       if (R.isEmpty(block)) {
         continue;
@@ -240,19 +279,24 @@ function useData(id: string, params: PlotParams) {
 
         const first = topicMessages[0]?.message;
         const existing = status[ref];
+
+        // keep track of the block index that we last sent; if there's a new
+        // change BEFORE that index, we need to reset the plot data; otherwise
+        // we do not
+        const lastSent = lastBlockSent[ref];
         if (R.equals(existing, first)) {
           continue;
         }
 
         // we already had a message in this block, meaning the data itself has
         // changed; we have to rebuild the plots
-        if (existing != undefined && wasReset[ref] == undefined) {
+        if (existing != undefined && lastSent != undefined && index < lastSent) {
           resetData.add(payload.topic);
-          wasReset[ref] = true;
         }
 
         status[ref] = first;
         messages[payload.topic] = topicMessages as MessageEvent[];
+        lastBlockSent[ref] = index;
       }
       blockStatus[index] = status;
 
