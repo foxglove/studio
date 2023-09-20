@@ -3,86 +3,65 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Menu, MenuItem, MenuItemProps, MenuProps } from "@mui/material";
-import { MouseEvent, useCallback, useMemo } from "react";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useCopyToClipboard } from "react-use";
 
-import { filterMap } from "@foxglove/den/collection";
-import { TopicListItem } from "@foxglove/studio-base/components/TopicList/useTopicListSearch";
+import { DraggedMessagePath } from "@foxglove/studio";
 
-type ContextMenuItemProps = { key: string } & Partial<MenuItemProps>;
-
-export function ContextMenu(
-  props: MenuProps & { treeItems: TopicListItem[]; selectedIndexes: Set<number> },
-): JSX.Element {
-  const { treeItems, selectedIndexes, ...other } = props;
+export function ContextMenu(props: {
+  messagePaths: DraggedMessagePath[];
+  anchorPosition: NonNullable<MenuProps["anchorPosition"]>;
+  onClose: () => void;
+}): JSX.Element {
+  const { messagePaths, anchorPosition, onClose } = props;
   const [, copyToClipboard] = useCopyToClipboard();
-
-  const handleClose = useCallback(
-    (event: MouseEvent<HTMLLIElement>) => {
-      props.onClose?.(event, "backdropClick");
-    },
-    [props],
-  );
-
-  const handleCopy = useCallback(
-    (event: MouseEvent<HTMLLIElement>, value: string) => {
-      handleClose(event);
-      copyToClipboard(value);
-    },
-    [copyToClipboard, handleClose],
-  );
-
-  const selectedListItems = filterMap(
-    Array.from(selectedIndexes).sort(),
-    (index: number) => treeItems[index],
-  );
+  const { t } = useTranslation("topicList");
 
   const menuItems = useMemo(() => {
-    const items: ContextMenuItemProps[] = [
+    const hasNonTopicItems = messagePaths.some((item) => !item.isTopic);
+    const items: MenuItemProps[] = [
       {
-        key: "copy-field-name",
-        children: `Copy ${
-          selectedListItems.length > 1 ? "selected message paths" : "message path"
-        }`,
-        onClick: (event) => {
-          handleCopy(
-            event,
-            selectedListItems
-              .map(({ item, type }) => (type === "topic" ? item.item.name : item.item.fullPath))
-              .join(","),
-          );
+        children: hasNonTopicItems
+          ? messagePaths.length === 1
+            ? t("copyMessagePath")
+            : t("copyMessagePaths")
+          : messagePaths.length === 1
+          ? t("copyTopicName")
+          : t("copyTopicNames"),
+        onClick: () => {
+          onClose();
+          copyToClipboard(messagePaths.map((item) => item.path).join("\n"));
         },
       },
     ];
-    if (selectedListItems.length === 1) {
+    if (messagePaths.length === 1 && messagePaths[0]?.isTopic === true) {
       items.push({
-        key: "copy-field-schema-name",
-        children: `Copy schema name`,
-        onClick: (event) => {
-          const schemaName =
-            selectedListItems[0]?.type === "topic"
-              ? selectedListItems[0]?.item?.item?.schemaName
-              : selectedListItems[0]?.item?.item?.suffix?.type;
-
+        children: t("copySchemaName"),
+        onClick: () => {
+          const schemaName = messagePaths[0]?.rootSchemaName;
           if (schemaName != undefined) {
-            handleCopy(event, schemaName);
+            onClose();
+            copyToClipboard(schemaName);
           }
         },
       });
     }
     return items;
-  }, [handleCopy, selectedListItems]);
+  }, [t, onClose, copyToClipboard, messagePaths]);
 
   return (
     <Menu
-      {...other}
+      open
+      onClose={onClose}
       anchorReference="anchorPosition"
+      anchorPosition={anchorPosition}
       MenuListProps={{
         dense: true,
       }}
     >
-      {menuItems.map(({ key, ...item }) => (
-        <MenuItem key={key} {...item} />
+      {menuItems.map((item, index) => (
+        <MenuItem key={index} {...item} />
       ))}
     </Menu>
   );

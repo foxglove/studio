@@ -10,10 +10,12 @@ import { badgeClasses } from "@mui/material";
 import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-type TreeClasses = "dragHandle" | "row";
+type TreeClasses = "dragHandle" | "row" | "isDragging" | "selected";
 
 /* eslint-disable tss-unused-classes/unused-classes */
 export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, classes) => ({
+  isDragging: {},
+  selected: {},
   row: {
     display: "flex",
     alignItems: "center",
@@ -31,7 +33,7 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
     [`:not(:hover) .${classes.dragHandle}`]: {
       visibility: "hidden",
     },
-    "&.isSelected, &.isDragging:active": {
+    [`&.${classes.selected}, &.${classes.isDragging}:active`]: {
       // use opaque color for better drag preview
       backgroundColor: tc
         .mix(
@@ -62,7 +64,7 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
     opacity: 0.6,
     cursor: "grab",
 
-    ".isSelected &": {
+    [`.${classes.selected} &`]: {
       color: theme.palette.primary.main,
       opacity: 1,
     },

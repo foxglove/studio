@@ -4,14 +4,24 @@
 
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { IconButton, List, ListItem, ListItemText, Skeleton, TextField } from "@mui/material";
+import {
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  PopoverPosition,
+  Skeleton,
+  TextField,
+} from "@mui/material";
 import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLatest } from "react-use";
 import { AutoSizer } from "react-virtualized";
 import { ListChildComponentProps, VariableSizeList } from "react-window";
 import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
+import { filterMap } from "@foxglove/den/collection";
 import { DraggedMessagePath } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
@@ -27,7 +37,7 @@ import { MessagePathSelectionProvider } from "@foxglove/studio-base/services/mes
 import { MessagePathRow } from "./MessagePathRow";
 import { TopicRow } from "./TopicRow";
 import { useMultiSelection } from "./useMultiSelection";
-import { useTopicListSearch } from "./useTopicListSearch";
+import { TopicListItem, useTopicListSearch } from "./useTopicListSearch";
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
@@ -56,6 +66,25 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
+function getDraggedMessagePath(treeItem: TopicListItem): DraggedMessagePath {
+  switch (treeItem.type) {
+    case "topic":
+      return {
+        path: treeItem.item.item.name,
+        rootSchemaName: treeItem.item.item.schemaName,
+        isTopic: true,
+        isLeaf: false,
+      };
+    case "schema":
+      return {
+        path: treeItem.item.item.fullPath,
+        rootSchemaName: treeItem.item.item.topic.schemaName,
+        isTopic: false,
+        isLeaf: treeItem.item.item.suffix.isLeaf,
+      };
+  }
+}
+
 export function TopicList(): JSX.Element {
   const { t } = useTranslation("topicList");
   const { classes } = useStyles();
@@ -72,60 +101,42 @@ export function TopicList(): JSX.Element {
     datatypes,
     filterText: debouncedFilterText,
   });
-  const { selectedIndexes, onSelect } = useMultiSelection(treeItems);
+  const { selectedIndexes, onSelect, getSelectedIndexes } = useMultiSelection(treeItems);
 
-  const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | undefined>(
-    undefined,
-  );
+  const [contextMenuState, setContextMenuState] = useState<
+    { position: PopoverPosition; items: DraggedMessagePath[] } | undefined
+  >(undefined);
+
+  const latestTreeItems = useLatest(treeItems);
+
+  const getSelectedItemsAsDraggedMessagePaths = useCallback(() => {
+    return filterMap(Array.from(getSelectedIndexes()).sort(), (index) =>
+      latestTreeItems.current[index]
+        ? getDraggedMessagePath(latestTreeItems.current[index]!)
+        : undefined,
+    );
+  }, [getSelectedIndexes, latestTreeItems]);
 
   const handleContextMenu = useCallback(
     (event: MouseEvent, index: number) => {
       event.preventDefault();
-      if (selectedIndexes.size <= 1) {
-        onSelect({
-          index,
-          modKey: event.metaKey || event.ctrlKey,
-          shiftKey: event.shiftKey,
-        });
+
+      const latestSelectedIndexes = getSelectedIndexes();
+      // Select only the clicked item if it was not already selected
+      if (!latestSelectedIndexes.has(index)) {
+        onSelect({ index, modKey: false, shiftKey: false });
       }
-      setContextMenu(
-        contextMenu == undefined
-          ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 }
-          : undefined,
-      );
+      setContextMenuState({
+        position: { left: event.clientX, top: event.clientY },
+        items: getSelectedItemsAsDraggedMessagePaths(),
+      });
     },
-    [contextMenu, onSelect, selectedIndexes.size],
+    [getSelectedIndexes, getSelectedItemsAsDraggedMessagePaths, onSelect],
   );
 
-  const handleContextMenuClose = () => {
-    setContextMenu(undefined);
-  };
-
-  const getItemAtIndex = useCallback(
-    (index: number): DraggedMessagePath | undefined => {
-      const treeItem = treeItems[index];
-      if (!treeItem) {
-        return undefined;
-      }
-      switch (treeItem.type) {
-        case "topic":
-          return {
-            path: treeItem.item.item.name,
-            rootSchemaName: treeItem.item.item.schemaName,
-            isTopic: true,
-            isLeaf: false,
-          };
-        case "schema":
-          return {
-            path: treeItem.item.item.fullPath,
-            rootSchemaName: treeItem.item.item.topic.schemaName,
-            isTopic: false,
-            isLeaf: treeItem.item.item.suffix.isLeaf,
-          };
-      }
-    },
-    [treeItems],
-  );
+  const handleContextMenuClose = useCallback(() => {
+    setContextMenuState(undefined);
+  }, []);
 
   useEffect(() => {
     // Discard cached row heights when the filter results change
@@ -217,7 +228,7 @@ export function TopicList(): JSX.Element {
   }
 
   return (
-    <MessagePathSelectionProvider selectedIndexes={selectedIndexes} getItemAtIndex={getItemAtIndex}>
+    <MessagePathSelectionProvider getSelectedItems={getSelectedItemsAsDraggedMessagePaths}>
       <div className={classes.root}>
         <header className={classes.filterBar}>
           <TextField
@@ -281,17 +292,11 @@ export function TopicList(): JSX.Element {
         )}
         <DirectTopicStatsUpdater interval={6} />
       </div>
-      {selectedIndexes.size > 0 && (
+      {contextMenuState && (
         <ContextMenu
-          treeItems={treeItems}
-          selectedIndexes={selectedIndexes}
-          open={contextMenu != undefined}
           onClose={handleContextMenuClose}
-          anchorPosition={
-            contextMenu != undefined
-              ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-              : undefined
-          }
+          anchorPosition={contextMenuState.position}
+          messagePaths={contextMenuState.items}
         />
       )}
     </MessagePathSelectionProvider>

@@ -63,7 +63,10 @@ export function MessagePathRow({
   return (
     <div
       ref={combinedRef}
-      className={cx(classes.row, classes.fieldRow, { isDragging, isSelected: selected })}
+      className={cx(classes.row, classes.fieldRow, {
+        [classes.isDragging]: isDragging,
+        [classes.selected]: selected,
+      })}
       style={{ ...style, cursor }}
       onClick={onClick}
       onContextMenu={onContextMenu}

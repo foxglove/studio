@@ -64,7 +64,10 @@ export function TopicRow({
   return (
     <div
       ref={combinedRef}
-      className={cx(classes.row, { isDragging, isSelected: selected })}
+      className={cx(classes.row, {
+        [classes.isDragging]: isDragging,
+        [classes.selected]: selected,
+      })}
       style={{ ...style, cursor }}
       onClick={onClick}
       onContextMenu={onContextMenu}
