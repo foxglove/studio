@@ -5,7 +5,7 @@
 import CancelIcon from "@mui/icons-material/Cancel";
 import { Theme, autocompleteClasses, inputBaseClasses } from "@mui/material";
 
-import { OverrideComponentReturn } from "@foxglove/studio-base/theme/overrides/types";
+import { OverrideComponentReturn } from "../types";
 
 export const autocomplete = (theme: Theme): OverrideComponentReturn<"MuiAutocomplete"> => ({
   MuiAutocomplete: {
