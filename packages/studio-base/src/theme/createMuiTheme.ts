@@ -12,19 +12,10 @@ import * as palette from "./palette";
 
 type ThemePreference = "dark" | "light";
 
-declare module "@mui/material/styles" {
-  interface Theme {
-    name?: ThemePreference;
-  }
-  interface ThemeOptions {
-    name?: ThemePreference;
-  }
-}
-
 export function createMuiTheme(
   themePreference: ThemePreference,
   locale: Language | undefined,
-): Theme {
+): Theme & { name: ThemePreference } {
   const theme = createTheme({
     palette: palette[themePreference],
     shape: { borderRadius: 2 },
