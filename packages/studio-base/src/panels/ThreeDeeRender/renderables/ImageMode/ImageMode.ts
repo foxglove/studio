@@ -89,7 +89,7 @@ const REMOVE_IMAGE_TIMEOUT_MS = 50;
 
 type ImageModeEvent = { type: "hasModifiedViewChanged" };
 
-export const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
+const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
   ...ROS_IMAGE_DATATYPES,
   ...ROS_COMPRESSED_IMAGE_DATATYPES,
   ...RAW_IMAGE_DATATYPES,
