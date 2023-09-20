@@ -294,9 +294,9 @@ export class ImageMode
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   #setHasCalibrationTopic = (hasCalibrationTopic: boolean): void => {
     if (hasCalibrationTopic) {
-      this.renderer.enableImageOnlySubscriptionMode();
-    } else {
       this.renderer.disableImageOnlySubscriptionMode();
+    } else {
+      this.renderer.enableImageOnlySubscriptionMode();
     }
   };
 
