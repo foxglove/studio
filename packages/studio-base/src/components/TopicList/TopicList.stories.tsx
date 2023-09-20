@@ -4,8 +4,6 @@
 
 import { Meta, StoryObj } from "@storybook/react";
 import { fireEvent, userEvent, within, waitFor } from "@storybook/testing-library";
-// eslint-disable-next-line storybook/use-storybook-testing-library
-import type { BoundFunction, FindAllByText } from "@testing-library/dom";
 import * as _ from "lodash-es";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -57,13 +55,9 @@ export default {
   ),
 } as Meta<typeof MockMessagePipelineProvider>;
 
-async function findAllByTextContent(
-  { findAllByText }: { findAllByText: BoundFunction<FindAllByText> },
-  str: string,
-  count: number,
-) {
+async function findAllByTextContent(canvasElement: HTMLElement, str: string, count: number) {
   return await waitFor(async () => {
-    const items = await findAllByText(
+    const items = await within(canvasElement).findAllByText(
       (_content, element) => element instanceof HTMLSpanElement && element.textContent === str,
     );
     if (items.length !== count) {
@@ -91,8 +85,7 @@ export const EmptyJapanese: Story = {
 
 export const ContextMenuSingleTopic: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    for (const item of await findAllByTextContent(canvas, "/topic_1", 2)) {
+    for (const item of await findAllByTextContent(canvasElement, "/topic_1", 2)) {
       fireEvent.contextMenu(item, {
         clientX: item.getBoundingClientRect().left + 100,
         clientY: item.getBoundingClientRect().top + 20,
@@ -103,9 +96,8 @@ export const ContextMenuSingleTopic: Story = {
 
 export const ContextMenuMultipleTopics: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const topic1s = await findAllByTextContent(canvas, "/topic_1", 2);
-    const topic2s = await findAllByTextContent(canvas, "/topic_2", 2);
+    const topic1s = await findAllByTextContent(canvasElement, "/topic_1", 2);
+    const topic2s = await findAllByTextContent(canvasElement, "/topic_2", 2);
     for (const [topic1, topic2] of _.zip(topic1s, topic2s)) {
       if (!topic1 || !topic2) {
         continue;
@@ -129,7 +121,7 @@ export const ContextMenuSinglePath: Story = {
       await userEvent.type(input, "data");
     }
 
-    const pathItems = await findAllByTextContent(canvas, ".data", 4);
+    const pathItems = await findAllByTextContent(canvasElement, ".data", 4);
 
     for (const item of pathItems) {
       fireEvent.contextMenu(item, {
@@ -149,8 +141,8 @@ export const ContextMenuMultiplePaths: Story = {
       await userEvent.type(input, "data");
     }
 
-    const topic1Items = await findAllByTextContent(canvas, "/topic_1", 2);
-    const pathItems = await findAllByTextContent(canvas, ".data", 4);
+    const topic1Items = await findAllByTextContent(canvasElement, "/topic_1", 2);
+    const pathItems = await findAllByTextContent(canvasElement, ".data", 4);
 
     for (const item of topic1Items) {
       fireEvent.click(item);
