@@ -7,7 +7,7 @@ import * as R from "ramda";
 import { useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { useShallowMemo, useDeepMemo } from "@foxglove/hooks";
+import { useDeepMemo } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
 import { useMessageReducer as useCurrent, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { useBlocksSubscriptions as useBlocks } from "@foxglove/studio-base/PanelAPI/useBlocksSubscriptions";
@@ -20,17 +20,33 @@ import {
   useMessagePipeline,
   MessagePipelineContext,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { mergeSubscriptions } from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
 import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
 
 import { PlotParams, Messages } from "./internalTypes";
-import { getPaths, PlotData } from "./plotData";
+import { getPaths, isSingleMessage, isBounded } from "./params";
+import { PlotData } from "./plotData";
 
 type Service = Comlink.Remote<(typeof import("./useDatasets.worker"))["service"]>;
+
+// We need to keep track of the block data we've already sent to the worker and
+// detect when it has changed, which can happen when the user changes a user
+// script or they trigger a subscription to different fields.
+// mapping from topic -> the first message on that topic in the block
+type BlockStatus = Record<string, unknown>;
+type Client = {
+  params: PlotParams | undefined;
+  setter: (topics: SubscribePayload[]) => void;
+};
+
 let worker: Worker | undefined;
 let service: Service | undefined;
 let numClients: number = 0;
+let blockStatus: BlockStatus[] = [];
+let lastBlockSent: Record<string, number> = {};
+let clients: Record<string, Client> = {};
 
 const pending: ((service: Service) => void)[] = [];
 async function waitService(): Promise<Service> {
@@ -44,37 +60,8 @@ async function waitService(): Promise<Service> {
 
 const getIsLive = (ctx: MessagePipelineContext) => ctx.seekPlayback == undefined;
 
-// topic -> number of fields
-type BlockStatus = Record<string, number>;
-let blockStatus: BlockStatus[] = [];
-
 const getPayloadString = (payload: SubscribePayload): string =>
   `${payload.topic}:${(payload.fields ?? []).join(",")}`;
-
-type Client = {
-  topics: SubscribePayload[];
-  setter: (topics: SubscribePayload[]) => void;
-};
-let clients: Record<string, Client> = {};
-
-function normalizePaths(topics: SubscribePayload[]): SubscribePayload[] {
-  return R.pipe(
-    R.groupBy((payload: SubscribePayload) => payload.topic),
-    // Combine subscriptions to the same topic (but different fields)
-    R.mapObjIndexed(
-      (payloads: SubscribePayload[] | undefined, topic: string): SubscribePayload => ({
-        topic,
-        fields: R.pipe(
-          // Aggregate all fields
-          R.chain((payload: SubscribePayload): string[] => payload.fields ?? []),
-          // Ensure there are no duplicates
-          R.uniq,
-        )(payloads ?? []),
-      }),
-    ),
-    R.values,
-  )(topics);
-}
 
 /**
  * Get the SubscribePayload for a single path by subscribing to all fields
@@ -130,7 +117,7 @@ function getPayloadsFromPaths(paths: readonly string[]): SubscribePayload[] {
       return [payload];
     }),
     // Then simplify
-    normalizePaths,
+    (v: SubscribePayload[]) => mergeSubscriptions(v) as SubscribePayload[],
   )(paths);
 }
 
@@ -142,34 +129,59 @@ function chooseClient() {
   }
 
   const clientList = R.values(clients);
-  const topics = R.pipe(
-    R.chain((client: Client) => client.topics),
-    normalizePaths,
+  const subscriptions = R.pipe(
+    R.chain((client: Client): SubscribePayload[] => {
+      const { params } = client;
+      if (params == undefined) {
+        return [];
+      }
+
+      const { xAxisPath, paths: yAxisPaths } = params;
+
+      const isOnlyCurrent = isBounded(params) || isSingleMessage(params);
+      return R.pipe(
+        getPayloadsFromPaths,
+        R.chain((v): SubscribePayload[] => {
+          const partial: SubscribePayload = {
+            ...v,
+            preloadType: "partial",
+          };
+
+          if (isOnlyCurrent) {
+            return [partial];
+          }
+
+          // Subscribe to both "partial" and "full" when using "full" In
+          // theory, "full" should imply "partial" but not doing this breaks
+          // MockMessagePipelineProvider
+          return [partial, { ...partial, preloadType: "full" }];
+        }),
+      )(getPaths(yAxisPaths, xAxisPath));
+    }),
+    (v) => mergeSubscriptions(v) as SubscribePayload[],
   )(clientList);
-  R.head(clientList)?.setter(topics);
+  clientList[0]?.setter(subscriptions);
+
+  const blockTopics = R.pipe(
+    R.filter((v: SubscribePayload) => v.preloadType === "full"),
+    R.map(getPayloadString),
+  )(subscriptions);
 
   // Also clear the status of any topics we're no longer using
-  blockStatus = R.map((block) => R.pick(R.map(getPayloadString, topics), block), blockStatus);
-}
-
-function getNumFields(events: readonly MessageEvent[]): number {
-  const message = events[0]?.message;
-  if (message == undefined) {
-    return 0;
-  }
-
-  return Object.keys(message).length;
+  blockStatus = blockStatus.map((block) => R.pick(blockTopics, block));
+  lastBlockSent = R.pick(blockTopics, lastBlockSent);
 }
 
 // Subscribe to "current" messages (those near the seek head) and forward new
 // messages to the worker as they arrive.
-function useData(id: string, topics: SubscribePayload[]) {
-  const [subscribed, setSubscribed] = React.useState<SubscribePayload[]>([]);
+function useData(id: string, params: PlotParams) {
+  const [subscriptions, setSubscribed] = React.useState<SubscribePayload[]>([]);
+  // Register client when the panel mounts and unregister when it unmounts
   useEffect(() => {
     clients = {
       ...clients,
       [id]: {
-        topics,
+        params: undefined,
         setter: setSubscribed,
       },
     };
@@ -179,7 +191,21 @@ function useData(id: string, topics: SubscribePayload[]) {
       clients = rest;
       chooseClient();
     };
-  }, [id, topics]);
+  }, [id]);
+
+  // Update registration when params change
+  useEffect(() => {
+    const { [id]: client } = clients;
+    if (client == undefined) {
+      return;
+    }
+
+    clients = {
+      ...clients,
+      [id]: { ...client, params },
+    };
+    chooseClient();
+  }, [id, params]);
 
   const isLive = useMessagePipeline<boolean>(getIsLive);
   useEffect(() => {
@@ -189,8 +215,13 @@ function useData(id: string, topics: SubscribePayload[]) {
     })();
   }, [isLive]);
 
+  const [blockSubscriptions, currentSubscriptions] = React.useMemo(
+    () => R.partition((v) => v.preloadType === "full", subscriptions),
+    [subscriptions],
+  );
+
   useCurrent<number>({
-    topics: subscribed,
+    topics: currentSubscriptions,
     restore: React.useCallback((state: number | undefined): number => {
       if (state == undefined) {
         void service?.clearCurrent();
@@ -199,47 +230,83 @@ function useData(id: string, topics: SubscribePayload[]) {
     }, []),
     addMessages: React.useCallback(
       (_: number | undefined, messages: readonly MessageEvent[]): number => {
-        void service?.addCurrent(messages);
+        void service?.addCurrent(
+          messages.map((event) => {
+            const { message } = event;
+
+            // Handle LazyMessageReader messages, which cannot be
+            // `postMessage`d otherwise
+            // https://github.com/foxglove/rosmsg-serialization/blob/2c15caf4f344012737f5aab01103e3c525889f2e/src/__snapshots__/LazyMessageReader.test.ts.snap#L304
+            if (
+              typeof message === "object" &&
+              message != undefined &&
+              "toObject" in message &&
+              typeof message.toObject === "function"
+            ) {
+              return {
+                ...event,
+                message: (message as { toObject: () => unknown }).toObject(),
+              };
+            }
+            return event;
+          }),
+        );
         return 1;
       },
       [],
     ),
   });
 
-  const blocks = useBlocks(
-    React.useMemo(() => R.map((v) => ({ ...v, preloadType: "full" }), subscribed), [subscribed]),
-  );
+  const blocks = useBlocks(blockSubscriptions);
   useEffect(() => {
     for (const [index, block] of blocks.entries()) {
       if (R.isEmpty(block)) {
-        break;
+        continue;
       }
 
       // Package any new messages into a single bundle to send to the worker
       const messages: Messages = {};
+      // Make a note of any topics that had new data so we can clear out
+      // accumulated points in the worker
+      const resetData: Set<string> = new Set<string>();
       const status: BlockStatus = blockStatus[index] ?? {};
-      for (const payload of subscribed) {
+      for (const payload of blockSubscriptions) {
         const ref = getPayloadString(payload);
         const topicMessages = block[payload.topic];
         if (topicMessages == undefined) {
           continue;
         }
 
-        const numFields = getNumFields(topicMessages);
-        if (status[ref] === numFields) {
+        const first = topicMessages[0]?.message;
+        const existing = status[ref];
+
+        // keep track of the block index that we last sent; if there's a new
+        // change BEFORE that index, we need to reset the plot data; otherwise
+        // we do not
+        const lastSent = lastBlockSent[ref];
+        if (R.equals(existing, first)) {
           continue;
         }
 
-        status[ref] = numFields;
+        // we already had a message in this block, meaning the data itself has
+        // changed; we have to rebuild the plots
+        if (existing != undefined && lastSent != undefined && index < lastSent) {
+          resetData.add(payload.topic);
+        }
+
+        status[ref] = first;
         messages[payload.topic] = topicMessages as MessageEvent[];
+        lastBlockSent[ref] = index;
       }
       blockStatus[index] = status;
 
-      if (!R.isEmpty(messages)) {
-        void service?.addBlock(messages);
+      if (R.isEmpty(messages)) {
+        continue;
       }
+
+      void service?.addBlock(messages, Array.from(resetData));
     }
-  }, [subscribed, blocks]);
+  }, [blockSubscriptions, blocks]);
 }
 
 // Mirror all of the topics and datatypes to the worker as necessary.
@@ -265,16 +332,7 @@ export default function useDatasets(params: PlotParams): {
   getFullData: () => Promise<PlotData | undefined>;
 } {
   const id = useMemo(() => uuidv4(), []);
-
   const stableParams = useDeepMemo(params);
-  const { xAxisPath, paths: yAxisPaths } = stableParams;
-
-  const allPaths = useMemo(() => {
-    return getPaths(yAxisPaths, xAxisPath);
-  }, [xAxisPath, yAxisPaths]);
-
-  const stablePaths = useShallowMemo(allPaths);
-  const topics = useMemo(() => getPayloadsFromPaths(stablePaths), [stablePaths]);
 
   useEffect(() => {
     if (worker == undefined) {
@@ -309,7 +367,7 @@ export default function useDatasets(params: PlotParams): {
     };
   }, [id]);
 
-  useData(id, topics);
+  useData(id, stableParams);
 
   // We also need to send along params on register to avoid a race condition
   const paramsRef = React.useRef<PlotParams>();

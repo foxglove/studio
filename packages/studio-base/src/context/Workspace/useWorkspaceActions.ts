@@ -25,12 +25,12 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import {
-  WorkspaceContext,
-  WorkspaceContextStore,
   LeftSidebarItemKey,
   LeftSidebarItemKeys,
   RightSidebarItemKey,
   RightSidebarItemKeys,
+  WorkspaceContext,
+  WorkspaceContextStore,
 } from "./WorkspaceContext";
 import { useOpenFile } from "./useOpenFile";
 

@@ -184,19 +184,6 @@ export function reducePlotData(data: PlotData[]): PlotData {
   return reduced;
 }
 
-export function getPaths(paths: readonly PlotPath[], xAxisPath?: BasePlotPath): string[] {
-  return R.chain(
-    (path: BasePlotPath | undefined): string[] => {
-      if (path == undefined) {
-        return [];
-      }
-
-      return [path.value];
-    },
-    [xAxisPath, ...paths],
-  );
-}
-
 type PathData = [PlotPath, PlotDataItem[] | undefined];
 export function buildPlotData(
   args: Im<{
@@ -326,7 +313,7 @@ export const sortPlotDataByHeaderStamp = createPlotMapping((dataset: TypedDataSe
 
   const resolved = resolveTypedIndices(
     dataset.data,
-    R.map(([index]) => index, indices),
+    indices.map(([index]) => index),
   );
 
   if (resolved == undefined) {

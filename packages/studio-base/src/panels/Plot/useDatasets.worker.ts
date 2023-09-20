@@ -7,7 +7,6 @@ import * as R from "ramda";
 
 import { Immutable } from "@foxglove/studio";
 import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { messagePathStructures } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
@@ -31,9 +30,9 @@ import {
   TypedData,
   Messages,
 } from "./internalTypes";
+import { isSingleMessage, isBounded, getParamPaths, getParamTopics } from "./params";
 import {
   buildPlotData,
-  getPaths,
   resolvePath,
   appendPlotData,
   reducePlotData,
@@ -51,11 +50,6 @@ type Cursors = Record<string, number>;
 type Accumulated = {
   cursors: Cursors;
   data: PlotData;
-};
-
-type ParsedPath = {
-  parsed: RosPath;
-  value: string;
 };
 
 type Client = {
@@ -110,40 +104,6 @@ function getNewMessages(
   return [newCursors, newMessages];
 }
 
-function getParamPaths(params: PlotParams): readonly string[] {
-  return getPaths(params.paths, params.xAxisPath);
-}
-
-function getParamTopics(params: PlotParams): readonly string[] {
-  return R.pipe(
-    R.chain((path: string): ParsedPath[] => {
-      const parsed = parseRosPath(path);
-      if (parsed == undefined) {
-        return [];
-      }
-
-      return [
-        {
-          parsed,
-          value: path,
-        },
-      ];
-    }),
-    R.map((v: ParsedPath) => v.parsed.topicName),
-    R.uniq,
-  )(getParamPaths(params));
-}
-
-function isSingleMessage(params: PlotParams): boolean {
-  const { xAxisVal } = params;
-  return xAxisVal === "currentCustom" || xAxisVal === "index";
-}
-
-function isBounded(params: PlotParams): boolean {
-  const { followingViewWidth } = params;
-  return followingViewWidth != undefined && followingViewWidth > 0;
-}
-
 function getPathData(messages: Messages, path: BasePlotPath): PlotDataItem[] | undefined {
   const parsed = parseRosPath(path.value);
   if (parsed == undefined) {
@@ -161,7 +121,7 @@ function buildPlot(params: PlotParams, messages: Messages): PlotData {
   const { paths, invertedTheme, startTime, xAxisPath, xAxisVal } = params;
   return buildPlotData({
     invertedTheme,
-    paths: R.map((path) => [path, getPathData(messages, path)], paths),
+    paths: paths.map((path) => [path, getPathData(messages, path)]),
     startTime,
     xAxisPath,
     xAxisData: xAxisPath != undefined ? getPathData(messages, xAxisPath) : undefined,
@@ -391,20 +351,31 @@ function evictCache() {
   current = R.pick(topics, current);
 }
 
-function addBlock(block: Messages): void {
+function addBlock(block: Messages, resetTopics: string[]): void {
   const topics = R.keys(block);
-  blocks = R.mergeWith(R.concat, blocks, block);
+
+  blocks = R.pipe(
+    // Remove data for any topics that have been reset
+    R.omit(resetTopics),
+    // Merge the new block into the existing blocks
+    (newBlocks) => R.mergeWith(R.concat, newBlocks, block),
+  )(blocks);
 
   for (const client of R.values(clients)) {
     const { params } = client;
     const relevantTopics = R.intersection(topics, client.topics);
+    const shouldReset = R.intersection(relevantTopics, resetTopics).length > 0;
     if (params == undefined || isSingleMessage(params) || relevantTopics.length === 0) {
       continue;
     }
 
     mutateClient(client.id, {
       ...client,
-      blocks: accumulate(client.blocks, params, blocks),
+      blocks: accumulate(
+        shouldReset ? initAccumulated(client.topics) : client.blocks,
+        params,
+        blocks,
+      ),
     });
     client.queueRebuild();
   }
