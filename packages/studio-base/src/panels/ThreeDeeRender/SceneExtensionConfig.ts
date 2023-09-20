@@ -28,26 +28,22 @@ import { PublishClickTool } from "./renderables/PublishClickTool";
 import { InterfaceMode } from "./types";
 
 export type SceneExtensionConfig = {
+  /** Reserved because the Renderer has members that reference them specifically */
   reserved: ReservedSceneExtensionConfig;
-  extensionsById: Record<AvailableNames, ExtensionOverride<SceneExtension>>;
+  extensionsById: Record<string, ExtensionOverride<SceneExtension>>;
 };
-/** Reserved because the Renderer has members that reference them specifically */
 
 export type ReservedSceneExtensionConfig = {
   imageMode: ExtensionOverride<ImageMode>;
   measurementTool: ExtensionOverride<MeasurementTool>;
   publishClickTool: ExtensionOverride<PublishClickTool>;
-  //   cameraHandler: ExtensionOverride<ICameraHandler>;
 };
 
 export type ExtensionOverride<ExtensionType extends SceneExtension> = {
   init: (renderer: IRenderer) => ExtensionType;
-  /** Which interfaceModes this extension is supported in. If undefined, will default to both '3d' and 'image' modes */
-  supportedModes?: InterfaceMode[];
+  /** Which interfaceModes this extension is supported in. If undefined, will default be present in BOTH '3d' and 'image' modes */
+  supportedInterfaceModes?: InterfaceMode[];
 };
-
-type ReservedNames = keyof ReservedSceneExtensionConfig;
-type AvailableNames = Exclude<string, ReservedNames>;
 
 export const DEFAULT_SCENE_EXTENSION_CONFIG: SceneExtensionConfig = {
   reserved: {
@@ -64,19 +60,19 @@ export const DEFAULT_SCENE_EXTENSION_CONFIG: SceneExtensionConfig = {
   extensionsById: {
     [Images.extensionId]: {
       init: (renderer: IRenderer) => new Images(renderer),
-      supportedModes: ["image"],
+      supportedInterfaceModes: ["image"],
     },
     [Cameras.extensionId]: {
       init: (renderer: IRenderer) => new Cameras(renderer),
-      supportedModes: ["3d"],
+      supportedInterfaceModes: ["3d"],
     },
     [PublishSettings.extensionId]: {
       init: (renderer: IRenderer) => new PublishSettings(renderer),
-      supportedModes: ["3d"],
+      supportedInterfaceModes: ["3d"],
     },
     [FrameAxes.extensionId]: {
       init: (renderer: IRenderer) =>
-        // only show frame axes labels when in 3d mode
+        // only show frame axes and labels by default when in 3d mode
         new FrameAxes(renderer, { visible: renderer.interfaceMode === "3d" }),
     },
     [Markers.extensionId]: {

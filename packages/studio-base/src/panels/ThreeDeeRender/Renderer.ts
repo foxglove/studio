@@ -328,8 +328,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const { extensionsById } = args.sceneExtensionConfig;
     for (const extensionItem of Object.values(extensionsById)) {
       if (
-        extensionItem.supportedModes == undefined ||
-        extensionItem.supportedModes.includes(interfaceMode)
+        extensionItem.supportedInterfaceModes == undefined ||
+        extensionItem.supportedInterfaceModes.includes(interfaceMode)
       ) {
         this.#addSceneExtension(extensionItem.init(this));
       }

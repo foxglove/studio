@@ -103,12 +103,12 @@ export function ThreeDeeRender(props: {
   interfaceMode: InterfaceMode;
   /** Override default downloading behavior, used for Storybook */
   onDownloadImage?: (blob: Blob, fileName: string) => void;
-  sceneExtensionConfigOverrides?: DeepPartial<SceneExtensionConfig>;
+  /** Allow for injection or overriding of default extensions by custom extensions */
+  customSceneExtensions?: DeepPartial<SceneExtensionConfig>;
   /** Enable hitmap debugging by default, used for picking stories */
   debugPicking?: boolean;
 }): JSX.Element {
-  const { context, interfaceMode, onDownloadImage, debugPicking, sceneExtensionConfigOverrides } =
-    props;
+  const { context, interfaceMode, onDownloadImage, debugPicking, customSceneExtensions } = props;
   const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
 
   // Load and save the persisted panel configuration
@@ -158,7 +158,7 @@ export function ThreeDeeRender(props: {
           sceneExtensionConfig: _.merge(
             {},
             DEFAULT_SCENE_EXTENSION_CONFIG,
-            sceneExtensionConfigOverrides ?? {},
+            customSceneExtensions ?? {},
           ),
           debugPicking,
         })
@@ -173,7 +173,7 @@ export function ThreeDeeRender(props: {
     canvas,
     configRef,
     config.scene.transforms?.enablePreloading,
-    sceneExtensionConfigOverrides,
+    customSceneExtensions,
     interfaceMode,
     fetchAsset,
     debugPicking,
