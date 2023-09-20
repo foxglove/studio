@@ -56,7 +56,7 @@ function initPanel(args: InitPanelArgs, context: BuiltinPanelExtensionContext) {
 type Props = {
   config: Record<string, unknown>;
   saveConfig: SaveConfig<Record<string, unknown>>;
-  onDownloadImage: ((blob: Blob, fileName: string) => void) | undefined;
+  onDownloadImage?: (blob: Blob, fileName: string) => void;
   debugPicking?: boolean;
 };
 
