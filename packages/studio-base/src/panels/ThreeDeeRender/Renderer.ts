@@ -301,8 +301,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     const { reserved } = args.sceneExtensionConfig;
 
-    this.measurementTool = new MeasurementTool(this);
-    this.publishClickTool = new PublishClickTool(this);
+    this.measurementTool = reserved.measurementTool.init(this);
+    this.publishClickTool = reserved.publishClickTool.init(this);
     this.#addSceneExtension(this.measurementTool);
     this.#addSceneExtension(this.publishClickTool);
 
@@ -340,6 +340,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         ", ",
       )}`,
     );
+
     if (interfaceMode === "image" && config.imageMode.calibrationTopic == undefined) {
       this.enableImageOnlySubscriptionMode();
     } else {

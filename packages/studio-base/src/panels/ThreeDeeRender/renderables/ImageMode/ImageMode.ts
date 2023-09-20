@@ -103,6 +103,7 @@ export class ImageMode
   extends SceneExtension<ImageRenderable, ImageModeEvent>
   implements ICameraHandler
 {
+  public static extensionId = "foxglove.ImageMode";
   #camera: ImageModeCamera;
   #cameraModel:
     | {
@@ -125,11 +126,8 @@ export class ImageMode
   // Will need to change when synchronization is implemented (FG-2686)
   #latestImage: { topic: string; image: AnyImage } | undefined;
 
-  /**
-   * @param canvasSize Canvas size in CSS pixels
-   */
-  public constructor(renderer: IRenderer) {
-    super("foxglove.ImageMode", renderer);
+  public constructor(renderer: IRenderer, name: string = ImageMode.extensionId) {
+    super(name, renderer);
 
     const canvasSize = renderer.input.canvasSize;
 
