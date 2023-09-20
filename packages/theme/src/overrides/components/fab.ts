@@ -18,6 +18,9 @@ export const fab = (theme: Theme): OverrideComponentReturn<"MuiFab"> => ({
       colorInherit: {
         backgroundColor: theme.palette.background.paper,
       },
+      extended: {
+        gap: theme.spacing(1),
+      },
     },
   },
 });

@@ -22,6 +22,7 @@
     "@foxglove/tsconfig": "2.0.0",
     "@foxglove/typescript-transformers": "workspace:*",
     "@mui/icons-material": "5.14.9",
+    "@mui/lab": "5.0.0-alpha.145",
     "@mui/material": "5.14.9",
     "@storybook/addon-actions": "7.4.2",
     "@storybook/jest": "0.2.2",

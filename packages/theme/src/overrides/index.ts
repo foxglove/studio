@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Components, Theme } from "@mui/material";
-// import type {} from "@mui/lab/themeAugmentation";
+import type {} from "@mui/lab/themeAugmentation";
 
 import * as components from "./components";
 

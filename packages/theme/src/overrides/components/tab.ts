@@ -4,14 +4,11 @@
 
 import { Theme } from "@mui/material";
 
-import { iconHack } from "@foxglove/studio-base/theme/overrides/shared";
-
 import { OverrideComponentReturn } from "../types";
 
 export const tab = (theme: Theme): OverrideComponentReturn<"MuiTab"> => ({
   MuiTab: {
     styleOverrides: {
-      labelIcon: iconHack(theme),
       root: {
         opacity: 0.8,
 

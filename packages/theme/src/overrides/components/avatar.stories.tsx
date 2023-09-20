@@ -7,7 +7,7 @@ import { Meta, StoryObj } from "@storybook/react";
 
 export default {
   component: MuiAvatar,
-  title: "theme/overrides",
+  title: "Theme/Data Display/Avatar",
   args: {},
   decorators: [
     (Story) => (
@@ -18,4 +18,4 @@ export default {
   ],
 } as Meta<typeof MuiAvatar>;
 
-export const Avatar: StoryObj = {};
+export const Default: StoryObj = {};

@@ -30,7 +30,7 @@ import DatabaseSettings from "../assets/database-settings.svg";
 import PanelLayout from "../assets/panel-layout.svg";
 import PanelSettings from "../assets/panel-settings.svg";
 
-const icons: {
+export const icons: {
   // This makes it a type error to forget to add an icon here once it has been added to RegisteredIconNames.
   [N in RegisteredIconNames]: React.ReactElement;
 } = {
@@ -57,5 +57,3 @@ const icons: {
   Variable2: <BracesVariable24Regular />,
   ROS: <GridDots24Filled />,
 };
-
-export default icons;

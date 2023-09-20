@@ -2,12 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Button as MuiButton, ButtonProps, Typography } from "@mui/material";
+import {
+  Add20Filled,
+  Delete20Regular,
+  Edit20Filled,
+  Heart20Filled,
+  Location20Filled,
+  Send20Filled,
+  Toolbox20Filled,
+} from "@fluentui/react-icons";
+import { Box, Button, ButtonProps, Fab, Stack } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
 import { Fragment } from "react";
 
-const variants: ButtonProps["variant"][] = ["text", "contained", "outlined"];
-const sizes: ButtonProps["size"][] = ["large", "medium", "small"];
+const variants: ButtonProps["variant"][] = ["text", "outlined", "contained"];
+const sizes: ButtonProps["size"][] = ["small", "medium", "large"];
 const colors: ButtonProps["color"][] = [
   "inherit",
   "primary",
@@ -19,55 +28,119 @@ const colors: ButtonProps["color"][] = [
 ];
 
 export default {
-  component: MuiButton,
-  title: "theme/overrides",
+  component: Button,
+  title: "Theme/Inputs/Button",
   decorators: [
     (Story) => {
       return (
-        <div style={{ padding: 16 }}>
+        <Stack direction="row" padding={2} gap={1} justifyContent="center" alignItems="center">
           <Story />
-        </div>
+        </Stack>
       );
     },
   ],
   parameters: {
     colorScheme: "both-column",
   },
-} as Meta<typeof MuiButton>;
+} satisfies Meta<typeof Button>;
 
-export const Button: StoryObj = {
+export const Default: StoryObj = {
   render: () => (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "100px repeat(9, max-content)",
-        gap: 12,
-        alignItems: "center",
-        justifyItems: "center",
-      }}
-    >
-      <div /> {/* empty cell */}
+    <>
+      <Button variant="text">Text</Button>
+      <Button variant="contained">Contained</Button>
+      <Button variant="outlined">Outlined</Button>
+    </>
+  ),
+};
+
+export const TextButton: StoryObj = {
+  render: () => (
+    <>
+      <Button>Primary</Button>
+      <Button disabled>Disabled</Button>
+      <Button href="#text-buttons">Link</Button>
+    </>
+  ),
+};
+
+export const ContainedButton: StoryObj = {
+  render: () => (
+    <>
+      <Button variant="contained">Contained</Button>
+      <Button variant="contained" disabled>
+        Disabled
+      </Button>
+      <Button variant="contained" href="#contained-buttons">
+        Link
+      </Button>
+    </>
+  ),
+};
+
+export const DisableElevation: StoryObj = {
+  args: {
+    disableElevation: true,
+    variant: "contained",
+    children: "Disable Elevation",
+  },
+};
+
+export const OutlinedButton: StoryObj = {
+  render: () => (
+    <>
+      <Button variant="outlined">Primary</Button>
+      <Button variant="outlined" disabled>
+        Disabled
+      </Button>
+      <Button variant="outlined" href="#outlined-buttons">
+        Link
+      </Button>
+    </>
+  ),
+};
+
+export const Color: StoryObj = {
+  render: () => (
+    <Box sx={{ display: "grid", gridTemplateColumns: `repeat(${colors.length}, auto)`, gap: 1 }}>
       {variants.map((variant) => (
-        <Typography key={variant} variant="overline" style={{ gridColumn: "span 3" }}>
-          {variant}
-        </Typography>
+        <Fragment key={variant}>
+          {colors.map((color) => (
+            <Button {...{ color, variant }} key={color}>
+              {color}
+            </Button>
+          ))}
+        </Fragment>
       ))}
-      {colors.map((color) =>
-        variants.map((variant, idx) => (
-          <Fragment key={variant}>
-            {idx === 0 && (
-              <Typography variant="overline" style={{ justifySelf: "flex-start" }}>
-                {color}
-              </Typography>
-            )}
-            {sizes.map((size) => (
-              <MuiButton {...{ color, variant, size }} key={color}>
-                Button
-              </MuiButton>
-            ))}
-          </Fragment>
-        )),
-      )}
-    </div>
+    </Box>
+  ),
+};
+
+export const Sizes: StoryObj = {
+  render: () => (
+    <Stack gap={2}>
+      {variants.map((variant) => (
+        <Stack key={variant} direction="row" alignItems="center" gap={2}>
+          {sizes.map((size) => (
+            <Button {...{ size, variant }} key={size}>
+              {size}
+            </Button>
+          ))}
+        </Stack>
+      ))}
+    </Stack>
+  ),
+};
+
+export const ButtonsWithIcons: StoryObj = {
+  render: () => (
+    <>
+      <Button variant="outlined" startIcon={<Delete20Regular />}>
+        Delete
+      </Button>
+      <Button variant="contained" endIcon={<Send20Filled />}>
+        Send
+      </Button>
+    </>
   ),
 };

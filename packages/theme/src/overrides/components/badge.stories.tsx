@@ -3,10 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Alert24Filled } from "@fluentui/react-icons";
-import { BadgeProps, Badge as MuiBadge } from "@mui/material";
+import { BadgeProps, Badge as MuiBadge, Stack } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
-
-import Stack from "@foxglove/studio-base/components/Stack";
 
 const colors: BadgeProps["color"][] = [
   "default",
@@ -20,10 +18,9 @@ const colors: BadgeProps["color"][] = [
 
 export default {
   component: MuiBadge,
-  title: "theme/overrides",
+  title: "Theme/Data Display/Badge",
   args: {
     badgeContent: 4,
-    color: "primary",
     children: <Alert24Filled />,
   },
   decorators: [
@@ -35,7 +32,7 @@ export default {
   ],
 } as Meta<typeof MuiBadge>;
 
-export const Badge: StoryObj = {
+export const Default: StoryObj = {
   render: (args) => (
     <Stack direction="row" gap={2}>
       {colors.map((color) => (

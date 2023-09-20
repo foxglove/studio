@@ -4,8 +4,8 @@
 
 import { ThemeOptions, TypographyStyle } from "@mui/material";
 
-import { Language } from "@foxglove/studio-base/i18n";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { Language } from "@foxglove/studio-base/src/i18n";
+import { fonts } from "@foxglove/studio-base/src/util/sharedStyleConstants";
 
 declare module "@mui/material/styles/createTypography" {
   interface Typography {

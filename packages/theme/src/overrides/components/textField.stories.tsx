@@ -12,9 +12,11 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField,
+  TextField as MuiTextField,
   TextFieldProps,
   Typography,
+  Stack,
+  TextField,
 } from "@mui/material";
 import { Meta } from "@storybook/react";
 import { Fragment } from "react";
@@ -22,11 +24,21 @@ import { Fragment } from "react";
 const options = [{ label: "Small" }, { label: "Medium" }];
 
 export default {
-  title: "theme/overrides",
+  title: "Theme/Inputs/TextField",
   args: {},
 } as Meta;
 
-export const Inputs = {
+export const Default = {
+  render: () => (
+    <Stack direction="row" justifyContent="center" alignItems="center" padding={2} gap={2}>
+      <TextField id="outlined-basic" label="Outlined" variant="outlined" />
+      <TextField id="filled-basic" label="Filled" variant="filled" />
+      <TextField id="standard-basic" label="Standard" variant="standard" />
+    </Stack>
+  ),
+};
+
+export const Variants = {
   render: (): JSX.Element => (
     <div
       style={{
@@ -53,7 +65,7 @@ export const Inputs = {
                       getOptionLabel={(option: { label: string }) => option.label}
                       options={options}
                       renderInput={(params) => (
-                        <TextField
+                        <MuiTextField
                           {...params}
                           size={size as TextFieldProps["size"]}
                           variant={variant as TextFieldProps["variant"]}
@@ -65,7 +77,7 @@ export const Inputs = {
                       )}
                     />
 
-                    <TextField
+                    <MuiTextField
                       variant={variant as TextFieldProps["variant"]}
                       error={color === "error"}
                       color={color !== "error" ? (color as TextFieldProps["color"]) : undefined}
@@ -74,7 +86,7 @@ export const Inputs = {
                       size={size as TextFieldProps["size"]}
                     />
 
-                    <TextField
+                    <MuiTextField
                       variant={variant as TextFieldProps["variant"]}
                       error={color === "error"}
                       color={color !== "error" ? (color as TextFieldProps["color"]) : undefined}
@@ -84,7 +96,7 @@ export const Inputs = {
                       size={size as TextFieldProps["size"]}
                     />
 
-                    <TextField
+                    <MuiTextField
                       error={color === "error"}
                       color={color !== "error" ? (color as TextFieldProps["color"]) : undefined}
                       variant={variant as TextFieldProps["variant"]}
