@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Meta, StoryObj } from "@storybook/react";
-import { fireEvent, userEvent, within } from "@storybook/testing-library";
-import { waitFor } from "@storybook/testing-library";
+import { fireEvent, userEvent, within, waitFor } from "@storybook/testing-library";
 // eslint-disable-next-line storybook/use-storybook-testing-library
 import type { BoundFunction, FindAllByText } from "@testing-library/dom";
 import * as _ from "lodash-es";
