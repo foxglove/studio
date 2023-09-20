@@ -303,6 +303,11 @@ export const ImageOnlyModeOffWithAutoSelectedTopics: StoryObj<
 > = {
   render: ImageWith3D,
   args: { imageTopic: undefined, calibrationTopic: undefined },
+  parameters: {
+    chromatic: {
+      delay: 1000,
+    },
+  },
 };
 
 export const ImageOnlyModeOffWithAutoSelectedCalibration: StoryObj<
@@ -314,6 +319,11 @@ export const ImageOnlyModeOffWithAutoSelectedCalibration: StoryObj<
     const { click } = userEvent.setup();
     await click(await screen.findByText("abc", { selector: ".MuiSelect-select" }));
     await click(await screen.findByText("camera/img"));
+  },
+  parameters: {
+    chromatic: {
+      delay: 1000,
+    },
   },
 };
 
