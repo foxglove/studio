@@ -2,16 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Add20Filled,
-  Delete20Regular,
-  Edit20Filled,
-  Heart20Filled,
-  Location20Filled,
-  Send20Filled,
-  Toolbox20Filled,
-} from "@fluentui/react-icons";
-import { Box, Button, ButtonProps, Fab, Stack } from "@mui/material";
+import { Delete20Regular, Send20Filled } from "@fluentui/react-icons";
+import { Box, Button, ButtonProps, Stack } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
 import { Fragment } from "react";
 
