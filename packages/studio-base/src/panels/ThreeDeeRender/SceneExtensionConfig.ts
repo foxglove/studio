@@ -58,6 +58,10 @@ export const DEFAULT_SCENE_EXTENSION_CONFIG: SceneExtensionConfig = {
     },
   },
   extensionsById: {
+    [PublishSettings.extensionId]: {
+      init: (renderer: IRenderer) => new PublishSettings(renderer),
+      supportedInterfaceModes: ["3d"],
+    },
     [Images.extensionId]: {
       init: (renderer: IRenderer) => new Images(renderer),
       supportedInterfaceModes: ["3d"],
@@ -66,23 +70,19 @@ export const DEFAULT_SCENE_EXTENSION_CONFIG: SceneExtensionConfig = {
       init: (renderer: IRenderer) => new Cameras(renderer),
       supportedInterfaceModes: ["3d"],
     },
-    [PublishSettings.extensionId]: {
-      init: (renderer: IRenderer) => new PublishSettings(renderer),
-      supportedInterfaceModes: ["3d"],
+    [SceneSettings.extensionId]: {
+      init: (renderer: IRenderer) => new SceneSettings(renderer),
     },
     [FrameAxes.extensionId]: {
       init: (renderer: IRenderer) =>
         // only show frame axes and labels by default when in 3d mode
         new FrameAxes(renderer, { visible: renderer.interfaceMode === "3d" }),
     },
-    [Markers.extensionId]: {
-      init: (renderer: IRenderer) => new Markers(renderer),
-    },
-    [SceneSettings.extensionId]: {
-      init: (renderer: IRenderer) => new SceneSettings(renderer),
-    },
     [Grids.extensionId]: {
       init: (renderer: IRenderer) => new Grids(renderer),
+    },
+    [Markers.extensionId]: {
+      init: (renderer: IRenderer) => new Markers(renderer),
     },
     [FoxgloveSceneEntities.extensionId]: {
       init: (renderer: IRenderer) => new FoxgloveSceneEntities(renderer),
