@@ -25,19 +25,19 @@ export default {
   },
   decorators: [
     (Story) => (
-      <div style={{ padding: 16 }}>
+      <Stack direction="row" gap={2} padding={2}>
         <Story />
-      </div>
+      </Stack>
     ),
   ],
 } as Meta<typeof MuiBadge>;
 
 export const Default: StoryObj = {
   render: (args) => (
-    <Stack direction="row" gap={2}>
+    <>
       {colors.map((color) => (
         <MuiBadge key={color} {...{ ...args, color }} />
       ))}
-    </Stack>
+    </>
   ),
 };
