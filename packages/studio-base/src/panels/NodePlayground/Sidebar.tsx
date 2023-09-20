@@ -158,7 +158,9 @@ const NodesList = ({
             startIcon={<AddIcon />}
             variant="contained"
             color="inherit"
-            onClick={addNewNode}
+            onClick={() => {
+              addNewNode();
+            }}
           >
             New script
           </Button>
