@@ -40,8 +40,7 @@ function initPanel(args: InitPanelArgs, context: BuiltinPanelExtensionContext) {
           <ThreeDeeRender
             context={context}
             interfaceMode={interfaceMode}
-            onDownloadImage={onDownloadImage}
-            debugPicking={debugPicking}
+            testOptions={{ onDownloadImage, debugPicking }}
           />
         </ForwardAnalyticsContextProvider>
       </CaptureErrorBoundary>

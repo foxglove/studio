@@ -5,6 +5,8 @@
 import EventEmitter from "eventemitter3";
 import i18next from "i18next";
 import { produce } from "immer";
+import * as _ from "lodash-es";
+import { EnqueueSnackbar } from "notistack";
 import * as THREE from "three";
 import { DeepPartial, assert } from "ts-essentials";
 import { v4 as uuidv4 } from "uuid";
@@ -25,6 +27,7 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { PanelContextMenuItem } from "@foxglove/studio-base/components/PanelContextMenu";
 import {
   Asset,
   BuiltinPanelExtensionContext,
@@ -32,6 +35,7 @@ import {
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { FoxgloveGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/FoxgloveGrid";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
+import IAnalytics from "@foxglove/studio-base/services/IAnalytics";
 import { dark, light } from "@foxglove/studio-base/theme/palette";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
@@ -42,6 +46,7 @@ import {
   RendererConfig,
   RendererEvents,
   RendererSubscription,
+  TestOptions,
 } from "./IRenderer";
 import { Input } from "./Input";
 import { DEFAULT_MESH_UP_AXIS, ModelCache } from "./ModelCache";
@@ -67,7 +72,6 @@ import { FrameAxes } from "./renderables/FrameAxes";
 import { Grids } from "./renderables/Grids";
 import { ImageMode } from "./renderables/ImageMode/ImageMode";
 import { Images } from "./renderables/Images";
-import { DownloadImageInfo } from "./renderables/Images/ImageTypes";
 import { LaserScans } from "./renderables/LaserScans";
 import { Markers } from "./renderables/Markers";
 import { MeasurementTool } from "./renderables/MeasurementTool";
@@ -158,6 +162,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #canvas: HTMLCanvasElement;
   public readonly gl: THREE.WebGLRenderer;
   public maxLod = DetailLevel.High;
+
   public debugPicking: boolean;
   public config: Immutable<RendererConfig>;
   public settings: SettingsManager;
@@ -220,12 +225,16 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #devicePixelRatioMediaQuery?: MediaQueryList;
   #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 
+  /** Options passed for local testing and storybook. */
+  public readonly testOptions: TestOptions;
+  public analytics?: IAnalytics;
+
   public constructor(args: {
     canvas: HTMLCanvasElement;
     config: Immutable<RendererConfig>;
     interfaceMode: InterfaceMode;
     fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
-    debugPicking?: boolean;
+    testOptions: TestOptions;
   }) {
     super();
     // NOTE: Global side effect
@@ -235,7 +244,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const canvas = (this.#canvas = args.canvas);
     const config = (this.config = args.config);
     this.#fetchAsset = args.fetchAsset;
-    this.debugPicking = args.debugPicking ?? false;
+    this.testOptions = args.testOptions;
+    this.debugPicking = args.testOptions.debugPicking ?? false;
 
     this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
@@ -859,10 +869,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.queueAnimationFrame();
   }
 
-  public getCurrentImage(): DownloadImageInfo | undefined {
-    return this.#imageModeExtension?.getLatestImage();
-  }
-
   public setSelectedRenderable(selection: PickedRenderable | undefined): void {
     if (this.#selectedRenderable === selection) {
       return;
@@ -1337,6 +1343,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     this.settings.errors.remove(FOLLOW_TF_PATH, FOLLOW_FRAME_NOT_FOUND);
   }
+  public getContextMenuItems = (enqueueSnackbar: EnqueueSnackbar): PanelContextMenuItem[] => {
+    return _.flatMap(Array.from(this.sceneExtensions.values()), (extension) =>
+      extension.getContextMenuItems(enqueueSnackbar),
+    );
+  };
 
   #updateResolution(): void {
     const resolution = this.input.canvasSize;
@@ -1394,6 +1405,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       }
     });
   };
+
+  public setAnalytics(analytics: IAnalytics): void {
+    this.analytics = analytics;
+  }
 }
 
 function handleMessage(

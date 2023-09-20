@@ -136,7 +136,13 @@ describe("3D Renderer", () => {
   it("constructs a renderer without error", () => {
     expect(
       () =>
-        new Renderer({ canvas, config: defaultRendererConfig, interfaceMode: "3d", fetchAsset }),
+        new Renderer({
+          canvas,
+          config: defaultRendererConfig,
+          interfaceMode: "3d",
+          fetchAsset,
+          testOptions: {},
+        }),
     ).not.toThrow();
   });
   it("does not set a unfollow pose snapshot  when in follow-pose mode", () => {
@@ -150,6 +156,7 @@ describe("3D Renderer", () => {
       },
       interfaceMode: "3d",
       fetchAsset,
+      testOptions: {},
     });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
@@ -175,7 +182,13 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer({ canvas, config, interfaceMode: "3d", fetchAsset });
+    const renderer = new Renderer({
+      canvas,
+      config,
+      interfaceMode: "3d",
+      fetchAsset,
+      testOptions: {},
+    });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -208,7 +221,13 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer({ canvas, config, interfaceMode: "3d", fetchAsset });
+    const renderer = new Renderer({
+      canvas,
+      config,
+      interfaceMode: "3d",
+      fetchAsset,
+      testOptions: {},
+    });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -240,7 +259,13 @@ describe("3D Renderer", () => {
       followTf: "display",
       scene: { transforms: { enablePreloading: false } },
     };
-    const renderer = new Renderer({ canvas, config, interfaceMode: "3d", fetchAsset });
+    const renderer = new Renderer({
+      canvas,
+      config,
+      interfaceMode: "3d",
+      fetchAsset,
+      testOptions: {},
+    });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
     ) as CameraStateSettings;
@@ -280,6 +305,7 @@ describe("3D Renderer", () => {
       },
       interfaceMode: "3d",
       fetchAsset,
+      testOptions: {},
     });
     const cameraState = renderer.sceneExtensions.get(
       "foxglove.CameraStateSettings",
@@ -326,6 +352,7 @@ describe("3D Renderer", () => {
       },
       interfaceMode: "3d",
       fetchAsset,
+      testOptions: {},
     });
     let currentFrame = [];
 
@@ -394,6 +421,7 @@ describe("3D Renderer", () => {
       },
       interfaceMode: "3d",
       fetchAsset,
+      testOptions: {},
     });
     let currentFrame = [];
 
@@ -464,6 +492,7 @@ describe("3D Renderer", () => {
       },
       interfaceMode: "3d",
       fetchAsset,
+      testOptions: {},
     });
     const allFrames = [
       createTFMessageEvent("root", "before4", 5n, [1n]),
@@ -513,6 +542,7 @@ describe("3D Renderer", () => {
       },
       interfaceMode: "3d",
       fetchAsset,
+      testOptions: {},
     });
     const allFrames = [
       createTFMessageEvent("root", "before4", 5n, [1n]),
@@ -563,6 +593,7 @@ describe("Renderer.handleAllFramesMessages behavior", () => {
     config: defaultRendererConfig,
     interfaceMode: "3d",
     fetchAsset,
+    testOptions: {},
   };
   beforeEach(() => {
     jest.clearAllMocks();

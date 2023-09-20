@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import { EnqueueSnackbar } from "notistack";
 import * as THREE from "three";
 
 import {
@@ -15,8 +16,10 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { PanelContextMenuItem } from "@foxglove/studio-base/components/PanelContextMenu";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
+import IAnalytics from "@foxglove/studio-base/services/IAnalytics";
 import { LabelPool } from "@foxglove/three-text";
 
 import { Input } from "./Input";
@@ -28,7 +31,6 @@ import { SharedGeometry } from "./SharedGeometry";
 import { CameraState } from "./camera";
 import { DetailLevel } from "./lod";
 import { LayerSettingsTransform } from "./renderables/FrameAxes";
-import { DownloadImageInfo } from "./renderables/Images/ImageTypes";
 import { MeasurementTool } from "./renderables/MeasurementTool";
 import { PublishClickTool, PublishClickType } from "./renderables/PublishClickTool";
 import { ColorModeSettings } from "./renderables/colorMode";
@@ -67,6 +69,13 @@ export type FollowMode = "follow-pose" | "follow-position" | "follow-none";
 
 export type ImageAnnotationSettings = {
   visible: boolean;
+};
+
+/** Arguments that can be passed to the renderer for local testing */
+export type TestOptions = {
+  /** Override default downloading behavior, used for Storybook */
+  onDownloadImage?: (blob: Blob, fileName: string) => void;
+  debugPicking?: boolean;
 };
 
 /** Settings pertaining to Image mode */
@@ -196,6 +205,7 @@ export class InstancedLineMaterial extends THREE.LineBasicMaterial {
 export interface IRenderer extends EventEmitter<RendererEvents> {
   readonly interfaceMode: InterfaceMode;
   readonly gl: THREE.WebGLRenderer;
+  readonly testOptions: TestOptions;
   maxLod: DetailLevel;
   config: Immutable<RendererConfig>;
   settings: SettingsManager;
@@ -244,6 +254,10 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   labelPool: LabelPool;
   markerPool: MarkerPool;
   sharedGeometry: SharedGeometry;
+
+  /** Optional analytics API to log events in Renderer or SceneExtensions */
+  analytics?: IAnalytics;
+  setAnalytics(analytics: IAnalytics): void;
 
   dispose(): void;
   cameraSyncError(): undefined | string;
@@ -315,9 +329,6 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   /** Reset any manual view modifications (image mode only). */
   resetView(): void;
 
-  /** Return the currently displayed image (image mode only). */
-  getCurrentImage(): DownloadImageInfo | undefined;
-
   setSelectedRenderable(selection: PickedRenderable | undefined): void;
 
   addMessageEvent(messageEvent: Readonly<MessageEvent>): void;
@@ -359,4 +370,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
 
   /** Handles MessagePaths being dropped into the 3D panel. Allows scene extensions to update in response */
   handleDrop: (paths: readonly DraggedMessagePath[]) => void;
+
+  /** Returns context menu items for active scene extensions. Takes Enqueue snackbar function for showing info that might result from option. */
+  getContextMenuItems: (enqueueSnackbar: EnqueueSnackbar) => PanelContextMenuItem[];
 }

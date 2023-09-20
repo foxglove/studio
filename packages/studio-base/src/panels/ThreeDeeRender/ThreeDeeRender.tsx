@@ -24,6 +24,7 @@ import {
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import type {
@@ -33,6 +34,7 @@ import type {
   RendererConfig,
   RendererEvents,
   RendererSubscription,
+  TestOptions,
 } from "./IRenderer";
 import type { PickedRenderable } from "./Picker";
 import { SELECTED_ID_VARIABLE } from "./Renderable";
@@ -97,13 +99,11 @@ function useRendererProperty<K extends keyof IRenderer>(
 export function ThreeDeeRender(props: {
   context: BuiltinPanelExtensionContext;
   interfaceMode: InterfaceMode;
-  /** Override default downloading behavior, used for Storybook */
-  onDownloadImage?: (blob: Blob, fileName: string) => void;
-  /** Enable hitmap debugging by default, used for picking stories */
-  debugPicking?: boolean;
+  testOptions: TestOptions;
 }): JSX.Element {
-  const { context, interfaceMode, onDownloadImage, debugPicking } = props;
+  const { context, interfaceMode, testOptions } = props;
   const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
+  const analytics = useAnalytics();
 
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
@@ -144,7 +144,7 @@ export function ThreeDeeRender(props: {
   const rendererRef = useRef<IRenderer | undefined>(undefined);
   useEffect(() => {
     const newRenderer = canvas
-      ? new Renderer({ canvas, config: configRef.current, interfaceMode, fetchAsset, debugPicking })
+      ? new Renderer({ canvas, config: configRef.current, interfaceMode, fetchAsset, testOptions })
       : undefined;
     setRenderer(newRenderer);
     rendererRef.current = newRenderer;
@@ -158,8 +158,14 @@ export function ThreeDeeRender(props: {
     config.scene.transforms?.enablePreloading,
     interfaceMode,
     fetchAsset,
-    debugPicking,
+    testOptions,
   ]);
+
+  useEffect(() => {
+    if (renderer) {
+      renderer.setAnalytics(analytics);
+    }
+  }, [renderer, analytics]);
 
   useEffect(() => {
     context.EXPERIMENTAL_setMessagePathDropConfig(
@@ -782,7 +788,6 @@ export function ThreeDeeRender(props: {
               renderer?.publishClickTool.start();
             }}
             timezone={timezone}
-            onDownloadImage={onDownloadImage}
           />
         </RendererContext.Provider>
       </div>
