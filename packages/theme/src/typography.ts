@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ThemeOptions } from "@mui/material";
+import { ThemeOptions as MuiThemeOptions, TypographyStyle } from "@mui/material";
 
 import { Language } from "./types";
 
@@ -34,30 +34,31 @@ export function muiTypography({
   locale,
 }: {
   locale: Language | undefined;
-}): ThemeOptions["typography"] {
-  let fontSettings: string;
+}): MuiThemeOptions["typography"] {
+  let fontSetttings: string;
   switch (locale) {
     case "zh":
     case "ja":
-      fontSettings = fontFeatureSettingsCJK;
+      fontSetttings = fontFeatureSettingsCJK;
       break;
     case "en":
     default:
-      fontSettings = fontFeatureSettings;
+      fontSetttings = fontFeatureSettings;
       break;
   }
-  const baseFontStyles = {
-    fontFeatureSettings: fontSettings,
+  const baseFontStyles: TypographyStyle = {
+    fontFeatureSettings: fontSetttings,
   };
   return {
     fontFamily: baseFontFamily,
     fontSize: 12,
-    fontFeatureSettings: fontSettings,
-    body1: { ...baseFontStyles },
-    body2: { ...baseFontStyles },
-    subtitle1: { ...baseFontStyles },
-    subtitle2: { ...baseFontStyles },
-    caption: { ...baseFontStyles },
+    fontFeatureSettings,
+    body1: {
+      ...baseFontStyles,
+    },
+    body2: {
+      ...baseFontStyles,
+    },
     button: {
       ...baseFontStyles,
       textTransform: "none",
