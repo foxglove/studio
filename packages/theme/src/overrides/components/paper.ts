@@ -6,16 +6,14 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const paper = (_theme: Theme): OverrideComponentReturn<"MuiPaper"> => ({
-  MuiPaper: {
-    defaultProps: {
-      elevation: 2,
-      square: true,
-    },
-    styleOverrides: {
-      elevation: {
-        backgroundImage: "none !important",
-      },
+export const MuiPaper = (_theme: Theme): OverrideComponentReturn<"MuiPaper"> => ({
+  defaultProps: {
+    elevation: 2,
+    square: true,
+  },
+  styleOverrides: {
+    elevation: {
+      backgroundImage: "none !important",
     },
   },
 });

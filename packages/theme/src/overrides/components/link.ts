@@ -6,15 +6,13 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const link = (theme: Theme): OverrideComponentReturn<"MuiLink"> => ({
-  MuiLink: {
-    defaultProps: {
-      color: theme.palette.mode === "dark" ? "secondary" : "primary",
-    },
-    styleOverrides: {
-      root: {
-        cursor: "pointer",
-      },
+export const MuiLink = (theme: Theme): OverrideComponentReturn<"MuiLink"> => ({
+  defaultProps: {
+    color: theme.palette.mode === "dark" ? "secondary" : "primary",
+  },
+  styleOverrides: {
+    root: {
+      cursor: "pointer",
     },
   },
 });

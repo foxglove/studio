@@ -6,11 +6,9 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const card = (_theme: Theme): OverrideComponentReturn<"MuiCard"> => ({
-  MuiCard: {
-    defaultProps: {
-      variant: "outlined",
-      square: false,
-    },
+export const MuiCard = (_theme: Theme): OverrideComponentReturn<"MuiCard"> => ({
+  defaultProps: {
+    variant: "outlined",
+    square: false,
   },
 });

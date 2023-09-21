@@ -6,22 +6,20 @@ import { Theme, alpha } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const toggleButton = (theme: Theme): OverrideComponentReturn<"MuiToggleButton"> => ({
-  MuiToggleButton: {
-    defaultProps: {
-      disableRipple: true,
-    },
-    styleOverrides: {
-      root: {
-        "&:active": {
-          backgroundColor: alpha(theme.palette.text.primary, theme.palette.action.activatedOpacity),
-        },
-        "&.Mui-selected:active": {
-          backgroundColor: alpha(
-            theme.palette.primary.main,
-            theme.palette.action.selectedOpacity + theme.palette.action.activatedOpacity,
-          ),
-        },
+export const MuiToggleButton = (theme: Theme): OverrideComponentReturn<"MuiToggleButton"> => ({
+  defaultProps: {
+    disableRipple: true,
+  },
+  styleOverrides: {
+    root: {
+      "&:active": {
+        backgroundColor: alpha(theme.palette.text.primary, theme.palette.action.activatedOpacity),
+      },
+      "&.Mui-selected:active": {
+        backgroundColor: alpha(
+          theme.palette.primary.main,
+          theme.palette.action.selectedOpacity + theme.palette.action.activatedOpacity,
+        ),
       },
     },
   },

@@ -6,10 +6,8 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const buttonBase = (_theme: Theme): OverrideComponentReturn<"MuiButtonBase"> => ({
-  MuiButtonBase: {
-    defaultProps: {
-      disableRipple: true,
-    },
+export const MuiButtonBase = (_theme: Theme): OverrideComponentReturn<"MuiButtonBase"> => ({
+  defaultProps: {
+    disableRipple: true,
   },
 });

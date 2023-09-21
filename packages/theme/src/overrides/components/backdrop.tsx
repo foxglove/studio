@@ -6,15 +6,13 @@ import { Theme, alpha } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const dialog = (theme: Theme): OverrideComponentReturn<"MuiBackdrop"> => ({
-  MuiBackdrop: {
-    styleOverrides: {
-      root: {
-        backgroundColor: alpha(theme.palette.common.black, 0.4),
-      },
-      invisible: {
-        backgroundColor: "transparent",
-      },
+export const MuiBackdrop = (theme: Theme): OverrideComponentReturn<"MuiBackdrop"> => ({
+  styleOverrides: {
+    root: {
+      backgroundColor: alpha(theme.palette.common.black, 0.4),
+    },
+    invisible: {
+      backgroundColor: "transparent",
     },
   },
 });

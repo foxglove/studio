@@ -6,12 +6,10 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const listSubheader = (theme: Theme): OverrideComponentReturn<"MuiListSubheader"> => ({
-  MuiListSubheader: {
-    styleOverrides: {
-      root: {
-        lineHeight: theme.spacing(4),
-      },
+export const MuiListSubheader = (theme: Theme): OverrideComponentReturn<"MuiListSubheader"> => ({
+  styleOverrides: {
+    root: {
+      lineHeight: theme.spacing(4),
     },
   },
 });

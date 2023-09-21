@@ -6,13 +6,11 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const listItemText = (theme: Theme): OverrideComponentReturn<"MuiListItemText"> => ({
-  MuiListItemText: {
-    styleOverrides: {
-      dense: {
-        marginTop: theme.spacing(0.25),
-        marginBottom: theme.spacing(0.25),
-      },
+export const MuiListItemText = (theme: Theme): OverrideComponentReturn<"MuiListItemText"> => ({
+  styleOverrides: {
+    dense: {
+      marginTop: theme.spacing(0.25),
+      marginBottom: theme.spacing(0.25),
     },
   },
 });

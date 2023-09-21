@@ -6,15 +6,13 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const cardActionArea = (_theme: Theme): OverrideComponentReturn<"MuiCardActionArea"> => ({
-  MuiCardActionArea: {
-    defaultProps: {
-      disableRipple: true,
-    },
-    styleOverrides: {
-      focusHighlight: {
-        transition: "none",
-      },
+export const MuiCardActionArea = (_theme: Theme): OverrideComponentReturn<"MuiCardActionArea"> => ({
+  defaultProps: {
+    disableRipple: true,
+  },
+  styleOverrides: {
+    focusHighlight: {
+      transition: "none",
     },
   },
 });

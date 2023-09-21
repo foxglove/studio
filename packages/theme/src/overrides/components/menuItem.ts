@@ -6,15 +6,13 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const menuItem = (_theme: Theme): OverrideComponentReturn<"MuiMenuItem"> => ({
-  MuiMenuItem: {
-    defaultProps: {
-      disableRipple: true,
-    },
-    styleOverrides: {
-      root: {
-        minHeight: 32,
-      },
+export const MuiMenuItem = (_theme: Theme): OverrideComponentReturn<"MuiMenuItem"> => ({
+  defaultProps: {
+    disableRipple: true,
+  },
+  styleOverrides: {
+    root: {
+      minHeight: 32,
     },
   },
 });

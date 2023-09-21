@@ -6,10 +6,8 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const popover = (_theme: Theme): OverrideComponentReturn<"MuiPopover"> => ({
-  MuiPopover: {
-    defaultProps: {
-      marginThreshold: 8,
-    },
+export const MuiPopover = (_theme: Theme): OverrideComponentReturn<"MuiPopover"> => ({
+  defaultProps: {
+    marginThreshold: 8,
   },
 });

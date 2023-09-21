@@ -6,20 +6,18 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const iconButton = (theme: Theme): OverrideComponentReturn<"MuiIconButton"> => ({
-  MuiIconButton: {
-    defaultProps: {
-      centerRipple: false,
-      // disableRipple: true,
-    },
-    styleOverrides: {
-      root: {
-        borderRadius: theme.shape.borderRadius,
-        transition: "none",
+export const MuiIconButton = (theme: Theme): OverrideComponentReturn<"MuiIconButton"> => ({
+  defaultProps: {
+    centerRipple: false,
+    // disableRipple: true,
+  },
+  styleOverrides: {
+    root: {
+      borderRadius: theme.shape.borderRadius,
+      transition: "none",
 
-        "&:hover": {
-          backgroundColor: theme.palette.action.hover,
-        },
+      "&:hover": {
+        backgroundColor: theme.palette.action.hover,
       },
     },
   },

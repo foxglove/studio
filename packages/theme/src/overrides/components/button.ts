@@ -6,39 +6,37 @@ import { Theme, buttonClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const button = (theme: Theme): OverrideComponentReturn<"MuiButton"> => ({
-  MuiButton: {
-    defaultProps: {
-      disableElevation: true,
+export const MuiButton = (theme: Theme): OverrideComponentReturn<"MuiButton"> => ({
+  defaultProps: {
+    disableElevation: true,
+  },
+  styleOverrides: {
+    root: {
+      transition: "none",
     },
-    styleOverrides: {
-      root: {
-        transition: "none",
+    containedInherit: {
+      backgroundColor: theme.palette.action.focus,
+    },
+    sizeSmall: {
+      [`&.${buttonClasses.text}`]: {
+        fontSize: "0.625rem",
       },
-      containedInherit: {
-        backgroundColor: theme.palette.action.focus,
+      [`&.${buttonClasses.contained}`]: {
+        fontSize: "0.625rem",
       },
-      sizeSmall: {
-        [`&.${buttonClasses.text}`]: {
-          fontSize: "0.625rem",
-        },
-        [`&.${buttonClasses.contained}`]: {
-          fontSize: "0.625rem",
-        },
-        [`&.${buttonClasses.outlined}`]: {
-          fontSize: "0.625rem",
-        },
+      [`&.${buttonClasses.outlined}`]: {
+        fontSize: "0.625rem",
       },
-      sizeLarge: {
-        [`&.${buttonClasses.text}`]: {
-          fontSize: "0.875rem",
-        },
-        [`&.${buttonClasses.contained}`]: {
-          fontSize: "0.875rem",
-        },
-        [`&.${buttonClasses.outlined}`]: {
-          fontSize: "0.875rem",
-        },
+    },
+    sizeLarge: {
+      [`&.${buttonClasses.text}`]: {
+        fontSize: "0.875rem",
+      },
+      [`&.${buttonClasses.contained}`]: {
+        fontSize: "0.875rem",
+      },
+      [`&.${buttonClasses.outlined}`]: {
+        fontSize: "0.875rem",
       },
     },
   },

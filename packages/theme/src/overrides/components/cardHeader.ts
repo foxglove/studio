@@ -6,19 +6,17 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const cardHeader = (_theme: Theme): OverrideComponentReturn<"MuiCardHeader"> => ({
-  MuiCardHeader: {
-    defaultProps: {
-      titleTypographyProps: {
-        variant: "h3",
-      },
+export const MuiCardHeader = (_theme: Theme): OverrideComponentReturn<"MuiCardHeader"> => ({
+  defaultProps: {
+    titleTypographyProps: {
+      variant: "h3",
     },
-    styleOverrides: {
-      action: {
-        alignSelf: undefined,
-        marginTop: undefined,
-        marginRight: undefined,
-      },
+  },
+  styleOverrides: {
+    action: {
+      alignSelf: undefined,
+      marginTop: undefined,
+      marginRight: undefined,
     },
   },
 });

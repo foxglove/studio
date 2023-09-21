@@ -6,13 +6,11 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const cardContent = (theme: Theme): OverrideComponentReturn<"MuiCardContent"> => ({
-  MuiCardContent: {
-    styleOverrides: {
-      root: {
-        "&:last-child": {
-          paddingBottom: theme.spacing(2),
-        },
+export const MuiCardContent = (theme: Theme): OverrideComponentReturn<"MuiCardContent"> => ({
+  styleOverrides: {
+    root: {
+      "&:last-child": {
+        paddingBottom: theme.spacing(2),
       },
     },
   },

@@ -6,14 +6,12 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const badge = (theme: Theme): OverrideComponentReturn<"MuiBadge"> => ({
-  MuiBadge: {
-    styleOverrides: {
-      badge: {
-        height: 16,
-        minWidth: 16,
-        padding: theme.spacing(0, 0.25),
-      },
+export const MuiBadge = (theme: Theme): OverrideComponentReturn<"MuiBadge"> => ({
+  styleOverrides: {
+    badge: {
+      height: 16,
+      minWidth: 16,
+      padding: theme.spacing(0, 0.25),
     },
   },
 });

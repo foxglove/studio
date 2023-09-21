@@ -9,26 +9,24 @@ import { listItemClasses } from "@mui/material/ListItem";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const menu = (theme: Theme): OverrideComponentReturn<"MuiMenu"> => ({
-  MuiMenu: {
-    defaultProps: {
-      TransitionComponent: Fade,
+export const MuiMenu = (theme: Theme): OverrideComponentReturn<"MuiMenu"> => ({
+  defaultProps: {
+    TransitionComponent: Fade,
+  },
+  styleOverrides: {
+    paper: {
+      borderRadius: theme.shape.borderRadius,
+      backgroundColor: theme.palette.background.menu,
     },
-    styleOverrides: {
-      paper: {
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: theme.palette.background.menu,
-      },
-      list: {
-        ...theme.typography.body1,
+    list: {
+      ...theme.typography.body1,
 
-        [`&.${listClasses.dense}`]: {
-          ...theme.typography.body2,
-        },
-        [`.${listItemClasses.root} + .${dividerClasses.root}`]: {
-          marginTop: theme.spacing(1),
-          marginBottom: theme.spacing(1),
-        },
+      [`&.${listClasses.dense}`]: {
+        ...theme.typography.body2,
+      },
+      [`.${listItemClasses.root} + .${dividerClasses.root}`]: {
+        marginTop: theme.spacing(1),
+        marginBottom: theme.spacing(1),
       },
     },
   },

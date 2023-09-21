@@ -6,21 +6,19 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const fab = (theme: Theme): OverrideComponentReturn<"MuiFab"> => ({
-  MuiFab: {
-    defaultProps: {
-      color: "inherit",
+export const MuiFab = (theme: Theme): OverrideComponentReturn<"MuiFab"> => ({
+  defaultProps: {
+    color: "inherit",
+  },
+  styleOverrides: {
+    root: {
+      boxShadow: theme.shadows[2],
     },
-    styleOverrides: {
-      root: {
-        boxShadow: theme.shadows[2],
-      },
-      colorInherit: {
-        backgroundColor: theme.palette.background.paper,
-      },
-      extended: {
-        gap: theme.spacing(1),
-      },
+    colorInherit: {
+      backgroundColor: theme.palette.background.paper,
+    },
+    extended: {
+      gap: theme.spacing(1),
     },
   },
 });

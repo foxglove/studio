@@ -6,25 +6,23 @@ import { Theme, inputAdornmentClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const inputAdornment = (_theme: Theme): OverrideComponentReturn<"MuiInputAdornment"> => ({
-  MuiInputAdornment: {
-    defaultProps: {},
-    styleOverrides: {
-      root: {
-        [`&.${inputAdornmentClasses.filled}`]: {
-          [`&.${inputAdornmentClasses.positionStart}, &.${inputAdornmentClasses.positionEnd}`]: {
-            [`:not(.${inputAdornmentClasses.hiddenLabel})`]: {
-              marginTop: 0,
-            },
+export const MuiInputAdornment = (_theme: Theme): OverrideComponentReturn<"MuiInputAdornment"> => ({
+  defaultProps: {},
+  styleOverrides: {
+    root: {
+      [`&.${inputAdornmentClasses.filled}`]: {
+        [`&.${inputAdornmentClasses.positionStart}, &.${inputAdornmentClasses.positionEnd}`]: {
+          [`:not(.${inputAdornmentClasses.hiddenLabel})`]: {
+            marginTop: 0,
           },
         },
       },
-      positionStart: {
-        marginRight: 0,
-      },
-      positionEnd: {
-        marginLeft: 0,
-      },
+    },
+    positionStart: {
+      marginRight: 0,
+    },
+    positionEnd: {
+      marginLeft: 0,
     },
   },
 });

@@ -6,6 +6,6 @@ import { Components, Theme } from "@mui/material";
 
 export type OverrideComponentReturn<T extends keyof Components<Theme>> = Required<
   Pick<Components<Theme>, T>
->;
+>[T];
 
 export type Language = "en" | "zh" | "ja";

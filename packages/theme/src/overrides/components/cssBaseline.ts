@@ -6,14 +6,12 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const cssBaseline = (_theme: Theme): OverrideComponentReturn<"MuiCssBaseline"> => ({
-  MuiCssBaseline: {
-    styleOverrides: {
-      "@global": {
-        svg: {
-          display: "block",
-          maxWidth: "100%",
-        },
+export const MuiCssBaseline = (_theme: Theme): OverrideComponentReturn<"MuiCssBaseline"> => ({
+  styleOverrides: {
+    "@global": {
+      svg: {
+        display: "block",
+        maxWidth: "100%",
       },
     },
   },

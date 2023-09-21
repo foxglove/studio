@@ -6,11 +6,9 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const checkbox = (_theme: Theme): OverrideComponentReturn<"MuiCheckbox"> => ({
-  MuiCheckbox: {
-    defaultProps: {
-      disableRipple: true,
-    },
-    styleOverrides: {},
+export const MuiCheckbox = (_theme: Theme): OverrideComponentReturn<"MuiCheckbox"> => ({
+  defaultProps: {
+    disableRipple: true,
   },
+  styleOverrides: {},
 });

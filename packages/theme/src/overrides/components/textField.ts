@@ -6,12 +6,10 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const textField = (_theme: Theme): OverrideComponentReturn<"MuiTextField"> => ({
-  MuiTextField: {
-    defaultProps: {
-      InputLabelProps: {
-        variant: "standard",
-      },
+export const MuiTextField = (_theme: Theme): OverrideComponentReturn<"MuiTextField"> => ({
+  defaultProps: {
+    InputLabelProps: {
+      variant: "standard",
     },
   },
 });

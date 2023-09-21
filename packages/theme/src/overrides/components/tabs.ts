@@ -7,14 +7,12 @@ import { tabsClasses } from "@mui/material/Tabs";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const tabs = (_theme: Theme): OverrideComponentReturn<"MuiTabs"> => ({
-  MuiTabs: {
-    styleOverrides: {
-      vertical: {
-        [`.${tabsClasses.indicator}`]: {
-          left: 0,
-          right: "auto",
-        },
+export const MuiTabs = (_theme: Theme): OverrideComponentReturn<"MuiTabs"> => ({
+  styleOverrides: {
+    vertical: {
+      [`.${tabsClasses.indicator}`]: {
+        left: 0,
+        right: "auto",
       },
     },
   },

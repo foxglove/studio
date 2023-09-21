@@ -6,31 +6,29 @@ import { Theme, inputBaseClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const inputBase = (theme: Theme): OverrideComponentReturn<"MuiInputBase"> => ({
-  MuiInputBase: {
-    styleOverrides: {
-      root: {
-        [`&.${inputBaseClasses.adornedStart}`]: {
-          paddingInlineStart: theme.spacing(1),
-        },
-        [`&.${inputBaseClasses.adornedEnd}`]: {
-          paddingInlineEnd: theme.spacing(1),
-        },
-        [`.${inputBaseClasses.inputAdornedStart}`]: {
-          paddingInlineStart: theme.spacing(0.75),
-        },
-        [`.${inputBaseClasses.inputAdornedEnd}`]: {
-          paddingInlineEnd: theme.spacing(0.75),
-        },
+export const MuiInputBase = (theme: Theme): OverrideComponentReturn<"MuiInputBase"> => ({
+  styleOverrides: {
+    root: {
+      [`&.${inputBaseClasses.adornedStart}`]: {
+        paddingInlineStart: theme.spacing(1),
       },
-      input: {
-        "::placeholder": {
-          transition: "none",
-          opacity: 0.6,
-        },
-        ":focus::placeholder": {
-          opacity: 0,
-        },
+      [`&.${inputBaseClasses.adornedEnd}`]: {
+        paddingInlineEnd: theme.spacing(1),
+      },
+      [`.${inputBaseClasses.inputAdornedStart}`]: {
+        paddingInlineStart: theme.spacing(0.75),
+      },
+      [`.${inputBaseClasses.inputAdornedEnd}`]: {
+        paddingInlineEnd: theme.spacing(0.75),
+      },
+    },
+    input: {
+      "::placeholder": {
+        transition: "none",
+        opacity: 0.6,
+      },
+      ":focus::placeholder": {
+        opacity: 0,
       },
     },
   },

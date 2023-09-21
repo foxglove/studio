@@ -6,16 +6,14 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const avatar = (theme: Theme): OverrideComponentReturn<"MuiAvatar"> => ({
-  MuiAvatar: {
-    defaultProps: {
-      variant: "rounded",
-    },
-    styleOverrides: {
-      colorDefault: {
-        color: "currentColor",
-        backgroundColor: theme.palette.action.hover,
-      },
+export const MuiAvatar = (theme: Theme): OverrideComponentReturn<"MuiAvatar"> => ({
+  defaultProps: {
+    variant: "rounded",
+  },
+  styleOverrides: {
+    colorDefault: {
+      color: "currentColor",
+      backgroundColor: theme.palette.action.hover,
     },
   },
 });

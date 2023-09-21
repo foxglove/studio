@@ -6,12 +6,10 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const tableCell = (theme: Theme): OverrideComponentReturn<"MuiTableCell"> => ({
-  MuiTableCell: {
-    styleOverrides: {
-      stickyHeader: {
-        backgroundColor: theme.palette.background.paper,
-      },
+export const MuiTableCell = (theme: Theme): OverrideComponentReturn<"MuiTableCell"> => ({
+  styleOverrides: {
+    stickyHeader: {
+      backgroundColor: theme.palette.background.paper,
     },
   },
 });

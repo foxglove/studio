@@ -6,12 +6,10 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const formLabel = (theme: Theme): OverrideComponentReturn<"MuiFormLabel"> => ({
-  MuiFormLabel: {
-    styleOverrides: {
-      root: {
-        marginBottom: theme.spacing(0.5),
-      },
+export const MuiFormLabel = (theme: Theme): OverrideComponentReturn<"MuiFormLabel"> => ({
+  styleOverrides: {
+    root: {
+      marginBottom: theme.spacing(0.5),
     },
   },
 });

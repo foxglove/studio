@@ -6,13 +6,11 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const dialogTitle = (theme: Theme): OverrideComponentReturn<"MuiDialogTitle"> => ({
-  MuiDialogTitle: {
-    styleOverrides: {
-      root: {
-        ...theme.typography.h4,
-        fontWeight: 600,
-      },
+export const MuiDialogTitle = (theme: Theme): OverrideComponentReturn<"MuiDialogTitle"> => ({
+  styleOverrides: {
+    root: {
+      ...theme.typography.h4,
+      fontWeight: 600,
     },
   },
 });

@@ -6,12 +6,10 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const toolbar = (_theme: Theme): OverrideComponentReturn<"MuiToolbar"> => ({
-  MuiToolbar: {
-    styleOverrides: {
-      root: {
-        justifyContent: "space-between",
-      },
+export const MuiToolbar = (_theme: Theme): OverrideComponentReturn<"MuiToolbar"> => ({
+  styleOverrides: {
+    root: {
+      justifyContent: "space-between",
     },
   },
 });

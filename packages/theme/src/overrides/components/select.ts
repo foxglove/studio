@@ -6,17 +6,15 @@ import { Theme, selectClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const select = (theme: Theme): OverrideComponentReturn<"MuiSelect"> => ({
-  MuiSelect: {
-    styleOverrides: {
-      standard: {
-        [`&.${selectClasses.select}`]: {
-          paddingInlineEnd: theme.spacing(4),
-        },
+export const MuiSelect = (theme: Theme): OverrideComponentReturn<"MuiSelect"> => ({
+  styleOverrides: {
+    standard: {
+      [`&.${selectClasses.select}`]: {
+        paddingInlineEnd: theme.spacing(4),
       },
-      iconStandard: {
-        right: theme.spacing(0.75),
-      },
+    },
+    iconStandard: {
+      right: theme.spacing(0.75),
     },
   },
 });

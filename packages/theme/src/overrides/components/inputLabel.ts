@@ -6,22 +6,20 @@ import { Theme, inputBaseClasses, inputClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const inputLabel = (theme: Theme): OverrideComponentReturn<"MuiInputLabel"> => ({
-  MuiInputLabel: {
-    defaultProps: {
-      variant: "standard",
-      shrink: false,
-    },
-    styleOverrides: {
-      standard: {
-        position: "relative",
-        transform: "none",
-        fontSize: "0.75rem",
-        padding: theme.spacing(0.325, 0),
+export const MuiInputLabel = (theme: Theme): OverrideComponentReturn<"MuiInputLabel"> => ({
+  defaultProps: {
+    variant: "standard",
+    shrink: false,
+  },
+  styleOverrides: {
+    standard: {
+      position: "relative",
+      transform: "none",
+      fontSize: "0.75rem",
+      padding: theme.spacing(0.325, 0),
 
-        [`& + .${inputBaseClasses.root}.${inputClasses.root}`]: {
-          marginTop: 0,
-        },
+      [`& + .${inputBaseClasses.root}.${inputClasses.root}`]: {
+        marginTop: 0,
       },
     },
   },

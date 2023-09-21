@@ -7,41 +7,39 @@ import { Theme, autocompleteClasses, inputBaseClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const autocomplete = (theme: Theme): OverrideComponentReturn<"MuiAutocomplete"> => ({
-  MuiAutocomplete: {
-    defaultProps: {
-      clearIcon: <CancelIcon fontSize="small" />,
+export const MuiAutocomplete = (theme: Theme): OverrideComponentReturn<"MuiAutocomplete"> => ({
+  defaultProps: {
+    clearIcon: <CancelIcon fontSize="small" />,
+  },
+  styleOverrides: {
+    root: {
+      minWidth: 144,
+
+      [`.${inputBaseClasses.sizeSmall}.${inputBaseClasses.root} .${autocompleteClasses.endAdornment}`]:
+        {
+          right: theme.spacing(0.75),
+        },
     },
-    styleOverrides: {
-      root: {
-        minWidth: 144,
+    inputRoot: {
+      [`&.${inputBaseClasses.root}`]: {
+        padding: theme.spacing(1, 1.25),
 
-        [`.${inputBaseClasses.sizeSmall}.${inputBaseClasses.root} .${autocompleteClasses.endAdornment}`]:
-          {
-            right: theme.spacing(0.75),
-          },
-      },
-      inputRoot: {
-        [`&.${inputBaseClasses.root}`]: {
-          padding: theme.spacing(1, 1.25),
-
-          [`.${autocompleteClasses.input}`]: {
-            padding: 0,
-          },
-          [`&.${inputBaseClasses.sizeSmall}`]: {
-            padding: theme.spacing(0.75, 1),
-          },
+        [`.${autocompleteClasses.input}`]: {
+          padding: 0,
+        },
+        [`&.${inputBaseClasses.sizeSmall}`]: {
+          padding: theme.spacing(0.75, 1),
         },
       },
-      endAdornment: {
-        display: "flex",
-        alignItems: "center",
-        top: `calc(50% - ${theme.spacing(1.5)})`,
-      },
-      clearIndicator: {
-        ":not(:hover)": {
-          opacity: 0.67,
-        },
+    },
+    endAdornment: {
+      display: "flex",
+      alignItems: "center",
+      top: `calc(50% - ${theme.spacing(1.5)})`,
+    },
+    clearIndicator: {
+      ":not(:hover)": {
+        opacity: 0.67,
       },
     },
   },

@@ -6,11 +6,9 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const radiow = (_theme: Theme): OverrideComponentReturn<"MuiRadio"> => ({
-  MuiRadio: {
-    defaultProps: {
-      disableRipple: true,
-      size: "small",
-    },
+export const MuiRadio = (_theme: Theme): OverrideComponentReturn<"MuiRadio"> => ({
+  defaultProps: {
+    disableRipple: true,
+    size: "small",
   },
 });

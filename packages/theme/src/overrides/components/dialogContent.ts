@@ -6,15 +6,13 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const dialogContent = (theme: Theme): OverrideComponentReturn<"MuiDialogContent"> => ({
-  MuiDialogContent: {
-    styleOverrides: {
-      root: {
-        ...theme.typography.body1,
+export const MuiDialogContent = (theme: Theme): OverrideComponentReturn<"MuiDialogContent"> => ({
+  styleOverrides: {
+    root: {
+      ...theme.typography.body1,
 
-        "& + .MuiDialogActions-root": {
-          paddingTop: 0,
-        },
+      "& + .MuiDialogActions-root": {
+        paddingTop: 0,
       },
     },
   },

@@ -6,22 +6,20 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const tab = (theme: Theme): OverrideComponentReturn<"MuiTab"> => ({
-  MuiTab: {
-    styleOverrides: {
-      root: {
-        opacity: 0.8,
+export const MuiTab = (theme: Theme): OverrideComponentReturn<"MuiTab"> => ({
+  styleOverrides: {
+    root: {
+      opacity: 0.8,
 
-        "&.Mui-selected": {
-          opacity: 1,
-        },
-
-        "&:not(.Mui-selected):hover": {
-          opacity: 1,
-          color: theme.palette.text.primary,
-        },
+      "&.Mui-selected": {
+        opacity: 1,
       },
-      selected: {},
+
+      "&:not(.Mui-selected):hover": {
+        opacity: 1,
+        color: theme.palette.text.primary,
+      },
     },
+    selected: {},
   },
 });

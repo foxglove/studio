@@ -6,10 +6,8 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const formControl = (_theme: Theme): OverrideComponentReturn<"MuiFormControl"> => ({
-  MuiFormControl: {
-    defaultProps: {
-      variant: "standard",
-    },
+export const MuiFormControl = (_theme: Theme): OverrideComponentReturn<"MuiFormControl"> => ({
+  defaultProps: {
+    variant: "standard",
   },
 });

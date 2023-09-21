@@ -6,20 +6,18 @@ import { Theme } from "@mui/material";
 
 import { OverrideComponentReturn } from "@foxglove/theme/types";
 
-export const dialog = (theme: Theme): OverrideComponentReturn<"MuiDialog"> => ({
-  MuiDialog: {
-    defaultProps: {
-      PaperProps: {
-        elevation: 4,
-      },
+export const MuiDialog = (theme: Theme): OverrideComponentReturn<"MuiDialog"> => ({
+  defaultProps: {
+    PaperProps: {
+      elevation: 4,
     },
-    styleOverrides: {
-      paper: {
-        // Prevent dialog from going underneath window title bar controls on Windows
-        maxHeight: `calc(100% - 2 * (env(titlebar-area-height, ${theme.spacing(
-          2,
-        )}) + ${theme.spacing(2)}))`,
-      },
+  },
+  styleOverrides: {
+    paper: {
+      // Prevent dialog from going underneath window title bar controls on Windows
+      maxHeight: `calc(100% - 2 * (env(titlebar-area-height, ${theme.spacing(2)}) + ${theme.spacing(
+        2,
+      )}))`,
     },
   },
 });
