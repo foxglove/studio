@@ -2,15 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Theme } from "@mui/material";
+import { Theme, alpha } from "@mui/material";
 
 import { OverrideComponentReturn } from "../types";
 
-export const formLabel = (theme: Theme): OverrideComponentReturn<"MuiFormLabel"> => ({
-  MuiFormLabel: {
+export const dialog = (theme: Theme): OverrideComponentReturn<"MuiBackdrop"> => ({
+  MuiBackdrop: {
     styleOverrides: {
       root: {
-        marginBottom: theme.spacing(0.5),
+        backgroundColor: alpha(theme.palette.common.black, 0.4),
+      },
+      invisible: {
+        backgroundColor: "transparent",
       },
     },
   },

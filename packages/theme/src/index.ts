@@ -3,6 +3,5 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export * from "./createMuiTheme";
-export * from "./icons";
 export * as palette from "./palette";
 export * from "./typography";

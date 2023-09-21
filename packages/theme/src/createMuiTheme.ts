@@ -21,20 +21,13 @@ declare module "@mui/material/styles" {
   }
 }
 
-export function createMuiTheme(
-  themePreference: ThemePreference,
-  locale: Language | undefined,
-): Theme {
+export function createMuiTheme(themePreference: ThemePreference, locale?: Language): Theme {
   const theme = createTheme({
+    name: themePreference,
     palette: palette[themePreference],
     shape: { borderRadius: 2 },
     typography: typography({ locale }),
   });
 
-  // add name for storybook
-  return {
-    ...theme,
-    name: themePreference,
-    components: overrides(theme),
-  };
+  return createTheme({ components: overrides(theme) }, theme);
 }

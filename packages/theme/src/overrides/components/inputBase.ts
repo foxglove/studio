@@ -4,7 +4,7 @@
 
 import { Theme, inputBaseClasses } from "@mui/material";
 
-import { OverrideComponentReturn } from "../../types";
+import { OverrideComponentReturn } from "../types";
 
 export const inputBase = (theme: Theme): OverrideComponentReturn<"MuiInputBase"> => ({
   MuiInputBase: {

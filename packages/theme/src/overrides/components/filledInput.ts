@@ -4,7 +4,7 @@
 
 import { Theme, alpha, filledInputClasses } from "@mui/material";
 
-import { OverrideComponentReturn } from "../../types";
+import { OverrideComponentReturn } from "../types";
 
 export const filledInput = (theme: Theme): OverrideComponentReturn<"MuiFilledInput"> => ({
   MuiFilledInput: {

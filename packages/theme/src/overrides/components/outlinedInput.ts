@@ -4,7 +4,7 @@
 
 import { Theme } from "@mui/material";
 
-import { OverrideComponentReturn } from "@foxglove/studio-base/theme/overrides/types";
+import { OverrideComponentReturn } from "../types";
 
 export const outlinedInput = (theme: Theme): OverrideComponentReturn<"MuiOutlinedInput"> => ({
   MuiOutlinedInput: {

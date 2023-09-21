@@ -5,7 +5,6 @@
 import { ThemeOptions, TypographyStyle } from "@mui/material";
 
 import { Language } from "@foxglove/studio-base/src/i18n";
-import { fonts } from "@foxglove/studio-base/src/util/sharedStyleConstants";
 
 declare module "@mui/material/styles/createTypography" {
   interface Typography {
@@ -16,29 +15,30 @@ declare module "@mui/material/styles/createTypography" {
   }
 }
 
-export function typography({
-  locale,
-}: {
-  locale: Language | undefined;
-}): ThemeOptions["typography"] {
-  let fontFeatureSettings: string;
-  switch (locale) {
-    case "zh":
-    case "ja":
-      fontFeatureSettings = fonts.SANS_SERIF_FEATURE_SETTINGS_CJK;
-      break;
-    case "en":
-    default:
-      fontFeatureSettings = fonts.SANS_SERIF_FEATURE_SETTINGS;
-      break;
-  }
+// We explicitly avoid fallback fonts (such as 'monospace') here to work around a bug in
+// Chrome/Chromium on Windows that causes crashes when multiple Workers try to access fonts that
+// have not yet been loaded. There is a race against the internal DirectWrite font cache which
+// ends up crashing in DWriteFontFamily::GetFirstMatchingFont() or DWriteFont::Create().
+//
+// https://bugs.chromium.org/p/chromium/issues/detail?id=1261577
+const baseFontFamily = "'Inter'";
+export const fontMonospace = "'IBM Plex Mono'";
+
+// enable font features https://rsms.me/inter/lab
+const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
+
+// contextual alternates create undesired changes in Chinese/Japanese
+const fontFeatureSettingsCJK = "'tnum'";
+
+export function typography({ locale = "en" }: { locale?: Language }): ThemeOptions["typography"] {
   const baseFontStyles: TypographyStyle = {
-    fontFeatureSettings,
+    fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
   };
+
   return {
-    fontFamily: fonts.SANS_SERIF,
+    fontFamily: baseFontFamily,
     fontSize: 12,
-    fontFeatureSettings,
+    fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
     body1: {
       ...baseFontStyles,
     },

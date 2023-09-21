@@ -4,7 +4,7 @@
 
 import { Theme } from "@mui/material";
 
-import { OverrideComponentReturn } from "../../types";
+import { OverrideComponentReturn } from "../types";
 
 export const formControl = (_theme: Theme): OverrideComponentReturn<"MuiFormControl"> => ({
   MuiFormControl: {
