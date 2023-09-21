@@ -109,22 +109,20 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
 
     if (this.#annotationNeedsUpdate) {
       // Need to keep it transparent so that other transparent objects aren't rendered over it
-      const colorAlpha = Math.min(textColor.a, 0.999);
       this.#label.setText(text);
       this.#label.setColor(
         SRGBToLinear(textColor.r),
         SRGBToLinear(textColor.g),
         SRGBToLinear(textColor.b),
-        colorAlpha,
+        textColor.a,
       );
 
       if (backgroundColor) {
-        const backgroundAlpha = Math.min(backgroundColor.a, 0.999);
         this.#label.setBackgroundColor(
           SRGBToLinear(backgroundColor.r),
           SRGBToLinear(backgroundColor.g),
           SRGBToLinear(backgroundColor.b),
-          backgroundAlpha,
+          backgroundColor.a,
         );
       } else {
         const foregroundIsDark = getLuminance(textColor.r, textColor.g, textColor.b) < 0.5;
