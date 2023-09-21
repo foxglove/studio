@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ThemeOptions, TypographyStyle } from "@mui/material";
+import { ThemeOptions } from "@mui/material";
 
 import { Language } from "@foxglove/studio-base/src/i18n";
 
@@ -21,46 +21,40 @@ declare module "@mui/material/styles/createTypography" {
 // ends up crashing in DWriteFontFamily::GetFirstMatchingFont() or DWriteFont::Create().
 //
 // https://bugs.chromium.org/p/chromium/issues/detail?id=1261577
-const baseFontFamily = "'Inter'";
+export const baseFontFamily = "'Inter'";
 export const fontMonospace = "'IBM Plex Mono'";
 
 // enable font features https://rsms.me/inter/lab
-const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
+export const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
 
 // contextual alternates create undesired changes in Chinese/Japanese
-const fontFeatureSettingsCJK = "'tnum'";
+export const fontFeatureSettingsCJK = "'tnum'";
 
 export function typography({ locale = "en" }: { locale?: Language }): ThemeOptions["typography"] {
-  const baseFontStyles: TypographyStyle = {
-    fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
-  };
-
   return {
     fontFamily: baseFontFamily,
-    fontSize: 12,
+    fontSize: 16,
     fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
     body1: {
-      ...baseFontStyles,
+      fontSize: "0.875rem",
     },
     body2: {
-      ...baseFontStyles,
+      fontSize: "0.75rem",
     },
     button: {
-      ...baseFontStyles,
       textTransform: "none",
       fontWeight: 700,
       letterSpacing: "-0.0125em",
     },
     overline: {
-      ...baseFontStyles,
       letterSpacing: "0.05em",
       lineHeight: "1.5",
     },
-    h1: { ...baseFontStyles, fontSize: "2rem" },
-    h2: { ...baseFontStyles, fontSize: "1.8rem" },
-    h3: { ...baseFontStyles, fontSize: "1.6rem" },
-    h4: { ...baseFontStyles, fontSize: "1.2rem" },
-    h5: { ...baseFontStyles, fontSize: "1.1rem" },
-    h6: { ...baseFontStyles, fontSize: "1rem" },
+    h1: { fontSize: "2rem" },
+    h2: { fontSize: "1.8rem" },
+    h3: { fontSize: "1.6rem" },
+    h4: { fontSize: "1.2rem" },
+    h5: { fontSize: "1.1rem" },
+    h6: { fontSize: "1rem" },
   };
 }

@@ -11,7 +11,7 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "main": "src/index",
+  "main": "./src/index",
   "devDependencies": {
     "@emotion/cache": "11.11.0",
     "@emotion/react": "11.11.1",
