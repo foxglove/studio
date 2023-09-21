@@ -31,30 +31,35 @@ export const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
 export const fontFeatureSettingsCJK = "'tnum'";
 
 export function typography({ locale = "en" }: { locale?: Language }): ThemeOptions["typography"] {
+  const baseFontStyles = {
+    fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
+  };
   return {
+    ...baseFontStyles,
     fontFamily: baseFontFamily,
     fontSize: 12,
-    fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
     body1: {
-      // fontSize: "0.875rem",
+      ...baseFontStyles,
     },
     body2: {
-      // fontSize: "0.75rem",
+      ...baseFontStyles,
     },
     button: {
+      ...baseFontStyles,
       textTransform: "none",
       fontWeight: 700,
       letterSpacing: "-0.0125em",
     },
     overline: {
+      ...baseFontStyles,
       letterSpacing: "0.05em",
       lineHeight: "1.5",
     },
-    h1: { fontSize: "2rem" },
-    h2: { fontSize: "1.8rem" },
-    h3: { fontSize: "1.6rem" },
-    h4: { fontSize: "1.2rem" },
-    h5: { fontSize: "1.1rem" },
-    h6: { fontSize: "1rem" },
+    h1: { ...baseFontStyles, fontSize: "2rem" },
+    h2: { ...baseFontStyles, fontSize: "1.8rem" },
+    h3: { ...baseFontStyles, fontSize: "1.6rem" },
+    h4: { ...baseFontStyles, fontSize: "1.2rem" },
+    h5: { ...baseFontStyles, fontSize: "1.1rem" },
+    h6: { ...baseFontStyles, fontSize: "1rem" },
   };
 }
