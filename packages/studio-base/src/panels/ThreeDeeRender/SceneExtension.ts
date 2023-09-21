@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as _ from "lodash-es";
-import { EnqueueSnackbar } from "notistack";
 import * as THREE from "three";
 import { DeepPartial, Writable } from "ts-essentials";
 
@@ -106,10 +105,7 @@ export class SceneExtension<
   }
 
   /** Allows SceneExtensions to add options to the context menu. Provides function to add pop up information via enqueueSnackbar */
-  public getContextMenuItems = (
-    enqueueSnackbar: EnqueueSnackbar,
-  ): readonly PanelContextMenuItem[] => {
-    void enqueueSnackbar;
+  public getContextMenuItems = (): readonly PanelContextMenuItem[] => {
     return [];
   };
 

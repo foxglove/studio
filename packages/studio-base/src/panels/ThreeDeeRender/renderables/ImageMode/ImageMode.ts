@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as _ from "lodash-es";
-import { EnqueueSnackbar } from "notistack";
 import * as THREE from "three";
 import { Writable } from "ts-essentials";
 
@@ -867,7 +866,7 @@ export class ImageMode
     };
   }
 
-  #getDownloadImageCallback = (enqueueSnackbar: EnqueueSnackbar): (() => Promise<void>) => {
+  #getDownloadImageCallback = (): (() => Promise<void>) => {
     return async () => {
       const currentImage = this.#getLatestImage();
       if (!currentImage) {
@@ -929,19 +928,19 @@ export class ImageMode
         }
       } catch (error) {
         log.error(error);
-        enqueueSnackbar((error as Error).toString(), { variant: "error" });
+        if (this.renderer.displayTemporaryError) {
+          this.renderer.displayTemporaryError((error as Error).toString());
+        }
       }
     };
   };
 
-  public override getContextMenuItems = (
-    enqueueSnackbar: EnqueueSnackbar,
-  ): PanelContextMenuItem[] => {
+  public override getContextMenuItems = (): PanelContextMenuItem[] => {
     return [
       {
         type: "item",
         label: "Download image",
-        onclick: this.#getDownloadImageCallback(enqueueSnackbar),
+        onclick: this.#getDownloadImageCallback(),
         disabled: this.#latestImage == undefined,
       },
     ];

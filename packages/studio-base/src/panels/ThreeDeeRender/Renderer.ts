@@ -5,8 +5,6 @@
 import EventEmitter from "eventemitter3";
 import i18next from "i18next";
 import { produce } from "immer";
-import * as _ from "lodash-es";
-import { EnqueueSnackbar } from "notistack";
 import * as THREE from "three";
 import { DeepPartial, assert } from "ts-essentials";
 import { v4 as uuidv4 } from "uuid";
@@ -209,6 +207,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #devicePixelRatioMediaQuery?: MediaQueryList;
   #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 
+  public readonly displayTemporaryError?: (str: string) => void;
   /** Options passed for local testing and storybook. */
   public readonly testOptions: TestOptions;
   public analytics?: IAnalytics;
@@ -218,10 +217,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     config: Immutable<RendererConfig>;
     interfaceMode: InterfaceMode;
     fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
+    displayTemporaryError?: (message: string) => void;
     testOptions: TestOptions;
     sceneExtensionConfig: SceneExtensionConfig;
   }) {
     super();
+    this.displayTemporaryError = args.displayTemporaryError;
     // NOTE: Global side effect
     THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
 
@@ -1322,9 +1323,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     this.settings.errors.remove(FOLLOW_TF_PATH, FOLLOW_FRAME_NOT_FOUND);
   }
-  public getContextMenuItems = (enqueueSnackbar: EnqueueSnackbar): PanelContextMenuItem[] => {
-    return _.flatMap(Array.from(this.sceneExtensions.values()), (extension) =>
-      extension.getContextMenuItems(enqueueSnackbar),
+  public getContextMenuItems = (): PanelContextMenuItem[] => {
+    return Array.from(this.sceneExtensions.values()).flatMap((extension) =>
+      extension.getContextMenuItems(),
     );
   };
 

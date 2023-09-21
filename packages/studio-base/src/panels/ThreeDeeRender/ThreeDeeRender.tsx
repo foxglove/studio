@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as _ from "lodash-es";
+import { useSnackbar } from "notistack";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useLatest } from "react-use";
@@ -148,6 +149,16 @@ export function ThreeDeeRender(props: {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<IRenderer | undefined>(undefined);
   const rendererRef = useRef<IRenderer | undefined>(undefined);
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const displayTemporaryError = useCallback(
+    (errorString: string) => {
+      enqueueSnackbar(errorString, { variant: "error" });
+    },
+    [enqueueSnackbar],
+  );
+
   useEffect(() => {
     const newRenderer = canvas
       ? new Renderer({
@@ -160,6 +171,7 @@ export function ThreeDeeRender(props: {
             DEFAULT_SCENE_EXTENSION_CONFIG,
             customSceneExtensions ?? {},
           ),
+          displayTemporaryError,
           testOptions,
         })
       : undefined;
@@ -177,6 +189,7 @@ export function ThreeDeeRender(props: {
     interfaceMode,
     fetchAsset,
     testOptions,
+    displayTemporaryError,
   ]);
 
   useEffect(() => {

@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
-import { EnqueueSnackbar } from "notistack";
 import * as THREE from "three";
 
 import {
@@ -374,5 +373,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   handleDrop: (paths: readonly DraggedMessagePath[]) => void;
 
   /** Returns context menu items for active scene extensions. Takes Enqueue snackbar function for showing info that might result from option. */
-  getContextMenuItems: (enqueueSnackbar: EnqueueSnackbar) => PanelContextMenuItem[];
+  getContextMenuItems: () => PanelContextMenuItem[];
+
+  displayTemporaryError?: (message: string) => void;
 }

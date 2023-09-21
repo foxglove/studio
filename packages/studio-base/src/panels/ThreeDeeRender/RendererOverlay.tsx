@@ -13,7 +13,6 @@ import {
   Paper,
   useTheme,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLongPress } from "react-use";
@@ -94,7 +93,6 @@ export function RendererOverlay(props: {
   onClickPublish: () => void;
   timezone: string | undefined;
 }): JSX.Element {
-  const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation("threeDee");
   const { classes } = useStyles();
   const [clickedPosition, setClickedPosition] = useState<{ clientX: number; clientY: number }>({
