@@ -31,5 +31,8 @@ export const MuiInputBase = (theme: Theme): OverrideComponentReturn<"MuiInputBas
         opacity: 0,
       },
     },
+    inputSizeSmall: {
+      fontSize: theme.typography.body2.fontSize,
+    },
   },
 });
