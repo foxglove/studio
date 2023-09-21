@@ -45,7 +45,7 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
 import BottomBar from "@foxglove/studio-base/panels/NodePlayground/BottomBar";
-import Sidebar from "@foxglove/studio-base/panels/NodePlayground/Sidebar";
+import { Sidebar } from "@foxglove/studio-base/panels/NodePlayground/Sidebar";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig, UserNodes } from "@foxglove/studio-base/types/panels";
 
@@ -373,6 +373,8 @@ function NodePlayground(props: Props) {
           userNodes={userNodes}
           script={currentScript}
           setScriptOverride={setScriptOverride}
+          setUserNodes={setUserNodes}
+          selectedNode={selectedNode}
           addNewNode={addNewNode}
         />
         <Stack

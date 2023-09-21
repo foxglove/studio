@@ -312,6 +312,10 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
           "&:hover": {
             backgroundColor: theme.palette.action.hover,
           },
+          "&:focus-visible": {
+            outline: "1px solid currentColor",
+            outlineOffset: -1,
+          },
           ...disableBackgroundColorTransition,
         },
       },
