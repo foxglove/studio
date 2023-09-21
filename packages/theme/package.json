@@ -20,7 +20,6 @@
     "@fluentui/react-icons": "2.0.216",
     "@foxglove/studio-base": "workspace:*",
     "@foxglove/tsconfig": "2.0.0",
-    "@foxglove/typescript-transformers": "workspace:*",
     "@mui/icons-material": "5.14.9",
     "@mui/lab": "5.0.0-alpha.145",
     "@mui/material": "5.14.10",
