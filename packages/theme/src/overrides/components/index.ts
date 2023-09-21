@@ -5,6 +5,7 @@
 export * from "./autocomplete";
 export * from "./avatar";
 export * from "./badge";
+export * from "./backdrop";
 export * from "./button";
 export * from "./buttonBase";
 export * from "./card";
