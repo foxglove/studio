@@ -4,10 +4,10 @@
 
 import { createTheme, Theme } from "@mui/material/styles";
 
-import { overrides } from "@foxglove/theme/overrides";
-import * as palette from "@foxglove/theme/palette";
-import { Language } from "@foxglove/theme/types";
-import { typography } from "@foxglove/theme/typography";
+import { overrides } from "./overrides";
+import * as palette from "./palette";
+import { Language } from "./types";
+import { typography } from "./typography";
 
 type ThemePreference = "dark" | "light";
 

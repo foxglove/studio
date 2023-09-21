@@ -8,7 +8,7 @@ import type {} from "@mui/lab/themeAugmentation";
 import * as components from "./components";
 
 export function overrides(theme: Theme): Components<Theme> {
-  return Object.values(components).reduce((acc, fn) => {
-    return { ...acc, ...fn(theme) };
+  return Object.entries(components).reduce((acc, [key, fn]) => {
+    return { ...acc, [key]: fn(theme) };
   }, {});
 }

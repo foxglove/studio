@@ -4,7 +4,7 @@
 
 import { Theme, alpha, inputClasses } from "@mui/material";
 
-import { OverrideComponentReturn } from "@foxglove/theme/types";
+import { OverrideComponentReturn } from "../../types";
 
 export const MuiInput = (theme: Theme): OverrideComponentReturn<"MuiInput"> => ({
   defaultProps: {
@@ -19,13 +19,8 @@ export const MuiInput = (theme: Theme): OverrideComponentReturn<"MuiInput"> => (
       },
       "&.Mui-focused": {
         backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.focusOpacity),
-        // outline: "2px solid",
-        // outlineColor: theme.palette.primary.main,
-        // outlineOffset: -2,
 
         [`&.${inputClasses.colorSecondary}`]: {
-          // outlineColor: theme.palette.secondary.main,
-
           backgroundColor: alpha(theme.palette.secondary.main, theme.palette.action.focusOpacity),
         },
         [`&.${inputClasses.error}`]: {

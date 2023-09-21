@@ -4,7 +4,7 @@
 
 import { Theme } from "@mui/material";
 
-import { OverrideComponentReturn } from "@foxglove/theme/types";
+import { OverrideComponentReturn } from "../../types";
 
 export const MuiFormControl = (_theme: Theme): OverrideComponentReturn<"MuiFormControl"> => ({
   defaultProps: {

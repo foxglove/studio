@@ -4,7 +4,7 @@
 
 import { Theme, alpha, filledInputClasses } from "@mui/material";
 
-import { OverrideComponentReturn } from "@foxglove/theme/types";
+import { OverrideComponentReturn } from "../../types";
 
 export const MuiFilledInput = (theme: Theme): OverrideComponentReturn<"MuiFilledInput"> => ({
   defaultProps: {
@@ -22,13 +22,8 @@ export const MuiFilledInput = (theme: Theme): OverrideComponentReturn<"MuiFilled
 
       "&.Mui-focused": {
         backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.focusOpacity),
-        // outline: "2px solid",
-        // outlineColor: theme.palette.primary.main,
-        // outlineOffset: -2,
 
         [`&.${filledInputClasses.colorSecondary}`]: {
-          // outlineColor: theme.palette.secondary.main,
-
           backgroundColor: alpha(theme.palette.secondary.main, theme.palette.action.focusOpacity),
         },
         [`&.${filledInputClasses.error}`]: {
