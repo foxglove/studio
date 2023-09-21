@@ -41,9 +41,6 @@ export const MuiInputBase: OverrideComponentReturn<"MuiInputBase"> = {
         transition: "none",
         opacity: 0.6,
       },
-      ":focus::placeholder": {
-        opacity: 0,
-      },
     },
     inputSizeSmall: ({ theme }) => ({
       fontSize: theme.typography.body2.fontSize,
