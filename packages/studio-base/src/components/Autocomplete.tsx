@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CancelIcon from "@mui/icons-material/Cancel";
 import { MenuItem, Autocomplete as MuiAutocomplete, TextField, alpha } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
 import * as React from "react";
@@ -82,15 +81,6 @@ const useStyles = makeStyles()((theme) => {
         "&:hover, &:focus-within": {
           paddingRight: theme.spacing(2.5),
         },
-      },
-    },
-    clearIndicator: {
-      marginRight: theme.spacing(-0.25),
-      opacity: theme.palette.action.disabledOpacity,
-
-      ":hover": {
-        background: "transparent",
-        opacity: 1,
       },
     },
     inputError: {
@@ -280,13 +270,8 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   return (
     <MuiAutocomplete
       className={classes.root}
-      clearIcon={<CancelIcon fontSize="small" />}
       componentsProps={{
         paper: { elevation: 8 },
-        clearIndicator: {
-          size: "small",
-          className: classes.clearIndicator,
-        },
       }}
       disableCloseOnSelect
       disabled={disabled}

@@ -2,14 +2,19 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DismissCircle20Filled } from "@fluentui/react-icons";
-import { Theme, autocompleteClasses, inputBaseClasses } from "@mui/material";
+import CancelIcon from "@mui/icons-material/Cancel";
+import { Theme, autocompleteClasses, inputBaseClasses, inputClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "../../types";
 
 export const MuiAutocomplete = (theme: Theme): OverrideComponentReturn<"MuiAutocomplete"> => ({
   defaultProps: {
-    clearIcon: <DismissCircle20Filled />,
+    clearIcon: <CancelIcon fontSize="inherit" />,
+    componentsProps: {
+      clearIndicator: {
+        size: "small",
+      },
+    },
   },
   styleOverrides: {
     root: {
@@ -25,6 +30,18 @@ export const MuiAutocomplete = (theme: Theme): OverrideComponentReturn<"MuiAutoc
         [`&.${inputBaseClasses.sizeSmall}`]: {
           padding: theme.spacing(0.75, 1),
         },
+      },
+      [`.${autocompleteClasses.input}.${inputClasses.inputAdornedEnd}`]: {
+        paddingRight: theme.spacing(0.75),
+      },
+    },
+    clearIndicator: {
+      marginRight: theme.spacing(-0.5),
+      opacity: theme.palette.action.disabledOpacity,
+
+      ":hover": {
+        background: "transparent",
+        opacity: 1,
       },
     },
     endAdornment: {
