@@ -17,6 +17,11 @@ import {
   Topic,
 } from "@foxglove/studio";
 import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
+import { RendererConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/config";
+import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import {
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
@@ -37,14 +42,9 @@ import { makePose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms
 import { ImageModeCamera } from "./ImageModeCamera";
 import { MessageHandler, MessageRenderState } from "./MessageHandler";
 import { ImageAnnotations } from "./annotations/ImageAnnotations";
-import type {
-  AnyRendererSubscription,
-  IRenderer,
-  ImageModeConfig,
-  RendererConfig,
-} from "../../IRenderer";
+import type { AnyRendererSubscription, IRenderer, ImageModeConfig } from "../../IRenderer";
 import { PartialMessageEvent, SceneExtension } from "../../SceneExtension";
-import { SettingsTreeEntry } from "../../SettingsManager";
+import { SettingsPath, SettingsTreeEntry } from "../../SettingsManager";
 import {
   CAMERA_CALIBRATION_DATATYPES,
   COMPRESSED_IMAGE_DATATYPES,
@@ -61,7 +61,7 @@ import { ICameraHandler } from "../ICameraHandler";
 import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
 import { ColorModeSettings, colorModeSettingsFields } from "../colorMode";
 
-const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
+const IMAGE_TOPIC_PATH: SettingsPath = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
 
 const IMAGE_TOPIC_UNAVAILABLE = "IMAGE_TOPIC_UNAVAILABLE";
@@ -558,14 +558,15 @@ export class ImageMode
     draft: Writable<RendererConfig>,
     path: DraggedMessagePath,
   ): void => {
-    if (path.rootSchemaName == undefined) {
-      return;
+    if (!path.isTopic || path.rootSchemaName == undefined) {
+      return undefined;
     }
     if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
       draft.imageMode.imageTopic = path.path;
     } else if (this.#annotations.supportedAnnotationSchemas.has(path.rootSchemaName)) {
       draft.imageMode.annotations ??= {};
-      draft.imageMode.annotations[path.path] = { visible: true };
+      const namespacedTopic = namespaceTopic(path.path, path.rootSchemaName);
+      draft.imageMode.annotations[namespacedTopic] = { visible: true };
     }
   };
 
@@ -598,7 +599,7 @@ export class ImageMode
   };
 
   #handleImageChange = (messageEvent: PartialMessageEvent<AnyImage>, image: AnyImage): void => {
-    const topic = messageEvent.topic;
+    const topic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
 
@@ -648,7 +649,7 @@ export class ImageMode
   };
 
   #getImageRenderable(
-    topicName: string,
+    topicName: NamespacedTopic,
     receiveTime: bigint,
     image: AnyImage | undefined,
     frameId: string,

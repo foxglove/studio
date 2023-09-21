@@ -7,12 +7,13 @@ import * as THREE from "three";
 import { DeepPartial, Writable } from "ts-essentials";
 
 import { DraggedMessagePath, MessageEvent, SettingsTreeAction } from "@foxglove/studio";
+import { RendererConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/config";
 
-import type { AnyRendererSubscription, IRenderer, RendererConfig } from "./IRenderer";
+import type { AnyRendererSubscription, IRenderer } from "./IRenderer";
 import { Path } from "./LayerErrors";
 import { Renderable } from "./Renderable";
 import type { SettingsTreeEntry } from "./SettingsManager";
-import { missingTransformMessage, MISSING_TRANSFORM } from "./renderables/transforms";
+import { MISSING_TRANSFORM, missingTransformMessage } from "./renderables/transforms";
 import { AnyFrameId } from "./transforms";
 import { updatePose } from "./updatePose";
 

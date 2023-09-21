@@ -9,6 +9,7 @@ import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeome
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { Color } from "@foxglove/schemas";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
 import {
@@ -87,7 +88,7 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
-  public constructor(topicName: string) {
+  public constructor(topicName: NamespacedTopic) {
     super(topicName, undefined, {
       receiveTime: 0n,
       messageTime: 0n,

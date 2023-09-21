@@ -9,6 +9,7 @@ import tinycolor from "tinycolor2";
 import { ImageAnnotations, LineType, PointsAnnotationType, SceneUpdate } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
+import { namespaceTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { makeRawImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
 import { xyzrpyToPose } from "@foxglove/studio-base/panels/ThreeDeeRender/transforms";
 import { Topic } from "@foxglove/studio-base/players/types";
@@ -267,15 +268,13 @@ const ImageWith3D = (initialConfig: ImageModeConfig): JSX.Element => {
           },
           imageMode: {
             ...initialConfig,
-            annotations: { annotations: { visible: true } },
+            annotations: {
+              [namespaceTopic("annotations", "foxglove.ImageAnnotations")]: { visible: true },
+            },
           },
-          topics: {
-            sceneUpdate1: {
-              visible: false,
-            },
-            sceneUpdate2: {
-              visible: true,
-            },
+          namespacedTopics: {
+            [namespaceTopic("sceneUpdate1", "foxglove.SceneUpdate")]: { visible: false },
+            [namespaceTopic("sceneUpdate2", "foxglove.SceneUpdate")]: { visible: true },
           },
         }}
       />

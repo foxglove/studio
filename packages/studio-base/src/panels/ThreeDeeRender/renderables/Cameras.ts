@@ -9,6 +9,10 @@ import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration } from "@foxglove/schemas";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { RenderableLineList } from "./markers/RenderableLineList";
@@ -21,16 +25,16 @@ import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
 import { CAMERA_CALIBRATION_DATATYPES } from "../foxglove";
 import {
   CameraInfo,
-  CAMERA_INFO_DATATYPES as ROS_CAMERA_INFO_DATATYPES,
   IncomingCameraInfo,
   Marker,
   MarkerAction,
   MarkerType,
+  CAMERA_INFO_DATATYPES as ROS_CAMERA_INFO_DATATYPES,
   TIME_ZERO,
   Vector3,
 } from "../ros";
-import { BaseSettings, fieldLineWidth, PRECISION_DISTANCE } from "../settings";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+import { BaseSettings, PRECISION_DISTANCE, fieldLineWidth } from "../settings";
+import { convertibleSchemaForTopic } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 
 const log = Logger.getLogger(__filename);
@@ -104,19 +108,19 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    const configTopics = this.renderer.config.topics;
+    const configTopics = this.renderer.config.namespacedTopics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (
-        !(
-          topicIsConvertibleToSchema(topic, ROS_CAMERA_INFO_DATATYPES) ||
-          topicIsConvertibleToSchema(topic, CAMERA_CALIBRATION_DATATYPES)
-        )
-      ) {
+      const schema =
+        convertibleSchemaForTopic(topic, ROS_CAMERA_INFO_DATATYPES) ??
+        convertibleSchemaForTopic(topic, CAMERA_CALIBRATION_DATATYPES);
+      if (!schema) {
         continue;
       }
-      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsCameraInfo>;
+
+      const namespacedTopic = namespaceTopic(topic.name, topic.schemaName);
+      const config = (configTopics[namespacedTopic] ?? {}) as Partial<LayerSettingsCameraInfo>;
 
       const fields: SettingsTreeFields = {
         distance: {
@@ -146,9 +150,10 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
       };
 
       entries.push({
-        path: ["topics", topic.name],
+        path: ["namespacedTopics", namespacedTopic],
         node: {
           icon: "Camera",
+          label: topic.name,
           fields,
           visible: config.visible ?? DEFAULT_SETTINGS.visible,
           handler,
@@ -156,6 +161,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
         },
       });
     }
+    console.log({ entries });
     return entries;
   }
 
@@ -168,12 +174,12 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
     this.saveSetting(path, action.payload.value);
 
     // Update the renderable
-    const topicName = path[1]!;
+    const topicName = path[1]! as NamespacedTopic;
     const renderable = this.renderables.get(topicName);
     if (renderable) {
       const { cameraInfo, receiveTime, originalMessage } = renderable.userData;
       if (cameraInfo) {
-        const settings = this.renderer.config.topics[topicName] as
+        const settings = this.renderer.config.namespacedTopics[topicName] as
           | Partial<LayerSettingsCameraInfo>
           | undefined;
         this.#updateCameraInfoRenderable(
@@ -190,7 +196,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
   #handleCameraInfo = (
     messageEvent: PartialMessageEvent<IncomingCameraInfo | CameraCalibration>,
   ): void => {
-    const topic = messageEvent.topic;
+    const topic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
@@ -200,7 +206,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
       const frameId = this.renderer.normalizeFrameId(cameraInfo.header.frame_id);
 
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config.topics[topic] as
+      const userSettings = this.renderer.config.namespacedTopics[topic] as
         | Partial<LayerSettingsCameraInfo>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
@@ -210,7 +216,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
         messageTime,
         frameId,
         pose: makePose(),
-        settingsPath: ["topics", topic],
+        settingsPath: ["namespacedTopics", topic],
         settings,
         topic,
         cameraInfo: undefined,

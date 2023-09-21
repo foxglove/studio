@@ -19,6 +19,7 @@ import {
   SettingsTreeFields,
 } from "@foxglove/studio";
 import { makeRgba, stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { eulerToQuaternion } from "@foxglove/studio-base/util/geometry";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
@@ -30,7 +31,7 @@ import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 import type { AnyRendererSubscription, IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
 import { PartialMessageEvent, SceneExtension } from "../SceneExtension";
-import { SettingsTreeEntry } from "../SettingsManager";
+import { SettingsPath, SettingsTreeEntry } from "../SettingsManager";
 import {
   ColorRGBA,
   JointState,
@@ -53,10 +54,10 @@ import { updatePose } from "../updatePose";
 const log = Logger.getLogger(__filename);
 
 const LAYER_ID = "foxglove.Urdf";
-const TOPIC_NAME = "/robot_description";
+const TOPIC_NAME = "/robot_description" as NamespacedTopic;
 
 /** ID of fake "topic" used to represent the /robot_description parameter */
-const PARAM_KEY = "param:/robot_description";
+const PARAM_KEY = "param:/robot_description" as NamespacedTopic;
 /** Standard parameter name used for URDF data in ROS */
 const PARAM_NAME = "/robot_description";
 const PARAM_DISPLAY_NAME = "/robot_description (parameter)";
@@ -271,7 +272,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         },
       };
       entries.push({
-        path: ["topics", TOPIC_NAME],
+        path: ["namespacedTopics", TOPIC_NAME],
         node: {
           label: TOPIC_NAME,
           icon: "PrecisionManufacturing",
@@ -304,7 +305,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       };
 
       entries.push({
-        path: ["topics", PARAM_KEY],
+        path: ["namespacedTopics", PARAM_KEY],
         node: {
           label: PARAM_DISPLAY_NAME,
           icon: "PrecisionManufacturing",
@@ -809,12 +810,14 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
     const isTopicOrParam = instanceId === TOPIC_NAME || instanceId === PARAM_KEY;
     const frameId = this.renderer.fixedFrameId ?? ""; // Unused
-    const settingsPath = isTopicOrParam ? ["topics", instanceId] : ["layers", instanceId];
+    const settingsPath: SettingsPath = isTopicOrParam
+      ? ["namespacedTopics", instanceId as NamespacedTopic]
+      : ["layers", instanceId];
     const sourceType = (settings as Partial<LayerSettingsCustomUrdf>).sourceType;
     const url = (settings as Partial<LayerSettingsCustomUrdf>).url;
     const filePath = (settings as Partial<LayerSettingsCustomUrdf>).filePath;
     const parameter = (settings as Partial<LayerSettingsCustomUrdf>).parameter;
-    const topic = (settings as Partial<LayerSettingsCustomUrdf>).topic;
+    const topic = (settings as Partial<LayerSettingsCustomUrdf>).topic as NamespacedTopic;
     const framePrefix = (settings as Partial<LayerSettingsCustomUrdf>).framePrefix;
     const label =
       (settings as Partial<LayerSettingsCustomUrdf>).label ?? DEFAULT_CUSTOM_SETTINGS.label;
@@ -1062,7 +1065,7 @@ function createRenderable(args: {
   fallbackColor?: ColorRGBA;
 }): Renderable {
   const { visual, robot, id, frameId, renderer, baseUrl, fallbackColor } = args;
-  const name = `${frameId}-${id}-${visual.geometry.geometryType}`;
+  const name = `${frameId}-${id}-${visual.geometry.geometryType}` as NamespacedTopic;
   const orientation = eulerToQuaternion(visual.origin.rpy);
   const pose = { position: visual.origin.xyz, orientation };
   const color = getColor(visual, robot) ?? fallbackColor ?? DEFAULT_COLOR;

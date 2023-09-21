@@ -18,6 +18,7 @@ import {
 } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { namespaceTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import {
   makeCompressedImageAndCalibration,
   makeRawImageAndCalibration,
@@ -28,7 +29,7 @@ import delay from "@foxglove/studio-base/util/delay";
 
 import { ImagePanel } from "../../index";
 import { CameraInfo, CompressedImage as RosCompressedImage, Image as RosRawImage } from "../../ros";
-import { PNG_TEST_IMAGE, rad2deg, SENSOR_FRAME_ID } from "../common";
+import { PNG_TEST_IMAGE, SENSOR_FRAME_ID, rad2deg } from "../common";
 
 export default {
   title: "panels/ThreeDeeRender/Images",
@@ -640,7 +641,9 @@ const InvalidPinholeCamera = (): JSX.Element => {
           imageMode: {
             calibrationTopic: "calibration",
             imageTopic: "camera",
-            annotations: { annotations: { visible: true } },
+            annotations: {
+              [namespaceTopic("annotations", "foxglove.ImageAnnotations")]: { visible: true },
+            },
           },
         }}
       />
@@ -1077,7 +1080,9 @@ export const RationalPolynomialDistortion: StoryObj = {
             imageMode: {
               imageTopic,
               calibrationTopic,
-              annotations: { [annotationsTopic]: { visible: true } },
+              annotations: {
+                [namespaceTopic(annotationsTopic, "foxglove.ImageAnnotations")]: { visible: true },
+              },
             },
           }}
         />

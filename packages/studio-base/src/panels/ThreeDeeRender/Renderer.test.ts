@@ -15,7 +15,7 @@ import { CameraStateSettings } from "@foxglove/studio-base/panels/ThreeDeeRender
 import { DEFAULT_PUBLISH_SETTINGS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PublishSettings";
 import { TFMessage } from "@foxglove/studio-base/panels/ThreeDeeRender/ros";
 
-import { RendererConfig } from "./IRenderer";
+import { RendererConfig } from "./config";
 
 // Jest doesn't support ES module imports fully yet, so we need to mock the wasm file
 jest.mock("three/examples/jsm/libs/draco/draco_decoder.wasm", () => "");
@@ -72,12 +72,14 @@ const defaultRendererConfig: RendererConfig = {
   cameraState: DEFAULT_CAMERA_STATE,
   followMode: "follow-pose",
   followTf: undefined,
-  scene: {},
-  transforms: {},
-  topics: {},
-  layers: {},
-  publish: DEFAULT_PUBLISH_SETTINGS,
   imageMode: {},
+  layers: {},
+  namespacedTopics: {},
+  publish: DEFAULT_PUBLISH_SETTINGS,
+  scene: {},
+  topics: {},
+  transforms: {},
+  version: "2",
 };
 
 const makeTf = () => ({

@@ -4,6 +4,7 @@
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SceneEntity, TextPrimitive } from "@foxglove/schemas";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { Label, LabelPool } from "@foxglove/three-text";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
@@ -90,7 +91,7 @@ export class RenderableTexts extends RenderablePrimitive {
   }
 
   public override update(
-    topic: string | undefined,
+    topic: NamespacedTopic | undefined,
     entity: SceneEntity | undefined,
     settings: LayerSettingsEntity,
     receiveTime: bigint,

@@ -4,6 +4,10 @@
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { RenderableLineStrip } from "./markers/RenderableLineStrip";
@@ -17,13 +21,13 @@ import {
   Marker,
   MarkerAction,
   MarkerType,
+  POLYGON_STAMPED_DATATYPES,
   Polygon,
   PolygonStamped,
-  POLYGON_STAMPED_DATATYPES,
   TIME_ZERO,
 } from "../ros";
 import { BaseSettings } from "../settings";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+import { convertibleSchemaForTopic } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 
 export type LayerSettingsPolygon = BaseSettings & {
@@ -77,14 +81,16 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    const configTopics = this.renderer.config.topics;
+    const configTopics = this.renderer.config.namespacedTopics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicIsConvertibleToSchema(topic, POLYGON_STAMPED_DATATYPES)) {
+      const schema = convertibleSchemaForTopic(topic, POLYGON_STAMPED_DATATYPES);
+      if (!schema) {
         continue;
       }
-      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsPolygon>;
+      const namespacedTopic = namespaceTopic(topic.name, schema);
+      const config = (configTopics[namespacedTopic] ?? {}) as Partial<LayerSettingsPolygon>;
 
       // prettier-ignore
       const fields: SettingsTreeFields = {
@@ -93,7 +99,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
       };
 
       entries.push({
-        path: ["topics", topic.name],
+        path: ["namespacedTopics", namespacedTopic],
         node: {
           label: topic.name,
           icon: "Star",
@@ -115,10 +121,10 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
     this.saveSetting(path, action.payload.value);
 
     // Update the renderable
-    const topicName = path[1]!;
+    const topicName = path[1]! as NamespacedTopic;
     const renderable = this.renderables.get(topicName);
     if (renderable) {
-      const settings = this.renderer.config.topics[topicName] as
+      const settings = this.renderer.config.namespacedTopics[topicName] as
         | Partial<LayerSettingsPolygon>
         | undefined;
       renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
@@ -131,14 +137,14 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
   };
 
   #handlePolygon = (messageEvent: PartialMessageEvent<PolygonStamped>): void => {
-    const topic = messageEvent.topic;
+    const topic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
     const polygonStamped = normalizePolygonStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
     let renderable = this.renderables.get(topic);
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config.topics[topic] as
+      const userSettings = this.renderer.config.namespacedTopics[topic] as
         | Partial<LayerSettingsPolygon>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
@@ -148,7 +154,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
         messageTime: toNanoSec(polygonStamped.header.stamp),
         frameId: this.renderer.normalizeFrameId(polygonStamped.header.frame_id),
         pose: makePose(),
-        settingsPath: ["topics", topic],
+        settingsPath: ["namespacedTopics", topic],
         settings,
         topic,
         polygonStamped,

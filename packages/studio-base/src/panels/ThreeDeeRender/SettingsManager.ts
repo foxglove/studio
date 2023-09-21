@@ -6,6 +6,7 @@ import EventEmitter from "eventemitter3";
 import { produce } from "immer";
 
 import { SettingsTreeAction, SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 
 import { LayerErrors, Path } from "./LayerErrors";
 
@@ -13,7 +14,23 @@ export type ActionHandler = (action: SettingsTreeAction) => void;
 
 export type SettingsTreeNodeWithActionHandler = SettingsTreeNode & { handler?: ActionHandler };
 
-export type SettingsTreeEntry = { path: Path; node: SettingsTreeNodeWithActionHandler };
+export type SettingsPath =
+  | ["cameraState"]
+  | ["general"]
+  | ["imageAnnotations"]
+  | ["imageAnnotations", NamespacedTopic]
+  | ["imageMode"]
+  | ["imageMode", "imageTopic"]
+  | ["layers"]
+  | ["layers", string]
+  | ["namespacedTopics"]
+  | ["namespacedTopics", NamespacedTopic]
+  | ["publish"]
+  | ["scene"]
+  | ["transforms"]
+  | ["transforms", string];
+
+export type SettingsTreeEntry = { path: SettingsPath; node: SettingsTreeNodeWithActionHandler };
 
 export type SettingsManagerEvents = {
   update: () => void;

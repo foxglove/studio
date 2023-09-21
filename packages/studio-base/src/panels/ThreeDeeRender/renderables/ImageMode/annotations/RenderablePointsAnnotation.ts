@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
 import {
@@ -59,7 +60,7 @@ export class RenderablePointsAnnotation extends Renderable<BaseUserData, /*TRend
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
-  public constructor(topicName: string) {
+  public constructor(topicName: NamespacedTopic) {
     super(topicName, undefined, {
       receiveTime: 0n,
       messageTime: 0n,

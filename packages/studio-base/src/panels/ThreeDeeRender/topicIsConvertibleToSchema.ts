@@ -17,3 +17,22 @@ export function topicIsConvertibleToSchema(
     (topic.convertibleTo?.some((name) => supportedSchemaNames.has(name)) ?? false)
   );
 }
+
+/**
+ * Finds the most appropriate schema for a topic given a set of supported schemas. Prefers
+ * a schema we support directly and falls back to a schema we can convert the topic to.
+ *
+ * @param topic the topic in question
+ * @param supportedSchemaNames schemas that the client supports
+ * @returns the best schema for the client to subscribe under
+ */
+export function convertibleSchemaForTopic(
+  topic: Topic,
+  supportedSchemaNames: ReadonlySet<string>,
+): undefined | string {
+  if (supportedSchemaNames.has(topic.schemaName)) {
+    return topic.schemaName;
+  }
+
+  return topic.convertibleTo?.find((name) => supportedSchemaNames.has(name));
+}

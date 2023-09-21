@@ -7,7 +7,11 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { PoseInFrame } from "@foxglove/schemas";
-import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import { MessageEvent, SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import { Axis, AXIS_LENGTH } from "./Axis";
@@ -27,19 +31,19 @@ import {
   normalizeTime,
 } from "../normalizeMessages";
 import {
+  ColorRGBA,
   Marker,
-  PoseWithCovarianceStamped,
-  PoseStamped,
-  POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
   MarkerAction,
   MarkerType,
-  TIME_ZERO,
   POSE_STAMPED_DATATYPES,
+  POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
+  PoseStamped,
   PoseWithCovariance,
-  ColorRGBA,
+  PoseWithCovarianceStamped,
+  TIME_ZERO,
 } from "../ros";
 import { BaseSettings, PRECISION_DISTANCE } from "../settings";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+import { convertibleSchemaForTopic } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 
 type DisplayType = "axis" | "arrow";
@@ -123,19 +127,23 @@ export class Poses extends SceneExtension<PoseRenderable> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    const configTopics = this.renderer.config.topics;
+    const configTopics = this.renderer.config.namespacedTopics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      const isPoseStamped = topicIsConvertibleToSchema(topic, POSE_STAMPED_DATATYPES);
-      const isPoseInFrame = topicIsConvertibleToSchema(topic, POSE_IN_FRAME_DATATYPES);
-      const isPoseWithCovarianceStamped = isPoseStamped
-        ? false
-        : topicIsConvertibleToSchema(topic, POSE_WITH_COVARIANCE_STAMPED_DATATYPES);
-      if (!(isPoseStamped || isPoseWithCovarianceStamped || isPoseInFrame)) {
+      const poseStampedSchema = convertibleSchemaForTopic(topic, POSE_STAMPED_DATATYPES);
+      const poseInFrameSchema = convertibleSchemaForTopic(topic, POSE_IN_FRAME_DATATYPES);
+      const poseWithCovarianceStampedSchema = poseStampedSchema
+        ? undefined
+        : convertibleSchemaForTopic(topic, POSE_WITH_COVARIANCE_STAMPED_DATATYPES);
+
+      const schema = poseStampedSchema ?? poseInFrameSchema ?? poseWithCovarianceStampedSchema;
+      if (schema == undefined) {
         continue;
       }
-      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsPose>;
+
+      const namespacedTopic = namespaceTopic(topic.name, schema);
+      const config = (configTopics[namespacedTopic] ?? {}) as Partial<LayerSettingsPose>;
       const type = config.type ?? DEFAULT_TYPE;
 
       const fields: SettingsTreeFields = {
@@ -174,7 +182,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
         };
       }
 
-      if (isPoseWithCovarianceStamped) {
+      if (schema === poseWithCovarianceStampedSchema) {
         const showCovariance = config.showCovariance ?? DEFAULT_SHOW_COVARIANCE;
         const covarianceColor = config.covarianceColor ?? DEFAULT_COVARIANCE_COLOR_STR;
 
@@ -193,7 +201,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
       }
 
       entries.push({
-        path: ["topics", topic.name],
+        path: ["namespacedTopics", namespacedTopic],
         node: {
           label: topic.name,
           icon: "Flag",
@@ -204,6 +212,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
         },
       });
     }
+
     return entries;
   }
 
@@ -216,10 +225,10 @@ export class Poses extends SceneExtension<PoseRenderable> {
     this.saveSetting(path, action.payload.value);
 
     // Update the renderable
-    const topicName = path[1]!;
-    const renderable = this.renderables.get(topicName);
+    const topic = path[1]! as NamespacedTopic;
+    const renderable = this.renderables.get(topic);
     if (renderable) {
-      const settings = this.renderer.config.topics[topicName] as
+      const settings = this.renderer.config.namespacedTopics[topic] as
         | Partial<LayerSettingsPose>
         | undefined;
       this.#updatePoseRenderable(
@@ -235,13 +244,13 @@ export class Poses extends SceneExtension<PoseRenderable> {
   #handlePoseStamped = (messageEvent: PartialMessageEvent<PoseStamped>): void => {
     const poseMessage = normalizePoseStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
-    this.#addPose(messageEvent.topic, poseMessage, messageEvent.message, receiveTime);
+    this.#addPose(messageEvent, poseMessage, receiveTime);
   };
 
   #handlePoseInFrame = (messageEvent: PartialMessageEvent<PoseInFrame>): void => {
     const poseMessage = normalizePoseInFrameToPoseStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
-    this.#addPose(messageEvent.topic, poseMessage, messageEvent.message, receiveTime);
+    this.#addPose(messageEvent, poseMessage, receiveTime);
   };
 
   #handlePoseWithCovariance = (
@@ -249,46 +258,46 @@ export class Poses extends SceneExtension<PoseRenderable> {
   ): void => {
     const poseMessage = normalizePoseWithCovarianceStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
-    this.#addPose(messageEvent.topic, poseMessage, messageEvent.message, receiveTime);
+    this.#addPose(messageEvent, poseMessage, receiveTime);
   };
 
   #addPose(
-    topic: string,
+    originalMessage: MessageEvent<Record<string, RosValue>>,
     poseMessage: PoseStamped | PoseWithCovarianceStamped,
-    originalMessage: Record<string, RosValue>,
     receiveTime: bigint,
   ): void {
-    let renderable = this.renderables.get(topic);
+    const namespacedTopic = namespaceTopic(originalMessage.topic, originalMessage.schemaName);
+    let renderable = this.renderables.get(namespacedTopic);
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config.topics[topic] as
+      const userSettings = this.renderer.config.namespacedTopics[namespacedTopic] as
         | Partial<LayerSettingsPose>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
 
-      renderable = new PoseRenderable(topic, this.renderer, {
+      renderable = new PoseRenderable(namespacedTopic, this.renderer, {
         receiveTime,
         messageTime: toNanoSec(poseMessage.header.stamp),
         frameId: this.renderer.normalizeFrameId(poseMessage.header.frame_id),
         pose: makePose(),
-        settingsPath: ["topics", topic],
+        settingsPath: ["namespacedTopics", namespacedTopic],
         settings,
-        topic,
+        topic: namespacedTopic,
         poseMessage,
-        originalMessage,
+        originalMessage: originalMessage.message,
         axis: undefined,
         arrow: undefined,
         sphere: undefined,
       });
 
       this.add(renderable);
-      this.renderables.set(topic, renderable);
+      this.renderables.set(namespacedTopic, renderable);
     }
 
     this.#updatePoseRenderable(
       renderable,
       poseMessage,
-      originalMessage,
+      originalMessage.message,
       receiveTime,
       renderable.userData.settings,
     );

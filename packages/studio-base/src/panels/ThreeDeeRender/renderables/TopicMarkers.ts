@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableMarker, getMarkerId } from "./markers/RenderableMarker";
 import { RenderableMeshResource } from "./markers/RenderableMeshResource";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
@@ -44,11 +46,11 @@ export class MarkersNamespace {
   public markersById = new Map<number, RenderableMarker>();
   public settings: LayerSettingsMarkerNamespace;
 
-  public constructor(topic: string, namespace: string, renderer: IRenderer) {
+  public constructor(topic: NamespacedTopic, namespace: string, renderer: IRenderer) {
     this.namespace = namespace;
 
     // Set the initial settings from default values merged with any user settings
-    const topicSettings = renderer.config.topics[topic] as PartialMarkerSettings;
+    const topicSettings = renderer.config.namespacedTopics[topic] as PartialMarkerSettings;
     const userSettings = topicSettings?.namespaces?.[namespace];
     this.settings = { ...DEFAULT_NAMESPACE_SETTINGS, ...userSettings };
   }

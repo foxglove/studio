@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import type { RendererConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { DEFAULT_CAMERA_STATE } from "@foxglove/studio-base/panels/ThreeDeeRender/camera";
+import { RendererConfigV1 } from "@foxglove/studio-base/panels/ThreeDeeRender/config";
 import { DEFAULT_PUBLISH_SETTINGS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PublishSettings";
 import {
   getAllPanelIds,
@@ -31,7 +31,7 @@ type LegacyImageConfig = {
   zoomPercentage?: number;
 };
 
-function migrateLegacyToNewImageConfig(legacyConfig: Partial<LegacyImageConfig>): RendererConfig {
+function migrateLegacyToNewImageConfig(legacyConfig: Partial<LegacyImageConfig>): RendererConfigV1 {
   return {
     cameraState: DEFAULT_CAMERA_STATE,
     followMode: "follow-pose",

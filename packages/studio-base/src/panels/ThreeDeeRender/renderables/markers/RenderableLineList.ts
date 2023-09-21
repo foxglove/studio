@@ -6,6 +6,8 @@ import * as THREE from "three";
 import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2";
 import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry";
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableMarker } from "./RenderableMarker";
 import {
   makeLineMaterial,
@@ -25,7 +27,7 @@ export class RenderableLineList extends RenderableMarker {
   #colorBuffer = new Uint8Array();
 
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: IRenderer,

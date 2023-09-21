@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+export const ALL_FOXGLOVE_DATATYPES = new Set<string>();
+
 export const FRAME_TRANSFORM_DATATYPES = new Set<string>();
 addFoxgloveSchema(FRAME_TRANSFORM_DATATYPES, "foxglove.FrameTransform");
 
@@ -58,6 +60,10 @@ function addFoxgloveSchema(output: Set<string>, dataType: string): Set<string> {
 
   // Add the IDL variation: foxglove::PointCloud
   output.add(`foxglove::${leaf}`);
+
+  for (const schema of output) {
+    ALL_FOXGLOVE_DATATYPES.add(schema);
+  }
 
   return output;
 }

@@ -30,6 +30,7 @@ import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon"
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
+import { unnamespacetopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -179,7 +180,9 @@ export function RendererOverlay(props: {
             object: {
               pose: selectedRenderable.renderable.pose,
               interactionData: {
-                topic: selectedRenderable.renderable.topic,
+                topic: selectedRenderable.renderable.topic
+                  ? unnamespacetopic(selectedRenderable.renderable.topic)
+                  : undefined,
                 highlighted: true,
                 originalMessage: selectedRenderable.renderable.details(),
                 instanceDetails:

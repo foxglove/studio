@@ -7,6 +7,7 @@ import { userEvent, screen } from "@storybook/testing-library";
 import { useEffect, useState } from "react";
 
 import { MessageEvent } from "@foxglove/studio";
+import { namespaceTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -567,7 +568,14 @@ export const MarkersSettings: StoryObj = {
     return <AllMarkers showOutlines={true} includeSettings />;
   },
   play: async () => {
-    await userEvent.click(await screen.findByTestId("settings__nodeHeaderToggle__topics-/markers"));
+    await userEvent.click(
+      await screen.findByTestId(
+        `settings__nodeHeaderToggle__namespacedTopics-${namespaceTopic(
+          "/markers",
+          "visualization_msgs/Marker",
+        )}`,
+      ),
+    );
   },
 };
 

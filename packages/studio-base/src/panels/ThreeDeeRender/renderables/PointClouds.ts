@@ -10,6 +10,10 @@ import { NumericType, PackedElementField, PointCloud } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
 import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+import {
   autoSelectColorField,
   createGeometry,
   createInstancePickingMaterial,
@@ -45,7 +49,7 @@ import {
   PointField,
   PointFieldType,
 } from "../ros";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+import { convertibleSchemaForTopic } from "../topicIsConvertibleToSchema";
 import { makePose, Pose } from "../transforms";
 
 type PointCloudFieldReaders = {
@@ -133,7 +137,11 @@ export class PointCloudHistoryRenderable extends Renderable<PointCloudHistoryUse
   #pointsHistory: RenderObjectHistory<PointCloudRenderable>;
   #stixelsHistory: RenderObjectHistory<StixelsRenderable>;
 
-  public constructor(topic: string, renderer: IRenderer, userData: PointCloudHistoryUserData) {
+  public constructor(
+    topic: NamespacedTopic,
+    renderer: IRenderer,
+    userData: PointCloudHistoryUserData,
+  ) {
     super(topic, renderer, userData);
 
     const isDecay = userData.settings.decayTime > 0;
@@ -718,16 +726,17 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    const configTopics = this.renderer.config.topics;
+    const configTopics = this.renderer.config.namespacedTopics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      const isPointCloud = topicIsConvertibleToSchema(topic, ALL_POINTCLOUD_DATATYPES);
-      if (!isPointCloud) {
+      const schema = convertibleSchemaForTopic(topic, ALL_POINTCLOUD_DATATYPES);
+      if (!schema) {
         continue;
       }
-      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsPointClouds>;
-      const messageFields = this.#fieldsByTopic.get(topic.name) ?? POINT_CLOUD_REQUIRED_FIELDS;
+      const namespacedTopic = namespaceTopic(topic.name, schema);
+      const config = (configTopics[namespacedTopic] ?? {}) as Partial<LayerSettingsPointClouds>;
+      const messageFields = this.#fieldsByTopic.get(namespacedTopic) ?? POINT_CLOUD_REQUIRED_FIELDS;
       const node: SettingsTreeNodeWithActionHandler = pointSettingsNode(
         topic,
         messageFields,
@@ -740,7 +749,8 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
       };
       node.handler = handler;
       node.icon = "Points";
-      entries.push({ path: ["topics", topic.name], node });
+      node.label = topic.name;
+      entries.push({ path: ["namespacedTopics", namespacedTopic], node });
     }
     return entries;
   }
@@ -775,10 +785,10 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
     this.saveSetting(path, action.payload.value);
 
     // Update the renderable
-    const topicName = path[1]!;
+    const topicName = path[1]! as NamespacedTopic;
     const renderable = this.renderables.get(topicName);
     if (renderable) {
-      const prevSettings = this.renderer.config.topics[topicName] as
+      const prevSettings = this.renderer.config.namespacedTopics[topicName] as
         | Partial<LayerSettingsPointClouds>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
@@ -792,7 +802,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
   };
 
   #handleFoxglovePointCloud = (messageEvent: PartialMessageEvent<PointCloud>): void => {
-    const topic = messageEvent.topic;
+    const topic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
     const pointCloud = normalizePointCloud(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const messageTime = toNanoSec(pointCloud.timestamp);
@@ -816,7 +826,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
   };
 
   #handleRosPointCloud = (messageEvent: PartialMessageEvent<PointCloud2>): void => {
-    const topic = messageEvent.topic;
+    const topic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
     const pointCloud = normalizePointCloud2(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const messageTime = toNanoSec(pointCloud.header.stamp);
@@ -848,7 +858,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
   };
 
   #handlePointCloud(
-    topic: string,
+    topic: NamespacedTopic,
     pointCloud: PointCloud | PointCloud2,
     receiveTime: bigint,
     messageTime: bigint,
@@ -858,7 +868,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
     let renderable = this.renderables.get(topic);
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config.topics[topic] as
+      const userSettings = this.renderer.config.namespacedTopics[topic] as
         | Partial<LayerSettingsPointClouds>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
@@ -871,7 +881,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
           updatedUserSettings.colorField = settings.colorField;
           updatedUserSettings.colorMode = settings.colorMode;
           updatedUserSettings.colorMap = settings.colorMap;
-          draft.topics[topic] = updatedUserSettings;
+          draft.namespacedTopics[topic] = updatedUserSettings;
         });
       }
 
@@ -885,7 +895,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         messageTime,
         frameId: this.renderer.normalizeFrameId(frameId),
         pose: makePose(),
-        settingsPath: ["topics", topic],
+        settingsPath: ["namespacedTopics", topic],
         settings,
         topic,
         latestPointCloud: pointCloud,

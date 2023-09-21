@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PinholeCameraModel } from "@foxglove/den/image";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 import { Label, LabelPool } from "@foxglove/three-text";
 
@@ -30,7 +31,7 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
   #cameraModel?: PinholeCameraModel;
   #cameraModelNeedsUpdate = false;
 
-  public constructor(topicName: string, labelPool: LabelPool) {
+  public constructor(topicName: NamespacedTopic, labelPool: LabelPool) {
     super(topicName, undefined, {
       receiveTime: 0n,
       messageTime: 0n,

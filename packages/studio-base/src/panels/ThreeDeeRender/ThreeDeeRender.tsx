@@ -28,22 +28,18 @@ import {
   DEFAULT_SCENE_EXTENSION_CONFIG,
   SceneExtensionConfig,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
+import { RendererConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/config";
+import { useMigratedThreeDeeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/useMigratedThreeDeeConfig";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
-import type {
-  FollowMode,
-  IRenderer,
-  ImageModeConfig,
-  RendererConfig,
-  RendererEvents,
-  RendererSubscription,
-} from "./IRenderer";
+import type { FollowMode, IRenderer, RendererEvents, RendererSubscription } from "./IRenderer";
 import type { PickedRenderable } from "./Picker";
 import { SELECTED_ID_VARIABLE } from "./Renderable";
 import { Renderer } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { RendererOverlay } from "./RendererOverlay";
-import { CameraState, DEFAULT_CAMERA_STATE } from "./camera";
+import { CameraState } from "./camera";
+import { namespaceTopic } from "./namespaceTopic";
 import {
   PublishRos1Datatypes,
   PublishRos2Datatypes,
@@ -51,9 +47,7 @@ import {
   makePoseEstimateMessage,
   makePoseMessage,
 } from "./publish";
-import type { LayerSettingsTransform } from "./renderables/FrameAxes";
 import { PublishClickEvent } from "./renderables/PublishClickTool";
-import { DEFAULT_PUBLISH_SETTINGS } from "./renderables/PublishSettings";
 import { InterfaceMode } from "./types";
 
 const log = Logger.getLogger(__filename);
@@ -96,7 +90,7 @@ function useRendererProperty<K extends keyof IRenderer>(
 }
 
 /**
- * A panel that renders a 3D scene. This is a thin wrapper around a `Renderer` instance.
+ * A panel that renders a 3D scene. This is a wrapper around a `Renderer` instance.
  */
 export function ThreeDeeRender(props: {
   context: BuiltinPanelExtensionContext;
@@ -111,36 +105,13 @@ export function ThreeDeeRender(props: {
   const { context, interfaceMode, onDownloadImage, debugPicking, customSceneExtensions } = props;
   const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
 
-  // Load and save the persisted panel configuration
-  const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
-    const partialConfig = initialState as DeepPartial<RendererConfig> | undefined;
+  const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
 
-    // Initialize the camera from default settings overlaid with persisted settings
-    const cameraState: CameraState = _.merge(
-      _.cloneDeep(DEFAULT_CAMERA_STATE),
-      partialConfig?.cameraState,
-    );
-    const publish = _.merge(_.cloneDeep(DEFAULT_PUBLISH_SETTINGS), partialConfig?.publish);
+  const [config, setConfig] = useMigratedThreeDeeConfig(
+    initialState as undefined | Record<string, unknown>,
+    topics,
+  );
 
-    const transforms = (partialConfig?.transforms ?? {}) as Record<
-      string,
-      Partial<LayerSettingsTransform>
-    >;
-
-    return {
-      cameraState,
-      followMode: partialConfig?.followMode ?? "follow-pose",
-      followTf: partialConfig?.followTf,
-      scene: partialConfig?.scene ?? {},
-      transforms,
-      topics: partialConfig?.topics ?? {},
-      layers: partialConfig?.layers ?? {},
-      publish,
-      // deep partial on config, makes gradient tuple type [string | undefined, string | undefined]
-      // which is incompatible with `Partial<ColorModeSettings>`
-      imageMode: (partialConfig?.imageMode ?? {}) as Partial<ImageModeConfig>,
-    };
-  });
   const configRef = useLatest(config);
   const { cameraState } = config;
   const backgroundColor = config.scene.backgroundColor;
@@ -192,7 +163,6 @@ export function ThreeDeeRender(props: {
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();
-  const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
   const [parameters, setParameters] = useState<
     Immutable<Map<string, ParameterValue>> | undefined
   >();
@@ -244,7 +214,14 @@ export function ThreeDeeRender(props: {
     };
     renderer?.addListener("cameraMove", listener);
     return () => void renderer?.removeListener("cameraMove", listener);
-  }, [config.scene.syncCamera, config.followMode, context, renderer?.followFrameId, renderer]);
+  }, [
+    config.scene.syncCamera,
+    config.followMode,
+    context,
+    renderer?.followFrameId,
+    renderer,
+    setConfig,
+  ]);
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
@@ -280,9 +257,13 @@ export function ThreeDeeRender(props: {
   useRendererEvent("settingsTreeChange", updateSettingsTree, renderer);
 
   // Save the panel configuration when it changes
-  const updateConfig = useCallback((curRenderer: IRenderer) => {
-    setConfig(curRenderer.config);
-  }, []);
+  const updateConfig = useCallback(
+    (curRenderer: IRenderer) => {
+      setConfig(curRenderer.config);
+    },
+    [setConfig],
+  );
+
   useRendererEvent("configChange", updateConfig, renderer);
 
   // Write to a global variable when the current selection changes
@@ -419,16 +400,12 @@ export function ThreeDeeRender(props: {
       rendererSubscription: RendererSubscription,
       convertTo?: string,
     ) => {
-      let shouldSubscribe = rendererSubscription.shouldSubscribe?.(topic.name);
-      if (shouldSubscribe == undefined) {
-        if (config.topics[topic.name]?.visible === true) {
-          shouldSubscribe = true;
-        } else if (config.imageMode.annotations?.[topic.name]?.visible === true) {
-          shouldSubscribe = true;
-        } else {
-          shouldSubscribe = false;
-        }
-      }
+      const namespacedTopic = namespaceTopic(topic.name, convertTo ?? topic.schemaName);
+      const imageAnnotations = config.imageMode.annotations ?? {};
+      const shouldSubscribe =
+        rendererSubscription.shouldSubscribe?.(topic.name) === true ||
+        config.namespacedTopics[namespacedTopic]?.visible === true ||
+        imageAnnotations[namespacedTopic]?.visible === true;
       if (shouldSubscribe) {
         newSubscriptions.push({
           topic: topic.name,
@@ -457,11 +434,11 @@ export function ThreeDeeRender(props: {
     setTopicsToSubscribe((prev) => (_.isEqual(prev, newSubscriptions) ? prev : newSubscriptions));
   }, [
     topics,
-    config.topics,
     // Need to update subscriptions when imagemode topics change
     // shouldSubscribe values will be re-evaluated
     config.imageMode.calibrationTopic,
     config.imageMode.imageTopic,
+    config.namespacedTopics,
     schemaHandlers,
     topicHandlers,
     config.imageMode.annotations,
@@ -579,9 +556,10 @@ export function ThreeDeeRender(props: {
   }, [
     config.scene.syncCamera,
     config.followMode,
-    renderer,
     renderer?.followFrameId,
     sharedPanelState,
+    setConfig,
+    renderer,
   ]);
 
   // Render a new frame if requested

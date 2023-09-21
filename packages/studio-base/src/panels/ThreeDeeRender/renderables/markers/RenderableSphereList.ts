@@ -4,6 +4,8 @@
 
 import * as THREE from "three";
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableMarker } from "./RenderableMarker";
 import { createGeometry as createSphereGeometry } from "./RenderableSphere";
 import { markerHasTransparency, makeStandardInstancedMaterial } from "./materials";
@@ -15,7 +17,7 @@ export class RenderableSphereList extends RenderableMarker {
   #mesh: DynamicInstancedMesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
 
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: Renderer,

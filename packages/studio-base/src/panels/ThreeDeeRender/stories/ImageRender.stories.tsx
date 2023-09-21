@@ -9,6 +9,7 @@ import { create } from "zustand";
 
 import { CompressedImage, RawImage } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
+import { namespaceTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -189,7 +190,12 @@ export const ImageRenderSettings: typeof ImageRender = {
   args: { includeSettings: true },
   play: async () => {
     await userEvent.click(
-      await screen.findByTestId("settings__nodeHeaderToggle__topics-/cam1/info"),
+      await screen.findByTestId(
+        `settings__nodeHeaderToggle__namespacedTopics-${namespaceTopic(
+          "/cam1/info",
+          "sensor_msgs/CameraInfo",
+        )}`,
+      ),
     );
   },
 };

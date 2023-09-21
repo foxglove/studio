@@ -6,8 +6,8 @@ import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import type { RendererConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { DEFAULT_CAMERA_STATE } from "@foxglove/studio-base/panels/ThreeDeeRender/camera";
+import { RendererConfigV1 } from "@foxglove/studio-base/panels/ThreeDeeRender/config";
 import {
   getAllPanelIds,
   getPanelIdForType,
@@ -16,7 +16,7 @@ import {
 
 import { replacePanel } from "./replacePanel";
 
-const DEFAULT_PUBLISH_SETTINGS: RendererConfig["publish"] = {
+const DEFAULT_PUBLISH_SETTINGS: RendererConfigV1["publish"] = {
   type: "point",
   poseTopic: "/move_base_simple/goal",
   pointTopic: "/clicked_point",
@@ -50,7 +50,7 @@ type Legacy3DConfig = {
   followTf?: string;
 };
 
-function migrateLegacyToNew3DConfig(legacyConfig: Partial<Legacy3DConfig>): RendererConfig {
+function migrateLegacyToNew3DConfig(legacyConfig: Partial<Legacy3DConfig>): RendererConfigV1 {
   return {
     followTf: legacyConfig.followTf,
     followMode:

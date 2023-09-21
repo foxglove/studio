@@ -6,6 +6,7 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { ArrowPrimitive, SceneEntity } from "@foxglove/schemas";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { IRenderer } from "../../IRenderer";
@@ -248,7 +249,7 @@ export class RenderableArrows extends RenderablePrimitive {
   }
 
   public override update(
-    topic: string | undefined,
+    topic: NamespacedTopic | undefined,
     entity: SceneEntity | undefined,
     settings: LayerSettingsEntity,
     receiveTime: bigint,

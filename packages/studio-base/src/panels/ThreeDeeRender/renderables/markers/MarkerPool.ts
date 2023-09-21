@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableArrow } from "./RenderableArrow";
 import { RenderableCube } from "./RenderableCube";
 import { RenderableCubeList } from "./RenderableCubeList";
@@ -43,7 +45,7 @@ export class MarkerPool {
 
   public acquire<T extends MarkerType>(
     type: T,
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
   ): RenderableMarker {
@@ -51,7 +53,7 @@ export class MarkerPool {
     if (renderables) {
       const renderable = renderables.pop();
       if (renderable) {
-        renderable.userData.settingsPath = ["topics", topic];
+        renderable.userData.settingsPath = ["namespacedTopics", topic];
         renderable.userData.settings = { visible: true, frameLocked: marker.frame_locked };
         renderable.userData.topic = topic;
         renderable.name = getMarkerId(topic, marker.ns, marker.id);

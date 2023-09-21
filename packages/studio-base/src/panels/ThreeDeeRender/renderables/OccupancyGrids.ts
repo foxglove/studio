@@ -7,22 +7,26 @@ import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import type { RosValue } from "@foxglove/studio-base/players/types";
 
 import type { AnyRendererSubscription, IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
-import { rgbaToCssString, SRGBToLinear, stringToRgba } from "../color";
+import { SRGBToLinear, rgbaToCssString, stringToRgba } from "../color";
 import {
   normalizeHeader,
-  normalizePose,
   normalizeInt8Array,
+  normalizePose,
   normalizeTime,
 } from "../normalizeMessages";
-import { ColorRGBA, OccupancyGrid, OCCUPANCY_GRID_DATATYPES } from "../ros";
+import { ColorRGBA, OCCUPANCY_GRID_DATATYPES, OccupancyGrid } from "../ros";
 import { BaseSettings } from "../settings";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+import { convertibleSchemaForTopic } from "../topicIsConvertibleToSchema";
 
 type ColorModes = "custom" | "costmap" | "map" | "raw";
 
@@ -99,15 +103,18 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    const configTopics = this.renderer.config.topics;
+    const configTopics = this.renderer.config.namespacedTopics;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicIsConvertibleToSchema(topic, OCCUPANCY_GRID_DATATYPES)) {
+      const schema = convertibleSchemaForTopic(topic, OCCUPANCY_GRID_DATATYPES);
+      if (schema == undefined) {
         continue;
       }
 
-      const configWithDefaults = { ...DEFAULT_SETTINGS, ...configTopics[topic.name] };
+      const namespacedTopic = namespaceTopic(topic.name, schema);
+
+      const configWithDefaults = { ...DEFAULT_SETTINGS, ...configTopics[namespacedTopic] };
 
       let fields: SettingsTreeFields = {
         colorMode: {
@@ -175,7 +182,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       };
 
       entries.push({
-        path: ["topics", topic.name],
+        path: ["namespacedTopics", namespacedTopic],
         node: {
           label: topic.name,
           icon: "Cells",
@@ -198,11 +205,11 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     this.saveSetting(path, action.payload.value);
 
     // Update the renderable
-    const topicName = path[1]!;
-    const renderable = this.renderables.get(topicName);
+    const settingsKey = path[1]! as NamespacedTopic;
+    const renderable = this.renderables.get(settingsKey);
     if (renderable) {
       const prevTransparent = occupancyGridHasTransparency(renderable.userData.settings);
-      const settings = this.renderer.config.topics[topicName] as
+      const settings = this.renderer.config.namespacedTopics[settingsKey] as
         | Partial<LayerSettingsOccupancyGrid>
         | undefined;
       renderable.userData.settings = { ...DEFAULT_SETTINGS, ...settings };
@@ -224,14 +231,14 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
   };
 
   #handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
-    const topic = messageEvent.topic;
+    const topic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
     const occupancyGrid = normalizeOccupancyGrid(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
 
     let renderable = this.renderables.get(topic);
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config.topics[topic] as
+      const userSettings = this.renderer.config.namespacedTopics[topic] as
         | Partial<LayerSettingsOccupancyGrid>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
@@ -251,7 +258,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
         messageTime: toNanoSec(occupancyGrid.header.stamp),
         frameId: this.renderer.normalizeFrameId(occupancyGrid.header.frame_id),
         pose: occupancyGrid.info.origin,
-        settingsPath: ["topics", topic],
+        settingsPath: ["namespacedTopics", topic],
         settings,
         topic,
         occupancyGrid,

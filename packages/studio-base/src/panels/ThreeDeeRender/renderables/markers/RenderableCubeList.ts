@@ -4,6 +4,8 @@
 
 import * as THREE from "three";
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { createGeometry as createCubeGeometry } from "./RenderableCube";
 import { RenderableMarker } from "./RenderableMarker";
 import { markerHasTransparency, makeStandardInstancedMaterial } from "./materials";
@@ -16,7 +18,7 @@ export class RenderableCubeList extends RenderableMarker {
   // outline: THREE.LineSegments | undefined;
 
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: Renderer,

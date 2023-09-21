@@ -8,6 +8,7 @@ import { quat } from "gl-matrix";
 
 import { FrameTransform, PoseInFrame } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
+import { namespaceTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -167,7 +168,14 @@ export const Foxglove_PoseInFrame: StoryObj = {
   },
 
   play: async () => {
-    await userEvent.click(await screen.findByTestId("settings__nodeHeaderToggle__topics-/pose1"));
+    await userEvent.click(
+      await screen.findByTestId(
+        `settings__nodeHeaderToggle__namespacedTopics-${namespaceTopic(
+          "/pose1",
+          "foxglove.PoseInFrame",
+        )}`,
+      ),
+    );
   },
 };
 

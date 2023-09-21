@@ -4,6 +4,8 @@
 
 import * as THREE from "three";
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
 import type { IRenderer } from "../../IRenderer";
@@ -16,7 +18,7 @@ export class RenderableCylinder extends RenderableMarker {
   #outline: THREE.LineSegments;
 
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: IRenderer,

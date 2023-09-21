@@ -8,6 +8,7 @@ import * as THREE from "three";
 
 import { ImageAnnotations, SceneUpdate } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
+import { namespaceTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { makeRawImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -125,7 +126,9 @@ const BaseStory = ({ rotation, flipHorizontal, flipVertical }: BaseStoryProps): 
             imageMode: {
               calibrationTopic: "calibration",
               imageTopic: "camera",
-              annotations: { annotations: { visible: true } },
+              annotations: {
+                [namespaceTopic("annotations", "foxglove.ImageAnnotations")]: { visible: true },
+              },
               rotation,
               flipHorizontal,
               flipVertical,

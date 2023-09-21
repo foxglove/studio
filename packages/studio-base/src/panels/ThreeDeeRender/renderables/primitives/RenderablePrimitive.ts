@@ -5,6 +5,7 @@
 import { SceneEntity } from "@foxglove/schemas";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { RosValue } from "@foxglove/studio-base/players/types";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
@@ -40,7 +41,7 @@ export class RenderablePrimitive extends Renderable<EntityRenderableUserData> {
     super(name, renderer, userData);
   }
   public update(
-    topic: string | undefined,
+    topic: NamespacedTopic | undefined,
     entity: SceneEntity | undefined,
     settings: LayerSettingsEntity,
     receiveTime: bigint,

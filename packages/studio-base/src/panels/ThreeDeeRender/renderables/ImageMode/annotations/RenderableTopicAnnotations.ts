@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { RosObject } from "@foxglove/studio-base/players/types";
 import { LabelPool } from "@foxglove/three-text";
 
@@ -35,9 +36,9 @@ export class RenderableTopicAnnotations extends THREE.Object3D {
   #cameraModelNeedsUpdate = false;
 
   #originalMessage?: RosObject;
-  #topicName: string;
+  #topicName: NamespacedTopic;
 
-  public constructor(topicName: string, labelPool: LabelPool) {
+  public constructor(topicName: NamespacedTopic, labelPool: LabelPool) {
     super();
     this.#labelPool = labelPool;
     this.#topicName = topicName;

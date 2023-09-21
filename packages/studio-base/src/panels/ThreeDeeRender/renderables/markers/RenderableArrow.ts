@@ -5,6 +5,8 @@
 import * as THREE from "three";
 import { clamp } from "three/src/math/MathUtils";
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
 import type { IRenderer } from "../../IRenderer";
@@ -33,7 +35,7 @@ export class RenderableArrow extends RenderableMarker {
   #headOutline: THREE.LineSegments;
 
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: IRenderer,

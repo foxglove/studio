@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import { EDGE_LINE_SEGMENTS_NAME } from "@foxglove/studio-base/panels/ThreeDeeRender/ModelCache";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 
 import { RenderableMarker } from "./RenderableMarker";
 import { makeStandardMaterial } from "./materials";
@@ -24,7 +25,7 @@ export class RenderableMeshResource extends RenderableMarker {
   #updateId = 0;
 
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: IRenderer,

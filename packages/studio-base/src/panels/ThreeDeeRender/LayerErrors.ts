@@ -8,7 +8,7 @@ import Logger from "@foxglove/log";
 
 export type Path = ReadonlyArray<string>;
 
-const TOPIC_PATH: [string, string] = ["topics", ""];
+const TOPIC_PATH: [string, string] = ["namespacedTopics", ""];
 
 export class NodeError {
   public path: Path;

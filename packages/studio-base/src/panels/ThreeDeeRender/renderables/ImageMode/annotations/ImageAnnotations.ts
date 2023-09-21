@@ -10,6 +10,10 @@ import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas"
 import { Immutable, MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
 import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+import {
   ImageMarker as RosImageMarker,
   ImageMarkerArray as RosImageMarkerArray,
 } from "@foxglove/studio-base/types/Messages";
@@ -21,13 +25,14 @@ import { AnyRendererSubscription, ImageModeConfig } from "../../../IRenderer";
 import { SettingsTreeEntry } from "../../../SettingsManager";
 import { IMAGE_ANNOTATIONS_DATATYPES } from "../../../foxglove";
 import { IMAGE_MARKER_ARRAY_DATATYPES, IMAGE_MARKER_DATATYPES } from "../../../ros";
-import { topicIsConvertibleToSchema } from "../../../topicIsConvertibleToSchema";
+import {
+  convertibleSchemaForTopic,
+  topicIsConvertibleToSchema,
+} from "../../../topicIsConvertibleToSchema";
 import { sortPrefixMatchesToFront } from "../../Images/topicPrefixMatching";
 import { MessageHandler, MessageRenderState } from "../MessageHandler";
 
 const MISSING_SYNCHRONIZED_ANNOTATION = "MISSING_SYNCHRONIZED_ANNOTATION";
-
-type TopicName = string & { __brand: "TopicName" };
 
 interface ImageAnnotationsContext {
   initialScale: number;
@@ -66,7 +71,7 @@ const ALL_SUPPORTED_ANNOTATION_SCHEMAS = new Set([
 export class ImageAnnotations extends THREE.Object3D {
   #context: ImageAnnotationsContext;
 
-  #renderablesByTopic = new Map<TopicName, RenderableTopicAnnotations>();
+  #renderablesByTopic = new Map<NamespacedTopic, RenderableTopicAnnotations>();
   #cameraModel?: PinholeCameraModel;
 
   #scale: number;
@@ -138,8 +143,11 @@ export class ImageAnnotations extends THREE.Object3D {
   }
 
   #updateFromMessageState = (newState: MessageRenderState) => {
-    if (newState.annotationsByTopic != undefined) {
-      for (const { originalMessage, annotations } of newState.annotationsByTopic.values()) {
+    if (newState.annotationsByNamespacedTopic != undefined) {
+      for (const {
+        originalMessage,
+        annotations,
+      } of newState.annotationsByNamespacedTopic.values()) {
         this.#handleMessage(originalMessage, annotations);
 
         // Hide any remaining errors for annotations we are able to render
@@ -169,12 +177,13 @@ export class ImageAnnotations extends THREE.Object3D {
     messageEvent: MessageEvent<FoxgloveImageAnnotations | RosImageMarker | RosImageMarkerArray>,
     annotations: Annotation[],
   ) {
-    let renderable = this.#renderablesByTopic.get(messageEvent.topic as TopicName);
+    const namespacedTopic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
+    let renderable = this.#renderablesByTopic.get(namespacedTopic);
     if (!renderable) {
-      renderable = new RenderableTopicAnnotations(messageEvent.topic, this.#context.labelPool);
+      renderable = new RenderableTopicAnnotations(namespacedTopic, this.#context.labelPool);
       renderable.setScale(this.#scale, this.#canvasWidth, this.#canvasHeight, this.#pixelRatio);
       renderable.setCameraModel(this.#cameraModel);
-      this.#renderablesByTopic.set(messageEvent.topic as TopicName, renderable);
+      this.#renderablesByTopic.set(namespacedTopic, renderable);
       this.add(renderable);
     }
 
@@ -188,7 +197,7 @@ export class ImageAnnotations extends THREE.Object3D {
       return;
     }
     const { value, path } = action.payload;
-    const topic = path[1]! as TopicName;
+    const topic = path[1]! as NamespacedTopic;
     if (path[0] === "imageAnnotations" && path[2] === "visible" && typeof value === "boolean") {
       this.#handleTopicVisibilityChange(topic, value);
     }
@@ -196,12 +205,12 @@ export class ImageAnnotations extends THREE.Object3D {
   }
 
   #handleTopicVisibilityChange(
-    topic: TopicName,
+    topic: NamespacedTopic,
     visible: boolean, // eslint-disable-line @foxglove/no-boolean-parameters
   ): void {
     this.#context.updateConfig((draft) => {
       draft.annotations ??= {};
-      const settings = (draft.annotations[topic] ??= {});
+      const settings = (draft.annotations[topic] ??= { visible: false });
       settings.visible = visible;
     });
     this.#context.messageHandler.setConfig({
@@ -236,15 +245,19 @@ export class ImageAnnotations extends THREE.Object3D {
     }
 
     for (const topic of annotationTopics) {
-      const settings = config.annotations?.[topic.name];
-      entries.push({
-        path: ["imageAnnotations", topic.name],
-        node: {
-          label: topic.name,
-          visible: settings?.visible ?? false,
-          handler: this.#handleSettingsAction.bind(this),
-        },
-      });
+      const schema = convertibleSchemaForTopic(topic, ALL_SUPPORTED_ANNOTATION_SCHEMAS);
+      if (schema) {
+        const namespacedTopic = namespaceTopic(topic.name, schema);
+        const settings = config.annotations?.[namespacedTopic];
+        entries.push({
+          path: ["imageAnnotations", namespacedTopic],
+          node: {
+            label: topic.name,
+            visible: settings?.visible ?? false,
+            handler: this.#handleSettingsAction.bind(this),
+          },
+        });
+      }
     }
     return entries;
   }

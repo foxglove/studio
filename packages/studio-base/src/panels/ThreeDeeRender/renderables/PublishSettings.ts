@@ -6,9 +6,10 @@ import { t } from "i18next";
 import * as _ from "lodash-es";
 
 import { SettingsTreeAction } from "@foxglove/studio";
+import { RendererConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/config";
 
 import { PublishClickType } from "./PublishClickTool";
-import type { IRenderer, RendererConfig } from "../IRenderer";
+import type { IRenderer } from "../IRenderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 

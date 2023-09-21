@@ -20,11 +20,12 @@ import { Label } from "@foxglove/three-text";
 import { Axis, AXIS_LENGTH } from "./Axis";
 import { DEFAULT_LABEL_SCALE_FACTOR } from "./SceneSettings";
 import { makeLinePickingMaterial } from "./markers/materials";
-import type { IRenderer, RendererConfig } from "../IRenderer";
+import type { IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { getLuminance, stringToRgb } from "../color";
+import { RendererConfig } from "../config";
 import { BaseSettings, fieldSize, PRECISION_DEGREES, PRECISION_DISTANCE } from "../settings";
 import { CoordinateFrame, Duration, makePose, MAX_DURATION, Transform } from "../transforms";
 

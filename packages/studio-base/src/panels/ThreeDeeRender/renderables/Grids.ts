@@ -7,6 +7,7 @@ import * as _ from "lodash-es";
 
 import Logger from "@foxglove/log";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 
 import { RenderableLineList } from "./markers/RenderableLineList";
 import type { IRenderer } from "../IRenderer";
@@ -263,7 +264,7 @@ export class Grids extends SceneExtension<GridRenderable> {
     const marker = createMarker(settings);
     const lineListId = `${instanceId}:LINE_LIST`;
     const lineList = new RenderableLineList(
-      lineListId,
+      lineListId as NamespacedTopic,
       marker,
       undefined,
       this.renderer,

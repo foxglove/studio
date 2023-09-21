@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { toNanoSec } from "@foxglove/rostime";
 import { Point3, SceneEntity, TriangleListPrimitive } from "@foxglove/schemas";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 
 import { RenderablePrimitive } from "./RenderablePrimitive";
 import type { IRenderer } from "../../IRenderer";
@@ -214,7 +215,7 @@ export class RenderableTriangles extends RenderablePrimitive {
   }
 
   public override update(
-    topic: string | undefined,
+    topic: NamespacedTopic | undefined,
     entity: SceneEntity | undefined,
     settings: LayerSettingsEntity,
     receiveTime: bigint,

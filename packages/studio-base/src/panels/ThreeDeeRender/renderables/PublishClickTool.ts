@@ -4,6 +4,8 @@
 
 import * as THREE from "three";
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableArrow } from "./markers/RenderableArrow";
 import { RenderableSphere } from "./markers/RenderableSphere";
 import type { IRenderer } from "../IRenderer";
@@ -78,9 +80,14 @@ export class PublishClickTool extends SceneExtension<Renderable, PublishClickEve
   public constructor(renderer: IRenderer) {
     super("foxglove.PublishClickTool", renderer);
 
-    this.#sphere = new RenderableSphere("", makeSphereMarker(), undefined, this.renderer);
+    this.#sphere = new RenderableSphere(
+      "" as NamespacedTopic,
+      makeSphereMarker(),
+      undefined,
+      this.renderer,
+    );
     this.#arrow = new RenderableArrow(
-      "",
+      "" as NamespacedTopic,
       makeArrowMarker(this.publishClickType),
       undefined,
       this.renderer,

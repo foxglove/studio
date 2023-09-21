@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { RosValue } from "@foxglove/studio-base/players/types";
 
 import type { IRenderer } from "../../IRenderer";
@@ -30,7 +31,7 @@ export function getMarkerId(topic: string, ns: string, id: number): string {
 
 export class RenderableMarker extends Renderable<MarkerUserData> {
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: IRenderer,
@@ -43,7 +44,7 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
       messageTime: toNanoSec(marker.header.stamp),
       frameId: renderer.normalizeFrameId(marker.header.frame_id),
       pose: marker.pose,
-      settingsPath: ["topics", topic],
+      settingsPath: ["namespacedTopics", topic],
       settings: { visible: true, frameLocked: marker.frame_locked },
       topic,
       marker,
@@ -62,7 +63,9 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
   }
 
   public getSettings(): LayerSettingsMarker | undefined {
-    return this.renderer.config.topics[this.userData.topic] as LayerSettingsMarker | undefined;
+    return this.renderer.config.namespacedTopics[this.userData.topic] as
+      | LayerSettingsMarker
+      | undefined;
   }
 
   public override details(): Record<string, RosValue> {
@@ -114,7 +117,7 @@ export class RenderableMarker extends Renderable<MarkerUserData> {
 
   #renderMarker(marker: Marker): Marker {
     const topicName = this.userData.topic;
-    const settings = this.renderer.config.topics[topicName] as
+    const settings = this.renderer.config.namespacedTopics[topicName] as
       | Partial<LayerSettingsMarker>
       | undefined;
     const colorStr = settings?.color;

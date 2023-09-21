@@ -288,6 +288,8 @@ export type JointState = {
 
 export const TIME_ZERO = { sec: 0, nsec: 0 };
 
+export const ALL_ROS_DATATYPES = new Set<string>();
+
 export const TRANSFORM_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(TRANSFORM_STAMPED_DATATYPES, "geometry_msgs/TransformStamped");
 
@@ -365,6 +367,10 @@ function addRosDataType(output: Set<string>, dataType: string): Set<string> {
 
   // Add the protobuf variation: ros.tf2_msgs.TFMessage
   output.add("ros." + dataType.split("/").join("."));
+
+  for (const schema of output) {
+    ALL_ROS_DATATYPES.add(schema);
+  }
 
   return output;
 }

@@ -8,6 +8,7 @@ import { vec3 } from "gl-matrix";
 
 import type { PointCloud } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
+import { namespaceTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
@@ -29,7 +30,12 @@ export const Foxglove_PointCloud_RGBA_Settings: StoryObj = {
   play: async () => {
     await userEvent.click(await screen.findByTestId("settings__nodeHeaderToggle__general"));
     await userEvent.click(
-      await screen.findByTestId("settings__nodeHeaderToggle__topics-/pointcloud"),
+      await screen.findByTestId(
+        `settings__nodeHeaderToggle__namespacedTopics-${namespaceTopic(
+          "/pointcloud",
+          "foxglove.PointCloud",
+        )}`,
+      ),
     );
   },
 };
@@ -47,7 +53,12 @@ export const Foxglove_PointCloud_Gradient_Settings: StoryObj = {
   play: async () => {
     await userEvent.click(await screen.findByTestId("settings__nodeHeaderToggle__general"));
     await userEvent.click(
-      await screen.findByTestId("settings__nodeHeaderToggle__topics-/pointcloud"),
+      await screen.findByTestId(
+        `settings__nodeHeaderToggle__namespacedTopics-${namespaceTopic(
+          "/pointcloud",
+          "foxglove.PointCloud",
+        )}`,
+      ),
     );
   },
 };

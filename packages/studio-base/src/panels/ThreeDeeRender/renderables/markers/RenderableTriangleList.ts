@@ -4,6 +4,8 @@
 
 import * as THREE from "three";
 
+import { NamespacedTopic } from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
+
 import { RenderableMarker } from "./RenderableMarker";
 import { markerHasTransparency, makeStandardVertexColorMaterial } from "./materials";
 import { DynamicBufferGeometry } from "../../DynamicBufferGeometry";
@@ -22,7 +24,7 @@ export class RenderableTriangleList extends RenderableMarker {
   #mesh: THREE.Mesh<DynamicBufferGeometry, THREE.MeshStandardMaterial>;
 
   public constructor(
-    topic: string,
+    topic: NamespacedTopic,
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: Renderer,

@@ -19,6 +19,10 @@ import {
   TriangleListPrimitive,
 } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
+import {
+  NamespacedTopic,
+  namespaceTopic,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/namespaceTopic";
 
 import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
@@ -28,15 +32,15 @@ import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExt
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import { SCENE_UPDATE_DATATYPES } from "../foxglove";
 import {
+  normalizeByteArray,
   normalizeColorRGBA,
   normalizeColorRGBAs,
   normalizePose,
   normalizeTime,
   normalizeVector3,
-  normalizeByteArray,
 } from "../normalizeMessages";
 import { LayerSettingsEntity } from "../settings";
-import { topicIsConvertibleToSchema } from "../topicIsConvertibleToSchema";
+import { convertibleSchemaForTopic } from "../topicIsConvertibleToSchema";
 import { makePose } from "../transforms";
 
 const SCENE_ENTITIES_DEFAULT_SETTINGS: LayerSettingsEntity = {
@@ -64,13 +68,15 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
-    const configTopics = this.renderer.config.topics;
+    const configTopics = this.renderer.config.namespacedTopics;
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
-      if (!topicIsConvertibleToSchema(topic, SCENE_UPDATE_DATATYPES)) {
+      const schema = convertibleSchemaForTopic(topic, SCENE_UPDATE_DATATYPES);
+      if (!schema) {
         continue;
       }
-      const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsEntity>;
+      const namespacedTopic = namespaceTopic(topic.name, schema);
+      const config = (configTopics[namespacedTopic] ?? {}) as Partial<LayerSettingsEntity>;
 
       const node: SettingsTreeNodeWithActionHandler = {
         label: topic.name,
@@ -95,7 +101,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
         handler: this.handleSettingsAction,
       };
 
-      entries.push({ path: ["topics", topic.name], node });
+      entries.push({ path: ["namespacedTopics", namespacedTopic], node });
     }
     return entries;
   }
@@ -130,10 +136,10 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     this.saveSetting(path, action.payload.value);
 
     // Update the TopicEntities settings
-    const topicName = path[1]!;
-    const renderable = this.renderables.get(topicName);
+    const namespacedTopic = path[1]! as NamespacedTopic;
+    const renderable = this.renderables.get(namespacedTopic);
     if (renderable) {
-      const settings = this.renderer.config.topics[topicName] as
+      const settings = this.renderer.config.namespacedTopics[namespacedTopic] as
         | Partial<LayerSettingsEntity>
         | undefined;
       renderable.userData.settings = { ...SCENE_ENTITIES_DEFAULT_SETTINGS, ...settings };
@@ -142,20 +148,20 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   };
 
   #handleSceneUpdate = (messageEvent: PartialMessageEvent<SceneUpdate>): void => {
-    const topic = messageEvent.topic;
+    const namespacedTopic = namespaceTopic(messageEvent.topic, messageEvent.schemaName);
     const sceneUpdates = messageEvent.message;
 
     for (const deletionMsg of sceneUpdates.deletions ?? []) {
       if (deletionMsg) {
         const deletion = normalizeSceneEntityDeletion(deletionMsg);
-        this.#getTopicEntities(topic).deleteEntities(deletion);
+        this.#getTopicEntities(namespacedTopic).deleteEntities(deletion);
       }
     }
 
     for (const entityMsg of sceneUpdates.entities ?? []) {
       if (entityMsg) {
         const entity = normalizeSceneEntity(entityMsg);
-        this.#getTopicEntities(topic).addOrUpdateEntity(
+        this.#getTopicEntities(namespacedTopic).addOrUpdateEntity(
           entity,
           toNanoSec(messageEvent.receiveTime),
         );
@@ -163,10 +169,10 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     }
   };
 
-  #getTopicEntities(topic: string): TopicEntities {
+  #getTopicEntities(topic: NamespacedTopic): TopicEntities {
     let topicEntities = this.renderables.get(topic);
     if (!topicEntities) {
-      const userSettings = this.renderer.config.topics[topic] as
+      const userSettings = this.renderer.config.namespacedTopics[topic] as
         | Partial<LayerSettingsEntity>
         | undefined;
 
@@ -175,7 +181,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
         messageTime: -1n,
         frameId: "",
         pose: makePose(),
-        settingsPath: ["topics", topic],
+        settingsPath: ["namespacedTopics", topic],
         topic,
         settings: { ...SCENE_ENTITIES_DEFAULT_SETTINGS, ...userSettings },
       });
