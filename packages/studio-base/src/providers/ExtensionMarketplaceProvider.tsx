@@ -12,9 +12,9 @@ import ExtensionMarketplaceContext, {
 const MARKETPLACE_URL =
   "https://raw.githubusercontent.com/foxglove/studio-extension-marketplace/main/extensions.json";
 
-export default function ExtensionMarketplaceProvider({
-  children,
-}: React.PropsWithChildren): JSX.Element {
+export default function ExtensionMarketplaceProvider(props: {
+  children?: React.ReactNode;
+}): JSX.Element {
   const getAvailableExtensions = useCallback(async (): Promise<ExtensionMarketplaceDetail[]> => {
     const res = await fetch(MARKETPLACE_URL);
     return (await res.json()) as ExtensionMarketplaceDetail[];
@@ -29,7 +29,7 @@ export default function ExtensionMarketplaceProvider({
   });
   return (
     <ExtensionMarketplaceContext.Provider value={marketplace}>
-      {children}
+      {props.children}
     </ExtensionMarketplaceContext.Provider>
   );
 }

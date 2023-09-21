@@ -33,7 +33,7 @@ const UserNodeStateContext = createContext<
 >(undefined);
 UserNodeStateContext.displayName = "UserNodeStateContext";
 
-export function UserNodeStateProvider({ children }: React.PropsWithChildren): JSX.Element {
+export function UserNodeStateProvider(props: { children?: React.ReactNode }): JSX.Element {
   const [state, setState] = useState<UserNodeState>({
     rosLib: ros_lib_dts,
     typesLib: generateEmptyTypesLib(),
@@ -102,7 +102,9 @@ export function UserNodeStateProvider({ children }: React.PropsWithChildren): JS
     setUserNodeTypesLib,
   });
 
-  return <UserNodeStateContext.Provider value={value}>{children}</UserNodeStateContext.Provider>;
+  return (
+    <UserNodeStateContext.Provider value={value}>{props.children}</UserNodeStateContext.Provider>
+  );
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

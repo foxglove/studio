@@ -18,7 +18,7 @@ import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockApp
 
 import { AppBar } from ".";
 
-function Wrapper({ children }: React.PropsWithChildren): JSX.Element {
+function Wrapper(props: { children?: React.ReactNode }): JSX.Element {
   const appConfiguration = makeMockAppConfiguration();
   const providers = [
     /* eslint-disable react/jsx-key */
@@ -32,7 +32,7 @@ function Wrapper({ children }: React.PropsWithChildren): JSX.Element {
     <ThemeProvider isDark />,
     /* eslint-enable react/jsx-key */
   ];
-  return <MultiProvider providers={providers}>{children}</MultiProvider>;
+  return <MultiProvider providers={providers}>{props.children}</MultiProvider>;
 }
 
 describe("<AppBar />", () => {

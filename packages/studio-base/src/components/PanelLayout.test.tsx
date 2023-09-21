@@ -76,7 +76,7 @@ describe("UnconnectedPanelLayout", () => {
         onChange={onChange}
       />,
       {
-        wrapper: function Wrapper({ children }: React.PropsWithChildren) {
+        wrapper: function Wrapper(props: { children?: React.ReactNode }) {
           const [config] = useState(() => makeMockAppConfiguration());
 
           return (
@@ -86,7 +86,7 @@ describe("UnconnectedPanelLayout", () => {
                   <MockCurrentLayoutProvider>
                     <PanelStateContextProvider>
                       <PanelCatalogContext.Provider value={panelCatalog}>
-                        {children}
+                        {props.children}
                       </PanelCatalogContext.Provider>
                     </PanelStateContextProvider>
                   </MockCurrentLayoutProvider>

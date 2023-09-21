@@ -12,7 +12,7 @@ describe("useCrash", () => {
   it("should re-throw the error", () => {
     let error: Error | undefined;
     const { result } = renderHook(() => useCrash(), {
-      wrapper: class Wrapper extends React.Component<React.PropsWithChildren> {
+      wrapper: class Wrapper extends React.Component<{ children?: React.ReactNode }> {
         public override componentDidCatch(err: Error) {
           error = err;
         }
