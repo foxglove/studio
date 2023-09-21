@@ -4,7 +4,7 @@
 
 import { createTheme, Theme } from "@mui/material/styles";
 
-import { overrides } from "./overrides";
+import * as components from "./components";
 import * as palette from "./palette";
 import { Language } from "./types";
 import { typography } from "./typography";
@@ -20,13 +20,14 @@ declare module "@mui/material/styles" {
   }
 }
 
-export function createMuiTheme(themePreference: ThemePreference, locale?: Language): Theme {
-  const theme = createTheme({
+export const createMuiTheme = (
+  themePreference: ThemePreference,
+  locale: Language | undefined,
+): Theme =>
+  createTheme({
     name: themePreference,
     palette: palette[themePreference],
     shape: { borderRadius: 2 },
     typography: typography({ locale }),
+    components,
   });
-
-  return createTheme({ components: overrides(theme) }, theme);
-}
