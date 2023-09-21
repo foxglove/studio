@@ -258,6 +258,8 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   /** Optional analytics API to log events in Renderer or SceneExtensions */
   analytics?: IAnalytics;
   setAnalytics(analytics: IAnalytics): void;
+  enableImageOnlySubscriptionMode: () => void;
+  disableImageOnlySubscriptionMode: () => void;
 
   dispose(): void;
   cameraSyncError(): undefined | string;
