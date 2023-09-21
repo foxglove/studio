@@ -30,14 +30,25 @@ export const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
 // contextual alternates create undesired changes in Chinese/Japanese
 export const fontFeatureSettingsCJK = "'tnum'";
 
-export function typography({ locale = "en" }: { locale?: Language }): ThemeOptions["typography"] {
+export function typography({ locale }: { locale?: Language }): ThemeOptions["typography"] {
+  let fontSettings: string;
+  switch (locale) {
+    case "zh":
+    case "ja":
+      fontSettings = fontFeatureSettingsCJK;
+      break;
+    case "en":
+    default:
+      fontSettings = fontFeatureSettings;
+      break;
+  }
   const baseFontStyles = {
-    fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
+    fontFeatureSettings: fontSettings,
   };
   return {
-    ...baseFontStyles,
     fontFamily: baseFontFamily,
     fontSize: 12,
+    fontFeatureSettings: fontSettings,
     body1: {
       ...baseFontStyles,
     },
