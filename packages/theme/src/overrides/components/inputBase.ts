@@ -10,6 +10,20 @@ export const MuiInputBase = (theme: Theme): OverrideComponentReturn<"MuiInputBas
   styleOverrides: {
     root: {
       [`&.${inputBaseClasses.adornedStart}`]: {
+        paddingInlineStart: theme.spacing(1.25),
+      },
+      [`&.${inputBaseClasses.adornedEnd}`]: {
+        paddingInlineEnd: theme.spacing(1.25),
+      },
+      [`.${inputBaseClasses.inputAdornedStart}`]: {
+        paddingInlineStart: theme.spacing(1),
+      },
+      [`.${inputBaseClasses.inputAdornedEnd}`]: {
+        paddingInlineEnd: theme.spacing(1),
+      },
+    },
+    sizeSmall: {
+      [`&.${inputBaseClasses.adornedStart}`]: {
         paddingInlineStart: theme.spacing(1),
       },
       [`&.${inputBaseClasses.adornedEnd}`]: {
