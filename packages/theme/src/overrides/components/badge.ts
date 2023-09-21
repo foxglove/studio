@@ -12,6 +12,7 @@ export const MuiBadge = (theme: Theme): OverrideComponentReturn<"MuiBadge"> => (
       height: 16,
       minWidth: 16,
       padding: theme.spacing(0, 0.25),
+      fontFeatureSettings: "normal",
     },
   },
 });
