@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Delete20Regular, Send20Filled } from "@fluentui/react-icons";
-import { Box, Button, ButtonProps, Stack } from "@mui/material";
+import { Button, ButtonProps, Stack } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
 import { Fragment } from "react";
 
@@ -51,7 +51,9 @@ export const TextButton: StoryObj = {
     <>
       <Button>Primary</Button>
       <Button disabled>Disabled</Button>
-      <Button href="#text-buttons">Link</Button>
+      <Button href="#text-buttons" target="_self">
+        Link
+      </Button>
     </>
   ),
 };
@@ -63,7 +65,7 @@ export const ContainedButton: StoryObj = {
       <Button variant="contained" disabled>
         Disabled
       </Button>
-      <Button variant="contained" href="#contained-buttons">
+      <Button variant="contained" href="#contained-buttons" target="_self">
         Link
       </Button>
     </>
@@ -85,7 +87,7 @@ export const OutlinedButton: StoryObj = {
       <Button variant="outlined" disabled>
         Disabled
       </Button>
-      <Button variant="outlined" href="#outlined-buttons">
+      <Button variant="outlined" href="#outlined-buttons" target="_self">
         Link
       </Button>
     </>
@@ -94,7 +96,7 @@ export const OutlinedButton: StoryObj = {
 
 export const Color: StoryObj = {
   render: () => (
-    <Box sx={{ display: "grid", gridTemplateColumns: `repeat(${colors.length}, auto)`, gap: 1 }}>
+    <Stack sx={{ display: "grid", gridTemplateColumns: `repeat(${colors.length}, auto)`, gap: 1 }}>
       {variants.map((variant) => (
         <Fragment key={variant}>
           {colors.map((color) => (
@@ -104,7 +106,7 @@ export const Color: StoryObj = {
           ))}
         </Fragment>
       ))}
-    </Box>
+    </Stack>
   ),
 };
 

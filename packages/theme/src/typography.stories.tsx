@@ -1,5 +1,8 @@
-import { Box, Stack, Typography as MuiTypography } from "@mui/material";
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Stack, Typography as MuiTypography } from "@mui/material";
 import { StoryObj } from "@storybook/react";
 import { ReactNode } from "react";
 
@@ -8,7 +11,7 @@ export default {
 };
 
 function Wrapper({ children }: { children: ReactNode }): JSX.Element {
-  return <Box sx={{ border: "1px dotted", borderColor: "info.main" }}>{children}</Box>;
+  return <Stack sx={{ border: "1px dotted", borderColor: "info.main" }}>{children}</Stack>;
 }
 
 export const Typography: StoryObj = {

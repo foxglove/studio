@@ -29,7 +29,7 @@ export default {
 } as Meta;
 
 export const Default = {
-  render: () => (
+  render: (): JSX.Element => (
     <Stack direction="row" justifyContent="center" alignItems="center" padding={2} gap={2}>
       <TextField id="outlined-basic" label="Outlined" variant="outlined" />
       <TextField id="filled-basic" label="Filled" variant="filled" />

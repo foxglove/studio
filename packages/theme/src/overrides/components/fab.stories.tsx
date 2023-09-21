@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
 import { Add20Filled, Edit20Filled, Heart20Filled, Toolbox20Filled } from "@fluentui/react-icons";
 import { Fab, FabProps, Stack } from "@mui/material";
 import { Meta, StoryObj } from "@storybook/react";
