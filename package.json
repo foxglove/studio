@@ -59,7 +59,8 @@
       "packages/*",
       "packages/@types/*",
       "web",
-      "benchmark"
+      "benchmark",
+      "theme"
     ]
   },
   "resolutions": {
