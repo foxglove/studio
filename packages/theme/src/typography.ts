@@ -4,7 +4,7 @@
 
 import { ThemeOptions } from "@mui/material";
 
-import { Language } from "@foxglove/studio-base/src/i18n";
+import { Language } from "@foxglove/theme/types";
 
 declare module "@mui/material/styles/createTypography" {
   interface Typography {

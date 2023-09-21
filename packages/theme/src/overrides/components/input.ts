@@ -4,7 +4,7 @@
 
 import { Theme, alpha, inputClasses } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/theme/types";
 
 export const input = (theme: Theme): OverrideComponentReturn<"MuiInput"> => ({
   MuiInput: {

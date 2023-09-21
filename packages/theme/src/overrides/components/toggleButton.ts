@@ -4,7 +4,7 @@
 
 import { Theme, alpha } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/theme/types";
 
 export const toggleButton = (theme: Theme): OverrideComponentReturn<"MuiToggleButton"> => ({
   MuiToggleButton: {

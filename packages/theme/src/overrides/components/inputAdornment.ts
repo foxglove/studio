@@ -4,7 +4,7 @@
 
 import { Theme, inputAdornmentClasses } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/theme/types";
 
 export const inputAdornment = (_theme: Theme): OverrideComponentReturn<"MuiInputAdornment"> => ({
   MuiInputAdornment: {

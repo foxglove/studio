@@ -7,7 +7,7 @@ import { dividerClasses } from "@mui/material/Divider";
 import { listClasses } from "@mui/material/List";
 import { listItemClasses } from "@mui/material/ListItem";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/theme/types";
 
 export const menu = (theme: Theme): OverrideComponentReturn<"MuiMenu"> => ({
   MuiMenu: {

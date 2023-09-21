@@ -5,7 +5,7 @@
 import { Theme } from "@mui/material";
 import { tabsClasses } from "@mui/material/Tabs";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/theme/types";
 
 export const tabs = (_theme: Theme): OverrideComponentReturn<"MuiTabs"> => ({
   MuiTabs: {

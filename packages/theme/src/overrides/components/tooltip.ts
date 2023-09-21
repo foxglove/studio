@@ -4,7 +4,7 @@
 
 import { Fade, Theme, alpha } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/theme/types";
 
 export const tooltip = (theme: Theme): OverrideComponentReturn<"MuiTooltip"> => ({
   MuiTooltip: {

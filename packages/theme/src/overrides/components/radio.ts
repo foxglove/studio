@@ -4,7 +4,7 @@
 
 import { Theme } from "@mui/material";
 
-import { OverrideComponentReturn } from "../types";
+import { OverrideComponentReturn } from "@foxglove/theme/types";
 
 export const radiow = (_theme: Theme): OverrideComponentReturn<"MuiRadio"> => ({
   MuiRadio: {
