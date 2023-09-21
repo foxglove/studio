@@ -30,7 +30,7 @@ export const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
 // contextual alternates create undesired changes in Chinese/Japanese
 export const fontFeatureSettingsCJK = "'tnum'";
 
-export function muiTypography({
+export function typography({
   locale,
 }: {
   locale: Language | undefined;
