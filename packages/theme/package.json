@@ -13,7 +13,6 @@
   "homepage": "https://foxglove.dev/",
   "main": "./src/index",
   "devDependencies": {
-    "@emotion/cache": "11.11.0",
     "@emotion/react": "11.11.1",
     "@emotion/styled": "11.11.0",
     "@fluentui/react-icons": "2.0.217",
@@ -22,10 +21,9 @@
     "@mui/icons-material": "5.14.9",
     "@mui/lab": "5.0.0-alpha.145",
     "@mui/material": "5.14.10",
+    "@storybook/react": "7.4.3",
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-i18next": "13.2.2"
+    "react": "18.2.0"
   }
 }
