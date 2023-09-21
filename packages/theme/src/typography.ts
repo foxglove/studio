@@ -30,47 +30,30 @@ export const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
 // contextual alternates create undesired changes in Chinese/Japanese
 export const fontFeatureSettingsCJK = "'tnum'";
 
-export function typography({ locale }: { locale?: Language }): ThemeOptions["typography"] {
-  let fontSettings: string;
-  switch (locale) {
-    case "zh":
-    case "ja":
-      fontSettings = fontFeatureSettingsCJK;
-      break;
-    case "en":
-    default:
-      fontSettings = fontFeatureSettings;
-      break;
-  }
-  const baseFontStyles = {
-    fontFeatureSettings: fontSettings,
-  };
+export function typography({ locale = "en" }: { locale?: Language }): ThemeOptions["typography"] {
   return {
     fontFamily: baseFontFamily,
     fontSize: 12,
-    fontFeatureSettings: fontSettings,
-    body1: {
-      ...baseFontStyles,
-    },
-    body2: {
-      ...baseFontStyles,
-    },
+    fontFeatureSettings: locale === "en" ? fontFeatureSettings : fontFeatureSettingsCJK,
+    body1: {},
+    body2: {},
+    subtitle1: {},
+    subtitle2: {},
+    caption: {},
     button: {
-      ...baseFontStyles,
       textTransform: "none",
       fontWeight: 700,
       letterSpacing: "-0.0125em",
     },
     overline: {
-      ...baseFontStyles,
       letterSpacing: "0.05em",
       lineHeight: "1.5",
     },
-    h1: { ...baseFontStyles, fontSize: "2rem" },
-    h2: { ...baseFontStyles, fontSize: "1.8rem" },
-    h3: { ...baseFontStyles, fontSize: "1.6rem" },
-    h4: { ...baseFontStyles, fontSize: "1.2rem" },
-    h5: { ...baseFontStyles, fontSize: "1.1rem" },
-    h6: { ...baseFontStyles, fontSize: "1rem" },
+    h1: { fontSize: "2rem" },
+    h2: { fontSize: "1.8rem" },
+    h3: { fontSize: "1.6rem" },
+    h4: { fontSize: "1.2rem" },
+    h5: { fontSize: "1.1rem" },
+    h6: { fontSize: "1rem" },
   };
 }
