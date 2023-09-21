@@ -8,6 +8,7 @@ import { OverrideComponentReturn } from "../../types";
 
 export const MuiInputLabel = (theme: Theme): OverrideComponentReturn<"MuiInputLabel"> => ({
   defaultProps: {
+    disableAnimation: true,
     variant: "standard",
     shrink: false,
   },

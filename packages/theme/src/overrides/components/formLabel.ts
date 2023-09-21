@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Theme } from "@mui/material";
+import { Theme, inputBaseClasses, inputClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "../../types";
 
@@ -10,6 +10,12 @@ export const MuiFormLabel = (theme: Theme): OverrideComponentReturn<"MuiFormLabe
   styleOverrides: {
     root: {
       marginBottom: theme.spacing(0.5),
+      fontSize: "0.75rem",
+      padding: theme.spacing(0.325, 0),
+
+      [`& + .${inputBaseClasses.root}.${inputClasses.root}`]: {
+        marginTop: 0,
+      },
     },
   },
 });
