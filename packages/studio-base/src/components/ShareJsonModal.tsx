@@ -129,12 +129,7 @@ export function ShareJsonModal({
 
         <Stack flex="auto" />
 
-        <Button
-          disabled={error != undefined}
-          variant="contained"
-          size="large"
-          onClick={handleSubmit}
-        >
+        <Button disabled={error != undefined} variant="contained" onClick={handleSubmit}>
           Apply
         </Button>
       </DialogActions>
