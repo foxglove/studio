@@ -286,8 +286,8 @@ export function RendererOverlay(props: {
   );
 
   const getContextMenuItems = useCallback((): PanelContextMenuItem[] => {
-    return renderer?.getContextMenuItems(enqueueSnackbar) ?? [];
-  }, [enqueueSnackbar, renderer]);
+    return renderer?.getContextMenuItems() ?? [];
+  }, [renderer]);
 
   const mousePresenceRef = useRef<HTMLDivElement>(ReactNull);
   const mousePresent = usePanelMousePresence(mousePresenceRef);
