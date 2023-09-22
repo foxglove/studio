@@ -21,13 +21,11 @@ import {
   sendPartial,
   mapClients,
   noEffects,
-  appendEffects,
   keepEffects,
 } from "./state";
 import { Messages } from "../internalTypes";
 import { isSingleMessage } from "../params";
 import { appendPlotData } from "../plotData";
-
 
 export function receiveMetadata(
   topics: readonly Topic[],
@@ -172,16 +170,25 @@ const updateRecordedClients = mapClients((client, state): [Client, SideEffects] 
 export function addCurrent(events: readonly MessageEvent[], state: State): StateAndEffects {
   const { current, isLive } = state;
 
+  const newCurrent = R.map((v) => v, current);
+
+  for (const message of events) {
+    const { topic } = message;
+    if (newCurrent[topic] == undefined) {
+      newCurrent[topic] = [];
+    }
+    newCurrent[topic]?.push(message);
+  }
+
+  const newState = {
+    ...state,
+    current: newCurrent,
+  };
+
   return R.pipe(
-    R.reduce(
-      (a: Messages, v: MessageEvent): Messages => ({ ...a, [v.topic]: [...(a[v.topic] ?? []), v] }),
-      {},
-    ),
-    (messages) => ({ ...state, current: R.mergeWith(R.concat, messages, current) }),
-    noEffects,
-    appendEffects(isLive ? updateLiveClients : updateRecordedClients),
+    isLive ? updateLiveClients : updateRecordedClients,
     keepEffects(evictCache),
-  )(events);
+  )(newState);
 }
 
 export function clearCurrent(state: State): StateAndEffects {

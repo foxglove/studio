@@ -80,7 +80,7 @@ export function receiveVariables(variables: GlobalVariables, state: State): Stat
   })(newState);
 }
 
-export function updateParams(state: State, id: string, params: PlotParams): StateAndEffects {
+export function updateParams(id: string, params: PlotParams, state: State): StateAndEffects {
   return R.pipe(
     mapClients((client) => {
       const { id: clientId } = client;
@@ -101,7 +101,7 @@ export function updateParams(state: State, id: string, params: PlotParams): Stat
   )(state);
 }
 
-export function updateView(state: State, id: string, view: PlotViewport): StateAndEffects {
+export function updateView(id: string, view: PlotViewport, state: State): StateAndEffects {
   const client = findClient(state, id);
   if (client == undefined) {
     return noEffects(state);
@@ -110,9 +110,9 @@ export function updateView(state: State, id: string, view: PlotViewport): StateA
 }
 
 export function register(
-  state: State,
   id: string,
   params: PlotParams | undefined,
+  state: State,
 ): StateAndEffects {
   const { clients } = state;
   const newState = {
@@ -134,7 +134,7 @@ export function register(
     return [newState, []];
   }
 
-  return updateParams(newState, id, params);
+  return updateParams(id, params, newState);
 }
 
 export function unregister(id: string, state: State): State {

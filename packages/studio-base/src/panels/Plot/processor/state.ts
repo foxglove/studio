@@ -29,7 +29,7 @@ export type State = {
   metadata: MetadataEnums;
 };
 
-enum SideEffectType {
+export enum SideEffectType {
   Rebuild = "rebuild",
   Data = "data",
   Partial = "partial",
@@ -94,6 +94,9 @@ export function init(): State {
 export function noEffects<T>(state: T): [T, SideEffects] {
   return [state, []];
 }
+
+// eslint-disable-next-line @foxglove/no-boolean-parameters
+export const setLive = (isLive: boolean, state: State): State => ({ ...state, isLive });
 
 export const appendEffects =
   (mutator: (state: State) => StateAndEffects) =>

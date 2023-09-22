@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export type { State, StateAndEffects, Client } from "./state";
-export { init } from "./state";
+export * from "./state";
 
 export { register, unregister, updateParams, updateView, receiveVariables } from "./clients";
 export { addBlock, addCurrent, clearCurrent, receiveMetadata } from "./messages";
