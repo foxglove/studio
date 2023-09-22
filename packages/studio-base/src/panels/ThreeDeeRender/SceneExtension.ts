@@ -104,7 +104,7 @@ export class SceneExtension<
     this.updateSettingsTree();
   }
 
-  /** Allows SceneExtensions to add options to the context menu. Provides function to add pop up information via enqueueSnackbar */
+  /** Allows SceneExtensions to add options to the context menu. */
   public getContextMenuItems = (): readonly PanelContextMenuItem[] => {
     return [];
   };
