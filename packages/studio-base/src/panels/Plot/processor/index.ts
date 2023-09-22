@@ -5,4 +5,4 @@
 export type { State, StateAndEffects, Client } from "./state";
 export { init } from "./state";
 
-export { register, updateParams } from "./clients";
+export { register, unregister, updateParams, updateView } from "./clients";

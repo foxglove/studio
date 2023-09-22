@@ -12,10 +12,12 @@ import {
   noEffects,
   mutateClient,
   rebuildClient,
+  keepEffects,
+  Client,
 } from "./state";
 import { initAccumulated, accumulate, evictCache } from "./messages";
 import { PlotParams } from "../internalTypes";
-import { keepEffects } from "./state";
+import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
 
 export function refreshClient(state: State, id: string): StateAndEffects {
   const { blocks, current, metadata, globalVariables } = state;
@@ -60,6 +62,14 @@ export function updateParams(state: State, id: string, params: PlotParams): Stat
   )(state);
 }
 
+export function updateView(state: State, id: string, view: PlotViewport): StateAndEffects {
+  const client = findClient(state, id);
+  if (client == undefined) {
+    return noEffects(state);
+  }
+  return [mutateClient(state, id, { ...client, view }), [rebuildClient(id)]];
+}
+
 export function register(
   state: State,
   id: string,
@@ -86,4 +96,11 @@ export function register(
   }
 
   return updateParams(newState, id, params);
+}
+
+export function unregister(id: string, state: State): State {
+  return evictCache({
+    ...state,
+    clients: R.filter(({ id: clientId }: Client) => clientId !== id, state.clients),
+  });
 }
