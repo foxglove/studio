@@ -32,10 +32,11 @@ type Props = {
 };
 
 const useStyles = makeStyles()((theme) => ({
+  toolbar: {
+    paddingBlock: 0,
+  },
   iconButton: {
-    "&.MuiIconButton-root": {
-      padding: theme.spacing(0.25),
-    },
+    padding: theme.spacing(0.25),
   },
 }));
 
@@ -57,7 +58,7 @@ function ToolbarComponent(props: Props): JSX.Element {
   const { classes } = useStyles();
 
   return (
-    <PanelToolbar>
+    <PanelToolbar className={classes.toolbar}>
       <IconButton
         className={classes.iconButton}
         title="Toggle diff"
