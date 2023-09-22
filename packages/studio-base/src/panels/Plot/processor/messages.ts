@@ -4,96 +4,10 @@
 
 import * as R from "ramda";
 
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-
-import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { PlotParams, Messages, MetadataEnums, PlotDataItem, BasePlotPath } from "../internalTypes";
-import { PlotData, appendPlotData, buildPlotData, resolvePath } from "../plotData";
-import {
-  Cursors,
-  State,
-  Accumulated,
-  initAccumulated,
-  StateAndEffects,
-  Client,
-  SideEffects,
-  rebuildClient,
-} from "./state";
+import { Messages } from "../internalTypes";
+import { State, StateAndEffects, Client, SideEffects, rebuildClient } from "./state";
 import { isSingleMessage } from "../params";
-
-function getPathData(
-  metadata: MetadataEnums,
-  globalVariables: GlobalVariables,
-  messages: Messages,
-  path: BasePlotPath,
-): PlotDataItem[] | undefined {
-  const parsed = parseRosPath(path.value);
-  if (parsed == undefined) {
-    return [];
-  }
-
-  return resolvePath(
-    metadata,
-    messages[parsed.topicName] ?? [],
-    fillInGlobalVariablesInPath(parsed, globalVariables),
-  );
-}
-
-function buildPlot(
-  metadata: MetadataEnums,
-  globalVariables: GlobalVariables,
-  params: PlotParams,
-  messages: Messages,
-): PlotData {
-  const { paths, invertedTheme, startTime, xAxisPath, xAxisVal } = params;
-  return buildPlotData({
-    invertedTheme,
-    paths: paths.map((path) => [path, getPathData(metadata, globalVariables, messages, path)]),
-    startTime,
-    xAxisPath,
-    xAxisData:
-      xAxisPath != undefined
-        ? getPathData(metadata, globalVariables, messages, xAxisPath)
-        : undefined,
-    xAxisVal,
-  });
-}
-
-function getNewMessages(
-  cursors: Cursors,
-  messages: Messages,
-): [newCursors: Cursors, newMessages: Messages] {
-  const newCursors: Cursors = {};
-  const newMessages: Messages = {};
-
-  for (const [topic, cursor] of Object.entries(cursors)) {
-    newCursors[topic] = messages[topic]?.length ?? cursor;
-    newMessages[topic] = messages[topic]?.slice(cursor) ?? [];
-  }
-
-  return [newCursors, newMessages];
-}
-
-export function accumulate(
-  metadata: MetadataEnums,
-  globalVariables: GlobalVariables,
-  previous: Accumulated,
-  params: PlotParams,
-  messages: Messages,
-): Accumulated {
-  const { cursors: oldCursors, data: oldData } = previous;
-  const [newCursors, newMessages] = getNewMessages(oldCursors, messages);
-
-  if (R.isEmpty(newMessages)) {
-    return previous;
-  }
-
-  return {
-    cursors: newCursors,
-    data: appendPlotData(oldData, buildPlot(metadata, globalVariables, params, newMessages)),
-  };
-}
+import { initAccumulated, accumulate } from "./accumulate";
 
 export function evictCache(state: State): State {
   const { clients, blocks, current } = state;
