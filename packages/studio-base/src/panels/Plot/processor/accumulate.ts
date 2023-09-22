@@ -5,9 +5,9 @@
 import * as R from "ramda";
 
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+
 import { PlotParams, Messages, MetadataEnums, PlotDataItem, BasePlotPath } from "../internalTypes";
 import { PlotData, EmptyPlotData, appendPlotData, buildPlotData, resolvePath } from "../plotData";
 

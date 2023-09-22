@@ -4,10 +4,11 @@
 
 import * as R from "ramda";
 
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+
 import { Accumulated } from "./accumulate";
+import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
 import { PlotData } from "../plotData";
 
 export type Client = {
@@ -107,7 +108,7 @@ export const keepEffects =
     return [mutator(state), effects];
   };
 
-export const findClient = (state: State, id: string) =>
+export const findClient = (state: State, id: string): Client | undefined =>
   R.find((client) => client.id === id, state.clients);
 
 export const mutateClient = (state: State, id: string, newClient: Client): State => ({

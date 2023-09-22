@@ -4,8 +4,13 @@
 
 import * as R from "ramda";
 
-import { MessageEvent } from "@foxglove/studio-base/players/types";
-import { Messages } from "../internalTypes";
+import { Immutable } from "@foxglove/studio";
+import { messagePathStructures } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
+import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
+
+import { initAccumulated, accumulate, getNewMessages, buildPlot } from "./accumulate";
 import {
   State,
   StateAndEffects,
@@ -19,9 +24,26 @@ import {
   appendEffects,
   keepEffects,
 } from "./state";
+import { Messages } from "../internalTypes";
 import { isSingleMessage } from "../params";
-import { initAccumulated, accumulate, getNewMessages, buildPlot } from "./accumulate";
 import { appendPlotData } from "../plotData";
+
+
+export function receiveMetadata(
+  topics: readonly Topic[],
+  datatypes: Immutable<RosDatatypes>,
+  state: State,
+): State {
+  return {
+    ...state,
+    metadata: {
+      topics,
+      datatypes,
+      enumValues: enumValuesByDatatypeAndField(datatypes),
+      structures: messagePathStructures(datatypes),
+    },
+  };
+}
 
 export function evictCache(state: State): State {
   const { clients, blocks, current } = state;
@@ -160,4 +182,21 @@ export function addCurrent(events: readonly MessageEvent[], state: State): State
     appendEffects(isLive ? updateLiveClients : updateRecordedClients),
     keepEffects(evictCache),
   )(events);
+}
+
+export function clearCurrent(state: State): StateAndEffects {
+  const newState = {
+    ...state,
+    current: {},
+  };
+
+  return mapClients((client) => {
+    return [
+      {
+        ...client,
+        current: initAccumulated(client.topics),
+      },
+      [rebuildClient(client.id)],
+    ];
+  })(newState);
 }

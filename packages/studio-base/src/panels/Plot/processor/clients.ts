@@ -4,61 +4,99 @@
 
 import * as R from "ramda";
 
-import { getParamTopics } from "../params";
+import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+
+import { initAccumulated, accumulate } from "./accumulate";
+import { evictCache } from "./messages";
 import {
   StateAndEffects,
+  SideEffects,
   State,
   findClient,
   noEffects,
   mutateClient,
+  mapClients,
   rebuildClient,
   keepEffects,
   Client,
 } from "./state";
-import { evictCache } from "./messages";
-import { initAccumulated, accumulate } from "./accumulate";
 import { PlotParams } from "../internalTypes";
-import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { getParamTopics, getParamPaths } from "../params";
 
-export function refreshClient(state: State, id: string): StateAndEffects {
+export function refreshClient(client: Client, state: State): [Client, SideEffects] {
   const { blocks, current, metadata, globalVariables } = state;
-  const client = findClient(state, id);
-  if (client == undefined) {
-    return noEffects(state);
-  }
-
-  const { params } = client;
+  const { id, params } = client;
   if (params == undefined) {
-    return noEffects(state);
+    return noEffects(client);
   }
 
   const topics = getParamTopics(params);
   const initialState = initAccumulated(topics);
   return [
-    mutateClient(state, id, {
+    {
       ...client,
       topics,
       blocks: accumulate(metadata, globalVariables, initialState, params, blocks),
       current: accumulate(metadata, globalVariables, initialState, params, current),
-    }),
+    },
     [rebuildClient(id)],
   ];
 }
 
-export function updateParams(state: State, id: string, params: PlotParams): StateAndEffects {
-  const client = findClient(state, id);
-  if (client == undefined) {
-    return noEffects(state);
-  }
+export function receiveVariables(variables: GlobalVariables, state: State): StateAndEffects {
+  const newState = {
+    ...state,
+    globalVariables: variables,
+  };
 
-  return R.pipe(
-    (state) =>
-      mutateClient(state, id, {
-        ...client,
-        params,
-        topics: getParamTopics(params),
+  return mapClients((client) => {
+    const { params } = client;
+    if (params == undefined) {
+      return noEffects(client);
+    }
+
+    // We only want to rebuild clients whose paths actually change when global
+    // variables do
+    const changedPaths = R.pipe(
+      R.chain((path: string) => {
+        const original = parseRosPath(path);
+        if (original == undefined) {
+          return [];
+        }
+
+        const filled = fillInGlobalVariablesInPath(original, variables);
+        return !R.equals(original.messagePath, filled.messagePath) ? [filled] : [];
       }),
-    (state) => refreshClient(state, id),
+    )(getParamPaths(params));
+
+    if (changedPaths.length === 0) {
+      return noEffects(client);
+    }
+
+    return refreshClient(client, newState);
+  })(newState);
+}
+
+export function updateParams(state: State, id: string, params: PlotParams): StateAndEffects {
+  return R.pipe(
+    mapClients((client) => {
+      const { id: clientId } = client;
+      if (clientId !== id) {
+        return noEffects(client);
+      }
+
+      return refreshClient(
+        {
+          ...client,
+          params,
+          topics: getParamTopics(params),
+        },
+        state,
+      );
+    }),
     keepEffects(evictCache),
   )(state);
 }
