@@ -99,7 +99,15 @@ export function parseJsonSchema(
           fields.push({ name: fieldName, type: "float64" });
           break;
         case "integer":
-          fields.push({ name: fieldName, type: "uint32" });
+          fields.push({
+            name: fieldName,
+            type:
+              (typeof fieldSchema.minimum === "number" && fieldSchema.minimum >= 0) ||
+              (typeof fieldSchema.exclusiveMinimum === "number" &&
+                fieldSchema.exclusiveMinimum >= 0)
+                ? "uint32"
+                : "int32",
+          });
           break;
         case "object": {
           const nestedTypeName = `${typeName}.${fieldName}`;
@@ -139,7 +147,16 @@ export function parseJsonSchema(
               fields.push({ name: fieldName, type: "float64", isArray: true });
               break;
             case "integer":
-              fields.push({ name: fieldName, type: "uint32", isArray: true });
+              fields.push({
+                name: fieldName,
+                type:
+                  (typeof itemSchema.minimum === "number" && itemSchema.minimum >= 0) ||
+                  (typeof itemSchema.exclusiveMinimum === "number" &&
+                    itemSchema.exclusiveMinimum >= 0)
+                    ? "uint32"
+                    : "int32",
+                isArray: true,
+              });
               break;
             case "object": {
               const nestedTypeName = `${typeName}.${fieldName}`;
