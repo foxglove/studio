@@ -46,6 +46,7 @@ import { SELECTED_ID_VARIABLE } from "./Renderable";
 import { Renderer } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { RendererOverlay } from "./RendererOverlay";
+import type { SceneExtensionConfig } from "./SceneExtensionConfig";
 import { CameraState, DEFAULT_CAMERA_STATE } from "./camera";
 import {
   PublishRos1Datatypes,

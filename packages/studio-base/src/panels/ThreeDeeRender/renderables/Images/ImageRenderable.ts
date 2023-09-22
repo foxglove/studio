@@ -18,10 +18,11 @@ import { RosValue } from "@foxglove/studio-base/players/types";
 import { AnyImage } from "./ImageTypes";
 import { decodeCompressedImageToBitmap } from "./decodeImage";
 import { CameraInfo } from "../../ros";
+import { DECODE_IMAGE_ERR_KEY, IMAGE_TOPIC_PATH } from "../ImageMode/constants";
 import { ColorModeSettings } from "../colorMode";
 
 const log = Logger.getLogger(__filename);
-
+export const IMAGE_FORMATS = new Set(["jpeg", "png", "webp"]);
 export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
   visible: boolean;
   frameLocked?: boolean;
@@ -30,9 +31,6 @@ export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
   planarProjectionFactor: number;
   color: string;
 }
-
-const DECODE_IMAGE_ERR_KEY = "CreateBitmap";
-const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 
 const DEFAULT_DISTANCE = 1;
 const DEFAULT_PLANAR_PROJECTION_FACTOR = 0;
@@ -57,7 +55,7 @@ export type ImageUserData = BaseUserData & {
   mesh: THREE.Mesh | undefined;
 };
 
-export class ImageRenderable extends Renderable<ImageUserData> {
+export class ImageRenderable extends Renderable<ImageUserData> implements IImageRenderable {
   // Make sure that everything is build the first time we render
   // set when camera info or image changes
   #geometryNeedsUpdate = true;
@@ -73,7 +71,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   #isUpdating = false;
 
   #decodedImage?: ImageBitmap | ImageData;
-  #decoder?: WorkerImageDecoder;
+  protected decoder?: WorkerImageDecoder;
   #receivedImageSequenceNumber = 0;
   #displayedImageSequenceNumber = 0;
 
@@ -83,12 +81,21 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     super(topicName, renderer, userData);
   }
 
+  protected isDisposed(): boolean {
+    return this.#disposed;
+  }
+
+  public setTopic(topicName: string): void {
+    this.name = topicName;
+    this.userData.topic = topicName;
+  }
+
   public override dispose(): void {
     this.#disposed = true;
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
-    this.#decoder?.terminate();
+    this.decoder?.terminate();
     super.dispose();
   }
 
@@ -173,13 +180,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.userData.image = image;
 
     const seq = ++this.#receivedImageSequenceNumber;
-    const decodePromise =
-      "format" in image
-        ? decodeCompressedImageToBitmap(image, resizeWidth)
-        : (this.#decoder ??= new WorkerImageDecoder()).decode(image, this.userData.settings);
+    const decodePromise = this.decodeImage(image, resizeWidth);
+
     decodePromise
       .then((result) => {
-        if (this.#disposed) {
+        if (this.isDisposed()) {
           return;
         }
         // prevent displaying an image older than the one currently displayed
@@ -198,7 +203,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       })
       .catch((err) => {
         log.error(err);
-        if (this.#disposed) {
+        if (this.isDisposed()) {
           return;
         }
         this.renderer.settings.errors.add(
@@ -212,6 +217,19 @@ export class ImageRenderable extends Renderable<ImageUserData> {
           `Error decoding image: ${err.message}`,
         );
       });
+  }
+
+  protected async decodeImage(
+    image: AnyImage,
+    resizeWidth?: number,
+  ): Promise<ImageBitmap | ImageData> {
+    if ("format" in image) {
+      if (!IMAGE_FORMATS.has(image.format)) {
+        throw new Error(`Unsupported format: "${image.format}"`);
+      }
+      return await decodeCompressedImageToBitmap(image, resizeWidth);
+    }
+    return await (this.decoder ??= new WorkerImageDecoder()).decode(image, this.userData.settings);
   }
 
   public update(): void {
@@ -367,6 +385,22 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
     this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
   }
+}
+
+export interface IImageRenderable extends Renderable<ImageUserData> {
+  setCameraModel: (cameraModel: PinholeCameraModel) => void;
+  setTopic(topicName: string): void;
+  dispose(): void;
+  updateHeaderInfo(): void;
+  details(): Record<string, RosValue>;
+  setRenderBehindScene(): void;
+  setSettings(newSettings: ImageRenderableSettings): void;
+  setImage(
+    image: AnyImage,
+    resizeWidth?: number,
+    onDecoded?: (result: { width: number; height: number }) => void,
+  ): void;
+  update(): void;
 }
 
 let tempColor = { r: 0, g: 0, b: 0, a: 0 };
