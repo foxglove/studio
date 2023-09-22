@@ -108,7 +108,6 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
     }
 
     if (this.#annotationNeedsUpdate) {
-      // Need to keep it transparent so that other transparent objects aren't rendered over it
       this.#label.setText(text);
       this.#label.setColor(
         SRGBToLinear(textColor.r),
