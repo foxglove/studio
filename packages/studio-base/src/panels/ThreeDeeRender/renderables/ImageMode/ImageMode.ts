@@ -81,9 +81,11 @@ import { ICameraHandler } from "../ICameraHandler";
 import { getTopicMatchPrefix, sortPrefixMatchesToFront } from "../Images/topicPrefixMatching";
 import { ColorModeSettings, colorModeSettingsFields } from "../colorMode";
 
+const log = Logger.getLogger(__filename);
+
 type ImageModeEvent = { type: "hasModifiedViewChanged" };
 
-const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
+export const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
   ...ROS_IMAGE_DATATYPES,
   ...ROS_COMPRESSED_IMAGE_DATATYPES,
   ...RAW_IMAGE_DATATYPES,
@@ -556,7 +558,7 @@ export class ImageMode
     if (!path.isTopic || path.rootSchemaName == undefined) {
       return undefined;
     }
-    if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
+    if (this.supportedImageSchemas.has(path.rootSchemaName)) {
       return "replace";
     } else if (this.#annotations.supportedAnnotationSchemas.has(path.rootSchemaName)) {
       return "add";
@@ -571,7 +573,7 @@ export class ImageMode
     if (path.rootSchemaName == undefined) {
       return;
     }
-    if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
+    if (this.supportedImageSchemas.has(path.rootSchemaName)) {
       draft.imageMode.imageTopic = path.path;
     } else if (this.#annotations.supportedAnnotationSchemas.has(path.rootSchemaName)) {
       draft.imageMode.annotations ??= {};
@@ -846,7 +848,7 @@ export class ImageMode
     this.updateSettingsTree();
   };
 
-  #getLatestImage(): DownloadImageInfo | undefined {
+  protected getLatestImage(): DownloadImageInfo | undefined {
     if (!this.#latestImage) {
       return undefined;
     }
@@ -868,7 +870,7 @@ export class ImageMode
 
   #getDownloadImageCallback = (): (() => Promise<void>) => {
     return async () => {
-      const currentImage = this.#getLatestImage();
+      const currentImage = this.getLatestImage();
       if (!currentImage) {
         return;
       }

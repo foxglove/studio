@@ -4,6 +4,7 @@
 
 import { StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom";
+import { DeepPartial } from "ts-essentials";
 
 import { useCrash } from "@foxglove/hooks";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
@@ -21,7 +22,7 @@ import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { TestOptions } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
-import { DEFAULT_SCENE_EXTENSION_CONFIG, SceneExtensionConfig } from "./SceneExtensionConfig";
+import { SceneExtensionConfig } from "./SceneExtensionConfig";
 import { ThreeDeeRender } from "./ThreeDeeRender";
 import { InterfaceMode } from "./types";
 
@@ -30,7 +31,7 @@ type InitPanelArgs = {
   forwardedAnalytics: ForwardedAnalytics;
   interfaceMode: InterfaceMode;
   testOptions: TestOptions;
-  customSceneExtensions?: Partial<SceneExtensionConfig>;
+  customSceneExtensions?: DeepPartial<SceneExtensionConfig>;
 };
 
 function initPanel(args: InitPanelArgs, context: BuiltinPanelExtensionContext) {
@@ -68,16 +69,16 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const crash = useCrash();
 
   const forwardedAnalytics = useForwardAnalytics();
-  const { gatedFeatureStore } = useAppContext();
+  const { verifiedFeatureStore } = useAppContext();
   const sceneExtensionConfig = useMemo(() => {
-    if (gatedFeatureStore == undefined) {
+    if (verifiedFeatureStore == undefined) {
       return undefined;
     }
-    const extensionConfigOverride = gatedFeatureStore.useFeature(
-      "ThreeDeeRender.sceneExtensionConfig",
-    )?.sceneExtensionConfig;
+    const extensionConfigOverride =
+      verifiedFeatureStore.availableFeatures["ThreeDeeRender.customSceneExtensions"]
+        ?.customSceneExtensions;
     return extensionConfigOverride;
-  }, [gatedFeatureStore]);
+  }, [verifiedFeatureStore]);
 
   const boundInitPanel = useMemo(
     () =>
