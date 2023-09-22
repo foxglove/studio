@@ -20,6 +20,7 @@ import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
+import { ProviderState } from "@foxglove/studio-base/components/TimeBasedChart/types";
 
 import { resolveTypedIndices, derivative } from "./datasets";
 import {
@@ -325,3 +326,18 @@ export const sortPlotDataByHeaderStamp = createPlotMapping((dataset: TypedDataSe
     data: resolved,
   };
 });
+
+export function getProvidedData(data: PlotData): ProviderState<TypedData[]> {
+  const { bounds } = data;
+  const datasets = [];
+  for (const dataset of data.datasets.values()) {
+    datasets.push(dataset);
+  }
+
+  return {
+    bounds,
+    data: {
+      datasets,
+    },
+  };
+}

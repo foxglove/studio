@@ -15,7 +15,8 @@ import {
   keepEffects,
   Client,
 } from "./state";
-import { initAccumulated, accumulate, evictCache } from "./messages";
+import { evictCache } from "./messages";
+import { initAccumulated, accumulate } from "./accumulate";
 import { PlotParams } from "../internalTypes";
 import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
 

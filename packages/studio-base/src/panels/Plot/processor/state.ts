@@ -8,6 +8,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
 import { Accumulated } from "./accumulate";
+import { PlotData } from "../plotData";
 
 export type Client = {
   id: string;
@@ -29,6 +30,8 @@ export type State = {
 
 enum SideEffectType {
   Rebuild = "rebuild",
+  Data = "data",
+  Partial = "partial",
 }
 
 type RebuildEffect = {
@@ -41,7 +44,31 @@ export const rebuildClient = (id: string): RebuildEffect => ({
   clientId: id,
 });
 
-type SideEffect = RebuildEffect;
+type DataEffect = {
+  type: SideEffectType.Data;
+  clientId: string;
+  data: PlotData;
+};
+
+export const sendData = (id: string, data: PlotData): DataEffect => ({
+  type: SideEffectType.Data,
+  clientId: id,
+  data,
+});
+
+type PartialEffect = {
+  type: SideEffectType.Partial;
+  clientId: string;
+  data: PlotData;
+};
+
+export const sendPartial = (id: string, data: PlotData): PartialEffect => ({
+  type: SideEffectType.Partial,
+  clientId: id,
+  data,
+});
+
+type SideEffect = RebuildEffect | DataEffect | PartialEffect;
 
 export type SideEffects = SideEffect[];
 
@@ -63,9 +90,22 @@ export function init(): State {
   };
 }
 
-export function noEffects(state: State): StateAndEffects {
+export function noEffects<T>(state: T): [T, SideEffects] {
   return [state, []];
 }
+
+export const appendEffects =
+  (mutator: (state: State) => StateAndEffects) =>
+  ([state, effects]: StateAndEffects): StateAndEffects => {
+    const [newState, newEffects] = mutator(state);
+    return [newState, [...effects, ...newEffects]];
+  };
+
+export const keepEffects =
+  (mutator: (state: State) => State) =>
+  ([state, effects]: StateAndEffects): StateAndEffects => {
+    return [mutator(state), effects];
+  };
 
 export const findClient = (state: State, id: string) =>
   R.find((client) => client.id === id, state.clients);
@@ -75,8 +115,16 @@ export const mutateClient = (state: State, id: string, newClient: Client): State
   clients: state.clients.map((client) => (client.id === id ? newClient : client)),
 });
 
-export const keepEffects =
-  (mutator: (state: State) => State) =>
-  ([state, effects]: StateAndEffects): StateAndEffects => {
-    return [mutator(state), effects];
+export const mapClients =
+  (mutator: (client: Client, state: State) => [Client, SideEffects]) =>
+  (state: State): StateAndEffects => {
+    const { clients } = state;
+    const changes = clients.map((client): [Client, SideEffects] => mutator(client, state));
+    return [
+      {
+        ...state,
+        clients: changes.map(([v]) => v),
+      },
+      R.chain(([, v]) => v, changes),
+    ];
   };

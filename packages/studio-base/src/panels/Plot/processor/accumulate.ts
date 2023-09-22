@@ -35,7 +35,7 @@ function getPathData(
   );
 }
 
-function buildPlot(
+export function buildPlot(
   metadata: MetadataEnums,
   globalVariables: GlobalVariables,
   params: PlotParams,
@@ -67,7 +67,7 @@ export function initAccumulated(topics: readonly string[]): Accumulated {
   };
 }
 
-function getNewMessages(
+export function getNewMessages(
   cursors: Cursors,
   messages: Messages,
 ): [newCursors: Cursors, newMessages: Messages] {
