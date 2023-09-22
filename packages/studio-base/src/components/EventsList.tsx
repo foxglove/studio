@@ -126,6 +126,7 @@ export function EventsList(): JSX.Element {
           variant="filled"
           fullWidth
           size="small"
+          color="secondary"
           value={filter}
           onChange={(event) => {
             setFilter(event.currentTarget.value);

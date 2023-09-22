@@ -234,6 +234,7 @@ export function TopicList(): JSX.Element {
           <TextField
             id="topic-filter"
             variant="filled"
+            color="secondary"
             disabled={playerPresence !== PlayerPresence.PRESENT}
             onChange={(event) => {
               setFilterText(event.target.value);
