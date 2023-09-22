@@ -96,8 +96,10 @@ export function parseJsonSchema(
           }
           break;
         case "number":
-        case "integer":
           fields.push({ name: fieldName, type: "float64" });
+          break;
+        case "integer":
+          fields.push({ name: fieldName, type: "uint32" });
           break;
         case "object": {
           const nestedTypeName = `${typeName}.${fieldName}`;
@@ -134,8 +136,10 @@ export function parseJsonSchema(
               fields.push({ name: fieldName, type: "string", isArray: true });
               break;
             case "number":
-            case "integer":
               fields.push({ name: fieldName, type: "float64", isArray: true });
+              break;
+            case "integer":
+              fields.push({ name: fieldName, type: "uint32", isArray: true });
               break;
             case "object": {
               const nestedTypeName = `${typeName}.${fieldName}`;

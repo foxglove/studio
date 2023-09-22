@@ -64,7 +64,7 @@ describe("parseJsonSchema", () => {
               { name: "str", type: "string" },
               { name: "bin", type: "uint8", isArray: true },
               { name: "num", type: "float64" },
-              { name: "int", type: "float64" },
+              { name: "int", type: "uint32" },
               { name: "bool", type: "bool" },
             ],
           },
@@ -104,7 +104,7 @@ describe("parseJsonSchema", () => {
             definitions: [
               { name: "str", type: "string", isArray: true },
               { name: "num", type: "float64", isArray: true },
-              { name: "int", type: "float64", isArray: true },
+              { name: "int", type: "uint32", isArray: true },
               { name: "bool", type: "bool", isArray: true },
             ],
           },
