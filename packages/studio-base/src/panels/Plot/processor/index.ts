@@ -6,3 +6,4 @@ export type { State, StateAndEffects, Client } from "./state";
 export { init } from "./state";
 
 export { register, unregister, updateParams, updateView } from "./clients";
+export { addBlock } from "./messages";

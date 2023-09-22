@@ -7,7 +7,25 @@ import * as R from "ramda";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
-import { Accumulated } from "./messages";
+import { PlotData, EmptyPlotData } from "../plotData";
+
+export type Cursors = Record<string, number>;
+export type Accumulated = {
+  cursors: Cursors;
+  data: PlotData;
+};
+
+export function initAccumulated(topics: readonly string[]): Accumulated {
+  const cursors: Cursors = {};
+  for (const topic of topics) {
+    cursors[topic] = 0;
+  }
+
+  return {
+    cursors,
+    data: EmptyPlotData,
+  };
+}
 
 export type Client = {
   id: string;
