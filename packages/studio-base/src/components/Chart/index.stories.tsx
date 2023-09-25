@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { StoryObj } from "@storybook/react";
-import cloneDeep from "lodash/cloneDeep";
+import * as _ from "lodash-es";
 import { useState, useCallback, ComponentProps, useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
 
@@ -105,9 +105,9 @@ const props: ComponentProps<typeof ChartComponent> = {
   type: "scatter",
 };
 
-const propsWithDatalabels = cloneDeep(props);
-if (propsWithDatalabels.data.datasets[0]?.datalabels) {
-  propsWithDatalabels.data.datasets[0].datalabels.display = true;
+const propsWithDatalabels = _.cloneDeep(props);
+if (propsWithDatalabels.data!.datasets[0]?.datalabels) {
+  propsWithDatalabels.data!.datasets[0].datalabels.display = true;
 }
 
 const divStyle = { width: 600, height: 800, background: "black" };

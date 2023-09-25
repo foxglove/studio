@@ -11,17 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  Delete20Regular,
-  FullScreenMaximize20Regular,
-  ShapeSubtract20Regular,
-  SplitHorizontal20Regular,
-  SplitVertical20Regular,
-} from "@fluentui/react-icons";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Divider, Menu, MenuItem } from "@mui/material";
 import { MouseEvent, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
 import { makeStyles } from "tss-react/mui";
 
@@ -59,10 +53,11 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
+function PanelActionsDropdownComponent({ isUnknownPanel }: Props): JSX.Element {
   const { classes, cx } = useStyles();
   const [menuAnchorEl, setMenuAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const [subMenuAnchorEl, setSubmenuAnchorEl] = useState<undefined | HTMLElement>(undefined);
+  const { t } = useTranslation("panelToolbar");
 
   const menuOpen = Boolean(menuAnchorEl);
   const submenuOpen = Boolean(subMenuAnchorEl);
@@ -148,15 +143,17 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
       items.push(
         {
           key: "vsplit",
-          text: "Split right",
-          icon: <SplitVertical20Regular />,
-          onClick: () => split(panelContext?.id, "row"),
+          text: t("splitRight"),
+          onClick: () => {
+            split(panelContext?.id, "row");
+          },
         },
         {
           key: "hsplit",
-          text: "Split down",
-          icon: <SplitHorizontal20Regular />,
-          onClick: () => split(panelContext?.id, "column"),
+          text: t("splitDown"),
+          onClick: () => {
+            split(panelContext?.id, "column");
+          },
         },
       );
     }
@@ -164,8 +161,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
     if (panelContext?.isFullscreen !== true) {
       items.push({
         key: "enter-fullscreen",
-        text: "Fullscreen",
-        icon: <FullScreenMaximize20Regular />,
+        text: t("fullscreen"),
         onClick: enterFullscreen,
         "data-testid": "panel-menu-fullscreen",
       });
@@ -175,8 +171,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
 
     items.push({
       key: "remove",
-      text: "Remove panel",
-      icon: <Delete20Regular />,
+      text: t("removePanel"),
       onClick: close,
       "data-testid": "panel-menu-remove",
       className: classes.error,
@@ -191,6 +186,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
     panelContext?.id,
     panelContext?.isFullscreen,
     split,
+    t,
   ]);
 
   const buttonRef = useRef<HTMLDivElement>(ReactNull);
@@ -209,7 +205,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
         aria-expanded={menuOpen ? "true" : undefined}
         onClick={handleMenuClick}
         data-testid="panel-menu"
-        title="More"
+        title={t("more")}
       >
         <MoreVertIcon />
       </ToolbarIconButton>
@@ -234,8 +230,7 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
           onClick={handleSubmenuClick}
           onMouseEnter={handleSubmenuMouseEnter}
         >
-          <ShapeSubtract20Regular />
-          Change panel
+          {t("changePanel")}
           <ChevronRightIcon className={classes.icon} fontSize="small" />
         </MenuItem>
         <ChangePanelMenu anchorEl={subMenuAnchorEl} onClose={handleSubmenuClose} tabId={tabId} />
@@ -250,11 +245,12 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
                 event.stopPropagation();
                 item.onClick?.();
               }}
-              onMouseEnter={() => setSubmenuAnchorEl(undefined)}
+              onMouseEnter={() => {
+                setSubmenuAnchorEl(undefined);
+              }}
               className={cx(classes.menuItem, item.className)}
               data-testid={item["data-testid"]}
             >
-              {item.icon}
               {item.text}
             </MenuItem>
           ),
@@ -263,3 +259,5 @@ export function PanelActionsDropdown({ isUnknownPanel }: Props): JSX.Element {
     </div>
   );
 }
+
+export const PanelActionsDropdown = React.memo(PanelActionsDropdownComponent);

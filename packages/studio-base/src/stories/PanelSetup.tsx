@@ -13,7 +13,7 @@
 
 import { useTheme } from "@mui/material";
 import { TFunction } from "i18next";
-import { flatten } from "lodash";
+import * as _ from "lodash-es";
 import { ComponentProps, ReactNode, useLayoutEffect, useMemo, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -90,6 +90,8 @@ export type Fixture = {
   setPublishers?: (publisherId: string, advertisements: AdvertiseOptions[]) => void;
   setSubscriptions?: ComponentProps<typeof MockMessagePipelineProvider>["setSubscriptions"];
   setParameter?: (key: string, value: ParameterValue) => void;
+  fetchAsset?: ComponentProps<typeof MockMessagePipelineProvider>["fetchAsset"];
+  callService?: (service: string, request: unknown) => Promise<unknown>;
   messageConverters?: readonly RegisterMessageConverterArgs<unknown>[];
   panelState?: Partial<PanelStateStore>;
 };
@@ -107,18 +109,7 @@ type UnconnectedProps = {
   className?: string;
 };
 
-function setNativeValue(element: unknown, value: unknown) {
-  const valueSetter = Object.getOwnPropertyDescriptor(element, "value")?.set; // eslint-disable-line @typescript-eslint/unbound-method
-  const prototype = Object.getPrototypeOf(element);
-  const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set; // eslint-disable-line @typescript-eslint/unbound-method
-  if (valueSetter && valueSetter !== prototypeValueSetter) {
-    prototypeValueSetter?.call(element, value);
-  } else {
-    valueSetter?.call(element, value);
-  }
-}
-
-export function makeMockPanelCatalog(t: TFunction<"panels">): PanelCatalog {
+function makeMockPanelCatalog(t: TFunction<"panels">): PanelCatalog {
   const allPanels = [...panels.getBuiltin(t), ...panels.getDebug(t)];
 
   const visiblePanels = [...panels.getBuiltin(t)];
@@ -133,30 +124,12 @@ export function makeMockPanelCatalog(t: TFunction<"panels">): PanelCatalog {
   };
 }
 
-export function triggerInputChange(
-  node: HTMLInputElement | HTMLTextAreaElement,
-  value: string = "",
-): void {
-  // force trigger textarea to change
-  node.value = `${value} `;
-  // trigger input change: https://stackoverflow.com/questions/23892547/what-is-the-best-way-to-trigger-onchange-event-in-react-js
-  setNativeValue(node, value);
-
-  const ev = new Event("input", { bubbles: true });
-  node.dispatchEvent(ev);
-}
-
-export function triggerInputBlur(node: HTMLInputElement | HTMLTextAreaElement): void {
-  const ev = new Event("blur", { bubbles: true });
-  node.dispatchEvent(ev);
-}
-
 export function triggerWheel(target: HTMLElement, deltaX: number): void {
   const event = new WheelEvent("wheel", { deltaX, bubbles: true, cancelable: true });
   target.dispatchEvent(event);
 }
 
-export const MosaicWrapper = ({ children }: { children: React.ReactNode }): JSX.Element => {
+const MosaicWrapper = ({ children }: { children: React.ReactNode }): JSX.Element => {
   return (
     <DndProvider backend={HTML5Backend}>
       <Mosaic
@@ -188,20 +161,39 @@ function PanelWrapper({
   includeSettings?: boolean;
   settingsWidth?: number;
 }): JSX.Element {
-  const settings =
-    usePanelStateStore((store) => Object.values(store.settingsTrees)[0]) ?? EmptyTree;
+  const settings = usePanelStateStore((store) => {
+    const trees = Object.values(store.settingsTrees);
+    if (trees.length > 1) {
+      throw new Error(
+        `includeSettings requires there to be at most 1 panel, found ${trees.length}`,
+      );
+    }
+    return trees[0] ?? EmptyTree;
+  });
 
   return (
     <>
       {includeSettings && (
         <div style={{ overflow: "auto", width: settingsWidth }}>
-          <SettingsTreeEditor settings={settings} />
+          <SettingsTreeEditor variant="panel" settings={settings} />
         </div>
       )}
       {children}
     </>
   );
 }
+
+const defaultFetchAsset: ComponentProps<typeof MockMessagePipelineProvider>["fetchAsset"] = async (
+  uri,
+  options,
+) => {
+  const response = await fetch(uri, options);
+  return {
+    uri,
+    data: new Uint8Array(await response.arrayBuffer()),
+    mediaType: response.headers.get("content-type") ?? undefined,
+  };
+};
 
 function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull {
   const { t } = useTranslation("panels");
@@ -282,6 +274,8 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
     setPublishers,
     setSubscriptions,
     setParameter,
+    fetchAsset,
+    callService,
   } = props.fixture ?? {};
   let dTypes = datatypes;
   if (!dTypes) {
@@ -293,7 +287,7 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
     }
     dTypes = dummyDatatypes;
   }
-  const allData = flatten(Object.values(frame));
+  const allData = _.flatten(Object.values(frame));
 
   const inner = (
     <div
@@ -316,6 +310,8 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
         setPublishers={setPublishers}
         setSubscriptions={setSubscriptions}
         setParameter={setParameter}
+        fetchAsset={fetchAsset ?? defaultFetchAsset}
+        callService={callService}
       >
         <PanelCatalogContext.Provider value={mockPanelCatalog}>
           <AppConfigurationContext.Provider value={mockAppConfiguration}>
@@ -349,7 +345,7 @@ type Props = UnconnectedProps & {
 export default function PanelSetup(props: Props): JSX.Element {
   const theme = useTheme();
   return (
-    <WorkspaceContextProvider>
+    <WorkspaceContextProvider disablePersistenceForStorybook>
       <UserNodeStateProvider>
         <TimelineInteractionStateProvider>
           <MockCurrentLayoutProvider onAction={props.onLayoutAction}>

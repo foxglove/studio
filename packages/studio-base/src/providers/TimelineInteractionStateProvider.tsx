@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { isEqual, keyBy } from "lodash";
+import * as _ from "lodash-es";
 import { ReactNode, useState } from "react";
 import { createStore, StoreApi } from "zustand";
 
@@ -22,13 +22,15 @@ function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStat
       hoveredEvent: undefined,
       hoverValue: undefined,
 
-      clearHoverValue: (componentId: string) =>
+      clearHoverValue: (componentId: string) => {
         set((store) => ({
           hoverValue: store.hoverValue?.componentId === componentId ? undefined : store.hoverValue,
-        })),
+        }));
+      },
 
-      setEventsAtHoverValue: (eventsAtHoverValue: TimelinePositionedEvent[]) =>
-        set({ eventsAtHoverValue: keyBy(eventsAtHoverValue, (event) => event.event.id) }),
+      setEventsAtHoverValue: (eventsAtHoverValue: TimelinePositionedEvent[]) => {
+        set({ eventsAtHoverValue: _.keyBy(eventsAtHoverValue, (event) => event.event.id) });
+      },
 
       setGlobalBounds: (
         newBounds:
@@ -58,10 +60,11 @@ function createTimelineInteractionStateStore(): StoreApi<TimelineInteractionStat
         }
       },
 
-      setHoverValue: (newValue: HoverValue) =>
+      setHoverValue: (newValue: HoverValue) => {
         set((store) => ({
-          hoverValue: isEqual(newValue, store.hoverValue) ? store.hoverValue : newValue,
-        })),
+          hoverValue: _.isEqual(newValue, store.hoverValue) ? store.hoverValue : newValue,
+        }));
+      },
     };
   });
 }

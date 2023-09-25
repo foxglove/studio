@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import EventEmitter from "eventemitter3";
+
 import { Condvar } from "@foxglove/den/async";
 import { VecQueue } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
@@ -21,11 +23,19 @@ import {
 const log = Log.getLogger(__filename);
 
 const DEFAULT_READ_AHEAD_DURATION = { sec: 10, nsec: 0 };
+const DEFAULT_MIN_READ_AHEAD_DURATION = { sec: 1, nsec: 0 };
 
 type Options = {
   // How far ahead to buffer
   readAheadDuration?: Time;
+  // The minimum duration to buffer before playback resumes
+  minReadAheadDuration?: Time;
 };
+
+interface EventTypes {
+  /** Dispatched when the loaded ranges have changed. Use `loadedRanges()` to get the new ranges. */
+  loadedRangesChange: () => void;
+}
 
 /**
  * BufferedIterableSource proxies access to IIterableSource. It buffers the messageIterator by
@@ -35,7 +45,7 @@ type Options = {
  * is the consumer and reads messages from cache while the startProducer method produces messages by
  * reading from the underlying source and populating the cache.
  */
-class BufferedIterableSource implements IIterableSource {
+class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterableSource {
   #source: CachingIterableSource;
 
   #readDone = false;
@@ -62,9 +72,22 @@ class BufferedIterableSource implements IIterableSource {
   // How far ahead of the read head we should try to keep buffering
   #readAheadDuration: Time;
 
+  // The minimum duration to buffer before playback resumes
+  #minReadAheadDuration: Time;
+
   public constructor(source: IIterableSource, opt?: Options) {
+    super();
+
     this.#readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
+    this.#minReadAheadDuration = opt?.minReadAheadDuration ?? DEFAULT_MIN_READ_AHEAD_DURATION;
     this.#source = new CachingIterableSource(source);
+
+    if (compare(this.#readAheadDuration, this.#minReadAheadDuration) < 0) {
+      throw new Error("Invariant: readAheadDuration < minReadAheadDuration");
+    }
+
+    // pass-through the range change event
+    this.#source.on("loadedRangesChange", () => this.emit("loadedRangesChange"));
   }
 
   public async initialize(): Promise<Initalization> {
@@ -77,7 +100,7 @@ class BufferedIterableSource implements IIterableSource {
       throw new Error("Invariant: uninitialized");
     }
 
-    if (args.topics.length === 0) {
+    if (args.topics.size === 0) {
       this.#readDone = true;
       return;
     }
@@ -138,14 +161,25 @@ class BufferedIterableSource implements IIterableSource {
 
         this.#cache.enqueue(result);
 
+        // We tend to expect message revents (not problems) so optimistically grab the receive time
+        // and minReadAheadUntil
+        const receiveTime =
+          result.type === "message-event" ? result.msgEvent.receiveTime : undefined;
+
+        // Make sure that we have buffered enough ahead before telling the consumer to try reading again.
+        const minReadAheadUntil = addTime(this.#readHead, this.#minReadAheadDuration);
+        if (receiveTime && compare(receiveTime, minReadAheadUntil) < 0) {
+          continue;
+        }
+
         // Indicate to the consumer that it can try reading again
         this.#readSignal.notifyAll();
 
-        // Keep reading while the messages we receive are <= the readUntil time.
-        if (
-          result.type === "message-event" &&
-          compare(result.msgEvent.receiveTime, readUntil) <= 0
-        ) {
+        this.#source.setCurrentReadHead(this.#readHead);
+
+        // Keep reading while the messages we receive are <= the readUntil time and while
+        // there is still space for reading new messages into the cache
+        if (receiveTime && compare(receiveTime, readUntil) <= 0 && this.#source.canReadMore()) {
           continue;
         }
 
@@ -168,6 +202,7 @@ class BufferedIterableSource implements IIterableSource {
 
   public async terminate(): Promise<void> {
     this.#cache.clear();
+    this.#source.removeAllListeners("loadedRangesChange");
     await this.#source.terminate();
   }
 
@@ -216,7 +251,7 @@ class BufferedIterableSource implements IIterableSource {
     const self = this;
     return (async function* bufferedIterableGenerator() {
       try {
-        if (args.topics.length === 0) {
+        if (args.topics.size === 0) {
           return;
         }
 

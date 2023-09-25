@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Divider, Typography } from "@mui/material";
-import { isEmpty } from "lodash";
+import * as _ from "lodash-es";
 import { Fragment } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -19,7 +19,7 @@ import {
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-export type PlaybackControlsTooltipItem =
+type PlaybackControlsTooltipItem =
   | { type: "divider" }
   | { type: "item"; title: string; value: string };
 
@@ -53,7 +53,7 @@ const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeD
 
 export function PlaybackControlsTooltipContent(params: { stamp: Time }): ReactNull | JSX.Element {
   const { stamp } = params;
-  const { formatTime, timeFormat } = useAppTimeFormat();
+  const { timeFormat, formatTime, formatDate } = useAppTimeFormat();
   const hoveredEvents = useTimelineInteractionState(selectHoveredEvents);
   const startTime = useMessagePipeline(selectStartTime);
   const { classes } = useStyles();
@@ -66,7 +66,7 @@ export function PlaybackControlsTooltipContent(params: { stamp: Time }): ReactNu
 
   const tooltipItems: PlaybackControlsTooltipItem[] = [];
 
-  if (!isEmpty(hoveredEvents)) {
+  if (!_.isEmpty(hoveredEvents)) {
     Object.values(hoveredEvents).forEach(({ event }) => {
       tooltipItems.push({
         type: "item",
@@ -78,7 +78,7 @@ export function PlaybackControlsTooltipContent(params: { stamp: Time }): ReactNu
         title: "End",
         value: formatTime(event.endTime),
       });
-      if (!isEmpty(event.metadata)) {
+      if (!_.isEmpty(event.metadata)) {
         Object.entries(event.metadata).forEach(([metaKey, metaValue]) => {
           tooltipItems.push({ type: "item", title: metaKey, value: metaValue });
         });
@@ -89,6 +89,7 @@ export function PlaybackControlsTooltipContent(params: { stamp: Time }): ReactNu
 
   switch (timeFormat) {
     case "TOD":
+      tooltipItems.push({ type: "item", title: "Date", value: formatDate(stamp) });
       tooltipItems.push({ type: "item", title: "Time", value: formatTime(stamp) });
       break;
     case "SEC":

@@ -6,31 +6,32 @@ import * as THREE from "three";
 import { assert } from "ts-essentials";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
+import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
+import { WorkerImageDecoder } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/WorkerImageDecoder";
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { RosValue } from "@foxglove/studio-base/players/types";
 
 import { AnyImage } from "./ImageTypes";
-import { RawImageOptions, decodeRawImage } from "./decodeImage";
+import { decodeCompressedImageToBitmap } from "./decodeImage";
 import { CameraInfo } from "../../ros";
+import { ColorModeSettings } from "../colorMode";
 
-export interface ImageRenderableSettings {
+const log = Logger.getLogger(__filename);
+
+export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
   visible: boolean;
   frameLocked?: boolean;
   cameraInfoTopic: string | undefined;
   distance: number;
   planarProjectionFactor: number;
   color: string;
-  minValue?: number;
-  maxValue?: number;
-  /** Opacity of foreground image, not used when `renderBehindScene` set to true */
-  foregroundOpacity: number;
 }
 
-export const CREATE_BITMAP_ERR_KEY = "CreateBitmap";
+const DECODE_IMAGE_ERR_KEY = "CreateBitmap";
 const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 
 const DEFAULT_DISTANCE = 1;
@@ -42,8 +43,8 @@ export const IMAGE_RENDERABLE_DEFAULT_SETTINGS: ImageRenderableSettings = {
   distance: DEFAULT_DISTANCE,
   planarProjectionFactor: DEFAULT_PLANAR_PROJECTION_FACTOR,
   color: "#ffffff",
-  foregroundOpacity: 0.0,
 };
+
 export type ImageUserData = BaseUserData & {
   topic: string;
   settings: ImageRenderableSettings;
@@ -67,24 +68,27 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   // set when material or texture changes
   #materialNeedsUpdate = true;
 
-  #renderFrontAndBehind: boolean = false;
-
-  #bitmap?: ImageBitmap;
+  #renderBehindScene: boolean = false;
 
   #isUpdating = false;
 
-  #foregroundMaterial: THREE.MeshBasicMaterial | undefined;
-  #foregroundMesh: THREE.Mesh | undefined;
+  #decodedImage?: ImageBitmap | ImageData;
+  #decoder?: WorkerImageDecoder;
+  #receivedImageSequenceNumber = 0;
+  #displayedImageSequenceNumber = 0;
+
+  #disposed = false;
 
   public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
     super(topicName, renderer, userData);
   }
 
   public override dispose(): void {
+    this.#disposed = true;
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
     this.userData.geometry?.dispose();
-    this.#foregroundMaterial?.dispose();
+    this.#decoder?.terminate();
     super.dispose();
   }
 
@@ -108,8 +112,8 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     return { image: this.userData.image, camera_info: this.userData.cameraInfo };
   }
 
-  public setRenderFrontAndBehind(): void {
-    this.#renderFrontAndBehind = true;
+  public setRenderBehindScene(): void {
+    this.#renderBehindScene = true;
     this.#materialNeedsUpdate = true;
     this.#meshNeedsUpdate = true;
   }
@@ -142,26 +146,72 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     }
 
     if (
+      prevSettings.colorMode !== newSettings.colorMode ||
+      prevSettings.flatColor !== newSettings.flatColor ||
+      prevSettings.gradient !== newSettings.gradient ||
+      prevSettings.colorMap !== newSettings.colorMap ||
       prevSettings.minValue !== newSettings.minValue ||
       prevSettings.maxValue !== newSettings.maxValue
     ) {
-      this.#textureNeedsUpdate = true;
-    }
-    if (prevSettings.foregroundOpacity !== newSettings.foregroundOpacity) {
-      this.#materialNeedsUpdate = true;
+      this.userData.settings = newSettings;
+      // Decode the current image again, which takes into account the new options
+      const image = this.userData.image;
+      if (image) {
+        this.setImage(image);
+      }
+      return;
     }
 
     this.userData.settings = newSettings;
   }
 
-  public setImage(image: AnyImage): void {
+  public setImage(
+    image: AnyImage,
+    resizeWidth?: number,
+    onDecoded?: (result: { width: number; height: number }) => void,
+  ): void {
     this.userData.image = image;
-    this.#textureNeedsUpdate = true;
-  }
 
-  public setBitmap(bitmap: ImageBitmap): void {
-    this.#bitmap = bitmap;
-    this.#textureNeedsUpdate = true;
+    const seq = ++this.#receivedImageSequenceNumber;
+    const decodePromise =
+      "format" in image
+        ? decodeCompressedImageToBitmap(image, resizeWidth)
+        : (this.#decoder ??= new WorkerImageDecoder()).decode(image, this.userData.settings);
+    decodePromise
+      .then((result) => {
+        if (this.#disposed) {
+          return;
+        }
+        // prevent displaying an image older than the one currently displayed
+        if (this.#displayedImageSequenceNumber > seq) {
+          return;
+        }
+        this.#displayedImageSequenceNumber = seq;
+        this.#decodedImage = result;
+        this.#textureNeedsUpdate = true;
+        this.update();
+
+        onDecoded?.(result);
+        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, DECODE_IMAGE_ERR_KEY);
+        this.renderer.settings.errors.removeFromTopic(this.userData.topic, DECODE_IMAGE_ERR_KEY);
+        this.renderer.queueAnimationFrame();
+      })
+      .catch((err) => {
+        log.error(err);
+        if (this.#disposed) {
+          return;
+        }
+        this.renderer.settings.errors.add(
+          IMAGE_TOPIC_PATH,
+          DECODE_IMAGE_ERR_KEY,
+          `Error decoding image: ${err.message}`,
+        );
+        this.renderer.settings.errors.addToTopic(
+          this.userData.topic,
+          DECODE_IMAGE_ERR_KEY,
+          `Error decoding image: ${err.message}`,
+        );
+      });
   }
 
   public update(): void {
@@ -169,20 +219,17 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       return;
     }
     this.#isUpdating = true;
-    // fallback camera info needs image width and height
-    if (this.#textureNeedsUpdate && this.userData.image) {
+
+    if (this.#textureNeedsUpdate && this.#decodedImage) {
       this.#updateTexture();
       this.#textureNeedsUpdate = false;
     }
-    // We need a valid camera model and image to render
-    if (!this.userData.cameraModel || !this.userData.image) {
-      this.#isUpdating = false;
-      return;
+
+    if (this.userData.image) {
+      this.updateHeaderInfo();
     }
 
-    this.updateHeaderInfo();
-
-    if (this.#geometryNeedsUpdate) {
+    if (this.#geometryNeedsUpdate && this.userData.cameraModel) {
       this.#rebuildGeometry();
       this.#geometryNeedsUpdate = false;
     }
@@ -192,7 +239,12 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.#materialNeedsUpdate = false;
     }
 
-    if (this.#meshNeedsUpdate && this.userData.texture) {
+    if (
+      this.#meshNeedsUpdate &&
+      this.userData.texture &&
+      this.userData.geometry &&
+      this.userData.material
+    ) {
       this.#updateMesh();
       this.#meshNeedsUpdate = false;
     }
@@ -210,73 +262,47 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   }
 
   #updateTexture(): void {
-    assert(this.userData.image, "Image must be set before texture can be updated or created");
-    const image = this.userData.image;
+    assert(
+      this.#decodedImage,
+      "Decoded image must be set before texture can be updated or created",
+    );
+    const decodedImage = this.#decodedImage;
     // Create or update the bitmap texture
-    if ("format" in image) {
-      const bitmap = this.#bitmap;
-      if (!bitmap) {
-        return;
-      }
-
+    if (decodedImage instanceof ImageBitmap) {
       const canvasTexture = this.userData.texture;
       if (
         canvasTexture == undefined ||
         // instanceof check allows us to switch from a raw image (DataTexture) to a compressed image (CanvasTexture)
         !(canvasTexture instanceof THREE.CanvasTexture) ||
-        !bitmapDimensionsEqual(bitmap, canvasTexture.image as ImageBitmap | undefined)
+        !bitmapDimensionsEqual(decodedImage, canvasTexture.image as ImageBitmap | undefined)
       ) {
         if (canvasTexture?.image instanceof ImageBitmap) {
           canvasTexture.image.close();
         }
         canvasTexture?.dispose();
-        this.userData.texture = createCanvasTexture(bitmap);
+        this.userData.texture = createCanvasTexture(decodedImage);
       } else {
-        canvasTexture.image = bitmap;
+        canvasTexture.image = decodedImage;
         canvasTexture.needsUpdate = true;
       }
     } else {
-      const { width, height } = image;
       let dataTexture = this.userData.texture;
       if (
         dataTexture == undefined ||
         // instanceof check allows us to switch from a compressed image (CanvasTexture) to a raw image (DataTexture)
         !(dataTexture instanceof THREE.DataTexture) ||
-        dataTexture.image.width !== width ||
-        dataTexture.image.height !== height
+        dataTexture.image.width !== decodedImage.width ||
+        dataTexture.image.height !== decodedImage.height
       ) {
         dataTexture?.dispose();
-        dataTexture = createDataTexture(width, height);
+        dataTexture = createDataTexture(decodedImage);
         this.userData.texture = dataTexture;
-      }
-      assert(dataTexture instanceof THREE.DataTexture); // https://github.com/microsoft/TypeScript/issues/54594
-
-      try {
-        decodeRawImage(image, this.#getRawImageOptions(), dataTexture.image.data);
+      } else {
+        dataTexture.image = decodedImage;
         dataTexture.needsUpdate = true;
-        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, CREATE_BITMAP_ERR_KEY);
-        this.renderer.settings.errors.removeFromTopic(this.userData.topic, CREATE_BITMAP_ERR_KEY);
-      } catch (error) {
-        this.renderer.settings.errors.add(
-          IMAGE_TOPIC_PATH,
-          CREATE_BITMAP_ERR_KEY,
-          `Error decoding raw image: ${error.message}`,
-        );
-        this.renderer.settings.errors.addToTopic(
-          this.userData.topic,
-          CREATE_BITMAP_ERR_KEY,
-          `Error decoding raw image: ${error.message}`,
-        );
       }
     }
     this.#materialNeedsUpdate = true;
-  }
-
-  #getRawImageOptions(): RawImageOptions {
-    return {
-      minValue: this.userData.settings.minValue,
-      maxValue: this.userData.settings.maxValue,
-    };
   }
 
   #updateMaterial(): void {
@@ -299,19 +325,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     material.transparent = transparent;
     material.depthWrite = !transparent;
 
-    if (this.#renderFrontAndBehind) {
-      assert(
-        this.#foregroundMaterial,
-        "ForegroundMaterial must be set before mesh can be updated or created",
-      );
-      const foregroundMaterial = this.#foregroundMaterial;
-      if (texture) {
-        foregroundMaterial.map = texture;
-      }
-      const foregroundTransparent = this.userData.settings.foregroundOpacity !== 1;
-      foregroundMaterial.opacity = this.userData.settings.foregroundOpacity;
-      foregroundMaterial.transparent = foregroundTransparent;
-      foregroundMaterial.depthWrite = !foregroundTransparent;
+    if (this.#renderBehindScene) {
       material.depthWrite = false;
       material.depthTest = false;
     } else {
@@ -333,17 +347,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       transparent,
       depthWrite: !transparent,
     });
-    if (!this.#renderFrontAndBehind) {
-      return;
-    }
-    this.#foregroundMaterial = new THREE.MeshBasicMaterial({
-      name: `${this.userData.topic}:ForegroundMaterial`,
-      color,
-      side: THREE.DoubleSide,
-      opacity: this.userData.settings.foregroundOpacity,
-      transparent,
-      depthWrite: !transparent,
-    });
   }
 
   #updateMesh(): void {
@@ -357,24 +360,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
       this.userData.mesh.material = this.userData.material;
     }
 
-    if (!this.#renderFrontAndBehind) {
+    if (!this.#renderBehindScene) {
       this.userData.mesh.renderOrder = 0;
       return;
     }
 
-    assert(
-      this.#foregroundMaterial,
-      "ForegroundMaterial must be set before mesh can be updated or created",
-    );
-
-    if (!this.#foregroundMesh) {
-      this.#foregroundMesh = new THREE.Mesh(this.userData.geometry, this.#foregroundMaterial);
-      this.#foregroundMesh.userData.pickable = false;
-      this.add(this.#foregroundMesh);
-    } else {
-      this.#foregroundMesh.geometry = this.userData.geometry;
-      this.#foregroundMesh.material = this.#foregroundMaterial;
-    }
     this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
   }
 }
@@ -397,13 +387,11 @@ function createCanvasTexture(bitmap: ImageBitmap): THREE.CanvasTexture {
   return texture;
 }
 
-function createDataTexture(width: number, height: number): THREE.DataTexture {
-  const size = width * height;
-  const rgba = new Uint8ClampedArray(size * 4);
-  return new THREE.DataTexture(
-    rgba,
-    width,
-    height,
+function createDataTexture(imageData: ImageData): THREE.DataTexture {
+  const dataTexture = new THREE.DataTexture(
+    imageData.data,
+    imageData.width,
+    imageData.height,
     THREE.RGBAFormat,
     THREE.UnsignedByteType,
     THREE.UVMapping,
@@ -414,6 +402,8 @@ function createDataTexture(width: number, height: number): THREE.DataTexture {
     1,
     THREE.SRGBColorSpace,
   );
+  dataTexture.needsUpdate = true; // ensure initial image data is displayed
+  return dataTexture;
 }
 
 function createGeometry(

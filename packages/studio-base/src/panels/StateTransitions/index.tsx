@@ -11,20 +11,19 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Edit16Filled } from "@fluentui/react-icons";
+import { Add16Filled, Edit16Filled } from "@fluentui/react-icons";
 import { Button, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
-import { isEmpty, pickBy, uniq } from "lodash";
+import * as _ from "lodash-es";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
+import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import { add as addTimes, fromSec, subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
-import { useBlocksByTopic } from "@foxglove/studio-base/PanelAPI";
-import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageDataItemsByPath,
   useDecodeMessagePathsForMessagesByTopic,
@@ -43,13 +42,16 @@ import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { ChartData, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
+import { SubscribePayload } from "@foxglove/studio-base/players/types";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
+import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
-import { stateTransitionPathDisplayName } from "./shared";
+import { DEFAULT_PATH, stateTransitionPathDisplayName } from "./shared";
 import { StateTransitionConfig } from "./types";
 
 export const transitionableRosTypes = [
@@ -154,7 +156,7 @@ export function openSiblingStateTransitionsPanel(
     siblingConfigCreator: (config: PanelConfig) => {
       return {
         ...config,
-        paths: uniq(
+        paths: _.uniq(
           (config as StateTransitionConfig).paths.concat([
             { value: topicName, timestampMethod: "receiveTime" },
           ]),
@@ -168,6 +170,10 @@ function selectCurrentTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.currentTime;
 }
 
+function selectEndTime(ctx: MessagePipelineContext) {
+  return ctx.playerState.activeData?.endTime;
+}
+
 type Props = {
   config: StateTransitionConfig;
   saveConfig: SaveConfig<StateTransitionConfig>;
@@ -179,24 +185,67 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { classes } = useStyles();
 
   const pathStrings = useMemo(() => paths.map(({ value }) => value), [paths]);
-  const subscribeTopics = useMemo(() => getTopicsFromPaths(pathStrings), [pathStrings]);
 
   const { openPanelSettings } = useWorkspaceActions();
-  const { id: panelId } = usePanelContext();
+  const { id: panelId, setMessagePathDropConfig } = usePanelContext();
   const { setSelectedPanelIds } = useSelectedPanels();
   const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
+
+  useEffect(() => {
+    setMessagePathDropConfig({
+      getDropStatus(draggedPaths) {
+        if (draggedPaths.some((path) => !path.isLeaf)) {
+          return { canDrop: false };
+        }
+        return { canDrop: true, effect: "add" };
+      },
+      handleDrop(draggedPaths) {
+        saveConfig((prevConfig) => ({
+          ...prevConfig,
+          paths: [
+            // If there was only a single series and its path was empty (the default state of the
+            // panel), replace the series rather than adding to it
+            ...prevConfig.paths,
+            ...draggedPaths.map((path) => ({
+              value: path.path,
+              enabled: true,
+              timestampMethod: "receiveTime" as const,
+            })),
+          ],
+        }));
+      },
+    });
+  }, [saveConfig, setMessagePathDropConfig]);
 
   const { startTime } = PanelAPI.useDataSourceInfo();
   const currentTime = useMessagePipeline(selectCurrentTime);
   const currentTimeSinceStart = useMemo(
-    () => (!currentTime || !startTime ? undefined : toSec(subtractTimes(currentTime, startTime))),
+    () => (currentTime && startTime ? toSec(subtractTimes(currentTime, startTime)) : undefined),
     [currentTime, startTime],
+  );
+  const endTime = useMessagePipeline(selectEndTime);
+  const endTimeSinceStart = useMemo(
+    () => (endTime && startTime ? toSec(subtractTimes(endTime, startTime)) : undefined),
+    [endTime, startTime],
   );
   const itemsByPath = useMessagesByPath(pathStrings);
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(pathStrings);
 
-  const blocks = useBlocksByTopic(subscribeTopics);
+  const subscriptions: SubscribePayload[] = useMemo(
+    () =>
+      filterMap(paths, (path) => {
+        const payload = subscribePayloadFromMessagePath(path.value, "full");
+        // Include the header in case we are ordering by header stamp.
+        if (path.timestampMethod === "headerStamp" && payload?.fields != undefined) {
+          payload.fields.push("header");
+        }
+        return payload;
+      }),
+    [paths],
+  );
+
+  const blocks = PanelAPI.useBlocksSubscriptions(subscriptions);
   const decodedBlocks = useMemo(
     () => blocks.map(decodeMessagePathsForMessagesByTopic),
     [blocks, decodeMessagePathsForMessagesByTopic],
@@ -215,11 +264,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   // since it's not needed to render the chart and would just cause unnecessary re-renders
   // if included in the dataset.
   const newItemsByPath = useMemo(() => {
-    const newItemsNotInBlocks = pickBy(
+    const newItemsNotInBlocks = _.pickBy(
       itemsByPath,
       (_items, path) => !decodedBlocks.some((block) => block[path]),
     );
-    return isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
+    return _.isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
   }, [decodedBlocks, itemsByPath]);
 
   const { datasets, minY } = useMemo(() => {
@@ -243,11 +292,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
 
       const newBlockDataSets = messagesToDatasets({
+        blocks: blocksForPath,
         path,
+        pathIndex,
         startTime,
         y,
-        pathIndex,
-        blocks: blocksForPath,
       });
 
       outDatasets = outDatasets.concat(newBlockDataSets);
@@ -257,11 +306,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       const items = newItemsByPath[path.value];
       if (items) {
         const newPathDataSets = messagesToDatasets({
+          blocks: [items],
           path,
+          pathIndex,
           startTime,
           y,
-          pathIndex,
-          blocks: [items],
         });
         outDatasets = outDatasets.concat(newPathDataSets);
       }
@@ -271,7 +320,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       datasets: outDatasets,
       minY: outMinY,
     };
-  }, [startTime, paths, decodedBlocks, newItemsByPath]);
+  }, [decodedBlocks, newItemsByPath, paths, startTime]);
 
   const yScale = useMemo<ScaleOptions<"linear">>(() => {
     return {
@@ -296,6 +345,34 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       },
     };
   }, []);
+
+  const databounds: undefined | Bounds = useMemo(() => {
+    if (
+      (config.xAxisMinValue != undefined || config.xAxisMaxValue != undefined) &&
+      endTimeSinceStart != undefined
+    ) {
+      return {
+        x: {
+          min: config.xAxisMinValue ?? 0,
+          max: config.xAxisMaxValue ?? endTimeSinceStart,
+        },
+        y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
+      };
+    } else if (config.xAxisRange != undefined && currentTimeSinceStart != undefined) {
+      return {
+        x: { min: currentTimeSinceStart - config.xAxisRange, max: currentTimeSinceStart },
+        y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
+      };
+    } else {
+      return undefined;
+    }
+  }, [
+    config.xAxisMaxValue,
+    config.xAxisMinValue,
+    config.xAxisRange,
+    currentTimeSinceStart,
+    endTimeSinceStart,
+  ]);
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.
@@ -359,6 +436,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             width={width ?? 0}
             height={height}
             data={data}
+            dataBounds={databounds}
             type="scatter"
             xAxes={xScale}
             xAxisIsPlaybackTime
@@ -369,14 +447,14 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           />
 
           <Stack className={classes.chartOverlay} position="absolute" paddingTop={0.5}>
-            {paths.map((path, index) => (
+            {(paths.length === 0 ? [DEFAULT_PATH] : paths).map((path, index) => (
               <div className={classes.row} key={index} style={{ height: heightPerTopic }}>
                 <Button
                   size="small"
                   color="inherit"
                   data-testid="edit-topic-button"
                   className={classes.button}
-                  endIcon={<Edit16Filled />}
+                  endIcon={paths.length === 0 ? <Add16Filled /> : <Edit16Filled />}
                   onClick={() => {
                     setSelectedPanelIds([panelId]);
                     openPanelSettings();
@@ -384,7 +462,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
                   }}
                 >
                   <Typography variant="inherit" noWrap>
-                    {stateTransitionPathDisplayName(path, index)}
+                    {stateTransitionPathDisplayName(path, "Click to add a series")}
                   </Typography>
                 </Button>
               </div>
@@ -397,7 +475,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 });
 
 const defaultConfig: StateTransitionConfig = {
-  paths: [{ value: "", timestampMethod: "receiveTime" }],
+  paths: [],
   isSynced: true,
 };
 export default Panel(

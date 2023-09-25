@@ -7,10 +7,10 @@ import { NumericType, PointCloud as FoxglovePointCloud } from "@foxglove/schemas
 import { MessageEvent, SettingsTreeAction } from "@foxglove/studio";
 import {
   createStixelMaterial,
-  PointCloudRenderable,
+  PointCloudHistoryRenderable,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PointClouds";
 import type { RosObject } from "@foxglove/studio-base/players/types";
-import { VelodynePacket, VelodyneScan } from "@foxglove/studio-base/types/Messages";
+import { VelodyneScan } from "@foxglove/studio-base/types/Messages";
 import {
   Calibration,
   Model,
@@ -42,7 +42,7 @@ type LayerSettingsVelodyneScans = LayerSettingsPointExtension & {
 };
 const DEFAULT_SETTINGS = { ...DEFAULT_POINT_SETTINGS, stixelsEnabled: false };
 
-export function pointFieldDataTypeToNumericType(type: PointFieldDataType): NumericType {
+function pointFieldDataTypeToNumericType(type: PointFieldDataType): NumericType {
   switch (type) {
     case PointFieldDataType.UINT8:
       return NumericType.UINT8;
@@ -76,7 +76,7 @@ class VelodyneCloudConverter {
       return undefined;
     }
 
-    const firstPacketData = scan.packets[0] as VelodynePacket;
+    const firstPacketData = scan.packets[0]!;
     const model = RawPacket.InferModel(firstPacketData.data);
     if (model == undefined) {
       return undefined;
@@ -123,12 +123,13 @@ class VelodyneCloudConverter {
   }
 }
 
-export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
+export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
+  public static extensionId = "foxglove.VelodyneScans";
   #pointCloudFieldsByTopic = new Map<string, string[]>();
   #velodyneCloudConverter = new VelodyneCloudConverter();
 
-  public constructor(renderer: IRenderer) {
-    super("foxglove.VelodyneScans", renderer);
+  public constructor(renderer: IRenderer, name: string = VelodyneScans.extensionId) {
+    super(name, renderer);
   }
 
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
@@ -186,8 +187,8 @@ export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...prevSettings };
       renderable.updatePointCloud(
-        renderable.userData.pointCloud,
-        renderable.userData.originalMessage,
+        renderable.userData.latestPointCloud,
+        renderable.userData.latestOriginalMessage,
         settings,
         renderable.userData.receiveTime,
       );
@@ -243,7 +244,7 @@ export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
       const stixelMaterial = createStixelMaterial(settings);
 
       const messageTime = toNanoSec(pointCloud.timestamp);
-      renderable = new PointCloudRenderable(topic, this.renderer, {
+      renderable = new PointCloudHistoryRenderable(topic, this.renderer, {
         receiveTime,
         messageTime,
         frameId: this.renderer.normalizeFrameId(pointCloud.frame_id),
@@ -251,8 +252,8 @@ export class VelodyneScans extends SceneExtension<PointCloudRenderable> {
         settingsPath: ["topics", topic],
         settings,
         topic,
-        pointCloud,
-        originalMessage: messageEvent.message as RosObject,
+        latestPointCloud: pointCloud,
+        latestOriginalMessage: messageEvent.message as RosObject,
         material,
         pickingMaterial,
         instancePickingMaterial,

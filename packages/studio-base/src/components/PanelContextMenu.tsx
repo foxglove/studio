@@ -40,14 +40,16 @@ type PanelContextMenuProps = {
  * This is a convenience component for attaching a context menu to a panel. It
  * must be a child of a Panel component to work.
  */
-export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
+function PanelContextMenuComponent(props: PanelContextMenuProps): JSX.Element {
   const { getItems } = props;
 
   const rootRef = useRef<HTMLDivElement>(ReactNull);
 
   const [position, setPosition] = useState<undefined | { x: number; y: number }>();
 
-  const handleClose = useCallback(() => setPosition(undefined), []);
+  const handleClose = useCallback(() => {
+    setPosition(undefined);
+  }, []);
 
   const [items, setItems] = useState<Immutable<PanelContextMenuItem[]>>([]);
 
@@ -92,7 +94,12 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
   }, [getItems]);
 
   return (
-    <div ref={rootRef} onContextMenu={(event) => event.preventDefault()}>
+    <div
+      ref={rootRef}
+      onContextMenu={(event) => {
+        event.preventDefault();
+      }}
+    >
       <Menu
         open={position != undefined}
         onClose={handleClose}
@@ -124,3 +131,5 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
     </div>
   );
 }
+
+export const PanelContextMenu = React.memo(PanelContextMenuComponent);

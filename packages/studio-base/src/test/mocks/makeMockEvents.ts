@@ -2,18 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { range } from "lodash";
+import * as _ from "lodash-es";
 
 import { add, toNanoSec, toSec } from "@foxglove/rostime";
 import { TimelinePositionedEvent } from "@foxglove/studio-base/context/EventsContext";
 
-// ts-prune-ignore-next
 export function makeMockEvents(
   count: number,
   startSec: number = 100,
   stepSec: number = 1,
 ): TimelinePositionedEvent[] {
-  return range(0, count).map((idx) => {
+  return _.range(0, count).map((idx) => {
     const startTime = { sec: idx * stepSec + startSec, nsec: 0 };
     const duration = { sec: (idx % 3) + 1, nsec: 0 };
     return {

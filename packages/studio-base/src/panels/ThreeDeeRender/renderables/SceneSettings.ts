@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { t } from "i18next";
-import { set } from "lodash";
+import * as _ from "lodash-es";
 
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 
@@ -15,8 +15,9 @@ import { SettingsTreeEntry } from "../SettingsManager";
 export const DEFAULT_LABEL_SCALE_FACTOR = 1;
 
 export class SceneSettings extends SceneExtension {
-  public constructor(renderer: IRenderer) {
-    super("foxglove.SceneSettings", renderer);
+  public static extensionId = "foxglove.SceneSettings";
+  public constructor(renderer: IRenderer, name: string = SceneSettings.extensionId) {
+    super(name, renderer);
 
     renderer.labelPool.scaleFactor =
       renderer.config.scene.labelScaleFactor ?? DEFAULT_LABEL_SCALE_FACTOR;
@@ -124,7 +125,7 @@ export class SceneSettings extends SceneExtension {
         return;
       }
       // Update the configuration
-      this.renderer.updateConfig((draft) => set(draft, path, value));
+      this.renderer.updateConfig((draft) => _.set(draft, path, value));
 
       if (path[1] === "backgroundColor") {
         const backgroundColor = value as string | undefined;

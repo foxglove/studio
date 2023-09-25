@@ -7,7 +7,6 @@ import {
   AppConfigurationValue,
 } from "@foxglove/studio-base/context/AppConfigurationContext";
 
-// ts-prune-ignore-next
 export function makeMockAppConfiguration(
   entries?: [string, AppConfigurationValue][],
 ): IAppConfiguration {
@@ -17,7 +16,9 @@ export function makeMockAppConfiguration(
     get: (key: string) => map.get(key),
     set: async (key: string, value: AppConfigurationValue) => {
       map.set(key, value);
-      [...(listeners.get(key) ?? [])].forEach((listener) => listener(value));
+      [...(listeners.get(key) ?? [])].forEach((listener) => {
+        listener(value);
+      });
     },
     addChangeListener: (key, cb) => {
       let listenersForKey = listeners.get(key);

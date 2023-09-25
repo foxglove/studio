@@ -19,7 +19,7 @@ import {
   IconButton,
   ButtonGroup,
 } from "@mui/material";
-import { countBy } from "lodash";
+import * as _ from "lodash-es";
 import { KeyboardEvent, useCallback } from "react";
 import { useAsyncFn } from "react-use";
 import { keyframes } from "tss-react";
@@ -126,7 +126,7 @@ export function CreateEventDialog(props: { onClose: () => void }): JSX.Element {
   const { formatTime } = useAppTimeFormat();
   const { createEvent: appModuleCreateEvent } = useAppContext();
 
-  const countedMetadata = countBy(event.metadataEntries, (kv) => kv.key);
+  const countedMetadata = _.countBy(event.metadataEntries, (kv) => kv.key);
   const duplicateKey = Object.entries(countedMetadata).find(
     ([key, count]) => key.length > 0 && count > 1,
   );
@@ -164,7 +164,9 @@ export function CreateEventDialog(props: { onClose: () => void }): JSX.Element {
   const onMetaDataKeyDown = useCallback(
     (keyboardEvent: KeyboardEvent) => {
       if (keyboardEvent.key === "Enter") {
-        createEvent().catch((error) => log.error(error));
+        createEvent().catch((error) => {
+          log.error(error);
+        });
       }
     },
     [createEvent],
@@ -262,7 +264,9 @@ export function CreateEventDialog(props: { onClose: () => void }): JSX.Element {
                   placeholder="Key (string)"
                   error={hasDuplicate}
                   onKeyDown={onMetaDataKeyDown}
-                  onChange={(evt) => updateMetadata(index, "key", evt.currentTarget.value)}
+                  onChange={(evt) => {
+                    updateMetadata(index, "key", evt.currentTarget.value);
+                  }}
                 />
                 <TextField
                   fullWidth
@@ -270,15 +274,24 @@ export function CreateEventDialog(props: { onClose: () => void }): JSX.Element {
                   placeholder="Value (string)"
                   error={hasDuplicate}
                   onKeyDown={onMetaDataKeyDown}
-                  onChange={(evt) => updateMetadata(index, "value", evt.currentTarget.value)}
+                  onChange={(evt) => {
+                    updateMetadata(index, "value", evt.currentTarget.value);
+                  }}
                 />
                 <ButtonGroup>
-                  <IconButton tabIndex={-1} onClick={() => addRow(index)}>
+                  <IconButton
+                    tabIndex={-1}
+                    onClick={() => {
+                      addRow(index);
+                    }}
+                  >
                     <AddIcon />
                   </IconButton>
                   <IconButton
                     tabIndex={-1}
-                    onClick={() => removeRow(index)}
+                    onClick={() => {
+                      removeRow(index);
+                    }}
                     style={{ visibility: event.metadataEntries.length > 1 ? "visible" : "hidden" }}
                   >
                     <RemoveIcon />

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Button } from "@mui/material";
-import { union } from "lodash";
+import * as _ from "lodash-es";
 import { useMemo, useRef, useState, ReactElement, useEffect } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -28,7 +28,9 @@ export default function VariablesList(): ReactElement {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => (skipAnimation.current = false), ANIMATION_RESET_DELAY_MS);
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const previousGlobalVariablesRef = useRef<GlobalVariables | undefined>(globalVariables);
@@ -39,7 +41,7 @@ export default function VariablesList(): ReactElement {
       previousGlobalVariablesRef.current = globalVariables;
       return;
     }
-    const newChangedVariables = union(
+    const newChangedVariables = _.union(
       Object.keys(globalVariables),
       Object.keys(previousGlobalVariablesRef.current ?? {}),
     ).filter((name) => {
@@ -49,8 +51,12 @@ export default function VariablesList(): ReactElement {
 
     setChangedVariables(newChangedVariables);
     previousGlobalVariablesRef.current = globalVariables;
-    const timerId = setTimeout(() => setChangedVariables([]), ANIMATION_RESET_DELAY_MS);
-    return () => clearTimeout(timerId);
+    const timerId = setTimeout(() => {
+      setChangedVariables([]);
+    }, ANIMATION_RESET_DELAY_MS);
+    return () => {
+      clearTimeout(timerId);
+    };
   }, [globalVariables, skipAnimation]);
 
   return (

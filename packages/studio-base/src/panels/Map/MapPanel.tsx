@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Feature } from "geojson";
 import { produce } from "immer";
 import {
   CircleMarker,
@@ -13,7 +14,7 @@ import {
   Map as LeafMap,
   TileLayer,
 } from "leaflet";
-import { difference, groupBy, isEqual, minBy, partition, union } from "lodash";
+import * as _ from "lodash-es";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
@@ -22,76 +23,32 @@ import { useDebouncedCallback } from "use-debounce";
 import { filterMap } from "@foxglove/den/collection";
 import { toSec } from "@foxglove/rostime";
 import {
-  PanelExtensionContext,
   MessageEvent,
+  PanelExtensionContext,
   SettingsTreeAction,
-  Topic,
   Subscription,
+  Topic,
 } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
 } from "@foxglove/studio-base/panels/Map/FilteredPointLayer";
-import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import { buildSettingsTree, Config, validateCustomUrl } from "./config";
-import { hasFix } from "./support";
-import { MapPanelMessage, NavSatFixMsg, NavSatFixStatus, Point } from "./types";
-
-type GeoJsonMessage = MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]>;
-
-// Minimal definition to allow extracting properties from features.
-type GeoJSONFeature = { properties?: Record<string, unknown> };
+import {
+  GeoJsonMessage,
+  hasFix,
+  isGeoJSONMessage,
+  isSupportedSchema,
+  isValidMapMessage,
+  parseGeoJSON,
+} from "./support";
+import { MapPanelMessage, Point } from "./types";
 
 type MapPanelProps = {
   context: PanelExtensionContext;
 };
-
-function isGeoJSONMessage(msgEvent: MessageEvent): msgEvent is GeoJsonMessage {
-  const datatype = msgEvent.schemaName;
-  return (
-    datatype === "foxglove_msgs/GeoJSON" ||
-    datatype === "foxglove_msgs/msg/GeoJSON" ||
-    datatype === "foxglove.GeoJSON"
-  );
-}
-
-/**
- * Verify that the message is either a GeoJSON message or a NavSatFix message with a
- * position fix and finite latitude and longitude so we can actually display it.
- */
-function isValidMapMessage(msgEvent: MessageEvent): msgEvent is MapPanelMessage {
-  if (isGeoJSONMessage(msgEvent)) {
-    return true;
-  }
-
-  const message = msgEvent.message as Partial<NavSatFixMsg>;
-  return (
-    message.latitude != undefined &&
-    isFinite(message.latitude) &&
-    message.longitude != undefined &&
-    isFinite(message.longitude) &&
-    message.status?.status !== NavSatFixStatus.STATUS_NO_FIX
-  );
-}
-
-function isSupportedSchema(schemaName: string) {
-  switch (schemaName) {
-    case "sensor_msgs/NavSatFix":
-    case "sensor_msgs/msg/NavSatFix":
-    case "ros.sensor_msgs.NavSatFix":
-    case "foxglove_msgs/LocationFix":
-    case "foxglove_msgs/msg/LocationFix":
-    case "foxglove.LocationFix":
-    case "foxglove_msgs/GeoJSON":
-    case "foxglove_msgs/msg/GeoJSON":
-    case "foxglove.GeoJSON":
-      return true;
-    default:
-      return false;
-  }
-}
 
 const memoizedFilterMessages = memoizeWeak((msgs: readonly MessageEvent[]) =>
   msgs.filter(isValidMapMessage),
@@ -150,12 +107,12 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   const [currentMapMessages, setCurrentMapMessages] = useState<MapPanelMessage[]>([]);
 
   const [allGeoMessages, allNavMessages] = useMemo(
-    () => partition(allMapMessages, isGeoJSONMessage),
+    () => _.partition(allMapMessages, isGeoJSONMessage),
     [allMapMessages],
   );
 
   const [currentGeoMessages, currentNavMessages] = useMemo(
-    () => partition(currentMapMessages, isGeoJSONMessage),
+    () => _.partition(currentMapMessages, isGeoJSONMessage),
     [currentMapMessages],
   );
 
@@ -223,8 +180,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
           produce((draft) => {
             draft.disabledTopics =
               value === true
-                ? difference(draft.disabledTopics, [topic])
-                : union(draft.disabledTopics, [topic]);
+                ? _.difference(draft.disabledTopics, [topic])
+                : _.union(draft.disabledTopics, [topic]);
           }),
         );
       }
@@ -428,7 +385,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         // Changing the topic list clears all map layers so we try to preserve reference identity
         // if the contents of the topic list haven't changed.
         setTopics((oldTopics) => {
-          return isEqual(oldTopics, renderState.topics) ? oldTopics : renderState.topics ?? [];
+          return _.isEqual(oldTopics, renderState.topics) ? oldTopics : renderState.topics ?? [];
         });
       }
 
@@ -471,7 +428,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   const [filterBounds, setFilterBounds] = useState<LatLngBounds | undefined>();
 
   const addGeoFeatureEventHandlers = useCallback(
-    (feature: GeoJSONFeature, message: MessageEvent, layer: Layer) => {
+    (feature: Feature, message: MessageEvent, layer: Layer) => {
       const featureName = feature.properties?.name;
       if (typeof featureName === "string" && featureName.length > 0) {
         layer.bindTooltip(featureName);
@@ -493,14 +450,17 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   const addGeoJsonMessage = useCallback(
     (message: GeoJsonMessage, group: FeatureGroup) => {
-      const parsed = JSON.parse(message.message.geojson) as Parameters<typeof geoJSON>[0];
-      geoJSON(parsed, {
-        onEachFeature: (feature: GeoJSONFeature, layer) =>
-          addGeoFeatureEventHandlers(feature, message, layer),
-        style: config.topicColors[message.topic]
-          ? { color: config.topicColors[message.topic] }
-          : {},
-      }).addTo(group);
+      const parsed = parseGeoJSON(message.message.geojson);
+      for (const { object, style } of parsed) {
+        geoJSON(object, {
+          onEachFeature: (feature: Feature, layer) => {
+            addGeoFeatureEventHandlers(feature, message, layer);
+          },
+          style: config.topicColors[message.topic]
+            ? { color: config.topicColors[message.topic], ...style }
+            : style,
+        }).addTo(group);
+      }
     },
     [addGeoFeatureEventHandlers, config.topicColors],
   );
@@ -560,7 +520,9 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
       allGeoMessages
         .filter((message) => message.topic === topic)
-        .forEach((message) => addGeoJsonMessage(message, topicLayer.allFrames));
+        .forEach((message) => {
+          addGeoJsonMessage(message, topicLayer.allFrames);
+        });
     }
   }, [
     addGeoJsonMessage,
@@ -580,7 +542,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    const navByTopic = groupBy(currentNavMessages, (msg) => msg.topic);
+    const navByTopic = _.groupBy(currentNavMessages, (msg) => msg.topic);
     for (const [topic, messages] of Object.entries(navByTopic)) {
       const topicLayer = topicLayers.get(topic);
       if (!topicLayer) {
@@ -588,7 +550,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       }
 
       topicLayer.currentFrame.clearLayers();
-      const [fixEvents, noFixEvents] = partition(messages, hasFix);
+      const [fixEvents, noFixEvents] = _.partition(messages, hasFix);
 
       const pointLayerNoFix = FilteredPointLayer({
         map: currentMap,
@@ -612,7 +574,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       topicLayer.currentFrame.addLayer(pointLayerFix);
     }
 
-    const geoByTopic = groupBy(currentGeoMessages, (msg) => msg.topic);
+    const geoByTopic = _.groupBy(currentGeoMessages, (msg) => msg.topic);
     for (const [topic, messages] of Object.entries(geoByTopic)) {
       const topicLayer = topicLayers.get(topic);
       if (topicLayer) {
@@ -642,7 +604,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     const prevNavMessages = allNavMessages.filter(
       (message) => toSec(message.receiveTime) <= previewTime,
     );
-    const event = minBy(prevNavMessages, (message) => previewTime - toSec(message.receiveTime));
+    const event = _.minBy(prevNavMessages, (message) => previewTime - toSec(message.receiveTime));
     if (!event) {
       return;
     }

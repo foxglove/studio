@@ -12,16 +12,20 @@
 //   You may not use this file except in compliance with the License.
 
 import { Mutex } from "async-mutex";
-import { isEqual, unionBy, uniq } from "lodash";
+import * as _ from "lodash-es";
 import memoizeWeak from "memoize-weak";
+import * as R from "ramda";
 import ReactDOM from "react-dom";
 import shallowequal from "shallowequal";
 import { v4 as uuidv4 } from "uuid";
 
-import { Condvar, MutexLocked } from "@foxglove/den/async";
+import { MutexLocked } from "@foxglove/den/async";
+import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
+import { mergeSubscriptions } from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { MemoizedLibGenerator } from "@foxglove/studio-base/players/UserNodePlayer/MemoizedLibGenerator";
 import { generateTypesLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateTypesLib";
@@ -135,7 +139,6 @@ export default class UserNodePlayer implements Player {
   // keep track of last message on all topics to recompute output topic messages when user nodes change
   #lastMessageByInputTopic = new Map<string, MessageEvent>();
   #userNodeIdsNeedUpdate = new Set<string>();
-  #globalVariablesChanged = false;
 
   #protectedState = new MutexLocked<ProtectedState>({
     userNodes: {},
@@ -229,40 +232,21 @@ export default class UserNodePlayer implements Player {
     result: (MessageBlock | undefined)[];
   } = { result: [] };
 
-  // Basic memoization by remembering the last values passed to getMessages
-  #lastGetMessagesInput: {
-    parsedMessages: readonly MessageEvent[];
-    globalVariables: GlobalVariables;
-    nodeRegistrations: readonly NodeRegistration[];
-  } = { parsedMessages: [], globalVariables: {}, nodeRegistrations: [] };
-  #lastGetMessagesResult: { parsedMessages: readonly MessageEvent[] } = {
-    parsedMessages: [],
-  };
-
   // Processes input messages through nodes to create messages on output topics
-  // Memoized to prevent reprocessing on same input
   async #getMessages(
-    parsedMessages: readonly MessageEvent[],
+    inputMessages: readonly MessageEvent[],
     globalVariables: GlobalVariables,
     nodeRegistrations: readonly NodeRegistration[],
-  ): Promise<{
-    parsedMessages: readonly MessageEvent[];
-  }> {
-    // prevents from memoizing results for empty requests
-    if (parsedMessages.length === 0) {
-      return { parsedMessages };
+  ): Promise<readonly MessageEvent[]> {
+    // fast-track if there's no input and return empty output
+    if (inputMessages.length === 0) {
+      return [];
     }
-    if (
-      shallowequal(this.#lastGetMessagesInput, {
-        parsedMessages,
-        globalVariables,
-        nodeRegistrations,
-      })
-    ) {
-      return this.#lastGetMessagesResult;
-    }
-    const parsedMessagesPromises: Promise<MessageEvent | undefined>[] = [];
-    for (const message of parsedMessages) {
+
+    const identity = <T>(item: T) => item;
+
+    const outputMessages: MessageEvent[] = [];
+    for (const message of inputMessages) {
       const messagePromises = [];
       for (const nodeRegistration of nodeRegistrations) {
         if (
@@ -271,24 +255,13 @@ export default class UserNodePlayer implements Player {
         ) {
           const messagePromise = nodeRegistration.processMessage(message, globalVariables);
           messagePromises.push(messagePromise);
-          parsedMessagesPromises.push(messagePromise);
         }
       }
-      await Promise.all(messagePromises);
+      const output = await Promise.all(messagePromises);
+      outputMessages.push(...filterMap(output, identity));
     }
 
-    const nodeParsedMessages = (await Promise.all(parsedMessagesPromises)).filter(
-      (value): value is MessageEvent => value != undefined,
-    );
-
-    const result = {
-      parsedMessages: parsedMessages
-        .concat(nodeParsedMessages)
-        .sort((a, b) => compare(a.receiveTime, b.receiveTime)),
-    };
-    this.#lastGetMessagesInput = { parsedMessages, globalVariables, nodeRegistrations };
-    this.#lastGetMessagesResult = result;
-    return result;
+    return outputMessages;
   }
 
   async #getBlocks(
@@ -315,7 +288,7 @@ export default class UserNodePlayer implements Player {
       return blocks;
     }
 
-    const allInputTopics = uniq(fullRegistrations.flatMap((reg) => reg.inputs));
+    const allInputTopics = _.uniq(fullRegistrations.flatMap((reg) => reg.inputs));
 
     const outputBlocks: (MessageBlock | undefined)[] = [];
     for (const block of blocks) {
@@ -360,6 +333,7 @@ export default class UserNodePlayer implements Player {
       // behavior.
       outputBlocks.push({
         messagesByTopic,
+        needTopics: block.needTopics,
         sizeInBytes: block.sizeInBytes,
       });
     }
@@ -374,12 +348,11 @@ export default class UserNodePlayer implements Player {
 
   public setGlobalVariables(globalVariables: GlobalVariables): void {
     this.#globalVariables = globalVariables;
-    this.#globalVariablesChanged = true;
   }
 
-  // Called when userNode state is updated.
+  // Called when userNode state is updated (i.e. scripts are saved)
   public async setUserNodes(userNodes: UserNodes): Promise<void> {
-    await this.#protectedState.runExclusive(async (state) => {
+    const newPlayerState = await this.#protectedState.runExclusive(async (state) => {
       for (const nodeId of Object.keys(userNodes)) {
         const prevNode = state.userNodes[nodeId];
         const newNode = userNodes[nodeId];
@@ -397,7 +370,35 @@ export default class UserNodePlayer implements Player {
       // This code causes us to reset workers twice because the seeking resets the workers too
       await this.#resetWorkersUnlocked(state);
       this.#setSubscriptionsUnlocked(this.#subscriptions, state);
+
+      const playerState = this.#playerState;
+      const lastActive = state.lastPlayerStateActiveData;
+      // If we have previous player state and are paused, then we re-emit the last active data so
+      // any panels that want our output topic get the updated message.
+      //
+      // Note: Until we learn otherwise, we assume that if a player is playing, it will emit new
+      // player state that will output new messages so we don't emit here while playing.
+      if (playerState && lastActive?.isPlaying === false) {
+        return {
+          ...playerState,
+          activeData: {
+            ...lastActive,
+            // We want to avoid re-emitting upstream data source messages into panels to maintain
+            // the invariant that the player emits a data-source message into "currentFrame" only once.
+            //
+            // Using an empty messages array will make user node player only emit the script output
+            // messages as a result of the updated script.
+            messages: [],
+          },
+        };
+      }
+
+      return undefined;
     });
+
+    if (newPlayerState) {
+      await this.#onPlayerState(newPlayerState);
+    }
   }
 
   // Defines the inputs/outputs and worker interface of a user node.
@@ -409,7 +410,7 @@ export default class UserNodePlayer implements Player {
     typesLib: string,
   ): Promise<NodeRegistration> {
     for (const cacheEntry of state.nodeRegistrationCache) {
-      if (nodeId === cacheEntry.nodeId && isEqual(userNode, cacheEntry.userNode)) {
+      if (nodeId === cacheEntry.nodeId && _.isEqual(userNode, cacheEntry.userNode)) {
         return cacheEntry.result;
       }
     }
@@ -442,14 +443,6 @@ export default class UserNodePlayer implements Player {
       // rpc channel for this processor. Lazily created on each message if an unused
       // channel isn't available.
       let rpc: undefined | Rpc;
-
-      // This signals that we have terminated the node registration and we should bail any
-      // message processing that is in-flight.
-      //
-      // These are lazily created in the first message we process and cleared on
-      // terminate.
-      let terminateCondvar: undefined | Condvar;
-      let terminateSignal: undefined | Promise<void>;
 
       const registration = async (msgEvent: MessageEvent, globalVariables: GlobalVariables) => {
         // Register the node within a web worker to be executed.
@@ -520,36 +513,18 @@ export default class UserNodePlayer implements Player {
           this.#addUserNodeLogs(nodeId, userNodeLogs);
         }
 
-        // This signals that we have terminated the node registration and we should bail any message
-        // processing that is in-flight.
-        if (!terminateCondvar) {
-          terminateCondvar = new Condvar();
-          terminateSignal = terminateCondvar.wait();
-        }
-
-        // To send the message over RPC we invoke maybePlainObject which calls toJSON on the message
-        // and builds a plain js object of the entire message. This is expensive so a future enhancement
-        // would be to send the underlying message array and build a lazy message reader
-        const result = await Promise.race([
-          rpc.send<ProcessMessageOutput>("processMessage", {
-            message: {
-              topic: msgEvent.topic,
-              receiveTime: msgEvent.receiveTime,
-              message: maybePlainObject(msgEvent.message),
-              datatype: msgEvent.schemaName,
-            },
-            globalVariables,
-          }),
-          terminateSignal,
-        ]);
-
-        if (!result) {
-          this.#problemStore.set(problemKey, {
-            message: `User Script ${nodeId} timed out`,
-            severity: "warn",
-          });
-          return;
-        }
+        // To send the message over RPC we need to send a plain JS object. We invoke
+        // maybePlainObject which calls toJSON on the message and builds a plain js object of the
+        // entire message.
+        const result = await rpc.send<ProcessMessageOutput>("processMessage", {
+          message: {
+            topic: msgEvent.topic,
+            receiveTime: msgEvent.receiveTime,
+            message: maybePlainObject(msgEvent.message),
+            datatype: msgEvent.schemaName,
+          },
+          globalVariables,
+        });
 
         const allDiagnostics = result.userNodeDiagnostics;
         if (result.error) {
@@ -598,12 +573,6 @@ export default class UserNodePlayer implements Player {
 
       const terminate = () => {
         this.#problemStore.delete(problemKey);
-
-        // Signal any pending in-flight message processing to terminate and clear the state so we can
-        // re-initialize when the next message is processed.
-        terminateCondvar?.notifyAll();
-        terminateCondvar = undefined;
-        terminateSignal = undefined;
 
         if (rpc) {
           this.#unusedNodeRuntimeWorkers.push(rpc);
@@ -790,12 +759,12 @@ export default class UserNodePlayer implements Player {
     let changedTopicsRequireEmitState = false;
     state.nodeRegistrations = validNodeRegistrations;
     const nodeTopics = state.nodeRegistrations.map(({ output }) => output);
-    if (!isEqual(nodeTopics, this.#memoizedNodeTopics)) {
+    if (!_.isEqual(nodeTopics, this.#memoizedNodeTopics)) {
       this.#memoizedNodeTopics = nodeTopics;
       changedTopicsRequireEmitState = true;
     }
     const nodeDatatypes = state.nodeRegistrations.map(({ nodeData: { datatypes } }) => datatypes);
-    if (!isEqual(nodeDatatypes, this.#memoizedNodeDatatypes)) {
+    if (!_.isEqual(nodeDatatypes, this.#memoizedNodeDatatypes)) {
       this.#memoizedNodeDatatypes = nodeDatatypes;
       changedTopicsRequireEmitState = true;
     }
@@ -823,7 +792,7 @@ export default class UserNodePlayer implements Player {
     // necessary because we won't emit a new state otherwise if there are no other active
     // subscriptions.
     if (changedTopicsRequireEmitState && this.#playerState?.activeData) {
-      const newTopics = unionBy(
+      const newTopics = _.unionBy(
         this.#playerState.activeData.topics,
         this.#memoizedNodeTopics,
         (top) => top.name,
@@ -936,21 +905,10 @@ export default class UserNodePlayer implements Player {
           }
         }
 
-        // if the globalVariables have changed recompute all last messages for the current frame
-        // there's no way to know which nodes are affected by the globalVariables change to make this more specific
-        if (this.#globalVariablesChanged) {
-          this.#globalVariablesChanged = false;
-          for (const inputTopic of this.#lastMessageByInputTopic.keys()) {
-            inputTopicsForRecompute.add(inputTopic);
-          }
-        }
-
         // remove topics that already have messages in state, because we won't need to take their last message to process
         // this also removes possible duplicate messages to be parsed
         for (const message of messages) {
-          if (inputTopicsForRecompute.has(message.topic)) {
-            inputTopicsForRecompute.delete(message.topic);
-          }
+          inputTopicsForRecompute.delete(message.topic);
         }
 
         const messagesForRecompute: MessageEvent[] = [];
@@ -967,15 +925,26 @@ export default class UserNodePlayer implements Player {
           this.#lastMessageByInputTopic.set(message.topic, message);
         }
 
-        const messagesRecomputed = messagesForRecompute.length > 0;
-
-        const messagesToBeParsed =
-          messagesForRecompute.length > 0 ? messages.concat(messagesForRecompute) : messages;
-        const { parsedMessages } = await this.#getMessages(
-          messagesToBeParsed,
+        // These are new messages generated from input messages
+        const computed = await this.#getMessages(
+          messages,
           globalVariables,
           state.nodeRegistrations,
         );
+
+        // These are messages generated from previously saved messages on input topics
+        const recomputed = await this.#getMessages(
+          messagesForRecompute,
+          globalVariables,
+          state.nodeRegistrations,
+        );
+
+        // The current frame messages are the input messages + recomputed + computed sorted by
+        // receive time
+        const currentFrameMessages = messages
+          .concat(recomputed)
+          .concat(computed)
+          .sort((a, b) => compare(a.receiveTime, b.receiveTime));
 
         const playerProgress = {
           ...playerState.progress,
@@ -999,10 +968,9 @@ export default class UserNodePlayer implements Player {
           progress: playerProgress,
           activeData: {
             ...activeData,
-            messages: parsedMessages,
+            messages: currentFrameMessages,
             topics: this.#getTopics(topics, this.#memoizedNodeTopics),
             datatypes: allDatatypes,
-            messagesRecomputed,
           },
         };
       });
@@ -1056,7 +1024,9 @@ export default class UserNodePlayer implements Player {
     // Delay _player.setListener until our setListener is called because setListener in some cases
     // triggers initialization logic and remote requests. This is an unfortunate API behavior and
     // naming choice, but it's better for us not to do trigger this logic in the constructor.
-    this.#player.setListener(async (state) => await this.#onPlayerState(state));
+    this.#player.setListener(async (state) => {
+      await this.#onPlayerState(state);
+    });
   }
 
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
@@ -1072,36 +1042,77 @@ export default class UserNodePlayer implements Player {
   }
 
   #setSubscriptionsUnlocked(subscriptions: SubscribePayload[], state: ProtectedState): void {
-    const nodeSubscriptions: Record<string, SubscribePayload> = {};
-    const realTopicSubscriptions: SubscribePayload[] = [];
+    // A mapping from the subscription to the input topics needed to satisfy
+    // that request.
+    type SubscriberInputs = [SubscribePayload, readonly string[] | undefined];
 
-    // For each subscription, identify required input topics by looking up the subscribed topic in
-    // the map of output topics -> inputs. Add these required input topics to the set of topic
-    // subscriptions to the underlying player.
-    for (const subscription of subscriptions) {
-      const inputs = state.inputsByOutputTopic.get(subscription.topic);
-      if (!inputs) {
-        nodeSubscriptions[subscription.topic] = subscription;
-        realTopicSubscriptions.push(subscription);
-        continue;
-      }
+    // Pair all subscriptions with their user script input topics (if any)
+    const payloadInputsPairs = R.pipe(
+      R.map((v: SubscribePayload): SubscriberInputs => [v, state.inputsByOutputTopic.get(v.topic)]),
+      R.filter(([, topics]: SubscriberInputs) => topics?.length !== 0),
+    )(subscriptions);
 
-      // If the inputs array is empty then we don't have anything to subscribe to for this output
-      if (inputs.length === 0) {
-        continue;
-      }
+    // An array of all of the input topics used by the user nodes referenced by
+    // `subscriptions`
+    const neededInputTopics = R.pipe(
+      R.chain(([, v]: SubscriberInputs): readonly string[] => v ?? []),
+      R.uniq,
+    )(payloadInputsPairs);
 
-      nodeSubscriptions[subscription.topic] = subscription;
-      for (const inputTopic of inputs) {
-        realTopicSubscriptions.push({
-          topic: inputTopic,
-          preloadType: subscription.preloadType ?? "partial",
-        });
-      }
-    }
+    // #nodeSubscriptions is a mapping from topic name to a SubscribePayload
+    // that contains the resolved preloadType--in other words, the kind of data
+    // (current or block) that this subscription needs
+    this.#nodeSubscriptions = R.pipe(
+      R.map(([subscription]: SubscriberInputs) => subscription),
+      // Gather all of the payloads into subscriptions for the same topic
+      R.groupBy((v: SubscribePayload) => v.topic),
+      // Consolidate subscriptions to the same topic down to a single payload
+      // and ignore `fields`
+      R.mapObjIndexed((payloads: SubscribePayload[] | undefined, topic): SubscribePayload => {
+        // If at least one preloadType is explicitly "full", we need "full",
+        // but default to "partial"
+        const hasFull = R.any((v: SubscribePayload) => v.preloadType === "full", payloads ?? []);
 
-    this.#nodeSubscriptions = nodeSubscriptions;
-    this.#player.setSubscriptions(realTopicSubscriptions);
+        return {
+          topic,
+          preloadType: hasFull ? "full" : "partial",
+        };
+      }),
+    )(payloadInputsPairs);
+
+    const resolvedSubscriptions = R.pipe(
+      R.chain(([subscription, topics]: SubscriberInputs): SubscribePayload[] => {
+        const preloadType = subscription.preloadType ?? "partial";
+
+        // Leave the subscription unmodified if it is not a user script topic
+        if (topics == undefined) {
+          // If this is an input to a user script, we need to upgrade it to a
+          // subscription of all the fields
+          if (neededInputTopics.includes(subscription.topic)) {
+            return [
+              {
+                topic: subscription.topic,
+                preloadType,
+              },
+            ];
+          }
+
+          return [subscription];
+        }
+
+        // Subscribe to all fields for all topics used by this user script
+        // because we can't know what fields the user script actually uses
+        // (for now)
+        return topics.map((v) => ({
+          topic: v,
+          preloadType,
+        }));
+      }),
+      mergeSubscriptions,
+    )(payloadInputsPairs);
+
+    // Merge subscriptions we pass on to the underlying player.
+    this.#player.setSubscriptions(resolvedSubscriptions);
   }
 
   public close = (): void => {
@@ -1132,6 +1143,13 @@ export default class UserNodePlayer implements Player {
     return await this.#player.callService(service, request);
   }
 
+  public async fetchAsset(uri: string): Promise<Asset> {
+    if (this.#player.fetchAsset) {
+      return await this.#player.fetchAsset(uri);
+    }
+    throw Error("Player does not support fetching assets");
+  }
+
   public startPlayback(): void {
     this.#player.startPlayback?.();
   }
@@ -1152,7 +1170,7 @@ export default class UserNodePlayer implements Player {
     this.#player.setPlaybackSpeed?.(speed);
   }
 
-  public seekPlayback(time: Time, backfillDuration?: Time): void {
-    this.#player.seekPlayback?.(time, backfillDuration);
+  public seekPlayback(time: Time): void {
+    this.#player.seekPlayback?.(time);
   }
 }

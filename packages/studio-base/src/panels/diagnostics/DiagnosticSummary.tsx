@@ -13,21 +13,21 @@
 
 import PushPinIcon from "@mui/icons-material/PushPin";
 import {
+  IconButton,
+  InputBase,
   ListItem,
-  ListItemText,
   ListItemButton,
+  ListItemText,
   MenuItem,
   Select,
-  InputBase,
-  IconButton,
+  Typography,
   iconButtonClasses,
+  inputBaseClasses,
   listItemTextClasses,
   selectClasses,
-  inputBaseClasses,
-  Typography,
 } from "@mui/material";
 import { produce } from "immer";
-import { compact, set, uniq } from "lodash";
+import * as _ from "lodash-es";
 import { CSSProperties, useCallback, useEffect, useMemo } from "react";
 import { AutoSizer } from "react-virtualized";
 import { FixedSizeList as List } from "react-window";
@@ -42,19 +42,22 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import useDiagnostics from "@foxglove/studio-base/panels/diagnostics/useDiagnostics";
+import useStaleTime from "@foxglove/studio-base/panels/diagnostics/useStaleTime";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import toggle from "@foxglove/studio-base/util/toggle";
 
 import { buildSummarySettingsTree } from "./settings";
 import {
-  DiagnosticSummaryConfig,
+  DEFAULT_SECONDS_UNTIL_STALE,
   DiagnosticInfo,
   DiagnosticStatusConfig,
-  getDiagnosticsByLevel,
-  filterAndSortDiagnostics,
-  LEVEL_NAMES,
+  DiagnosticSummaryConfig,
   KNOWN_LEVELS,
+  LEVEL_NAMES,
+  filterAndSortDiagnostics,
+  getDiagnosticsByLevel,
+  getDiagnosticsWithStales,
 } from "./util";
 
 type NodeRowProps = {
@@ -158,9 +161,17 @@ function DiagnosticSummary(props: Props): JSX.Element {
   const { config, saveConfig } = props;
   const { classes } = useStyles();
   const { topics } = useDataSourceInfo();
-  const { minLevel, topicToRender, pinnedIds, hardwareIdFilter, sortByLevel = true } = config;
+  const {
+    minLevel,
+    topicToRender,
+    pinnedIds,
+    hardwareIdFilter,
+    sortByLevel = true,
+    secondsUntilStale = DEFAULT_SECONDS_UNTIL_STALE,
+  } = config;
   const { openSiblingPanel } = usePanelContext();
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+  const staleTime = useStaleTime(secondsUntilStale);
 
   const togglePinned = useCallback(
     (info: DiagnosticInfo) => {
@@ -179,7 +190,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
             selectedName: info.status.name,
             topicToRender,
             collapsedSections: [],
-          } as DiagnosticStatusConfig),
+          }) as DiagnosticStatusConfig,
         updateIfExists: true,
       });
     },
@@ -213,7 +224,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
       .map((topic) => topic.name);
 
     // Keeps only the first occurrence of each topic.
-    return uniq([...filtered]);
+    return _.uniq([...filtered]);
   }, [topics]);
 
   // If the topicToRender is not in the availableTopics, then we should not try to use it
@@ -223,8 +234,12 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   const diagnostics = useDiagnostics(diagnosticTopic);
 
+  const diagnosticsWithOldMarkedAsStales = useMemo(() => {
+    return staleTime ? getDiagnosticsWithStales(diagnostics, staleTime) : diagnostics;
+  }, [diagnostics, staleTime]);
+
   const summary = useMemo(() => {
-    if (diagnostics.size === 0) {
+    if (diagnosticsWithOldMarkedAsStales.size === 0) {
       return (
         <EmptyState>
           Waiting for <code>{topicToRender}</code> messages
@@ -232,15 +247,15 @@ function DiagnosticSummary(props: Props): JSX.Element {
       );
     }
     const pinnedNodes = filterMap(pinnedIds, (id) => {
-      const [_, trimmedHardwareId, name] = id.split("|");
+      const [, trimmedHardwareId, name] = id.split("|");
       if (name == undefined || trimmedHardwareId == undefined) {
         return;
       }
-      const diagnosticsByName = diagnostics.get(trimmedHardwareId);
+      const diagnosticsByName = diagnosticsWithOldMarkedAsStales.get(trimmedHardwareId);
       return diagnosticsByName?.get(name);
     });
 
-    const nodesByLevel = getDiagnosticsByLevel(diagnostics);
+    const nodesByLevel = getDiagnosticsByLevel(diagnosticsWithOldMarkedAsStales);
     const levels = Array.from(nodesByLevel.keys()).sort().reverse();
     const sortedNodes = sortByLevel
       ? ([] as DiagnosticInfo[]).concat(
@@ -254,7 +269,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
           pinnedIds,
         );
 
-    const nodes: DiagnosticInfo[] = [...compact(pinnedNodes), ...sortedNodes].filter(
+    const nodes: DiagnosticInfo[] = [..._.compact(pinnedNodes), ...sortedNodes].filter(
       ({ status }) => status.level >= minLevel,
     );
     if (nodes.length === 0) {
@@ -277,7 +292,15 @@ function DiagnosticSummary(props: Props): JSX.Element {
         )}
       </AutoSizer>
     );
-  }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, minLevel, topicToRender]);
+  }, [
+    diagnosticsWithOldMarkedAsStales,
+    hardwareIdFilter,
+    pinnedIds,
+    renderRow,
+    sortByLevel,
+    minLevel,
+    topicToRender,
+  ]);
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
@@ -286,7 +309,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
       }
 
       const { path, value } = action.payload;
-      saveConfig(produce<DiagnosticSummaryConfig>((draft) => set(draft, path.slice(1), value)));
+      saveConfig(produce<DiagnosticSummaryConfig>((draft) => _.set(draft, path.slice(1), value)));
     },
     [saveConfig],
   );
@@ -308,7 +331,9 @@ function DiagnosticSummary(props: Props): JSX.Element {
             id="status-filter-menu"
             color="secondary"
             size="small"
-            onChange={(event) => saveConfig({ minLevel: event.target.value as number })}
+            onChange={(event) => {
+              saveConfig({ minLevel: event.target.value as number });
+            }}
             MenuProps={{ MenuListProps: { dense: true } }}
           >
             {KNOWN_LEVELS.map((level) => (
@@ -322,7 +347,9 @@ function DiagnosticSummary(props: Props): JSX.Element {
           <InputBase
             value={hardwareIdFilter}
             placeholder="Filter"
-            onChange={(e) => saveConfig({ hardwareIdFilter: e.target.value })}
+            onChange={(e) => {
+              saveConfig({ hardwareIdFilter: e.target.value });
+            }}
             style={{ flex: "auto", font: "inherit" }}
           />
         </Stack>

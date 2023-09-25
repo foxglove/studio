@@ -12,7 +12,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook } from "@testing-library/react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
@@ -25,6 +25,20 @@ describe("useMessagesByTopic", () => {
       ({ topics, historySize }) => PanelAPI.useMessagesByTopic({ topics, historySize }),
       {
         initialProps: { topics: ["/foo"], historySize: 1 },
+        wrapper: ({ children }) => (
+          <MockMessagePipelineProvider>{children}</MockMessagePipelineProvider>
+        ),
+      },
+    );
+
+    expect(result.current).toEqual({ "/foo": [] });
+  });
+
+  it("accepts SubscribePayloads", async () => {
+    const { result } = renderHook(
+      ({ topics, historySize }) => PanelAPI.useMessagesByTopic({ topics, historySize }),
+      {
+        initialProps: { topics: [{ topic: "/foo", fields: ["a"] }], historySize: 1 },
         wrapper: ({ children }) => (
           <MockMessagePipelineProvider>{children}</MockMessagePipelineProvider>
         ),

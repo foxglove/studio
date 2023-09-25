@@ -6,9 +6,9 @@ import { Fragment, Suspense, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { DesktopInterfaceChangeWindowReloader } from "@foxglove/studio-base/components/DesktopInterfaceChangeWindowReloader";
 import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
+import ProblemsContextProvider from "@foxglove/studio-base/providers/ProblemsContextProvider";
 import { StudioLogsSettingsProvider } from "@foxglove/studio-base/providers/StudioLogsSettingsProvider";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 
@@ -23,7 +23,6 @@ import PlayerManager from "./components/PlayerManager";
 import SendNotificationToastAdapter from "./components/SendNotificationToastAdapter";
 import StudioToastProvider from "./components/StudioToastProvider";
 import AppConfigurationContext, { IAppConfiguration } from "./context/AppConfigurationContext";
-import LayoutStorageContext from "./context/LayoutStorageContext";
 import NativeAppMenuContext, { INativeAppMenu } from "./context/NativeAppMenuContext";
 import NativeWindowContext, { INativeWindow } from "./context/NativeWindowContext";
 import { IDataSourceFactory } from "./context/PlayerSelectionContext";
@@ -31,18 +30,14 @@ import { UserNodeStateProvider } from "./context/UserNodeStateContext";
 import CurrentLayoutProvider from "./providers/CurrentLayoutProvider";
 import ExtensionCatalogProvider from "./providers/ExtensionCatalogProvider";
 import ExtensionMarketplaceProvider from "./providers/ExtensionMarketplaceProvider";
-import LayoutManagerProvider from "./providers/LayoutManagerProvider";
 import PanelCatalogProvider from "./providers/PanelCatalogProvider";
-import UserProfileLocalStorageProvider from "./providers/UserProfileLocalStorageProvider";
 import { LaunchPreference } from "./screens/LaunchPreference";
 import { ExtensionLoader } from "./services/ExtensionLoader";
-import { ILayoutStorage } from "./services/ILayoutStorage";
 
 type AppProps = CustomWindowControlsProps & {
   deepLinks: string[];
   appConfiguration: IAppConfiguration;
   dataSources: IDataSourceFactory[];
-  layoutStorage: ILayoutStorage;
   extensionLoaders: readonly ExtensionLoader[];
   nativeAppMenu?: INativeAppMenu;
   nativeWindow?: INativeWindow;
@@ -51,7 +46,6 @@ type AppProps = CustomWindowControlsProps & {
   appBarLeftInset?: number;
   extraProviders?: JSX.Element[];
   onAppBarDoubleClick?: () => void;
-  onReloadWindow?: () => void;
 };
 
 // Suppress context menu for the entire app except on inputs & textareas.
@@ -68,7 +62,6 @@ export function App(props: AppProps): JSX.Element {
   const {
     appConfiguration,
     dataSources,
-    layoutStorage,
     extensionLoaders,
     nativeAppMenu,
     nativeWindow,
@@ -80,7 +73,6 @@ export function App(props: AppProps): JSX.Element {
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    <UserProfileLocalStorageProvider />,
     <TimelineInteractionStateProvider />,
     <UserNodeStateProvider />,
     <CurrentLayoutProvider />,
@@ -101,21 +93,22 @@ export function App(props: AppProps): JSX.Element {
 
   if (extraProviders) {
     providers.unshift(...extraProviders);
-  } else {
-    // Extra providers have their own layout providers
-    providers.unshift(<LayoutManagerProvider />);
-    providers.unshift(<LayoutStorageContext.Provider value={layoutStorage} />);
   }
 
   // The toast and logs provider comes first so they are available to all downstream providers
   providers.unshift(<StudioToastProvider />);
   providers.unshift(<StudioLogsSettingsProvider />);
 
+  // Problems provider also must come before other, depdendent contexts.
+  providers.unshift(<ProblemsContextProvider />);
+
   const MaybeLaunchPreference = enableLaunchPreferenceScreen === true ? LaunchPreference : Fragment;
 
   useEffect(() => {
     document.addEventListener("contextmenu", contextMenuHandler);
-    return () => document.removeEventListener("contextmenu", contextMenuHandler);
+    return () => {
+      document.removeEventListener("contextmenu", contextMenuHandler);
+    };
   }, []);
 
   return (
@@ -142,9 +135,6 @@ export function App(props: AppProps): JSX.Element {
                         onUnmaximizeWindow={props.onUnmaximizeWindow}
                         onCloseWindow={props.onCloseWindow}
                       />
-                      {props.onReloadWindow && (
-                        <DesktopInterfaceChangeWindowReloader reloadWindow={props.onReloadWindow} />
-                      )}
                     </PanelCatalogProvider>
                   </Suspense>
                 </DndProvider>

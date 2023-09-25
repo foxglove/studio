@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj, StoryFn } from "@storybook/react";
+import { waitFor } from "@storybook/testing-library";
 import { useCallback } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -17,7 +18,6 @@ export default {
   parameters: {
     chromatic: { delay: 50 },
   },
-  decorators: [Wrapper],
 };
 
 const labeledPaths = paths.map((path, index) => {
@@ -45,7 +45,7 @@ const exampleConfig: PlotConfig = {
 };
 
 function Wrapper(Wrapped: StoryFn): JSX.Element {
-  const readySignal = useReadySignal({ count: 3 });
+  const readySignal = useReadySignal({ count: 20 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
   return (
@@ -120,6 +120,7 @@ export const Light: StoryObj = {
   },
 
   parameters: { useReadySignal: true, colorScheme: "light" },
+  decorators: [Wrapper],
 };
 
 export const Dark: StoryObj = {
@@ -134,28 +135,35 @@ export const Dark: StoryObj = {
   },
 
   parameters: { useReadySignal: true, colorScheme: "dark" },
+  decorators: [Wrapper],
 };
 
 export const LimitWidth: StoryObj = {
   render: function Story() {
+    const readySignal = useReadySignal({ count: 6 });
+    const pauseFrame = useCallback(() => readySignal, [readySignal]);
+
     return (
-      <div
-        style={{
-          height: "100%",
-          width: "100%",
-        }}
-      >
-        <Plot
-          overrideConfig={{ ...exampleConfig, legendDisplay: "left", sidebarDimension: 4096 }}
-        />
-      </div>
+      <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
+        <div
+          style={{
+            height: "100%",
+            width: "100%",
+          }}
+        >
+          <Plot
+            overrideConfig={{ ...exampleConfig, legendDisplay: "left", sidebarDimension: 4096 }}
+          />
+        </div>
+      </PanelSetup>
     );
   },
 
+  play: async (ctx) => {
+    await waitFor(() => ctx.parameters.storyReady);
+  },
+
   parameters: {
-    chromatic: {
-      delay: 500,
-    },
     colorScheme: "light",
     useReadySignal: true,
   },

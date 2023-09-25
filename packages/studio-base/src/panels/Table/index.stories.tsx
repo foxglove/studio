@@ -3,9 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { fireEvent, within } from "@storybook/testing-library";
+import { fireEvent, userEvent, within } from "@storybook/testing-library";
 
 import Table from "@foxglove/studio-base/panels/Table";
+import { mockMessage } from "@foxglove/studio-base/players/TopicAliasingPlayer/mocks";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
 const makeArrayData = ({
@@ -24,6 +25,7 @@ const makeArrayData = ({
       },
       arr: nestArray ? makeArrayData({ length: 5, nestArray: false }) : [],
       primitiveArray: [1, 2, 3, 4, 5],
+      typedArray: new Uint32Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a]),
     };
   });
 };
@@ -58,6 +60,32 @@ const fixture: Fixture = {
   },
 };
 
+const longTextFixture: Fixture = {
+  datatypes: new Map([
+    [
+      "schema",
+      {
+        definitions: [
+          { type: "string", name: "value_a", isConstant: false, isArray: false },
+          { type: "string", name: "value_b", isConstant: false, isArray: false },
+        ],
+      },
+    ],
+  ]),
+  topics: [{ name: "topic", schemaName: "schema" }],
+  frame: {
+    topic: [
+      mockMessage(
+        {
+          value_a: Array(30).fill("Long string that could wrap.").join(" \n"),
+          value_b: "Another value",
+        },
+        { topic: "topic" },
+      ),
+    ],
+  },
+};
+
 export default {
   title: "panels/Table",
 };
@@ -74,6 +102,14 @@ export const NoData: StoryObj = {
   render: () => (
     <PanelSetup fixture={{ frame: {}, topics: [] }}>
       <Table overrideConfig={{ topicPath: "/unknown" }} />
+    </PanelSetup>
+  ),
+};
+
+export const LongTextValue: StoryObj = {
+  render: () => (
+    <PanelSetup fixture={longTextFixture}>
+      <Table overrideConfig={{ topicPath: "topic" }} />
     </PanelSetup>
   ),
 };
@@ -186,8 +222,7 @@ export const Sorting: StoryObj = {
     const canvas = within(canvasElement);
 
     const [targetCol] = await canvas.findAllByTestId("column-header-val");
-    fireEvent.click(targetCol!);
-    fireEvent.click(targetCol!);
+    await userEvent.click(targetCol!);
   },
 };
 

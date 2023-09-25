@@ -13,8 +13,7 @@
           "/CAM_FRONT_LEFT/lidar": {
             "visible": false
           }
-        },
-        "foregroundOpacity": 0
+        }
       },
       "cameraState": {
         "distance": 20,
@@ -325,7 +324,7 @@
         {
           "value": "/imu.linear_accel.x",
           "enabled": true,
-          "timestampMethod": "headerStamp"
+          "timestampMethod": "receiveTime"
         },
         {
           "value": "/diagnostics.status[:].values[:]{key==\"throttle_sensor\"}.value",

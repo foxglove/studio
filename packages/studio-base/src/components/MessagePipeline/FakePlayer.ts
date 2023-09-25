@@ -22,7 +22,6 @@ import {
   PlayerPresence,
 } from "@foxglove/studio-base/players/types";
 
-// ts-prune-ignore-next
 export default class FakePlayer implements Player {
   #listener?: (arg0: PlayerState) => Promise<void>;
   public playerId: string = "test";
@@ -39,17 +38,19 @@ export default class FakePlayer implements Player {
     activeData,
     presence,
     progress,
+    playerId,
   }: {
     activeData?: PlayerStateActiveData;
     presence?: PlayerPresence;
     progress?: PlayerState["progress"];
+    playerId?: string;
   } = {}): Promise<void> {
     if (!this.#listener) {
       return undefined;
     }
 
-    return await this.#listener({
-      playerId: this.playerId,
+    await this.#listener({
+      playerId: playerId ?? this.playerId,
       presence: presence ?? PlayerPresence.PRESENT,
       capabilities: this.#capabilities,
       profile: this.#profile,

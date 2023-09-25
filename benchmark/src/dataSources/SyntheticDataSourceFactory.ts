@@ -8,21 +8,25 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { Player } from "@foxglove/studio-base/players/types";
 
-interface PlayerConstructor {
-  new (): Player;
-}
+type PlayerConstructor = new () => Player;
 
 class SyntheticDataSourceFactory implements IDataSourceFactory {
   public id;
   public type: IDataSourceFactory["type"] = "sample";
   public displayName = "Synthetic";
   public iconName: IDataSourceFactory["iconName"] = "FileASPX";
+  public sampleLayout: IDataSourceFactory["sampleLayout"];
 
   #newFn: PlayerConstructor;
 
-  public constructor(id: string, newFn: PlayerConstructor) {
+  public constructor(
+    id: string,
+    newFn: PlayerConstructor,
+    layout: IDataSourceFactory["sampleLayout"],
+  ) {
     this.id = id;
     this.#newFn = newFn;
+    this.sampleLayout = layout;
   }
 
   public initialize(_args: DataSourceFactoryInitializeArgs): Player | undefined {

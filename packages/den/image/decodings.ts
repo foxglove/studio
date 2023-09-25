@@ -11,6 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+/**
+ * Adapted from:
+ * https://github.com/ros2/rviz/blob/e8838720e57b56cc0d50e05b00b28bee3c5dc9ee/rviz_default_plugins/src/rviz_default_plugins/displays/image/ros_image_texture.cpp#L332
+ */
 function yuvToRGBA8(
   y1: number,
   u: number,
@@ -20,60 +24,69 @@ function yuvToRGBA8(
   output: Uint8ClampedArray,
 ): void {
   // rgba
-  output[c] = y1 + 1.402 * v;
-  output[c + 1] = y1 - 0.34414 * u - 0.71414 * v;
-  output[c + 2] = y1 + 1.772 * u;
+  output[c] = y1 + Math.trunc((1403 * v) / 1000);
+  output[c + 1] = y1 - Math.trunc((344 * u) / 1000) - Math.trunc((714 * v) / 1000);
+  output[c + 2] = y1 + Math.trunc((1770 * u) / 1000);
   output[c + 3] = 255;
 
   // rgba
-  output[c + 4] = y2 + 1.402 * v;
-  output[c + 5] = y2 - 0.34414 * u - 0.71414 * v;
-  output[c + 6] = y2 + 1.772 * u;
+  output[c + 4] = y2 + Math.trunc((1403 * v) / 1000);
+  output[c + 5] = y2 - Math.trunc((344 * u) / 1000) - Math.trunc((714 * v) / 1000);
+  output[c + 6] = y2 + Math.trunc((1770 * u) / 1000);
   output[c + 7] = 255;
 }
 
-export function decodeYUV(
-  yuv: Int8Array,
+export function decodeUYVY(
+  uyvy: Uint8Array,
   width: number,
   height: number,
+  step: number,
   output: Uint8ClampedArray,
 ): void {
-  let c = 0;
-  let off = 0;
+  if (step < width * 2) {
+    throw new Error(`UYVY image row step (${step}) must be at least 2*width (${width * 2})`);
+  }
+  let outIdx = 0;
 
   // populate 2 pixels at a time
-  const max = height * width;
-  for (let r = 0; r <= max; r += 2) {
-    const u = yuv[off]! - 128;
-    const y1 = yuv[off + 1]!;
-    const v = yuv[off + 2]! - 128;
-    const y2 = yuv[off + 3]!;
-    yuvToRGBA8(y1, u, y2, v, c, output);
-    c += 8;
-    off += 4;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col += 2) {
+      const off = rowStart + col * 2;
+      const u = uyvy[off]! - 128;
+      const y1 = uyvy[off + 1]!;
+      const v = uyvy[off + 2]! - 128;
+      const y2 = uyvy[off + 3]!;
+      yuvToRGBA8(y1, u, y2, v, outIdx, output);
+      outIdx += 8;
+    }
   }
 }
 
-// change name in the future do something more distinct
 export function decodeYUYV(
-  yuyv: Int8Array,
+  yuyv: Uint8Array,
   width: number,
   height: number,
+  step: number,
   output: Uint8ClampedArray,
 ): void {
-  let c = 0;
-  let off = 0;
+  if (step < width * 2) {
+    throw new Error(`YUYV image row step (${step}) must be at least 2*width (${width * 2})`);
+  }
+  let outIdx = 0;
 
   // populate 2 pixels at a time
-  const max = height * width;
-  for (let r = 0; r <= max; r += 2) {
-    const y1 = yuyv[off]!;
-    const u = yuyv[off + 1]! - 128;
-    const y2 = yuyv[off + 2]!;
-    const v = yuyv[off + 3]! - 128;
-    yuvToRGBA8(y1, u, y2, v, c, output);
-    c += 8;
-    off += 4;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col += 2) {
+      const off = rowStart + col * 2;
+      const y1 = yuyv[off]!;
+      const u = yuyv[off + 1]! - 128;
+      const y2 = yuyv[off + 2]!;
+      const v = yuyv[off + 3]! - 128;
+      yuvToRGBA8(y1, u, y2, v, outIdx, output);
+      outIdx += 8;
+    }
   }
 }
 
@@ -81,20 +94,27 @@ export function decodeRGB8(
   rgb: Uint8Array,
   width: number,
   height: number,
+  step: number,
   output: Uint8ClampedArray,
 ): void {
-  let inIdx = 0;
+  if (step < width * 3) {
+    throw new Error(`RGB8 image row step (${step}) must be at least 3*width (${width * 3})`);
+  }
   let outIdx = 0;
 
-  for (let i = 0; i < width * height; i++) {
-    const r = rgb[inIdx++]!;
-    const g = rgb[inIdx++]!;
-    const b = rgb[inIdx++]!;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col++) {
+      const inIdx = rowStart + col * 3;
+      const r = rgb[inIdx]!;
+      const g = rgb[inIdx + 1]!;
+      const b = rgb[inIdx + 2]!;
 
-    output[outIdx++] = r;
-    output[outIdx++] = g;
-    output[outIdx++] = b;
-    output[outIdx++] = 255;
+      output[outIdx++] = r;
+      output[outIdx++] = g;
+      output[outIdx++] = b;
+      output[outIdx++] = 255;
+    }
   }
 }
 
@@ -102,21 +122,28 @@ export function decodeRGBA8(
   rgba: Uint8Array,
   width: number,
   height: number,
+  step: number,
   output: Uint8ClampedArray,
 ): void {
-  let inIdx = 0;
+  if (step < width * 4) {
+    throw new Error(`RGBA8 image row step (${step}) must be at least 4*width (${width * 4})`);
+  }
   let outIdx = 0;
 
-  for (let i = 0; i < width * height; i++) {
-    const r = rgba[inIdx++]!;
-    const g = rgba[inIdx++]!;
-    const b = rgba[inIdx++]!;
-    const a = rgba[inIdx++]!;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col++) {
+      const inIdx = rowStart + col * 4;
+      const r = rgba[inIdx]!;
+      const g = rgba[inIdx + 1]!;
+      const b = rgba[inIdx + 2]!;
+      const a = rgba[inIdx + 3]!;
 
-    output[outIdx++] = r;
-    output[outIdx++] = g;
-    output[outIdx++] = b;
-    output[outIdx++] = a;
+      output[outIdx++] = r;
+      output[outIdx++] = g;
+      output[outIdx++] = b;
+      output[outIdx++] = a;
+    }
   }
 }
 
@@ -124,21 +151,28 @@ export function decodeBGRA8(
   rgba: Uint8Array,
   width: number,
   height: number,
+  step: number,
   output: Uint8ClampedArray,
 ): void {
-  let inIdx = 0;
+  if (step < width * 4) {
+    throw new Error(`BGRA8 image row step (${step}) must be at least 4*width (${width * 4})`);
+  }
   let outIdx = 0;
 
-  for (let i = 0; i < width * height; i++) {
-    const b = rgba[inIdx++]!;
-    const g = rgba[inIdx++]!;
-    const r = rgba[inIdx++]!;
-    const a = rgba[inIdx++]!;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col++) {
+      const inIdx = rowStart + col * 4;
+      const b = rgba[inIdx]!;
+      const g = rgba[inIdx + 1]!;
+      const r = rgba[inIdx + 2]!;
+      const a = rgba[inIdx + 3]!;
 
-    output[outIdx++] = r;
-    output[outIdx++] = g;
-    output[outIdx++] = b;
-    output[outIdx++] = a;
+      output[outIdx++] = r;
+      output[outIdx++] = g;
+      output[outIdx++] = b;
+      output[outIdx++] = a;
+    }
   }
 }
 
@@ -146,20 +180,27 @@ export function decodeBGR8(
   bgr: Uint8Array,
   width: number,
   height: number,
+  step: number,
   output: Uint8ClampedArray,
 ): void {
-  let inIdx = 0;
+  if (step < width * 3) {
+    throw new Error(`BGR8 image row step (${step}) must be at least 3*width (${width * 3})`);
+  }
   let outIdx = 0;
 
-  for (let i = 0; i < width * height; i++) {
-    const b = bgr[inIdx++]!;
-    const g = bgr[inIdx++]!;
-    const r = bgr[inIdx++]!;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col++) {
+      const inIdx = rowStart + col * 3;
+      const b = bgr[inIdx]!;
+      const g = bgr[inIdx + 1]!;
+      const r = bgr[inIdx + 2]!;
 
-    output[outIdx++] = r;
-    output[outIdx++] = g;
-    output[outIdx++] = b;
-    output[outIdx++] = 255;
+      output[outIdx++] = r;
+      output[outIdx++] = g;
+      output[outIdx++] = b;
+      output[outIdx++] = 255;
+    }
   }
 }
 
@@ -167,19 +208,26 @@ export function decodeFloat1c(
   gray: Uint8Array,
   width: number,
   height: number,
+  step: number,
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   is_bigendian: boolean,
   output: Uint8ClampedArray,
 ): void {
+  if (step < width * 4) {
+    throw new Error(`Float image row step (${step}) must be at least 4*width (${width * 4})`);
+  }
   const view = new DataView(gray.buffer, gray.byteOffset);
 
   let outIdx = 0;
-  for (let i = 0; i < width * height * 4; i += 4) {
-    const val = view.getFloat32(i, !is_bigendian) * 255;
-    output[outIdx++] = val;
-    output[outIdx++] = val;
-    output[outIdx++] = val;
-    output[outIdx++] = 255;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col++) {
+      const val = view.getFloat32(rowStart + col * 4, !is_bigendian) * 255;
+      output[outIdx++] = val;
+      output[outIdx++] = val;
+      output[outIdx++] = val;
+      output[outIdx++] = 255;
+    }
   }
 }
 
@@ -187,17 +235,23 @@ export function decodeMono8(
   mono8: Uint8Array,
   width: number,
   height: number,
+  step: number,
   output: Uint8ClampedArray,
 ): void {
-  let inIdx = 0;
+  if (step < width) {
+    throw new Error(`Uint8 image row step (${step}) must be at least width (${width})`);
+  }
   let outIdx = 0;
 
-  for (let i = 0; i < width * height; i++) {
-    const ch = mono8[inIdx++]!;
-    output[outIdx++] = ch;
-    output[outIdx++] = ch;
-    output[outIdx++] = ch;
-    output[outIdx++] = 255;
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col++) {
+      const ch = mono8[rowStart + col]!;
+      output[outIdx++] = ch;
+      output[outIdx++] = ch;
+      output[outIdx++] = ch;
+      output[outIdx++] = 255;
+    }
   }
 }
 
@@ -205,11 +259,19 @@ export function decodeMono16(
   mono16: Uint8Array,
   width: number,
   height: number,
+  step: number,
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   is_bigendian: boolean,
   output: Uint8ClampedArray,
-  options?: { minValue?: number; maxValue?: number },
+  options?: {
+    minValue?: number;
+    maxValue?: number;
+    colorConverter?: (value: number) => { r: number; g: number; b: number; a: number };
+  },
 ): void {
+  if (step < width * 2) {
+    throw new Error(`Uint16 image row step (${step}) must be at least 2*width (${width * 2})`);
+  }
   const view = new DataView(mono16.buffer, mono16.byteOffset);
 
   // Use user-provided max/min values, or default to 0-10000, consistent with image_view's default.
@@ -222,17 +284,31 @@ export function decodeMono16(
   if (maxValue === minValue) {
     maxValue = minValue + 1;
   }
+  const converter = options?.colorConverter;
 
   let outIdx = 0;
-  for (let i = 0; i < width * height * 2; i += 2) {
-    let val = view.getUint16(i, !is_bigendian);
+  for (let row = 0; row < height; row++) {
+    const rowStart = row * step;
+    for (let col = 0; col < width; col++) {
+      let val = view.getUint16(rowStart + col * 2, !is_bigendian);
 
-    val = ((val - minValue) / (maxValue - minValue)) * 255;
+      if (converter) {
+        const { r, g, b } = converter(val);
 
-    output[outIdx++] = val;
-    output[outIdx++] = val;
-    output[outIdx++] = val;
-    output[outIdx++] = 255;
+        output[outIdx++] = r * 255;
+        output[outIdx++] = g * 255;
+        output[outIdx++] = b * 255;
+      } else {
+        // 0 - 1.0
+        val = (val - minValue) / (maxValue - minValue);
+        val *= 255;
+
+        output[outIdx++] = val;
+        output[outIdx++] = val;
+        output[outIdx++] = val;
+      }
+      output[outIdx++] = 255;
+    }
   }
 }
 
@@ -243,7 +319,13 @@ function makeSpecializedDecodeBayer(
   tr: string,
   bl: string,
   br: string,
-): (data: Uint8Array, width: number, height: number, output: Uint8ClampedArray) => void {
+): (
+  data: Uint8Array,
+  width: number,
+  height: number,
+  step: number,
+  output: Uint8ClampedArray,
+) => void {
   // We probably can't afford real debayering/demosaicking, so do something simpler
   // The input array look like a single-plane array of pixels.  However, each pixel represents a one particular color
   // for a group of pixels in the 2x2 region.  For 'rggb', there color representatio for the 2x2 region looks like:
@@ -258,22 +340,26 @@ function makeSpecializedDecodeBayer(
   //
   // We'll do something much simpler.  For each group of 2x2, we're replicate the R and B values for all pixels.
   // For the two row, we'll replicate G0 for the green channels, and replicate G1 for the bottom row.
-  // eslint-disable-next-line no-new-func
+  // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
   return new Function(
     "data",
     "width",
     "height",
+    "step",
     "output",
-    `
+    /* js */ `
+  if (step < width) {
+    throw new Error(\`Bayer image row step (\${step}) must be at least width (\${width})\`);
+  }
   for (let i = 0; i < height / 2; i++) {
-    let inIdx = i * 2 * width;
+    let inIdx = i * 2 * step;
     let outTopIdx = i * 2 * width * 4; // Addresses top row
     let outBottomIdx = (i * 2 + 1) * width * 4; // Addresses bottom row
     for (let j = 0; j < width / 2; j++) {
       const tl = data[inIdx++];
       const tr = data[inIdx++];
-      const bl = data[inIdx + width - 2];
-      const br = data[inIdx + width - 1];
+      const bl = data[inIdx + step - 2];
+      const br = data[inIdx + step - 1];
 
       const ${tl} = tl;
       const ${tr} = tr;

@@ -70,7 +70,11 @@ export function main(): void {
         }
       }
     }, [previewedFile]);
-    useEffect(() => state.error && console.error(state.error), [state.error]);
+    useEffect(() => {
+      if (state.error) {
+        console.error(state.error);
+      }
+    }, [state.error]);
 
     // eslint-disable-next-line no-restricted-syntax
     const progressRef = useRef<HTMLProgressElement>(null);
@@ -122,6 +126,7 @@ export function main(): void {
     );
   }
 
+  // eslint-disable-next-line react/no-deprecated
   ReactDOM.render(
     <>
       <GlobalStyle />

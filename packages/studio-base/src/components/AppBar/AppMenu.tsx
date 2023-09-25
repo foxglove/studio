@@ -3,29 +3,32 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
+  Divider,
+  ListSubheader,
   Menu,
-  MenuItem as MuiMenuItem,
+  MenuItem,
   PaperProps,
   PopoverPosition,
   PopoverReference,
+  Typography,
 } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
-import { shallow } from "zustand/shallow";
 
+import { NestedMenuItem } from "@foxglove/studio-base/components/AppBar/NestedMenuItem";
+import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { useCurrentUserType } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   WorkspaceContextStore,
-  useWorkspaceStore,
+  useWorkspaceStoreWithShallowSelector,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-
-import { MenuItem, NestedMenuItem } from "./NestedMenuItem";
 
 type AppMenuProps = {
   handleClose: () => void;
@@ -53,6 +56,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   const { classes } = useStyles();
   const { t } = useTranslation("appBar");
 
+  const { appBarMenuItems } = useAppContext();
+
   const [nestedMenu, setNestedMenu] = useState<string | undefined>();
 
   const currentUserType = useCurrentUserType();
@@ -64,8 +69,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
       left: { open: leftSidebarOpen },
       right: { open: rightSidebarOpen },
     },
-  } = useWorkspaceStore(selectWorkspace, shallow);
-  const { sidebarActions, dialogActions } = useWorkspaceActions();
+  } = useWorkspaceStoreWithShallowSelector(selectWorkspace);
+  const { sidebarActions, dialogActions, layoutActions } = useWorkspaceActions();
 
   const handleNestedMenuClose = useCallback(() => {
     setNestedMenu(undefined);
@@ -89,7 +94,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
   // FILE
 
   const fileItems = useMemo(() => {
-    const items: MenuItem[] = [
+    const items: AppBarMenuItem[] = [
       {
         type: "item",
         label: t("open"),
@@ -140,7 +145,8 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     return items;
   }, [
     classes.truncate,
-    dialogActions,
+    dialogActions.dataSource,
+    dialogActions.openFile,
     handleAnalytics,
     handleNestedMenuClose,
     recentSources,
@@ -150,7 +156,7 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
 
   // VIEW
 
-  const viewItems = useMemo<MenuItem[]>(
+  const viewItems = useMemo<AppBarMenuItem[]>(
     () => [
       {
         type: "item",
@@ -172,9 +178,31 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           handleNestedMenuClose();
         },
       },
+      {
+        type: "divider",
+      },
+      {
+        type: "item",
+        label: t("importLayoutFromFile"),
+        key: "import-layout",
+        onClick: () => {
+          layoutActions.importFromFile();
+          handleNestedMenuClose();
+        },
+      },
+      {
+        type: "item",
+        label: t("exportLayoutToFile"),
+        key: "export-layout",
+        onClick: () => {
+          layoutActions.exportToFile();
+          handleNestedMenuClose();
+        },
+      },
     ],
     [
       handleNestedMenuClose,
+      layoutActions,
       leftSidebarOpen,
       rightSidebarOpen,
       sidebarActions.left,
@@ -203,7 +231,13 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
     handleNestedMenuClose();
   }, [handleAnalytics, handleNestedMenuClose]);
 
-  const helpItems = useMemo<MenuItem[]>(
+  const onDemoClick = useCallback(() => {
+    dialogActions.dataSource.open("demo");
+    handleAnalytics("demo");
+    handleNestedMenuClose();
+  }, [dialogActions.dataSource, handleAnalytics, handleNestedMenuClose]);
+
+  const helpItems = useMemo<AppBarMenuItem[]>(
     () => [
       { type: "item", key: "about", label: t("about"), onClick: onAboutClick },
       { type: "divider" },
@@ -215,8 +249,10 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         onClick: onSlackClick,
         external: true,
       },
+      { type: "divider" },
+      { type: "item", key: "demo", label: t("exploreSampleData"), onClick: onDemoClick },
     ],
-    [onAboutClick, onDocsClick, onSlackClick, t],
+    [onAboutClick, onDemoClick, onDocsClick, onSlackClick, t],
   );
 
   return (
@@ -241,6 +277,31 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
           } as Partial<PaperProps & { "data-tourid"?: string }>
         }
       >
+        {(appBarMenuItems ?? []).map((item, idx) => {
+          switch (item.type) {
+            case "item":
+              return (
+                <MenuItem
+                  key={item.key}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    handleClose();
+                  }}
+                >
+                  {item.label}
+                  {item.shortcut && <kbd>{item.shortcut}</kbd>}
+                </MenuItem>
+              );
+            case "divider":
+              return <Divider variant="middle" key={`divider${idx}`} />;
+            case "subheader":
+              return (
+                <ListSubheader key={item.key} disableSticky>
+                  <Typography variant="overline">{item.label}</Typography>
+                </ListSubheader>
+              );
+          }
+        })}
         <NestedMenuItem
           onPointerEnter={handleItemPointerEnter}
           items={fileItems}
@@ -265,17 +326,6 @@ export function AppMenu(props: AppMenuProps): JSX.Element {
         >
           {t("help")}
         </NestedMenuItem>
-        <MuiMenuItem
-          id="app-menu-demo"
-          onPointerEnter={() => handleItemPointerEnter("app-menu-demo")}
-          onClick={() => {
-            dialogActions.dataSource.open("demo");
-            handleAnalytics("demo");
-            handleNestedMenuClose();
-          }}
-        >
-          {t("exploreSampleData")}
-        </MuiMenuItem>
       </Menu>
     </>
   );

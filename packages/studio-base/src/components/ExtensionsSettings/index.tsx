@@ -2,8 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Button, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
-import { differenceWith, groupBy, isEmpty, keyBy } from "lodash";
+import {
+  Alert,
+  AlertTitle,
+  Button,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Typography,
+} from "@mui/material";
+import * as _ from "lodash-es";
 import { useEffect, useMemo, useState } from "react";
 import { useAsyncFn } from "react-use";
 import { makeStyles } from "tss-react/mui";
@@ -92,7 +101,7 @@ export default function ExtensionsSettings(): React.ReactElement {
   );
 
   const marketplaceMap = useMemo(
-    () => keyBy(marketplaceEntries.value ?? [], (entry) => entry.id),
+    () => _.keyBy(marketplaceEntries.value ?? [], (entry) => entry.id),
     [marketplaceEntries],
   );
 
@@ -123,14 +132,14 @@ export default function ExtensionsSettings(): React.ReactElement {
   );
 
   const namespacedEntries = useMemo(
-    () => groupBy(installedEntries, (entry) => entry.namespace),
+    () => _.groupBy(installedEntries, (entry) => entry.namespace),
     [installedEntries],
   );
 
   // Hide installed extensions from the list of available extensions
   const filteredMarketplaceEntries = useMemo(
     () =>
-      differenceWith(
+      _.differenceWith(
         marketplaceEntries.value ?? [],
         installed ?? [],
         (a, b) => a.id === b.id && a.namespace === b.namespace,
@@ -139,7 +148,9 @@ export default function ExtensionsSettings(): React.ReactElement {
   );
 
   useEffect(() => {
-    refreshMarketplaceEntries().catch((error) => log.error(error));
+    refreshMarketplaceEntries().catch((error) => {
+      log.error(error);
+    });
   }, [refreshMarketplaceEntries]);
 
   if (focusedExtension != undefined) {
@@ -147,28 +158,29 @@ export default function ExtensionsSettings(): React.ReactElement {
       <ExtensionDetails
         installed={focusedExtension.installed}
         extension={focusedExtension.entry}
-        onClose={() => setFocusedExtension(undefined)}
+        onClose={() => {
+          setFocusedExtension(undefined);
+        }}
       />
-    );
-  }
-
-  if (marketplaceEntries.error) {
-    return (
-      <Stack gap={1} alignItems="center" justifyContent="center" fullHeight>
-        <Typography align="center" variant="body2" color="text.secondary">
-          Failed to fetch the list of available extensions. Check your Internet connection and try
-          again.
-        </Typography>
-        <Button onClick={async () => await refreshMarketplaceEntries()}>
-          Retry Fetching Extensions
-        </Button>
-      </Stack>
     );
   }
 
   return (
     <Stack gap={1}>
-      {!isEmpty(namespacedEntries) ? (
+      {marketplaceEntries.error && (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" onClick={async () => await refreshMarketplaceEntries()}>
+              Retry
+            </Button>
+          }
+        >
+          <AlertTitle>Failed to retrieve the list of available marketplace extensions</AlertTitle>
+          Check your internet connection and try again.
+        </Alert>
+      )}
+      {!_.isEmpty(namespacedEntries) ? (
         Object.entries(namespacedEntries).map(([namespace, entries]) => (
           <List key={namespace}>
             <Stack paddingY={0.25} paddingX={2}>
@@ -180,7 +192,9 @@ export default function ExtensionsSettings(): React.ReactElement {
               <ExtensionListEntry
                 key={`${entry.id}`}
                 entry={entry}
-                onClick={() => setFocusedExtension({ installed: true, entry })}
+                onClick={() => {
+                  setFocusedExtension({ installed: true, entry });
+                }}
               />
             ))}
           </List>
@@ -202,7 +216,9 @@ export default function ExtensionsSettings(): React.ReactElement {
           <ExtensionListEntry
             key={`${entry.id}_${entry.namespace}`}
             entry={entry}
-            onClick={() => setFocusedExtension({ installed: false, entry })}
+            onClick={() => {
+              setFocusedExtension({ installed: false, entry });
+            }}
           />
         ))}
       </List>

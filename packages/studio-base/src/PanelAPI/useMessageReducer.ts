@@ -11,14 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useRef, useMemo, useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Log from "@foxglove/log";
 import {
-  useMessagePipeline,
   MessagePipelineContext,
+  useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import useShouldNotChangeOften from "@foxglove/studio-base/hooks/useShouldNotChangeOften";
 import {
@@ -34,7 +34,7 @@ type MessageReducer<T> = (arg0: T, message: MessageEvent) => T;
 type MessagesReducer<T> = (arg0: T, messages: readonly MessageEvent[]) => T;
 
 type Params<T> = {
-  topics: readonly string[];
+  topics: readonly string[] | SubscribePayload[];
   preloadType?: SubscriptionPreloadType;
 
   // Functions called when the reducers change and for each newly received message.
@@ -60,36 +60,44 @@ export function useMessageReducer<T>(props: Params<T>): T {
     );
   }
 
-  useShouldNotChangeOften(props.restore, () =>
+  useShouldNotChangeOften(props.restore, () => {
     log.warn(
       "useMessageReducer restore() is changing frequently. " +
         "restore() will be called each time it changes, so a new function " +
         "shouldn't be created on each render. (If you're using Hooks, try useCallback.)",
-    ),
-  );
-  useShouldNotChangeOften(props.addMessage, () =>
+    );
+  });
+  useShouldNotChangeOften(props.addMessage, () => {
     log.warn(
       "useMessageReducer addMessage() is changing frequently. " +
         "addMessage() will be called each time it changes, so a new function " +
         "shouldn't be created on each render. (If you're using Hooks, try useCallback.)",
-    ),
-  );
-  useShouldNotChangeOften(props.addMessages, () =>
+    );
+  });
+  useShouldNotChangeOften(props.addMessages, () => {
     log.warn(
       "useMessageReducer addMessages() is changing frequently. " +
         "addMessages() will be called each time it changes, so a new function " +
         "shouldn't be created on each render. (If you're using Hooks, try useCallback.)",
-    ),
-  );
+    );
+  });
 
   const requestedTopics = useShallowMemo(props.topics);
 
   const subscriptions = useMemo<SubscribePayload[]>(() => {
-    return requestedTopics.map((topic) => ({ topic, preloadType }));
+    return requestedTopics.map((topic) => {
+      if (typeof topic === "string") {
+        return { topic, preloadType };
+      } else {
+        return topic;
+      }
+    });
   }, [preloadType, requestedTopics]);
 
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
-  useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
+  useEffect(() => {
+    setSubscriptions(id, subscriptions);
+  }, [id, setSubscriptions, subscriptions]);
   useEffect(() => {
     return () => {
       setSubscriptions(id, []);

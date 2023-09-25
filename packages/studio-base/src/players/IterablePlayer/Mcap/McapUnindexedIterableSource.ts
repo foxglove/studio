@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { McapStreamReader, McapTypes } from "@mcap/core";
-import { isEqual } from "lodash";
+import * as _ from "lodash-es";
 
 import { loadDecompressHandlers, parseChannel, ParsedChannel } from "@foxglove/mcap-support";
 import {
@@ -56,6 +56,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
     const problems: PlayerProblem[] = [];
     const channelIdsWithErrors = new Set<number>();
 
+    let messageCount = 0;
     const messagesByChannel = new Map<number, MessageEvent[]>();
     const schemasById = new Map<number, McapTypes.TypedMcapRecords["Schema"]>();
     const channelInfoById = new Map<
@@ -79,7 +80,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
         case "Schema": {
           const existingSchema = schemasById.get(record.id);
           if (existingSchema) {
-            if (!isEqual(existingSchema, record)) {
+            if (!_.isEqual(existingSchema, record)) {
               throw new Error(`differing schemas for id ${record.id}`);
             }
           }
@@ -90,7 +91,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
         case "Channel": {
           const existingInfo = channelInfoById.get(record.id);
           if (existingInfo) {
-            if (!isEqual(existingInfo.channel, record)) {
+            if (!_.isEqual(existingInfo.channel, record)) {
               throw new Error(`differing channel infos for id ${record.id}`);
             }
             break;
@@ -134,6 +135,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
             }
             throw new Error(`message for channel ${channelId} with no prior channel info`);
           }
+          ++messageCount;
           const receiveTime = fromNanoSec(record.logTime);
           if (!startTime || isLessThan(receiveTime, startTime)) {
             startTime = receiveTime;
@@ -209,11 +211,18 @@ export class McapUnindexedIterableSource implements IIterableSource {
       });
     }
 
-    problems.push({
-      message: "This file is unindexed. Unindexed files may have degraded performance.",
-      tip: "See the mcap spec: https://mcap.dev/specification/index.html#summary-section",
-      severity: "warn",
-    });
+    if (messageCount === 0) {
+      problems.push({
+        message: "This file contains no messages.",
+        severity: "warn",
+      });
+    } else {
+      problems.push({
+        message: "This file is unindexed. Unindexed files may have degraded performance.",
+        tip: "See the MCAP spec: https://mcap.dev/specification/index.html#summary-section",
+        severity: "warn",
+      });
+    }
 
     return {
       start: this.#start,
@@ -238,18 +247,18 @@ export class McapUnindexedIterableSource implements IIterableSource {
     const start = args.start ?? this.#start;
     const end = args.end ?? this.#end;
 
-    if (topics.length === 0 || !start || !end) {
+    if (topics.size === 0 || !start || !end) {
       return;
     }
 
-    const topicsSet = new Set(topics);
+    const topicsMap = new Map(topics);
     const resultMessages = [];
 
     for (const [channelId, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
         if (
           isTimeInRangeInclusive(msgEvent.receiveTime, start, end) &&
-          topicsSet.has(msgEvent.topic)
+          topicsMap.has(msgEvent.topic)
         ) {
           resultMessages.push({
             type: "message-event" as const,
@@ -273,9 +282,9 @@ export class McapUnindexedIterableSource implements IIterableSource {
 
     const needTopics = args.topics;
     const msgEventsByTopic = new Map<string, MessageEvent>();
-    for (const [_, msgEvents] of this.#msgEventsByChannel) {
+    for (const [, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
-        if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.includes(msgEvent.topic)) {
+        if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.has(msgEvent.topic)) {
           msgEventsByTopic.set(msgEvent.topic, msgEvent);
         }
       }

@@ -20,18 +20,13 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const useStyles = makeStyles()({
   checkbox: {
-    "&.MuiCheckbox-root": {
-      paddingTop: 0,
-    },
+    paddingTop: 0,
   },
   formControlLabel: {
-    "&.MuiFormControlLabel-root": {
-      alignItems: "start",
-    },
+    alignItems: "start",
   },
 });
 
@@ -46,6 +41,11 @@ function useFeatures(): Feature[] {
 
   const features: Feature[] = [
     {
+      key: AppSetting.ENABLE_NEW_APP_MENU,
+      name: t("newAppMenu"),
+      description: <>{t("newAppMenuDescription")}</>,
+    },
+    {
       key: AppSetting.SHOW_DEBUG_PANELS,
       name: t("studioDebugPanels"),
       description: <>{t("studioDebugPanelsDescription")}</>,
@@ -54,16 +54,6 @@ function useFeatures(): Feature[] {
       key: AppSetting.ENABLE_MEMORY_USE_INDICATOR,
       name: t("memoryUseIndicator"),
       description: <>{t("memoryUseIndicatorDescription")}</>,
-    },
-    {
-      key: AppSetting.ENABLE_NEW_TOPNAV,
-      name: t("newNavigation"),
-      description: (
-        <>
-          {t("newNavigationDescription")}
-          {isDesktopApp() && t("restartTheAppForChangesToTakeEffect")}
-        </>
-      ),
     },
   ];
 

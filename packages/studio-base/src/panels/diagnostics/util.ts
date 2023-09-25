@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { sortBy, truncate } from "lodash";
+import * as _ from "lodash-es";
 
-import { Time } from "@foxglove/rostime";
+import { Time, compare } from "@foxglove/rostime";
 import { Header } from "@foxglove/studio-base/types/Messages";
 import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 
@@ -22,8 +22,8 @@ import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 // way smaller than 5KB, so this is a very generous maximum. But feel free to increase it more if
 // necessary. Exported for tests.
 export const MAX_STRING_LENGTH = 5000; // 5KB
+export const DEFAULT_SECONDS_UNTIL_STALE = 5; // ROS rqt_runtime_monitor default
 
-// ts-prune-ignore-next
 export const LEVELS: { OK: 0; WARN: 1; ERROR: 2; STALE: 3 } = {
   OK: 0,
   WARN: 1,
@@ -50,6 +50,7 @@ export type DiagnosticStatusConfig = {
   splitFraction?: number;
   topicToRender: string;
   numericPrecision?: number;
+  secondsUntilStale?: number;
 };
 
 export type DiagnosticSummaryConfig = {
@@ -58,6 +59,7 @@ export type DiagnosticSummaryConfig = {
   topicToRender: string;
   hardwareIdFilter: string;
   sortByLevel?: boolean;
+  secondsUntilStale?: number;
 };
 
 export type DiagnosticId = string & ToString;
@@ -119,7 +121,7 @@ export function computeDiagnosticInfo(
       ...status,
       values: status.values.map((kv) =>
         kv.value.length > MAX_STRING_LENGTH
-          ? { key: kv.key, value: truncate(kv.value, { length: MAX_STRING_LENGTH }) }
+          ? { key: kv.key, value: _.truncate(kv.value, { length: MAX_STRING_LENGTH }) }
           : kv,
       ),
     };
@@ -149,6 +151,24 @@ export function getDiagnosticsByLevel(
   return ret;
 }
 
+export function getDiagnosticsWithStales(
+  diagnosticsByHardwareId: Map<string, DiagnosticsById>,
+  staleTime: Time,
+): Map<string, DiagnosticsById> {
+  const ret = new Map<string, DiagnosticsById>();
+  for (const [hardwareId, diagnosticsByName] of diagnosticsByHardwareId) {
+    const newDiagnosticsByName: DiagnosticsById = new Map();
+    ret.set(hardwareId, newDiagnosticsByName);
+
+    for (const [name, diagnostic] of diagnosticsByName) {
+      const markStale = compare(diagnostic.stamp, staleTime) < 0;
+      const level = markStale ? LEVELS.STALE : diagnostic.status.level;
+      newDiagnosticsByName.set(name, { ...diagnostic, status: { ...diagnostic.status, level } });
+    }
+  }
+  return ret;
+}
+
 export const filterAndSortDiagnostics = (
   nodes: DiagnosticInfo[],
   hardwareIdFilter: string,
@@ -156,7 +176,7 @@ export const filterAndSortDiagnostics = (
 ): DiagnosticInfo[] => {
   const unpinnedNodes = nodes.filter(({ id }) => !pinnedIds.includes(id));
   if (hardwareIdFilter.length === 0) {
-    return sortBy(unpinnedNodes, (info) => info.displayName.replace(/^\//, ""));
+    return _.sortBy(unpinnedNodes, (info) => info.displayName.replace(/^\//, ""));
   }
   // fuzzyFilter sorts by match accuracy.
   return fuzzyFilter({

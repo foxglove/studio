@@ -18,7 +18,7 @@ import {
   Tooltip,
   InputBase,
 } from "@mui/material";
-import { pick } from "lodash";
+import * as _ from "lodash-es";
 import { useMemo, useCallback, useState, useRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -95,9 +95,9 @@ const changeGlobalKey = (
 ) => {
   const keys = Object.keys(globalVariables);
   overwriteGlobalVariables({
-    ...pick(globalVariables, keys.slice(0, idx)),
+    ..._.pick(globalVariables, keys.slice(0, idx)),
     [newKey]: globalVariables[oldKey],
-    ...pick(globalVariables, keys.slice(idx + 1)),
+    ..._.pick(globalVariables, keys.slice(idx + 1)),
   });
 };
 
@@ -209,7 +209,9 @@ export default function Variable(props: {
         <ListItemButton
           className={classes.listItemButton}
           selected={isSelected}
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => {
+            setExpanded(!expanded);
+          }}
         >
           <ListItemText
             className={classes.listItemText}
@@ -225,9 +227,17 @@ export default function Variable(props: {
                   value={editedName ?? name}
                   placeholder="variable_name"
                   data-testid={`global-variable-key-input-${name}`}
-                  onClick={(e) => e.stopPropagation()}
-                  onFocus={() => editedName === "" && setExpanded(true)}
-                  onChange={(event) => setEditedName(event.target.value)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onFocus={() => {
+                    if (editedName === "") {
+                      setExpanded(true);
+                    }
+                  }}
+                  onChange={(event) => {
+                    setEditedName(event.target.value);
+                  }}
                   onBlur={onBlur}
                   endAdornment={
                     isDuplicate && (

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { transform } from "lodash";
+import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
 import { SettingsTreeFields, SettingsTreeNodes, Topic } from "@foxglove/studio";
@@ -35,6 +35,7 @@ function isGeoJSONSchema(schemaName: string) {
   switch (schemaName) {
     case "foxglove_msgs/GeoJSON":
     case "foxglove_msgs/msg/GeoJSON":
+    case "foxglove::GeoJSON":
     case "foxglove.GeoJSON":
       return true;
     default:
@@ -46,7 +47,7 @@ export function buildSettingsTree(
   config: Config,
   eligibleTopics: Omit<Topic, "datatype">[],
 ): SettingsTreeNodes {
-  const topics: SettingsTreeNodes = transform(
+  const topics: SettingsTreeNodes = _.transform(
     eligibleTopics,
     (result, topic) => {
       const coloring = config.topicColors[topic.name];

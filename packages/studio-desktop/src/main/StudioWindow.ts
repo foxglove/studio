@@ -2,37 +2,34 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+/// <reference types="../typings/i18next" />
+
 import {
-  app,
-  dialog,
   BrowserWindow,
   BrowserWindowConstructorOptions,
   Menu,
-  MenuItemConstructorOptions,
-  shell,
   MenuItem,
-  systemPreferences,
-  nativeTheme,
+  MenuItemConstructorOptions,
   TitleBarOverlayOptions,
+  app,
+  nativeTheme,
+  shell,
+  systemPreferences,
 } from "electron";
+import i18n, { t } from "i18next";
 import path from "path";
 
 import Logger from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
-import {
-  APP_BAR_BACKGROUND_COLOR,
-  APP_BAR_HEIGHT,
-  APP_BAR_FOREGROUND_COLOR,
-} from "@foxglove/studio-base/src/components/AppBar/constants";
+import { APP_BAR_HEIGHT } from "@foxglove/studio-base/src/components/AppBar/constants";
+import { NativeAppMenuEvent } from "@foxglove/studio-base/src/context/NativeAppMenuContext";
 import * as palette from "@foxglove/studio-base/src/theme/palette";
 
 import StudioAppUpdater from "./StudioAppUpdater";
 import getDevModeIcon from "./getDevModeIcon";
-import { getAppSetting } from "./settings";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
 import { encodeRendererArg } from "../common/rendererArgs";
-import { FOXGLOVE_PRODUCT_NAME, FOXGLOVE_PRODUCT_VERSION } from "../common/webpackDefines";
+import { FOXGLOVE_PRODUCT_NAME } from "../common/webpackDefines";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
@@ -45,71 +42,18 @@ const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 const closeMenuItem: MenuItemConstructorOptions = isMac ? { role: "close" } : { role: "quit" };
 const log = Logger.getLogger(__filename);
 
-type SectionKey = "app" | "panels" | "resources" | "products" | "contact" | "legal";
-type HelpInfo = {
-  title: string;
-  content?: React.ReactNode;
-  url?: string;
-};
-const helpMenuItems: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = new Map([
-  [
-    "resources",
-    {
-      subheader: "External resources",
-      links: [
-        { title: "Browse docs", url: "https://foxglove.dev/docs" },
-        { title: "Join our community", url: "https://foxglove.dev/community" },
-      ],
-    },
-  ],
-  [
-    "products",
-    {
-      subheader: "Products",
-      links: [
-        { title: "Foxglove Studio", url: "https://foxglove.dev/studio" },
-        { title: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
-      ],
-    },
-  ],
-  [
-    "contact",
-    {
-      subheader: "Contact",
-      links: [
-        { title: "Give feedback", url: "https://foxglove.dev/contact" },
-        { title: "Schedule a demo", url: "https://foxglove.dev/demo" },
-      ],
-    },
-  ],
-  [
-    "legal",
-    {
-      subheader: "Legal",
-      links: [
-        { title: "License terms", url: "https://foxglove.dev/legal/studio-license" },
-        { title: "Privacy policy", url: "https://foxglove.dev/legal/privacy" },
-      ],
-    },
-  ],
-]);
-
-const getTitleCase = (baseString: string): string =>
-  baseString
-    .split(" ")
-    .map((word) => `${word[0]?.toUpperCase()}${word.substring(1)}`)
-    .join(" ");
-
-type ClearableMenu = Menu & { clear: () => void };
+function getWindowBackgroundColor(): string | undefined {
+  const theme = palette[nativeTheme.shouldUseDarkColors ? "dark" : "light"];
+  return theme.background?.default;
+}
 
 function getTitleBarOverlayOptions(): TitleBarOverlayOptions {
+  const theme = palette[nativeTheme.shouldUseDarkColors ? "dark" : "light"];
   if (isWindows) {
     return {
       height: APP_BAR_HEIGHT,
-      color: nativeTheme.shouldUseDarkColors
-        ? APP_BAR_BACKGROUND_COLOR.dark
-        : APP_BAR_BACKGROUND_COLOR.light,
-      symbolColor: APP_BAR_FOREGROUND_COLOR,
+      color: theme.appBar.main,
+      symbolColor: theme.appBar.text,
     };
   }
   return {};
@@ -117,31 +61,22 @@ function getTitleBarOverlayOptions(): TitleBarOverlayOptions {
 
 function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void): BrowserWindow {
   const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
-  const enableNewTopNav = getAppSetting<boolean>(AppSetting.ENABLE_NEW_TOPNAV) ?? false;
-  const colorScheme = getAppSetting<string>(AppSetting.COLOR_SCHEME) ?? "system";
-  const isDark =
-    colorScheme === "dark" || (colorScheme === "system" && nativeTheme.shouldUseDarkColors);
-  const backgroundColor = isDark
-    ? palette.dark.background?.default
-    : palette.light.background?.default;
-
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
 
   const macTrafficLightInset =
     Math.floor((APP_BAR_HEIGHT - /*button size*/ 12) / 2) - /*for good measure*/ 1;
 
   const windowOptions: BrowserWindowConstructorOptions = {
-    backgroundColor,
+    backgroundColor: getWindowBackgroundColor(),
     height: 800,
     width: 1200,
     minWidth: 350,
     minHeight: 250,
     autoHideMenuBar: true,
     title: FOXGLOVE_PRODUCT_NAME,
-    frame: enableNewTopNav && isLinux ? false : true,
-    titleBarStyle: enableNewTopNav ? "hidden" : "default",
-    trafficLightPosition:
-      isMac && enableNewTopNav ? { x: macTrafficLightInset, y: macTrafficLightInset } : undefined,
+    frame: isLinux ? false : true,
+    titleBarStyle: "hidden",
+    trafficLightPosition: isMac ? { x: macTrafficLightInset, y: macTrafficLightInset } : undefined,
     titleBarOverlay: getTitleBarOverlayOptions(),
     webPreferences: {
       contextIsolation: true,
@@ -173,18 +108,26 @@ function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void)
       // Although the TS types say this function is always available, it is undefined on non-Windows platforms
       browserWindow.setTitleBarOverlay(getTitleBarOverlayOptions());
     }
+    const bgColor = getWindowBackgroundColor();
+    if (bgColor != undefined) {
+      browserWindow.setBackgroundColor(bgColor);
+    }
   });
 
   // Forward full screen events to the renderer
-  browserWindow.addListener("enter-full-screen", () =>
-    browserWindow.webContents.send("enter-full-screen"),
-  );
-  browserWindow.addListener("leave-full-screen", () =>
-    browserWindow.webContents.send("leave-full-screen"),
-  );
-  browserWindow.addListener("maximize", () => browserWindow.webContents.send("maximize"));
+  browserWindow.addListener("enter-full-screen", () => {
+    browserWindow.webContents.send("enter-full-screen");
+  });
+  browserWindow.addListener("leave-full-screen", () => {
+    browserWindow.webContents.send("leave-full-screen");
+  });
+  browserWindow.addListener("maximize", () => {
+    browserWindow.webContents.send("maximize");
+  });
 
-  browserWindow.addListener("unmaximize", () => browserWindow.webContents.send("unmaximize"));
+  browserWindow.addListener("unmaximize", () => {
+    browserWindow.webContents.send("unmaximize");
+  });
 
   browserWindow.webContents.once("dom-ready", () => {
     if (!isProduction) {
@@ -255,11 +198,15 @@ function newStudioWindow(deepLinks: string[] = [], reloadMainWindow: () => void)
   return browserWindow;
 }
 
+function sendNativeAppMenuEvent(event: NativeAppMenuEvent, browserWindow: BrowserWindow) {
+  browserWindow.webContents.send(event);
+}
+
 function buildMenu(browserWindow: BrowserWindow): Menu {
   const menuTemplate: MenuItemConstructorOptions[] = [];
 
   const checkForUpdatesItem: MenuItemConstructorOptions = {
-    label: "Check for Updates…",
+    label: t("desktopWindow:checkForUpdates"),
     click: () => void StudioAppUpdater.Instance().checkNow(),
     enabled: StudioAppUpdater.Instance().canCheckForUpdates(),
   };
@@ -272,11 +219,12 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         { role: "about" },
         checkForUpdatesItem,
         { type: "separator" },
-
         {
-          label: "Settings…",
+          label: t("desktopWindow:settings"),
           accelerator: "CommandOrControl+,",
-          click: () => browserWindow.webContents.send("open-app-settings"),
+          click: () => {
+            sendNativeAppMenuEvent("open-help-general", browserWindow);
+          },
         },
         { role: "services" },
         { type: "separator" },
@@ -293,25 +241,40 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
 
   menuTemplate.push({
     role: "fileMenu",
-    label: "File",
+    label: t("desktopWindow:file"),
     id: "fileMenu",
     submenu: [
       {
-        label: "New Window",
+        label: t("desktopWindow:newWindow"),
         click: () => {
           new StudioWindow().load();
         },
       },
-      ...(isMac
-        ? []
-        : [
-            { type: "separator" } as const,
-            {
-              label: "Settings…",
-              accelerator: "CommandOrControl+,",
-              click: () => browserWindow.webContents.send("open-app-settings"),
-            } as const,
-          ]),
+      { type: "separator" },
+      {
+        id: "open",
+        label: t("appBar:open"),
+        click: async () => {
+          await simulateUserClick(browserWindow);
+          sendNativeAppMenuEvent("open", browserWindow);
+        },
+      },
+      {
+        id: "openLocalFile",
+        label: t("appBar:openLocalFile"),
+        click: async () => {
+          await simulateUserClick(browserWindow);
+          sendNativeAppMenuEvent("open-file", browserWindow);
+        },
+      },
+      {
+        id: "openConnection",
+        label: t("appBar:openConnection"),
+        click: async () => {
+          await simulateUserClick(browserWindow);
+          sendNativeAppMenuEvent("open-connection", browserWindow);
+        },
+      },
       { type: "separator" },
       closeMenuItem,
     ],
@@ -319,18 +282,8 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
 
   menuTemplate.push({
     role: "editMenu",
-    label: "Edit",
+    label: t("desktopWindow:edit"),
     submenu: [
-      {
-        label: "Add Panel to Layout",
-        click: () => browserWindow.webContents.send("open-add-panel"),
-      },
-      {
-        label: "Edit Panel Settings",
-        click: () => browserWindow.webContents.send("open-panel-settings"),
-      },
-      { type: "separator" },
-
       { role: "undo" },
       { role: "redo" },
       { type: "separator" },
@@ -359,7 +312,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     const workers = browserWindow.webContents.getAllSharedWorkers();
     Menu.buildFromTemplate(
       workers.length === 0
-        ? [{ label: "No Shared Workers", enabled: false }]
+        ? [{ label: t("desktopWindow:noSharedWorkers"), enabled: false }]
         : workers.map(
             (worker) =>
               new MenuItem({
@@ -375,14 +328,8 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
 
   menuTemplate.push({
     role: "viewMenu",
-    label: "View",
+    label: t("desktopWindow:view"),
     submenu: [
-      { label: "Layouts", click: () => browserWindow.webContents.send("open-layouts") },
-      { label: "Variables", click: () => browserWindow.webContents.send("open-variables") },
-      { label: "Extensions", click: () => browserWindow.webContents.send("open-extensions") },
-      { label: "Account", click: () => browserWindow.webContents.send("open-account") },
-      { type: "separator" },
-
       { role: "resetZoom" },
       { role: "zoomIn" },
       { role: "zoomOut" },
@@ -390,13 +337,13 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
       { role: "togglefullscreen" },
       { type: "separator" },
       {
-        label: "Advanced",
+        label: t("desktopWindow:advanced"),
         submenu: [
           { role: "reload" },
           { role: "forceReload" },
           { role: "toggleDevTools" },
           {
-            label: "Inspect Shared Worker…",
+            label: t("desktopWindow:inspectSharedWorker"),
             click() {
               showSharedWorkersMenu();
             },
@@ -406,50 +353,35 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     ],
   });
 
-  const showAboutDialog = () => {
-    void dialog.showMessageBox(browserWindow, {
-      type: "info",
-      title: `About ${FOXGLOVE_PRODUCT_NAME}`,
-      message: FOXGLOVE_PRODUCT_NAME,
-      detail: `Version: ${FOXGLOVE_PRODUCT_VERSION}`,
-    });
-  };
-
-  const helpSidebarItems = Array.from(helpMenuItems.values(), ({ subheader, links }) => ({
-    label: getTitleCase(subheader),
-    submenu: links.map(({ title, url }) => ({
-      label: getTitleCase(title),
-      click: url
-        ? async () => await shell.openExternal(url)
-        : () => browserWindow.webContents.send("open-help"),
-    })),
-  }));
-
   menuTemplate.push({
     role: "help",
     submenu: [
       {
-        label: "Explore Sample Data",
-        click: () => browserWindow.webContents.send("open-sample-data"),
+        label: t("appBar:about"),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-about", browserWindow);
+        },
+      },
+      {
+        label: t("appBar:viewOurDocs"),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-docs", browserWindow);
+        },
+      },
+      {
+        label: t("appBar:joinOurSlack"),
+        click: () => {
+          sendNativeAppMenuEvent("open-help-slack", browserWindow);
+        },
       },
       { type: "separator" },
-      ...helpSidebarItems,
       {
-        label: "Learn More",
-        click: async () => await shell.openExternal("https://foxglove.dev"),
+        label: t("appBar:exploreSampleData"),
+        click: async () => {
+          await simulateUserClick(browserWindow);
+          sendNativeAppMenuEvent("open-demo", browserWindow);
+        },
       },
-      ...(isMac
-        ? []
-        : [
-            { type: "separator" } as const,
-            {
-              label: "About",
-              click() {
-                showAboutDialog();
-              },
-            },
-            checkForUpdatesItem,
-          ]),
     ],
   });
 
@@ -462,7 +394,6 @@ class StudioWindow {
   // BrowserWindow.id is not as available
   static #windowsByContentId = new Map<number, StudioWindow>();
   readonly #deepLinks: string[];
-  readonly #inputSources = new Set<string>();
 
   #browserWindow: BrowserWindow;
   #menu: Menu;
@@ -473,6 +404,14 @@ class StudioWindow {
     const [newWindow, newMenu] = this.#buildBrowserWindow();
     this.#browserWindow = newWindow;
     this.#menu = newMenu;
+
+    i18n.on("languageChanged", () => {
+      const isAppMenu = Menu.getApplicationMenu() === this.#menu;
+      this.#menu = buildMenu(this.#browserWindow);
+      if (isAppMenu) {
+        Menu.setApplicationMenu(this.#menu);
+      }
+    });
   }
 
   public load(): void {
@@ -486,47 +425,6 @@ class StudioWindow {
       .catch((err) => {
         log.error("loadURL error", err);
       });
-  }
-
-  public addInputSource(name: string): void {
-    // A "Foxglove Data Platform" connection is triggered by opening a URL from console
-    // Not currently a connection that can be started from inside Foxglove Studio
-    const unsupportedInputSourceNames = ["Foxglove Data Platform"];
-    if (unsupportedInputSourceNames.includes(name)) {
-      return;
-    }
-
-    this.#inputSources.add(name);
-
-    const fileMenu = this.#menu.getMenuItemById("fileMenu");
-    if (!fileMenu) {
-      return;
-    }
-
-    const existingItem = fileMenu.submenu?.getMenuItemById(name);
-    // If the item already exists, we can silently return
-    // The existing click handler will support the new item since they have the same name
-    if (existingItem) {
-      existingItem.visible = true;
-      return;
-    }
-
-    // build new file menu
-    this.#rebuildFileMenu(fileMenu);
-
-    this.#browserWindow.setMenu(this.#menu);
-  }
-
-  public removeInputSource(name: string): void {
-    this.#inputSources.delete(name);
-
-    const fileMenu = this.#menu.getMenuItemById("fileMenu");
-    if (!fileMenu) {
-      return;
-    }
-
-    this.#rebuildFileMenu(fileMenu);
-    this.#browserWindow.setMenu(this.#menu);
   }
 
   public getBrowserWindow(): BrowserWindow {
@@ -561,124 +459,16 @@ class StudioWindow {
       this.#reloadMainWindow();
     });
     const newMenu = buildMenu(browserWindow);
-
     const id = browserWindow.webContents.id;
 
     log.info(`New Foxglove Studio window ${id}`);
     StudioWindow.#windowsByContentId.set(id, this);
 
-    // when a window closes and it is the current application menu, clear the input sources
-    browserWindow.once("close", () => {
-      if (Menu.getApplicationMenu() === this.#menu) {
-        const existingMenu = Menu.getApplicationMenu();
-        const fileMenu = existingMenu?.getMenuItemById("fileMenu");
-        // https://github.com/electron/electron/issues/8598
-        (fileMenu?.submenu as undefined | ClearableMenu)?.clear();
-        fileMenu?.submenu?.append(
-          new MenuItem({
-            label: "New Window",
-            click: () => {
-              new StudioWindow().load();
-            },
-          }),
-        );
-
-        fileMenu?.submenu?.append(
-          new MenuItem({
-            type: "separator",
-          }),
-        );
-
-        fileMenu?.submenu?.append(new MenuItem(closeMenuItem));
-        Menu.setApplicationMenu(existingMenu);
-      }
-    });
     browserWindow.once("closed", () => {
       StudioWindow.#windowsByContentId.delete(id);
     });
 
     return [browserWindow, newMenu];
-  }
-
-  #rebuildFileMenu(fileMenu: MenuItem): void {
-    const browserWindow = this.#browserWindow;
-
-    // https://github.com/electron/electron/issues/8598
-    (fileMenu.submenu as ClearableMenu).clear();
-    fileMenu.submenu?.items.splice(0, fileMenu.submenu.items.length);
-
-    fileMenu.submenu?.append(
-      new MenuItem({
-        label: "New Window",
-        click: () => {
-          new StudioWindow().load();
-        },
-      }),
-    );
-
-    fileMenu.submenu?.append(
-      new MenuItem({
-        type: "separator",
-      }),
-    );
-
-    fileMenu.submenu?.append(
-      new MenuItem({
-        label: "Open File…",
-        click: async () => {
-          await simulateUserClick(browserWindow);
-          browserWindow.webContents.send("open-file");
-        },
-      }),
-    );
-
-    fileMenu.submenu?.append(
-      new MenuItem({
-        label: "Open Remote File…",
-        click: async () => {
-          await simulateUserClick(browserWindow);
-          browserWindow.webContents.send("open-remote-file");
-        },
-      }),
-    );
-
-    fileMenu.submenu?.append(
-      new MenuItem({
-        label: "Open Connection",
-        submenu: Array.from(this.#inputSources).map((name) => ({
-          // Electron menus require a preceding & to escape the & char
-          label: name.replace(/&/g, "&&"),
-          click: async () => {
-            await simulateUserClick(browserWindow);
-            browserWindow.webContents.send("menu.click-input-source", name);
-          },
-        })),
-      }),
-    );
-
-    if (!isMac) {
-      fileMenu.submenu?.append(
-        new MenuItem({
-          type: "separator",
-        }),
-      );
-
-      fileMenu.submenu?.append(
-        new MenuItem({
-          label: "Settings…",
-          accelerator: "CommandOrControl+,",
-          click: () => browserWindow.webContents.send("open-app-settings"),
-        }),
-      );
-    }
-
-    fileMenu.submenu?.append(
-      new MenuItem({
-        type: "separator",
-      }),
-    );
-
-    fileMenu.submenu?.append(new MenuItem(closeMenuItem));
   }
 }
 

@@ -21,6 +21,7 @@ extends:
   - plugin:@foxglove/react
   - plugin:@foxglove/jest
   - plugin:storybook/recommended
+  - plugin:@foxglove/studio/all
 
 settings:
   import/internal-regex: "^@foxglove"
@@ -28,7 +29,6 @@ settings:
 rules:
   "@foxglove/license-header": error
   "@foxglove/prefer-hash-private": error
-  "@foxglove/studio/link-target": error
 
   tss-unused-classes/unused-classes: error
 
@@ -92,13 +92,6 @@ rules:
           importNames: [Box]
           message: "@mui/Box has performance implications. Use tss-react/mui instead."
 
-        - name: "lodash"
-          importNames: [get]
-          message: "Use optional chaining instead of lodash.get."
-
-        - name: "lodash/get"
-          message: "Use optional chaining instead of lodash.get."
-
   no-restricted-syntax:
     - error
     - selector: "MethodDefinition[kind='get'], Property[kind='get']"
@@ -122,6 +115,15 @@ rules:
     - selector: "CallExpression[callee.name='setInterval'][arguments.length<2]"
       message: "`setInterval()` must be invoked with at least two arguments."
 
+    - selector: "CallExpression[callee.object.name='Promise'][callee.property.name='race']"
+      message: >
+        Promise.race is banned
+          use `import { race } from "@foxglove/den/async"` instead
+
+        See:
+          https://github.com/nodejs/node/issues/17469#issuecomment-685216777
+          https://bugs.chromium.org/p/v8/issues/detail?id=9858"
+
   jest/expect-expect:
     [error, { assertFunctionNames: [expect*, sendNotification.expectCalledDuringTest] }]
 
@@ -140,15 +142,12 @@ overrides:
 
       "@typescript-eslint/no-inferrable-types": off # It's sometimes useful to explicitly name to guard against future changes
       "@typescript-eslint/no-empty-function": off
-      "@typescript-eslint/no-implied-eval": off # We need to use `new Function()`
 
       # These are related to `any` types, which we generally don't have except from imports
       "@typescript-eslint/no-unsafe-member-access": off
       "@typescript-eslint/no-unsafe-return": off
       "@typescript-eslint/no-unsafe-assignment": off
       "@typescript-eslint/no-unsafe-call": off
-
-      "@typescript-eslint/require-await": off # Async functions without await are used to satisfy interface requirements
 
       # These could theoretically be turned on (or merit investigation) but are currently noisy
       "@typescript-eslint/no-misused-promises": off # Often used with e.g. useCallback(async () => {})
@@ -157,6 +156,17 @@ overrides:
       "@typescript-eslint/prefer-regexp-exec": off
       "@typescript-eslint/no-unnecessary-condition": error
       "@typescript-eslint/unbound-method": [error, { ignoreStatic: true }]
+
+      # https://eslint.org/docs/latest/rules/no-loop-func
+      "no-loop-func": error
+
+      # unused vars must have `_` prefix, but `_` alone is not ignored (see @foxglove/studio/lodash-imports)
+      "@typescript-eslint/no-unused-vars":
+        - error
+        - vars: all
+          args: after-used
+          varsIgnorePattern: "^_."
+          argsIgnorePattern: "^_."
 
   - rules:
       "@typescript-eslint/no-explicit-any": off
@@ -169,12 +179,3 @@ overrides:
       react/forbid-component-props: off
     files:
       - "**/*.stories.tsx"
-
-  - rules:
-      "@foxglove/no-restricted-imports": off
-    files:
-      # Ignore existing implementations of @mui/styled and @mui/Box
-      - "packages/studio-base/src/components/DataSourceSidebar/DataSourceSidebar.tsx"
-      - "packages/studio-base/src/components/LayoutBrowser/LayoutRow.tsx"
-      - "packages/studio-base/src/panels/Image/components/Toolbar.tsx"
-      - "packages/studio-base/src/panels/Image/components/ZoomMenu.tsx"

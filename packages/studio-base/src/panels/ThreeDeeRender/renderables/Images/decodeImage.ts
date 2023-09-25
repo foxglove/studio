@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as _ from "lodash-es";
+
 import {
   decodeBGR8,
   decodeBGRA8,
@@ -14,13 +16,14 @@ import {
   decodeMono8,
   decodeRGB8,
   decodeRGBA8,
-  decodeYUV,
+  decodeUYVY,
   decodeYUYV,
 } from "@foxglove/den/image";
 import { RawImage } from "@foxglove/schemas";
 
 import { CompressedImageTypes } from "./ImageTypes";
 import { Image as RosImage } from "../../ros";
+import { ColorModeSettings, getColorConverter } from "../colorMode";
 
 export async function decodeCompressedImageToBitmap(
   image: CompressedImageTypes,
@@ -30,63 +33,100 @@ export async function decodeCompressedImageToBitmap(
   return await createImageBitmap(bitmapData, { resizeWidth });
 }
 
-export type RawImageOptions = {
-  minValue?: number;
-  maxValue?: number;
+export const IMAGE_DEFAULT_COLOR_MODE_SETTINGS: Required<
+  Omit<ColorModeSettings, "colorField" | "minValue" | "maxValue">
+> = {
+  colorMode: "gradient",
+  flatColor: "#ffffff",
+  gradient: ["#000000", "#ffffff"],
+  colorMap: "turbo",
+  explicitAlpha: 0,
 };
+const MIN_MAX_16_BIT = { minValue: 0, maxValue: 65535 };
 
+export type RawImageOptions = ColorModeSettings;
+
+/**
+ * See also:
+ * https://github.com/ros2/common_interfaces/blob/366eea24ffce6c87f8860cbcd27f4863f46ad822/sensor_msgs/include/sensor_msgs/image_encodings.hpp
+ */
 export function decodeRawImage(
   image: RosImage | RawImage,
-  options: RawImageOptions,
+  options: Partial<RawImageOptions>,
   output: Uint8ClampedArray,
 ): void {
-  const { encoding, width, height } = image;
+  const { encoding, width, height, step } = image;
   const is_bigendian = "is_bigendian" in image ? image.is_bigendian : false;
   const rawData = image.data as Uint8Array;
   switch (encoding) {
     case "yuv422":
-    case "uyuv":
-      decodeYUV(image.data as Int8Array, width, height, output);
+    case "uyvy":
+      decodeUYVY(rawData, width, height, step, output);
       break;
+    case "yuv422_yuy2":
     case "yuyv":
-      decodeYUYV(image.data as Int8Array, width, height, output);
+      decodeYUYV(rawData, width, height, step, output);
       break;
     case "rgb8":
-      decodeRGB8(rawData, width, height, output);
+      decodeRGB8(rawData, width, height, step, output);
       break;
     case "rgba8":
-      decodeRGBA8(rawData, width, height, output);
+      decodeRGBA8(rawData, width, height, step, output);
       break;
     case "bgra8":
-      decodeBGRA8(rawData, width, height, output);
+      decodeBGRA8(rawData, width, height, step, output);
       break;
     case "bgr8":
     case "8UC3":
-      decodeBGR8(rawData, width, height, output);
+      decodeBGR8(rawData, width, height, step, output);
       break;
     case "32FC1":
-      decodeFloat1c(rawData, width, height, is_bigendian, output);
+      decodeFloat1c(rawData, width, height, step, is_bigendian, output);
       break;
     case "bayer_rggb8":
-      decodeBayerRGGB8(rawData, width, height, output);
+      decodeBayerRGGB8(rawData, width, height, step, output);
       break;
     case "bayer_bggr8":
-      decodeBayerBGGR8(rawData, width, height, output);
+      decodeBayerBGGR8(rawData, width, height, step, output);
       break;
     case "bayer_gbrg8":
-      decodeBayerGBRG8(rawData, width, height, output);
+      decodeBayerGBRG8(rawData, width, height, step, output);
       break;
     case "bayer_grbg8":
-      decodeBayerGRBG8(rawData, width, height, output);
+      decodeBayerGRBG8(rawData, width, height, step, output);
       break;
     case "mono8":
     case "8UC1":
-      decodeMono8(rawData, width, height, output);
+      decodeMono8(rawData, width, height, step, output);
       break;
     case "mono16":
-    case "16UC1":
-      decodeMono16(rawData, width, height, is_bigendian, output, options);
+    case "16UC1": {
+      // combine options with defaults. lodash merge makes sure undefined values in options are replaced with defaults
+      // whereas a normal spread would allow undefined values to overwrite defaults
+      const settings = _.merge({}, IMAGE_DEFAULT_COLOR_MODE_SETTINGS, MIN_MAX_16_BIT, options);
+      if (settings.colorMode === "rgba-fields" || settings.colorMode === "flat") {
+        throw Error(`${settings.colorMode} color mode is not supported for mono16 images`);
+      }
+      const min = settings.minValue;
+      const max = settings.maxValue;
+      const tempColor = { r: 0, g: 0, b: 0, a: 0 };
+      const converter = getColorConverter(
+        settings as ColorModeSettings & {
+          colorMode: typeof settings.colorMode;
+        },
+        min,
+        max,
+      );
+      decodeMono16(rawData, width, height, step, is_bigendian, output, {
+        minValue: options.minValue,
+        maxValue: options.maxValue,
+        colorConverter: (value: number) => {
+          converter(tempColor, value);
+          return tempColor;
+        },
+      });
       break;
+    }
     default:
       throw new Error(`Unsupported encoding ${encoding}`);
   }

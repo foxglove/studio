@@ -30,7 +30,7 @@ import { CoordinateFrame, Duration, makePose, MAX_DURATION, Transform } from "..
 
 export type LayerSettingsTransform = BaseSettings & {
   xyzOffset: Readonly<[number | undefined, number | undefined, number | undefined]>;
-  rpyOffset: Readonly<[number | undefined, number | undefined, number | undefined]>;
+  rpyCoefficient: Readonly<[number | undefined, number | undefined, number | undefined]>;
 };
 
 const PICKING_LINE_SIZE = 6;
@@ -47,7 +47,7 @@ const DEFAULT_SETTINGS: LayerSettingsTransform = {
   visible: true,
   frameLocked: true,
   xyzOffset: [0, 0, 0],
-  rpyOffset: [0, 0, 0],
+  rpyCoefficient: [0, 0, 0],
 };
 
 export type FrameAxisUserData = BaseUserData & {
@@ -84,6 +84,7 @@ const tempEuler = new THREE.Euler();
 const tempTfPath: [string, string] = ["transforms", ""];
 
 export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
+  public static extensionId = "foxglove.FrameAxes";
   #lineMaterial: LineMaterial;
   #linePickingMaterial: THREE.ShaderMaterial;
 
@@ -95,8 +96,9 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   public constructor(
     renderer: IRenderer,
     defaultRenderableSettings: Partial<LayerSettingsTransform>,
+    name: string = FrameAxes.extensionId,
   ) {
-    super("foxglove.FrameAxes", renderer);
+    super(name, renderer);
 
     const linewidth = this.renderer.config.scene.transforms?.lineWidth ?? DEFAULT_LINE_WIDTH_PX;
     const color = stringToRgb(
@@ -418,6 +420,10 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     for (const frameId of this.renderer.transformTree.frames().keys()) {
       this.#addFrameAxis(frameId);
     }
+    const config = this.renderer.config;
+    if (config.scene.transforms?.editable === true) {
+      this.#updateFrameAxes();
+    }
     this.updateSettingsTree();
   };
 
@@ -507,7 +513,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     const frameKey = `frame:${renderable.userData.frameId}`;
     frame.offsetPosition = getOffset(this.renderer.config.transforms[frameKey]?.xyzOffset);
-    frame.offsetEulerDegrees = getOffset(this.renderer.config.transforms[frameKey]?.rpyOffset);
+    frame.offsetEulerDegrees = getOffset(this.renderer.config.transforms[frameKey]?.rpyCoefficient);
   }
 }
 function createLineGeometry(): LineGeometry {
@@ -525,7 +531,9 @@ function buildSettingsFields(
   const parentFrameId = frame?.parent()?.id;
 
   if (parentFrameId == undefined) {
-    return { parent: { label: "Parent", input: "string", readonly: true, value: "<root>" } };
+    return {
+      parent: { label: t("threeDee:parent"), input: "string", readonly: true, value: "<root>" },
+    };
   }
 
   const historySizeValue = String(frame?.transformsSize() ?? 0);
@@ -553,25 +561,25 @@ function buildSettingsFields(
 
   const fields: SettingsTreeFields = {
     parent: {
-      label: "Parent",
+      label: t("threeDee:parent"),
       input: "string",
       readonly: true,
       value: parentFrameId,
     },
     age: {
-      label: "Age",
+      label: t("threeDee:age"),
       input: "string",
       readonly: true,
       value: ageValue,
     },
     historySize: {
-      label: "History Size",
+      label: t("threeDee:historySize"),
       input: "string",
       readonly: true,
       value: historySizeValue,
     },
     xyz: {
-      label: "Translation",
+      label: t("threeDee:translation"),
       input: "vec3",
       precision: PRECISION_DISTANCE,
       labels: ["X", "Y", "Z"],
@@ -579,7 +587,7 @@ function buildSettingsFields(
       value: xyzValue,
     },
     rpy: {
-      label: "Rotation",
+      label: t("threeDee:rotation"),
       input: "vec3",
       precision: PRECISION_DEGREES,
       labels: ["R", "P", "Y"],
@@ -590,32 +598,34 @@ function buildSettingsFields(
 
   if (config.scene.transforms?.editable ?? DEFAULT_EDITABLE) {
     let xyzOffsetValue = config.transforms[frameKey]?.xyzOffset as THREE.Vector3Tuple | undefined;
-    let rpyOffsetValue = config.transforms[frameKey]?.rpyOffset as THREE.Vector3Tuple | undefined;
+    let rpyCoefficient = config.transforms[frameKey]?.rpyCoefficient as
+      | THREE.Vector3Tuple
+      | undefined;
 
     if (xyzOffsetValue && vec3IsZero(xyzOffsetValue)) {
       xyzOffsetValue = undefined;
     }
-    if (rpyOffsetValue && vec3IsZero(rpyOffsetValue)) {
-      rpyOffsetValue = undefined;
+    if (rpyCoefficient && vec3IsZero(rpyCoefficient)) {
+      rpyCoefficient = undefined;
     }
 
     fields.xyzOffset = {
-      label: "Translation Offset",
+      label: t("threeDee:translationOffset"),
       input: "vec3",
       precision: PRECISION_DISTANCE,
       step: 0.1,
       labels: ["X", "Y", "Z"],
       value: xyzOffsetValue,
     };
-    fields.rpyOffset = {
-      label: "Rotation Offset",
+    fields.rpyCoefficient = {
+      label: t("threeDee:rotationOffset"),
       input: "vec3",
       precision: PRECISION_DEGREES,
       step: 1,
       min: -180,
       max: 180,
       labels: ["R", "P", "Y"],
-      value: rpyOffsetValue,
+      value: rpyCoefficient,
     };
   }
 

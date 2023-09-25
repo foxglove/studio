@@ -68,8 +68,6 @@ export type MutablePose = {
   orientation: MutableOrientation;
 };
 
-export type FloatArray = ReadonlyArray<number> | Readonly<Float32Array> | Readonly<Float64Array>;
-
 type Colors = readonly Color[];
 
 // Markers
@@ -215,12 +213,10 @@ export type Marker =
   | CylinderMarker
   | LineStripMarker
   | LineListMarker
-  | CubeListMarker
   | PointsMarker
   | TextMarker
   | MeshMarker
   | TriangleListMarker
-  | MeshMarker
   | InstancedLineListMarker
   | ColorMarker;
 
@@ -235,7 +231,6 @@ export type PointField = Readonly<{
   count: number;
 }>;
 
-// ts-prune-ignore-next
 export type PointCloud2 = StampedMessage & {
   fields: readonly PointField[];
   height: number;
@@ -250,24 +245,6 @@ export type PointCloud2 = StampedMessage & {
   // this is appended by scene builder
   pose?: MutablePose;
 };
-
-export type Image = Readonly<
-  StampedMessage & {
-    height: number;
-    width: number;
-    encoding: string;
-    is_bigendian: boolean;
-    step: number;
-    data: Uint8Array;
-  }
->;
-
-export type CompressedImage = Readonly<
-  StampedMessage & {
-    format: string;
-    data: Uint8Array;
-  }
->;
 
 export type VelodynePacket = Readonly<{
   stamp: Time;
@@ -317,28 +294,4 @@ export type ImageMarker = Readonly<{
 
 export type ImageMarkerArray = Readonly<{
   markers: ImageMarker[];
-}>;
-
-type Roi = Readonly<{
-  x_offset: number;
-  y_offset: number;
-  height: number;
-  width: number;
-  do_rectify: boolean;
-}>;
-
-// Empty string indicates no distortion model
-export type DistortionModel = "plumb_bob" | "rational_polynomial" | "";
-
-export type CameraInfo = Readonly<{
-  width: number;
-  height: number;
-  binning_x: number;
-  binning_y: number;
-  roi: Roi;
-  distortion_model: DistortionModel | string;
-  D: FloatArray;
-  K: FloatArray;
-  P: FloatArray;
-  R: FloatArray;
 }>;

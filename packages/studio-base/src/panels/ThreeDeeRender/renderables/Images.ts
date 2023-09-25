@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { t } from "i18next";
 import { assert } from "ts-essentials";
 
 import { MultiMap, filterMap } from "@foxglove/den/collection";
@@ -11,13 +12,8 @@ import { toNanoSec } from "@foxglove/rostime";
 import { CameraCalibration, CompressedImage, RawImage } from "@foxglove/schemas";
 import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 
-import {
-  CREATE_BITMAP_ERR_KEY,
-  IMAGE_RENDERABLE_DEFAULT_SETTINGS,
-  ImageRenderable,
-} from "./Images/ImageRenderable";
+import { IMAGE_RENDERABLE_DEFAULT_SETTINGS, ImageRenderable } from "./Images/ImageRenderable";
 import { ALL_CAMERA_INFO_SCHEMAS, AnyImage } from "./Images/ImageTypes";
-import { decodeCompressedImageToBitmap } from "./Images/decodeImage";
 import {
   normalizeCompressedImage,
   normalizeRawImage,
@@ -61,6 +57,7 @@ const NO_CAMERA_INFO_ERR = "NoCameraInfo";
 const CAMERA_MODEL = "CameraModel";
 
 export class Images extends SceneExtension<ImageRenderable> {
+  public static extensionId = "foxglove.Images";
   /* All known camera info topics */
   #cameraInfoTopics = new Set<string>();
 
@@ -78,8 +75,8 @@ export class Images extends SceneExtension<ImageRenderable> {
    */
   #cameraInfoByTopic = new Map<string, CameraInfo>();
 
-  public constructor(renderer: IRenderer) {
-    super("foxglove.Images", renderer);
+  public constructor(renderer: IRenderer, name: string = Images.extensionId) {
+    super(name, renderer);
     this.renderer.on("topicsChanged", this.#handleTopicsChanged);
     this.#handleTopicsChanged();
   }
@@ -163,12 +160,32 @@ export class Images extends SceneExtension<ImageRenderable> {
       cameraInfoOptions.sort();
       sortPrefixMatchesToFront(cameraInfoOptions, imageTopic, (option) => option.value);
 
-      // prettier-ignore
       const fields: SettingsTreeFields = {
-        cameraInfoTopic: { label: "Camera Info", input: "select", options: cameraInfoOptions, value: config.cameraInfoTopic },
-        distance: { label: "Distance", input: "number", placeholder: String(IMAGE_RENDERABLE_DEFAULT_SETTINGS.distance), step: 0.1, precision: PRECISION_DISTANCE, value: config.distance },
-        planarProjectionFactor: { label: "Planar Projection Factor", input: "number", placeholder: String(IMAGE_RENDERABLE_DEFAULT_SETTINGS.planarProjectionFactor), min: 0, max: 1, step: 0.1, precision: 2, value: config.planarProjectionFactor },
-        color: { label: "Color", input: "rgba", value: config.color },
+        cameraInfoTopic: {
+          label: t("threeDee:cameraInfo"),
+          input: "select",
+          options: cameraInfoOptions,
+          value: config.cameraInfoTopic,
+        },
+        distance: {
+          label: t("threeDee:distance"),
+          input: "number",
+          placeholder: String(IMAGE_RENDERABLE_DEFAULT_SETTINGS.distance),
+          step: 0.1,
+          precision: PRECISION_DISTANCE,
+          value: config.distance,
+        },
+        planarProjectionFactor: {
+          label: t("threeDee:planarProjectionFactor"),
+          input: "number",
+          placeholder: String(IMAGE_RENDERABLE_DEFAULT_SETTINGS.planarProjectionFactor),
+          min: 0,
+          max: 1,
+          step: 0.1,
+          precision: 2,
+          value: config.planarProjectionFactor,
+        },
+        color: { label: t("threeDee:color"), input: "rgba", value: config.color },
       };
 
       entries.push({
@@ -280,38 +297,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
 
     const renderable = this.#getImageRenderable(imageTopic, receiveTime, image, frameId);
-    renderable.setImage(image);
-
-    const isCompressedImage = "format" in image;
-
-    if (isCompressedImage) {
-      decodeCompressedImageToBitmap(image, DEFAULT_BITMAP_WIDTH)
-        .then((maybeBitmap) => {
-          const prevRenderable = renderable;
-          const currentRenderable = this.renderables.get(imageTopic);
-          if (currentRenderable !== prevRenderable) {
-            return;
-          }
-          this.renderer.settings.errors.removeFromTopic(imageTopic, CREATE_BITMAP_ERR_KEY);
-          if (maybeBitmap instanceof ImageBitmap) {
-            renderable.setBitmap(maybeBitmap);
-          }
-          renderable.update();
-          this.renderer.queueAnimationFrame();
-        })
-        .catch((err) => {
-          const prevRenderable = renderable;
-          const currentRenderable = this.renderables.get(imageTopic);
-          if (currentRenderable !== prevRenderable) {
-            return;
-          }
-          this.renderer.settings.errors.addToTopic(
-            imageTopic,
-            CREATE_BITMAP_ERR_KEY,
-            `Error creating bitmap: ${err.message}`,
-          );
-        });
-    }
+    renderable.setImage(image, DEFAULT_BITMAP_WIDTH);
 
     renderable.userData.receiveTime = receiveTime;
     // Auto-select settings.cameraInfoTopic if it's not already set
@@ -364,11 +350,6 @@ export class Images extends SceneExtension<ImageRenderable> {
       );
     } else {
       this.#recomputeCameraModel(renderable, cameraInfo);
-    }
-
-    // Compressed images handle their own update after loading the bitmap
-    if (!isCompressedImage) {
-      renderable.update();
     }
   };
 

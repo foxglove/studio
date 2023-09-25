@@ -4,7 +4,7 @@
 
 import { StoryFn, StoryContext, StoryObj } from "@storybook/react";
 import { userEvent } from "@storybook/testing-library";
-import { cloneDeep, tap } from "lodash";
+import * as _ from "lodash-es";
 import { useState } from "react";
 import { useTimeoutFn } from "react-use";
 
@@ -27,12 +27,20 @@ const EMPTY_MESSAGE: NavSatFixMsg = {
   position_covariance: [1, 0, 0, 0, 1, 0, 0, 0, 1],
   position_covariance_type: NavSatFixPositionCovarianceType.COVARIANCE_TYPE_UNKNOWN,
 };
-const OFFSET_MESSAGE = tap(cloneDeep(EMPTY_MESSAGE), (message) => {
+const OFFSET_MESSAGE = _.tap(_.cloneDeep(EMPTY_MESSAGE), (message) => {
   message.latitude += 0.1;
   message.longitude += 0.1;
 });
 
-function makeGeoJsonMessage(center: { lat: number; lon: number }) {
+function makeGeoJsonMessage({
+  center,
+  key,
+  polyStyle = {},
+}: {
+  center: { lat: number; lon: number };
+  key: string;
+  polyStyle?: Record<string, unknown>;
+}) {
   return {
     type: "FeatureCollection",
     features: [
@@ -46,12 +54,19 @@ function makeGeoJsonMessage(center: { lat: number; lon: number }) {
             [0.1 + center.lon, 0.1 + center.lat],
           ],
         },
+        properties: {
+          name: `Named Line ${key}`,
+          style: {
+            color: "#ff0000",
+            dashArray: "4 4",
+            lineCap: "butt",
+            opacity: "1",
+            weight: 4,
+          },
+        },
       },
       {
         type: "Feature",
-        properties: {
-          name: "Named Polygon",
-        },
         geometry: {
           type: "Polygon",
           coordinates: [
@@ -62,11 +77,15 @@ function makeGeoJsonMessage(center: { lat: number; lon: number }) {
             ],
           ],
         },
+        properties: {
+          name: `Named Polygon ${key}`,
+          style: polyStyle,
+        },
       },
       {
         type: "Feature",
         properties: {
-          name: "Named Point",
+          name: `Named Point ${key}`,
           "marker-color": "#7f7e7e",
           "marker-size": "medium",
           "marker-symbol": "1",
@@ -159,6 +178,44 @@ export const SinglePointWithMissingValues: StoryObj = {
                 ...EMPTY_MESSAGE,
                 latitude: undefined,
                 longitude: undefined,
+              },
+            },
+          ],
+        },
+      } as Fixture,
+    },
+  },
+};
+
+export const SinglePointWithInvalidData: StoryObj = {
+  render: function Story() {
+    return <MapPanel />;
+  },
+
+  decorators: [Wrapper],
+
+  parameters: {
+    chromatic: {
+      delay: 1000,
+    },
+    panelSetup: {
+      fixture: {
+        topics: [{ name: "/gps", schemaName: "sensor_msgs/NavSatFix" }],
+        frame: {
+          "/gps": [
+            {
+              topic: "/gps",
+              schemaName: "sensor_msgs/NavSatFix",
+              sizeInBytes: 0,
+              receiveTime: { sec: 123, nsec: 456 },
+              message: {
+                latitude: NaN,
+                longitude: NaN,
+                altitude: 0,
+                status: {
+                  status: NavSatFixStatus.STATUS_NO_FIX,
+                  service: NavSatFixService.SERVICE_GPS,
+                },
               },
             },
           ],
@@ -273,50 +330,15 @@ export const MultipleTopics: StoryObj = {
   },
 };
 
-export const SinglePointNoFix: StoryObj = {
-  render: function Story() {
-    return <MapPanel />;
-  },
-
-  decorators: [Wrapper],
-
-  parameters: {
-    chromatic: {
-      delay: 1000,
-    },
-    decorators: [Wrapper],
-    panelSetup: {
-      fixture: {
-        topics: [{ name: "/gps", schemaName: "sensor_msgs/NavSatFix" }],
-        frame: {
-          "/gps": [
-            {
-              topic: "/gps",
-              schemaName: "sensor_msgs/NavSatFix",
-              sizeInBytes: 0,
-              receiveTime: { sec: 123, nsec: 456 },
-              message: {
-                latitude: 0,
-                longitude: 0,
-                altitude: 0,
-                status: {
-                  status: NavSatFixStatus.STATUS_NO_FIX,
-                  service: NavSatFixService.SERVICE_GPS,
-                },
-                position_covariance: [1, 0, 0, 0, 1, 0, 0, 0, 1],
-                position_covariance_type: NavSatFixPositionCovarianceType.COVARIANCE_TYPE_UNKNOWN,
-              },
-            },
-          ],
-        },
-      } as Fixture,
-    },
-  },
-};
-
 export const SinglePointDiagonalCovariance: StoryObj = {
   render: function Story() {
-    return <MapPanel />;
+    return (
+      <MapPanel
+        overrideConfig={{
+          zoomLevel: 12,
+        }}
+      />
+    );
   },
 
   decorators: [Wrapper],
@@ -358,7 +380,13 @@ export const SinglePointDiagonalCovariance: StoryObj = {
 
 export const SinglePointFullCovariance: StoryObj = {
   render: function Story() {
-    return <MapPanel />;
+    return (
+      <MapPanel
+        overrideConfig={{
+          zoomLevel: 21,
+        }}
+      />
+    );
   },
 
   decorators: [Wrapper],
@@ -386,7 +414,7 @@ export const SinglePointFullCovariance: StoryObj = {
                   status: NavSatFixStatus.STATUS_GBAS_FIX,
                   service: NavSatFixService.SERVICE_GPS,
                 },
-                position_covariance: [1, 2, 3, 2, 5000000, 6, 3, 6, 1000000000],
+                position_covariance: [5, -4, 0, -4, 6, 0, 0, 0, 1],
                 position_covariance_type: NavSatFixPositionCovarianceType.COVARIANCE_TYPE_KNOWN,
               },
             },
@@ -402,8 +430,8 @@ const GeoCenter = { lat: 0.25, lon: 0.25 };
 export const GeoJSON: StoryObj = {
   render: function Story() {
     const topics: Topic[] = [
-      { name: "/geo", schemaName: "foxglove.GeoJSON" },
-      { name: "/geo2", schemaName: "foxglove.GeoJSON" },
+      { name: "/geojson_with_update", schemaName: "foxglove.GeoJSON" },
+      { name: "/geojson", schemaName: "foxglove.GeoJSON" },
       { name: "/gps", schemaName: "sensor_msgs/NavSatFix" },
     ];
 
@@ -419,27 +447,39 @@ export const GeoJSON: StoryObj = {
             sizeInBytes: 10,
           },
         ],
-        "/geo": [
+        "/geojson_with_update": [
           {
-            topic: "/geo",
+            topic: "/geojson_with_update",
             receiveTime: { sec: 123, nsec: 0 },
             schemaName: "foxglove.GeoJSON",
             message: {
               geojson: JSON.stringify(
-                makeGeoJsonMessage({ lat: GeoCenter.lat - 0.2, lon: GeoCenter.lon - 0.2 }),
+                makeGeoJsonMessage({
+                  center: { lat: GeoCenter.lat - 0.2, lon: GeoCenter.lon - 0.2 },
+                  key: "/geo",
+                }),
               ),
             },
             sizeInBytes: 10,
           },
         ],
-        "/geo2": [
+        "/geojson": [
           {
-            topic: "/geo2",
+            topic: "/geojson",
             receiveTime: { sec: 123, nsec: 0 },
             schemaName: "foxglove.GeoJSON",
             message: {
               geojson: JSON.stringify(
-                makeGeoJsonMessage({ lat: GeoCenter.lat - 0.1, lon: GeoCenter.lon - 0.1 }),
+                makeGeoJsonMessage({
+                  center: { lat: GeoCenter.lat - 0.1, lon: GeoCenter.lon - 0.1 },
+                  key: "/geo2",
+                  polyStyle: {
+                    color: "#ff00ff",
+                    fillColor: "#ffff00",
+                    opacity: "0.8",
+                    weight: 4,
+                  },
+                }),
               ),
             },
             sizeInBytes: 10,
@@ -454,14 +494,17 @@ export const GeoJSON: StoryObj = {
       setFixture({
         topics,
         frame: {
-          "/geo": [
+          "/geojson_with_update": [
             {
-              topic: "/geo",
+              topic: "/geojson_with_update",
               receiveTime: { sec: 130, nsec: 0 },
               schemaName: "foxglove.GeoJSON",
               message: {
                 geojson: JSON.stringify(
-                  makeGeoJsonMessage({ lat: GeoCenter.lat + 0.2, lon: GeoCenter.lon + 0.1 }),
+                  makeGeoJsonMessage({
+                    center: { lat: GeoCenter.lat + 0.2, lon: GeoCenter.lon + 0.1 },
+                    key: "/geo",
+                  }),
                 ),
               },
               sizeInBytes: 10,
@@ -475,7 +518,7 @@ export const GeoJSON: StoryObj = {
       <PanelSetup fixture={fixture} includeSettings>
         <MapPanel
           overrideConfig={{
-            topicColors: { "/geo": "#00ffaa", "/geo2": "#aa00ff" },
+            topicColors: { "/geojson_with_update": "#00ffaa" },
             center: GeoCenter,
           }}
         />
@@ -493,7 +536,7 @@ export const GeoJSON: StoryObj = {
   play: async () => {
     const followSelect = document.querySelectorAll("div[role=button][aria-haspopup=listbox]")[1];
     if (followSelect) {
-      userEvent.click(followSelect);
+      await userEvent.click(followSelect);
     }
   },
 };

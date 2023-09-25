@@ -20,12 +20,12 @@ export enum AppSetting {
 
   // Experimental features
   SHOW_DEBUG_PANELS = "showDebugPanels",
-  ENABLE_NEW_TOPNAV = "enableNewTopNav",
 
   // Miscellaneous
   HIDE_SIGN_IN_PROMPT = "hideSignInPrompt",
   LAUNCH_PREFERENCE = "launchPreference",
   SHOW_OPEN_DIALOG_ON_STARTUP = "ui.open-dialog-startup",
+  ENABLE_NEW_APP_MENU = "ui.new-app-menu",
 
   // Dev only
   ENABLE_LAYOUT_DEBUGGING = "enableLayoutDebugging",

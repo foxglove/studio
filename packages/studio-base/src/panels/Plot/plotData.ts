@@ -2,197 +2,326 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { assignWith, last, isEmpty, first } from "lodash";
-import memoizeWeak from "memoize-weak";
+import * as _ from "lodash-es";
+import * as R from "ramda";
 
-import { filterMap } from "@foxglove/den/collection";
-import { Time, isLessThan, isGreaterThan, compare as compareTimes } from "@foxglove/rostime";
+import { Time } from "@foxglove/rostime";
 import { Immutable as Im } from "@foxglove/studio";
-import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
-import { MessageDataItemsByPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import { PlotDataByPath, PlotDataItem } from "@foxglove/studio-base/panels/Plot/internalTypes";
+import { iterateTyped, getTypedLength } from "@foxglove/studio-base/components/Chart/datasets";
+import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import { getMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { getTypedBounds } from "@foxglove/studio-base/components/TimeBasedChart/useProvider";
+import {
+  getDatasetsFromMessagePlotPath,
+  concatTyped,
+  mergeTyped,
+} from "@foxglove/studio-base/panels/Plot/datasets";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { Bounds, makeInvertedBounds, unionBounds } from "@foxglove/studio-base/types/Bounds";
+import { Range } from "@foxglove/studio-base/util/ranges";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
-const MAX_TIME = Object.freeze({ sec: Infinity, nsec: Infinity });
-const MIN_TIME = Object.freeze({ sec: -Infinity, nsec: -Infinity });
+import { resolveTypedIndices, derivative } from "./datasets";
+import {
+  DatasetsByPath,
+  PlotDataItem,
+  BasePlotPath,
+  PlotPath,
+  PlotXAxisVal,
+  isReferenceLinePlotPathType,
+  MetadataEnums,
+  TypedData,
+  TypedDataSet,
+} from "./internalTypes";
+import * as maps from "./maps";
 
-function minTime(a: Time, b: Time): Time {
-  return isLessThan(a, b) ? a : b;
-}
+/**
+ * Plot data bundles datasets with precomputed bounds and paths with mismatched data
+ * paths. It's used to contain data from blocks and currentFrame segments and eventually
+ * is merged into a single object and passed to the chart components.
+ */
+export type PlotData = {
+  bounds: Bounds;
+  datasets: DatasetsByPath;
+  pathsWithMismatchedDataLengths: string[];
+};
 
-function maxTime(a: Time, b: Time): Time {
-  return isLessThan(a, b) ? b : a;
-}
+export type StateHandler = (state: Im<PlotData> | undefined) => void;
 
-type TimeRange = { start: Time; end: Time };
+export const EmptyData: TypedData = Object.freeze({
+  receiveTime: [],
+  value: [],
+  x: new Float32Array(0),
+  y: new Float32Array(0),
+});
+
+export const EmptyPlotData: PlotData = Object.freeze({
+  bounds: makeInvertedBounds(),
+  datasets: new Map(),
+  pathsWithMismatchedDataLengths: [],
+});
 
 /**
  * Find the earliest and latest times of messages in data, for all messages and per-path.
  * Assumes invidual ranges of messages are already sorted by receiveTime.
  */
-export function findTimeRanges(data: Im<PlotDataByPath>): {
-  all: TimeRange;
-  byPath: Record<string, TimeRange>;
+function findXRanges(data: Im<PlotData>): {
+  all: Range;
+  byPath: Record<string, Range>;
 } {
-  const byPath: Record<string, TimeRange> = {};
-  let start: Time = MAX_TIME;
-  let end: Time = MIN_TIME;
-  for (const path of Object.keys(data)) {
-    const thisPath = (byPath[path] = { start: MAX_TIME, end: MIN_TIME });
-    for (const item of data[path] ?? []) {
-      thisPath.start = minTime(thisPath.start, first(item)?.receiveTime ?? MAX_TIME);
-      thisPath.end = maxTime(thisPath.end, last(item)?.receiveTime ?? MIN_TIME);
-      start = minTime(start, thisPath.start);
-      end = maxTime(end, thisPath.end);
-    }
+  const byPath: Record<string, Range> = {};
+  let start = Number.MAX_SAFE_INTEGER;
+  let end = Number.MIN_SAFE_INTEGER;
+  for (const [path, dataset] of data.datasets) {
+    const thisPath = (byPath[path.value] = {
+      start: Number.MAX_SAFE_INTEGER,
+      end: Number.MIN_SAFE_INTEGER,
+    });
+    const { data: subData } = dataset;
+    const resolved = resolveTypedIndices(subData as TypedData[], [
+      0,
+      getTypedLength(subData as TypedData[]) - 1,
+    ])?.[0];
+
+    thisPath.start = Math.min(thisPath.start, resolved?.x[0] ?? Number.MAX_SAFE_INTEGER);
+    thisPath.end = Math.max(
+      thisPath.end,
+      resolved?.x[resolved.x.length - 1] ?? Number.MIN_SAFE_INTEGER,
+    );
+    start = Math.min(start, thisPath.start);
+    end = Math.max(end, thisPath.end);
   }
 
   return { all: { start, end }, byPath };
 }
 
-/**
- * Fetch the data we need from each item in itemsByPath and discard the rest of
- * the message to save memory.
- */
-const getByPath = (itemsByPath: MessageDataItemsByPath): PlotDataByPath => {
-  const ret: PlotDataByPath = {};
-  Object.entries(itemsByPath).forEach(([path, items]) => {
-    ret[path] = [
-      items.map((messageAndData) => {
-        const headerStamp = getTimestampForMessage(messageAndData.messageEvent.message);
-        return {
-          queriedData: messageAndData.queriedData,
-          receiveTime: messageAndData.messageEvent.receiveTime,
-          headerStamp,
-        };
-      }),
-    ];
-  });
-  return ret;
-};
-
-const getMessagePathItemsForBlock = memoizeWeak(
-  (
-    decodeMessagePathsForMessagesByTopic: (_: MessageBlock) => MessageDataItemsByPath,
-    block: MessageBlock,
-  ): PlotDataByPath => {
-    return Object.freeze(getByPath(decodeMessagePathsForMessagesByTopic(block)));
-  },
-);
-
-/**
- * Fetch all the plot data we want for our current subscribed topics from blocks.
- */
-export function getBlockItemsByPath(
-  decodeMessagePathsForMessagesByTopic: (_: MessageBlock) => MessageDataItemsByPath,
-  blocks: readonly MessageBlock[],
-): PlotDataByPath {
-  const ret: PlotDataByPath = {};
-  const lastBlockIndexForPath: Record<string, number> = {};
-  let count = 0;
-  let i = 0;
-  for (const block of blocks) {
-    const messagePathItemsForBlock: PlotDataByPath = getMessagePathItemsForBlock(
-      decodeMessagePathsForMessagesByTopic,
-      block,
-    );
-
-    // After 1 million data points we check if there is more memory to continue loading more
-    // data points. This helps prevent runaway memory use if the user tried to plot a binary topic.
-    //
-    // An example would be to try plotting `/map.data[:]` where map is an occupancy grid
-    // this can easily result in many millions of points.
-    if (count >= 1_000_000) {
-      // if we have memory stats we can let the user have more points as long as memory is not under pressure
-      // foxglove-depcheck-used: @types/foxglove__web
-      if (performance.memory) {
-        const pct = performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit;
-        if (isNaN(pct) || pct > 0.6) {
-          return ret;
-        }
-      } else {
-        return ret;
-      }
-    }
-
-    for (const [path, messagePathItems] of Object.entries(messagePathItemsForBlock)) {
-      const existingItems = ret[path] ?? [];
-      // getMessagePathItemsForBlock returns an array of exactly one range of items.
-      const [pathItems] = messagePathItems;
-      if (lastBlockIndexForPath[path] === i - 1) {
-        // If we are continuing directly from the previous block index (i - 1) then add to the
-        // existing range, otherwise start a new range
-        const currentRange = existingItems[existingItems.length - 1];
-        if (currentRange && pathItems) {
-          for (const item of pathItems) {
-            currentRange.push(item);
-          }
-        }
-      } else {
-        if (pathItems) {
-          // Start a new contiguous range. Make a copy so we can extend it.
-          existingItems.push(pathItems.slice());
-        }
-      }
-      count += pathItems?.length ?? 0;
-      ret[path] = existingItems;
-      lastBlockIndexForPath[path] = i;
-    }
-
-    i += 1;
+export function mapDatasets(
+  map: (dataset: TypedDataSet, path: PlotPath) => TypedDataSet,
+  datasets: DatasetsByPath,
+): DatasetsByPath {
+  const result: DatasetsByPath = new Map();
+  for (const [path, dataset] of datasets.entries()) {
+    result.set(path, map(dataset, path));
   }
 
-  return ret;
+  return result;
 }
 
 /**
- * Merge two PlotDataByPath objects into a single PlotDataByPath object,
- * discarding any overlapping messages between the two items.
+ * Appends new PlotData to existing PlotData. Assumes there are no time overlaps between
+ * the two items.
  */
-function mergeByPath(a: Im<PlotDataByPath>, b: Im<PlotDataByPath>): Im<PlotDataByPath> {
-  return assignWith(
-    {},
-    a,
-    b,
-    (objValue: undefined | PlotDataItem[][], srcValue: undefined | PlotDataItem[][]) => {
-      if (objValue == undefined) {
-        return srcValue;
-      }
-      const lastTime = last(last(objValue))?.receiveTime ?? MIN_TIME;
-      const newValues = filterMap(srcValue ?? [], (item) => {
-        const laterDatums = item.filter((datum) => isGreaterThan(datum.receiveTime, lastTime));
-        return laterDatums.length > 0 ? laterDatums : undefined;
-      });
-      return newValues.length > 0 ? objValue.concat(newValues) : objValue;
-    },
-  );
-}
+export function appendPlotData(a: PlotData, b: PlotData): PlotData {
+  if (a === EmptyPlotData) {
+    return b;
+  }
 
-const memoFindTimeRanges = memoizeWeak(findTimeRanges);
+  if (b === EmptyPlotData) {
+    return a;
+  }
 
-// Sort by start time, then end time, so that folding from the left gives us the
-// right consolidated interval.
-function compare(a: Im<PlotDataByPath>, b: Im<PlotDataByPath>): number {
-  const rangeA = memoFindTimeRanges(a).all;
-  const rangeB = memoFindTimeRanges(b).all;
-  const startCompare = compareTimes(rangeA.start, rangeB.start);
-  return startCompare !== 0 ? startCompare : compareTimes(rangeA.end, rangeB.end);
+  return {
+    ...a,
+    bounds: unionBounds(a.bounds, b.bounds),
+    datasets: maps.merge(a.datasets, b.datasets, (aVal, bVal) => {
+      return {
+        ...aVal,
+        data: concatTyped(aVal.data, bVal.data),
+      };
+    }),
+  };
 }
 
 /**
- * Reduce multiple PlotDataByPath objects into a single PlotDataByPath object,
- * concatenating messages for each path after trimming messages that overlap
- * between items.
+ * Merge two PlotData objects into a single PlotData object, discarding any
+ * overlapping messages between the two items. Assumes they represent
+ * non-contiguous segments of a chart.
  */
-export function combine(data: Im<PlotDataByPath[]>): Im<PlotDataByPath> {
+function mergePlotData(a: PlotData, b: PlotData): PlotData {
+  if (a === EmptyPlotData) {
+    return b;
+  }
+
+  if (b === EmptyPlotData) {
+    return a;
+  }
+
+  return {
+    ...a,
+    bounds: unionBounds(a.bounds, b.bounds),
+    datasets: maps.merge(a.datasets, b.datasets, (aSet, bSet) => ({
+      ...aSet,
+      data: mergeTyped(aSet.data, bSet.data),
+    })),
+  };
+}
+
+/**
+ * Sort by start time, then end time, so that folding from the left gives us
+ * the right consolidated interval.
+ */
+function compare(a: Im<PlotData>, b: Im<PlotData>): number {
+  const rangeA = findXRanges(a).all;
+  const rangeB = findXRanges(b).all;
+  const startCompare = rangeA.start - rangeB.start;
+  return startCompare !== 0 ? startCompare : rangeA.end - rangeB.end;
+}
+
+/**
+ * Reduce multiple PlotData objects into a single PlotData object, concatenating messages
+ * for each path after trimming messages that overlap between items.
+ */
+export function reducePlotData(data: PlotData[]): PlotData {
   const sorted = data.slice().sort(compare);
 
   const reduced = sorted.reduce((acc, item) => {
-    if (isEmpty(acc)) {
+    if (_.isEmpty(acc)) {
       return item;
     }
-    return mergeByPath(acc, item);
-  }, {} as PlotDataByPath);
+    return mergePlotData(acc, item);
+  }, EmptyPlotData);
 
   return reduced;
 }
+
+type PathData = [PlotPath, PlotDataItem[] | undefined];
+export function buildPlotData(
+  args: Im<{
+    invertedTheme?: boolean;
+    paths: PathData[];
+    startTime: Time;
+    xAxisPath?: BasePlotPath;
+    xAxisData: PlotDataItem[] | undefined;
+    xAxisVal: PlotXAxisVal;
+  }>,
+): PlotData {
+  const { paths, startTime, xAxisVal, xAxisPath, xAxisData, invertedTheme } = args;
+  const bounds: Bounds = makeInvertedBounds();
+  const pathsWithMismatchedDataLengths: string[] = [];
+  const datasets: DatasetsByPath = new Map();
+  for (const [index, [path, data]] of paths.entries()) {
+    const xRanges = xAxisData;
+    const yRanges = data ?? [];
+    if (!path.enabled) {
+      continue;
+    } else if (!isReferenceLinePlotPathType(path)) {
+      const res = getDatasetsFromMessagePlotPath({
+        path,
+        yAxisRanges: yRanges,
+        index,
+        startTime,
+        xAxisVal,
+        xAxisRanges: xRanges,
+        xAxisPath,
+        invertedTheme,
+      });
+
+      if (res.hasMismatchedData) {
+        pathsWithMismatchedDataLengths.push(path.value);
+      }
+
+      const pathBounds = getTypedBounds([res.dataset]);
+      if (pathBounds == undefined) {
+        continue;
+      }
+
+      bounds.x.min = Math.min(bounds.x.min, pathBounds.x.min);
+      bounds.x.max = Math.max(bounds.x.max, pathBounds.x.max);
+      bounds.y.min = Math.min(bounds.y.min, pathBounds.y.min);
+      bounds.y.max = Math.max(bounds.y.max, pathBounds.y.max);
+
+      datasets.set(path, res.dataset);
+    }
+  }
+
+  return {
+    bounds,
+    datasets,
+    pathsWithMismatchedDataLengths,
+  };
+}
+
+export function resolvePath(
+  metadata: MetadataEnums,
+  messages: readonly MessageEvent[],
+  path: RosPath,
+): PlotDataItem[] {
+  const { structures, enumValues } = metadata;
+  const topics = R.indexBy((topic) => topic.name, metadata.topics);
+
+  return R.chain((message: MessageEvent): PlotDataItem[] => {
+    const items = getMessagePathDataItems(message, path, topics, structures, enumValues);
+    if (items == undefined) {
+      return [];
+    }
+
+    return [
+      {
+        queriedData: items,
+        receiveTime: message.receiveTime,
+        headerStamp: getTimestampForMessage(message.message),
+      },
+    ];
+  }, messages);
+}
+
+const createPlotMapping =
+  (map: (dataset: TypedDataSet, path: PlotPath) => TypedDataSet) =>
+  (data: PlotData): PlotData => ({
+    ...data,
+    datasets: mapDatasets(map, data.datasets),
+  });
+
+/**
+ * Applies the @derivative modifier to the dataset. This has to be done on the complete
+ * dataset, not calculated incrementally.
+ */
+export const applyDerivativeToPlotData = createPlotMapping((dataset, path) => {
+  if (!path.value.endsWith(".@derivative")) {
+    return dataset;
+  }
+
+  return {
+    ...dataset,
+    data: derivative(dataset.data),
+  };
+});
+
+/**
+ * Sorts datsets by header stamp, which at this point in the processing chain is the x value of each point.
+ * This has to be done on the complete dataset, not point by point.
+ *
+ * Messages are provided in receive time order but header stamps might be out of order
+ * This would create zig-zag lines connecting the wrong points. Sorting the header stamp values (x)
+ * results in the datums being in the correct order for connected lines.
+ *
+ * An example is when messages at the same receive time have different header stamps. The receive
+ * time ordering is undefined (could be different for different data sources), but the header stamps
+ * still need sorting so the plot renders correctly.
+ */
+export const sortPlotDataByHeaderStamp = createPlotMapping((dataset: TypedDataSet, path) => {
+  if (path.timestampMethod !== "headerStamp") {
+    return dataset;
+  }
+
+  const indices: [index: number, timestamp: number][] = [];
+  for (const datum of iterateTyped(dataset.data)) {
+    indices.push([datum.index, datum.x]);
+  }
+
+  indices.sort(([, ax], [, bx]) => ax - bx);
+
+  const resolved = resolveTypedIndices(
+    dataset.data,
+    indices.map(([index]) => index),
+  );
+
+  if (resolved == undefined) {
+    return dataset;
+  }
+
+  return {
+    ...dataset,
+    data: resolved,
+  };
+});

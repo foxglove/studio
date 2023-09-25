@@ -15,6 +15,7 @@ import { MessageDefinition } from "@foxglove/message-definition";
 import { Time } from "@foxglove/rostime";
 import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { Immutable } from "@foxglove/studio";
+import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { Range } from "@foxglove/studio-base/util/ranges";
@@ -26,9 +27,12 @@ export type { MessageEvent };
 export type MessageDefinitionsByTopic = {
   [topic: string]: string;
 };
+
 export type ParsedMessageDefinitionsByTopic = {
   [topic: string]: MessageDefinition[];
 };
+
+export type TopicSelection = Map<string, SubscribePayload>;
 
 // A `Player` is a class that manages playback state. It manages subscriptions,
 // current time, which topics and datatypes are available, and so on.
@@ -55,10 +59,12 @@ export interface Player {
   // If the player support service calls (i.e. PlayerState#capabilities contains PlayerCapabilities.callServices)
   // this will make a service call to the named service with the request payload.
   callService(service: string, request: unknown): Promise<unknown>;
+  // Asset fetching. Available if `capabilities` contains PlayerCapabilities.assets.
+  fetchAsset?(uri: string): Promise<Asset>;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
   startPlayback?(): void;
   pausePlayback?(): void;
-  seekPlayback?(time: Time, backfillDuration?: Time): void;
+  seekPlayback?(time: Time): void;
   playUntil?(time: Time): void;
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
@@ -194,13 +200,6 @@ export type PlayerStateActiveData = {
   // A map of parameter names to parameter values, used to describe remote parameters such as
   // rosparams.
   parameters?: Map<string, ParameterValue>;
-
-  /** Set to true when `messages` has been recomputed without seek, backfill or playback.
-   * For example: when global variables changes, user-scripts needs to be rerun to recompute
-   * messages. This variable would be set to true to indicate that `messages` may have changed
-   * without a seek or backfill occurring.
-   */
-  messagesRecomputed?: boolean;
 };
 
 // Represents a ROS topic, though the actual data does not need to come from a ROS system.
@@ -211,6 +210,8 @@ export type Topic = {
   name: string;
   // Name of the datatype (see `type PlayerStateActiveData` for details).
   schemaName: string | undefined;
+  // Name of the topic before topic aliasing, if any.
+  aliasedFromName?: string;
 };
 
 export type TopicWithSchemaName = Topic & { schemaName: string };
@@ -254,6 +255,11 @@ export type MessageBlock = {
   readonly messagesByTopic: {
     readonly [topic: string]: MessageEvent[];
   };
+  /**
+   * Indicates which topics are yet to be fully loaded for this block. Can be used to track the
+   * progress of block loading. For a fully loaded block this will be empty or undefined.
+   */
+  needTopics?: TopicSelection;
   readonly sizeInBytes: number;
 };
 
@@ -276,10 +282,22 @@ export type SubscriptionPreloadType =
   | "full" // Fetch messages for the entire content range.
   | "partial"; // Fetch messages as needed.
 
-// Represents a subscription to a single topic, for use in `setSubscriptions`.
+/**
+ * Represents a subscription to a single topic, for use in `setSubscriptions`.
+ */
 export type SubscribePayload = {
-  // The topic name to subscribe to
+  /**
+   * The name of the topic to subscribe to.
+   */
   topic: string;
+  /**
+   * If defined the source will return only these fields from messages.
+   * Otherwise entire messages will be returned.
+   */
+  fields?: string[];
+  /**
+   * Defines the range of messages to subscribe to.
+   */
   preloadType?: SubscriptionPreloadType;
 };
 
@@ -302,6 +320,9 @@ export type PublishPayload = { topic: string; msg: Record<string, unknown> };
 export const PlayerCapabilities = {
   // Publishing messages. Need to be connected to some sort of live robotics system (e.g. ROS).
   advertise: "advertise",
+
+  // Fetching assets.
+  assets: "assets",
 
   // Calling services
   callServices: "callServices",

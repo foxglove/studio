@@ -17,7 +17,7 @@ import { useCallback, useState, PropsWithChildren } from "react";
 
 import clipboard from "@foxglove/studio-base/util/clipboard";
 
-export default function CopyButton(
+function CopyButtonComponent(
   props: PropsWithChildren<{
     getText: () => string;
     size?: "small" | "medium" | "large";
@@ -43,9 +43,13 @@ export default function CopyButton(
       .copy(getText())
       .then(() => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
+        setTimeout(() => {
+          setCopied(false);
+        }, 1500);
       })
-      .catch((err) => console.warn(err));
+      .catch((err) => {
+        console.warn(err);
+      });
   }, [getText]);
 
   if (children == undefined) {
@@ -84,3 +88,5 @@ export default function CopyButton(
     </Button>
   );
 }
+
+export default React.memo(CopyButtonComponent);

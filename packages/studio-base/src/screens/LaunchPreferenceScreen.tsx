@@ -39,27 +39,20 @@ export function LaunchPreferenceScreen(): ReactElement {
   const [globalPreference, setGlobalPreference] = useAppConfigurationValue<string | undefined>(
     AppSetting.LAUNCH_PREFERENCE,
   );
-  const [_, setSessionPreference] = useSessionStorageValue(AppSetting.LAUNCH_PREFERENCE);
+  const [, setSessionPreference] = useSessionStorageValue(AppSetting.LAUNCH_PREFERENCE);
   const [rememberPreference, setRememberPreference] = useState(globalPreference != undefined);
 
   async function launchInWeb() {
     setSessionPreference(LaunchPreferenceValue.WEB); // always set session preference to allow overriding the URL param
-    if (rememberPreference) {
-      await setGlobalPreference(LaunchPreferenceValue.WEB);
-    }
+    await setGlobalPreference(rememberPreference ? LaunchPreferenceValue.WEB : undefined);
   }
 
   async function launchInDesktop() {
     setSessionPreference(LaunchPreferenceValue.DESKTOP); // always set session preference to allow overriding the URL param
-    if (rememberPreference) {
-      await setGlobalPreference(LaunchPreferenceValue.DESKTOP);
-    }
+    await setGlobalPreference(rememberPreference ? LaunchPreferenceValue.DESKTOP : undefined);
   }
 
-  async function toggleRememberPreference() {
-    if (rememberPreference) {
-      await setGlobalPreference(undefined);
-    }
+  function toggleRememberPreference() {
     setRememberPreference(!rememberPreference);
   }
 

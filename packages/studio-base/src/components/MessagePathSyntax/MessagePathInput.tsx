@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
-import { flatten, flatMap, partition } from "lodash";
+import * as _ from "lodash-es";
 import { CSSProperties, useCallback, useMemo } from "react";
 
 import { MessageDefinitionField } from "@foxglove/message-definition";
@@ -24,13 +24,12 @@ import useGlobalVariables, {
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 
 import { RosPath, RosPrimitive } from "./constants";
 import {
   traverseStructure,
   messagePathStructures,
-  messagePathsForDatatype,
+  messagePathsForStructure,
   validTerminatingStructureItem,
   StructureTraversalResult,
 } from "./messagePathsForDatatype";
@@ -124,7 +123,7 @@ export function getFirstInvalidVariableFromRosPath(
 ): { variableName: string; loc: number } | undefined {
   const { messagePath } = rosPath;
   const globalVars = Object.keys(globalVariables);
-  return flatMap(messagePath, (path) => {
+  return _.flatMap(messagePath, (path) => {
     const messagePathParts = [];
     if (
       path.type === "filter" &&
@@ -205,7 +204,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
 
   const onChangeProp = props.onChange;
   const onChange = useCallback(
-    (event: React.SyntheticEvent<Element>, rawValue: string) => {
+    (event: React.SyntheticEvent, rawValue: string) => {
       // When typing a "{" character, also  insert a "}", so you get an
       // autocomplete window immediately for selecting a filter name.
       let value = rawValue;
@@ -213,7 +212,9 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         const target = event.target as HTMLInputElement;
         const newCursorPosition = target.selectionEnd ?? 0;
         value = `${value.slice(0, newCursorPosition)}}${value.slice(newCursorPosition)}`;
-        setImmediate(() => target.setSelectionRange(newCursorPosition, newCursorPosition));
+        setImmediate(() => {
+          target.setSelectionRange(newCursorPosition, newCursorPosition);
+        });
       }
       onChangeProp(value, props.index);
     },
@@ -250,7 +251,9 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       // have just autocompleted a name inside that filter).
       if (keepGoingAfterTopicName || value.includes("{") || path.includes("{")) {
         const newCursorPosition = autocompleteRange.start + value.length;
-        setImmediate(() => autocomplete.setSelectionRange(newCursorPosition, newCursorPosition));
+        setImmediate(() => {
+          autocomplete.setSelectionRange(newCursorPosition, newCursorPosition);
+        });
       } else {
         autocomplete.blur();
       }
@@ -333,6 +336,8 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     return undefined;
   }, [invalidGlobalVariablesVariable, structureTraversalResult, validTypes, rosPath, topic]);
 
+  const structures = useMemo(() => messagePathStructures(datatypes), [datatypes]);
+
   const { autocompleteItems, autocompleteFilterText, autocompleteRange } = useMemo(() => {
     if (disableAutocomplete) {
       return {
@@ -386,11 +391,13 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         const initialFilterLength =
           rosPath.messagePath[0]?.type === "filter" ? rosPath.messagePath[0].repr.length + 2 : 0;
 
+        const structure = topic.schemaName != undefined ? structures[topic.schemaName] : undefined;
+
         return {
           autocompleteItems:
-            topic.schemaName == undefined
+            structure == undefined
               ? []
-              : messagePathsForDatatype(topic.schemaName, datatypes, {
+              : messagePathsForStructure(structure, {
                   validTypes,
                   noMultiSlices,
                   messagePath: rosPath.messagePath,
@@ -439,27 +446,29 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     rosPath,
     invalidGlobalVariablesVariable,
     path,
-    topicNamesAutocompleteItems,
     topicNamesAndFieldsAutocompleteItems,
+    topicNamesAutocompleteItems,
     structureTraversalResult,
-    datatypes,
+    structures,
     validTypes,
     noMultiSlices,
     globalVariables,
   ]);
+
+  const topicsByName = useMemo(() => _.keyBy(topics, ({ name }) => name), [topics]);
 
   const orderedAutocompleteItems = useMemo(() => {
     if (prioritizedDatatype == undefined) {
       return autocompleteItems;
     }
 
-    return flatten(
-      partition(
+    return _.flatten(
+      _.partition(
         autocompleteItems,
-        (item) => getTopicsByTopicName(topics)[item]?.schemaName === prioritizedDatatype,
+        (item) => topicsByName[item]?.schemaName === prioritizedDatatype,
       ),
     );
-  }, [autocompleteItems, prioritizedDatatype, topics]);
+  }, [autocompleteItems, prioritizedDatatype, topicsByName]);
 
   const usesUnsupportedMathModifier =
     (supportsMathModifiers == undefined || !supportsMathModifiers) && path.includes(".@");
@@ -484,9 +493,9 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         filterText={autocompleteFilterText}
         value={path}
         onChange={onChange}
-        onSelect={(value, autocomplete) =>
-          onSelect(value, autocomplete, autocompleteType, autocompleteRange)
-        }
+        onSelect={(value, autocomplete) => {
+          onSelect(value, autocomplete, autocompleteType, autocompleteRange);
+        }}
         hasError={hasError}
         placeholder={
           placeholder != undefined && placeholder !== "" ? placeholder : "/some/topic.msgs[0].field"

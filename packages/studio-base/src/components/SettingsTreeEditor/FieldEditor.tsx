@@ -2,13 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ClearIcon from "@mui/icons-material/Clear";
+import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
-  List,
-  ListProps,
   MenuItem,
+  MenuList,
+  MenuListProps,
   Select,
   TextField,
   ToggleButton,
@@ -37,6 +37,21 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
     : "rgba(0, 0, 0, 0.06)";
 
   return {
+    autocomplete: {
+      ".MuiInputBase-root.MuiInputBase-sizeSmall": {
+        paddingInline: 0,
+        paddingBlock: theme.spacing(0.3125),
+      },
+    },
+    clearIndicator: {
+      marginRight: theme.spacing(-0.25),
+      opacity: theme.palette.action.disabledOpacity,
+
+      ":hover": {
+        background: "transparent",
+        opacity: 1,
+      },
+    },
     error: {},
     fieldLabel: {
       color: theme.palette.text.secondary,
@@ -127,30 +142,40 @@ function FieldInput({
     case "autocomplete":
       return (
         <Autocomplete
+          className={classes.autocomplete}
           size="small"
           freeSolo={true}
           value={field.value}
           disabled={field.disabled}
           readOnly={field.readonly}
-          ListboxComponent={List}
-          ListboxProps={{ dense: true } as Partial<ListProps>}
+          ListboxComponent={MenuList}
+          ListboxProps={{ dense: true } as Partial<MenuListProps>}
           renderOption={(props, option, { selected }) => (
             <MenuItem selected={selected} {...props}>
               {option}
             </MenuItem>
           )}
-          componentsProps={{ clearIndicator: { size: "small" } }}
-          clearIcon={<ClearIcon fontSize="small" />}
-          renderInput={(params) => <TextField {...params} variant="filled" size="small" />}
-          onInputChange={(_event, value) =>
-            actionHandler({ action: "update", payload: { path, input: "autocomplete", value } })
-          }
-          onChange={(_event, value) =>
+          componentsProps={{
+            clearIndicator: {
+              size: "small",
+              className: classes.clearIndicator,
+            },
+          }}
+          clearIcon={<CancelIcon fontSize="small" />}
+          renderInput={(params) => (
+            <TextField {...params} variant="filled" size="small" placeholder={field.placeholder} />
+          )}
+          onInputChange={(_event, value, reason) => {
+            if (reason === "input") {
+              actionHandler({ action: "update", payload: { path, input: "autocomplete", value } });
+            }
+          }}
+          onChange={(_event, value) => {
             actionHandler({
               action: "update",
               payload: { path, input: "autocomplete", value: value ?? undefined },
-            })
-          }
+            });
+          }}
           options={field.items}
         />
       );
@@ -168,9 +193,9 @@ function FieldInput({
           min={field.min}
           precision={field.precision}
           step={field.step}
-          onChange={(value) =>
-            actionHandler({ action: "update", payload: { path, input: "number", value } })
-          }
+          onChange={(value) => {
+            actionHandler({ action: "update", payload: { path, input: "number", value } });
+          }}
         />
       );
     case "toggle":
@@ -217,12 +242,12 @@ function FieldInput({
           InputProps={{
             readOnly: field.readonly,
           }}
-          onChange={(event) =>
+          onChange={(event) => {
             actionHandler({
               action: "update",
               payload: { path, input: "string", value: event.target.value },
-            })
-          }
+            });
+          }}
         />
       );
     case "boolean":
@@ -255,12 +280,12 @@ function FieldInput({
           readOnly={field.readonly}
           placeholder={field.placeholder}
           value={field.value?.toString()}
-          onChange={(value) =>
+          onChange={(value) => {
             actionHandler({
               action: "update",
               payload: { path, input: "rgb", value },
-            })
-          }
+            });
+          }}
           hideClearButton={field.hideClearButton}
         />
       );
@@ -272,12 +297,12 @@ function FieldInput({
           readOnly={field.readonly}
           placeholder={field.placeholder}
           value={field.value?.toString()}
-          onChange={(value) =>
+          onChange={(value) => {
             actionHandler({
               action: "update",
               payload: { path, input: "rgba", value },
-            })
-          }
+            });
+          }}
         />
       );
     case "messagepath":
@@ -288,12 +313,12 @@ function FieldInput({
             disabled={field.disabled}
             readOnly={field.readonly}
             supportsMathModifiers={field.supportsMathModifiers}
-            onChange={(value) =>
+            onChange={(value) => {
               actionHandler({
                 action: "update",
                 payload: { path, input: "messagepath", value },
-              })
-            }
+              });
+            }}
             validTypes={field.validTypes}
           />
         </Stack>
@@ -335,7 +360,7 @@ function FieldInput({
             }
             return value;
           }}
-          onChange={(event) =>
+          onChange={(event) => {
             actionHandler({
               action: "update",
               payload: {
@@ -346,12 +371,12 @@ function FieldInput({
                     ? undefined
                     : (event.target.value as undefined | string | string[]),
               },
-            })
-          }
+            });
+          }}
           MenuProps={{ MenuListProps: { dense: true } }}
         >
-          {field.options.map(({ label, value = UNDEFINED_SENTINEL_VALUE }) => (
-            <MenuItem key={value} value={value}>
+          {field.options.map(({ label, value = UNDEFINED_SENTINEL_VALUE, disabled }) => (
+            <MenuItem key={value} value={value} disabled={disabled}>
               {label}
             </MenuItem>
           ))}
@@ -368,9 +393,9 @@ function FieldInput({
           colors={field.value}
           disabled={field.disabled}
           readOnly={field.readonly}
-          onChange={(value) =>
-            actionHandler({ action: "update", payload: { path, input: "gradient", value } })
-          }
+          onChange={(value) => {
+            actionHandler({ action: "update", payload: { path, input: "gradient", value } });
+          }}
         />
       );
     case "vec3":
@@ -384,9 +409,9 @@ function FieldInput({
           readOnly={field.readonly}
           min={field.min}
           max={field.max}
-          onChange={(value) =>
-            actionHandler({ action: "update", payload: { path, input: "vec3", value } })
-          }
+          onChange={(value) => {
+            actionHandler({ action: "update", payload: { path, input: "vec3", value } });
+          }}
         />
       );
     case "vec2":
@@ -400,9 +425,9 @@ function FieldInput({
           readOnly={field.readonly}
           min={field.min}
           max={field.max}
-          onChange={(value) =>
-            actionHandler({ action: "update", payload: { path, input: "vec2", value } })
-          }
+          onChange={(value) => {
+            actionHandler({ action: "update", payload: { path, input: "vec2", value } });
+          }}
         />
       );
   }

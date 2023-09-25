@@ -3,7 +3,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook, waitFor } from "@testing-library/react";
 
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
@@ -45,7 +45,7 @@ describe("ExtensionCatalogProvider", () => {
       uninstallExtension: jest.fn(),
     };
 
-    const { result, waitFor } = renderHook(() => useExtensionCatalog((state) => state), {
+    const { result } = renderHook(() => useExtensionCatalog((state) => state), {
       initialProps: {},
       wrapper: ({ children }) => (
         <ExtensionCatalogProvider loaders={[mockPrivateLoader]}>
@@ -54,7 +54,9 @@ describe("ExtensionCatalogProvider", () => {
       ),
     });
 
-    await waitFor(() => expect(loadExtension).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(loadExtension).toHaveBeenCalledTimes(1);
+    });
     expect(result.current.installedExtensions).toEqual([
       {
         description: "description",
@@ -101,7 +103,7 @@ describe("ExtensionCatalogProvider", () => {
       uninstallExtension: jest.fn(),
     };
 
-    const { result, waitFor } = renderHook(() => useExtensionCatalog((state) => state), {
+    const { result } = renderHook(() => useExtensionCatalog((state) => state), {
       initialProps: {},
       wrapper: ({ children }) => (
         <ExtensionCatalogProvider loaders={[mockPrivateLoader1, mockPrivateLoader2]}>
@@ -110,8 +112,12 @@ describe("ExtensionCatalogProvider", () => {
       ),
     });
 
-    await waitFor(() => expect(loadExtension1).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(loadExtension2).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(loadExtension1).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(loadExtension2).toHaveBeenCalledTimes(1);
+    });
     expect(result.current.installedExtensions).toEqual([
       {
         description: "description",
@@ -166,7 +172,7 @@ describe("ExtensionCatalogProvider", () => {
       uninstallExtension: jest.fn(),
     };
 
-    const { result, waitFor } = renderHook(() => useExtensionCatalog((state) => state), {
+    const { result } = renderHook(() => useExtensionCatalog((state) => state), {
       initialProps: {},
       wrapper: ({ children }) => (
         <ExtensionCatalogProvider loaders={[mockPrivateLoader]}>
@@ -175,13 +181,55 @@ describe("ExtensionCatalogProvider", () => {
       ),
     });
 
-    await waitFor(() => expect(loadExtension).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(loadExtension).toHaveBeenCalledTimes(1);
+    });
     expect(result.current.installedMessageConverters).toEqual([
       {
         fromSchemaName: "from.Schema",
         toSchemaName: "to.Schema",
         converter: expect.any(Function),
+        extensionNamespace: "org",
       },
+    ]);
+  });
+
+  it("should register topic aliases", async () => {
+    const source = `
+        module.exports = {
+            activate: function(ctx) {
+                ctx.registerTopicAliases(() => {
+                    return [];
+                })
+            }
+        }
+    `;
+
+    const loadExtension = jest.fn().mockResolvedValue(source);
+    const mockPrivateLoader: ExtensionLoader = {
+      namespace: "org",
+      getExtensions: jest
+        .fn()
+        .mockResolvedValue([fakeExtension({ namespace: "org", name: "sample", version: "1" })]),
+      loadExtension,
+      installExtension: jest.fn(),
+      uninstallExtension: jest.fn(),
+    };
+
+    const { result } = renderHook(() => useExtensionCatalog((state) => state), {
+      initialProps: {},
+      wrapper: ({ children }) => (
+        <ExtensionCatalogProvider loaders={[mockPrivateLoader]}>
+          {children}
+        </ExtensionCatalogProvider>
+      ),
+    });
+
+    await waitFor(() => {
+      expect(loadExtension).toHaveBeenCalledTimes(1);
+    });
+    expect(result.current.installedTopicAliasFunctions).toEqual([
+      { extensionId: "id", aliasFunction: expect.any(Function) },
     ]);
   });
 });

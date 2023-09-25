@@ -10,7 +10,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import { makeColor, STL_CUBE_MESH_RESOURCE } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
-import { ThreeDeePanel } from "../index";
+import ThreeDeePanel from "../index";
 
 const RED = makeColorAttribute("#f44336");
 const GREEN = makeColorAttribute("#4caf50");
@@ -97,6 +97,29 @@ const URDF2 = `<?xml version="1.0"?>
   </joint>
 </robot>`;
 
+const URDF3 = `<?xml version="1.0"?>
+<robot name="URDF Test3">
+  <material name="base-sphere-material"><color rgba="${BLUE}"/></material>
+  <material name="sphere-material"><color rgba="${RED}"/></material>
+  <link name="base_link">
+    <visual>
+      <geometry><sphere radius="0.2"/></geometry>
+      <material name="base-sphere-material"/>
+    </visual>
+  </link>
+  <joint name="base_sphere_box_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="sphere_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0.3"/>
+  </joint>
+  <link name="sphere_link">
+    <visual>
+      <geometry><sphere radius="0.1"/></geometry>
+      <material name="sphere-material"/>
+    </visual>
+  </link>
+</robot>`;
+
 export default {
   title: "panels/ThreeDeeRender",
   component: ThreeDeePanel,
@@ -104,7 +127,11 @@ export default {
 
 export const Urdfs: StoryObj = {
   render: function Story() {
-    const topics: Topic[] = [{ name: "/robot_description", schemaName: "std_msgs/String" }];
+    const topics: Topic[] = [
+      { name: "/robot_description", schemaName: "std_msgs/String" },
+      { name: "/tf_static", schemaName: "tf2_msgs/TFMessage" },
+      { name: "/some/robot_description", schemaName: "std_msgs/String" },
+    ];
     const robot_description: MessageEvent<{ data: string }> = {
       topic: "/robot_description",
       receiveTime: { sec: 10, nsec: 0 },
@@ -114,7 +141,29 @@ export const Urdfs: StoryObj = {
       schemaName: "std_msgs/String",
       sizeInBytes: 0,
     };
+    const mesh_T_robot_1 = {
+      header: {
+        frame_id: "mesh-no-material",
+      },
+      child_frame_id: "robot_1/base_link",
+      transform: {
+        translation: {
+          x: 0,
+          y: -3,
+          z: 0,
+        },
+        rotation: {
+          w: 1,
+        },
+      },
+    };
+    const mesh_T_robot_2 = {
+      ...mesh_T_robot_1,
+      child_frame_id: "robot_2/base_link",
+      transform: { ...mesh_T_robot_1.transform, translation: { x: 1, y: -1 } },
+    };
 
+    const urdfParamName = "/some_ns/robot_description";
     const fixture = useDelayedFixture({
       topics,
       frame: {
@@ -122,7 +171,30 @@ export const Urdfs: StoryObj = {
       },
       capabilities: [],
       activeData: {
-        currentTime: undefined,
+        currentTime: { sec: 0, nsec: 0 },
+        parameters: new Map([[urdfParamName, URDF3]]),
+        messages: [
+          // Add transforms for the URDF instances that use a `framePrefix`, as these use the
+          // same URDF and would otherwise displayed on top of each other.
+          {
+            topic: "/tf_static",
+            schemaName: "tf2_msgs/TFMessage",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              transforms: [mesh_T_robot_1, mesh_T_robot_2],
+            },
+          },
+          {
+            topic: "/some/robot_description",
+            schemaName: "std_msgs/String",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              data: URDF3,
+            },
+          },
+        ],
       },
     });
 
@@ -140,9 +212,22 @@ export const Urdfs: StoryObj = {
                 layerId: "foxglove.Grid",
                 position: [0, 0, 0],
               },
-              urdf: {
+              urdfFromUrl: {
                 layerId: "foxglove.Urdf",
+                sourceType: "url",
                 url: encodeURI(`data:text/xml;utf8,${URDF2}`),
+              },
+              urdfFromParameter: {
+                layerId: "foxglove.Urdf",
+                sourceType: "param",
+                parameter: urdfParamName,
+                framePrefix: `robot_1/`,
+              },
+              urdfFromTopic: {
+                layerId: "foxglove.Urdf",
+                sourceType: "topic",
+                topic: "/some/robot_description",
+                framePrefix: `robot_2/`,
               },
             },
             cameraState: {

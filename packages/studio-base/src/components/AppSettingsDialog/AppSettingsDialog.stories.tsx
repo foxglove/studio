@@ -4,7 +4,7 @@
 
 import { StoryFn, StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
-import { range } from "lodash";
+import * as _ from "lodash-es";
 
 import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
 import ExtensionMarketplaceContext, {
@@ -15,7 +15,7 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
 
 import { AppSettingsDialog } from "./AppSettingsDialog";
 
-const installedExtensions: ExtensionInfo[] = range(1, 10).map((index) => ({
+const installedExtensions: ExtensionInfo[] = _.range(1, 10).map((index) => ({
   id: "publisher.storyextension",
   name: "privatestoryextension",
   qualifiedName: "storyextension",
@@ -101,12 +101,13 @@ export const ChangingLanguage: StoryObj = {
   },
 
   play: async () => {
+    const { click, keyboard } = userEvent.setup();
     const input = await screen.findByText("English", { exact: false });
-    userEvent.click(input);
+    await click(input);
 
-    userEvent.keyboard("中文");
+    await keyboard("中文");
     const item = await screen.findByText("中文", { exact: false });
-    userEvent.click(item);
+    await click(item);
   },
 };
 

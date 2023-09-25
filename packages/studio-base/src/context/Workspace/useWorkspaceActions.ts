@@ -3,29 +3,34 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Draft, produce } from "immer";
-import { union } from "lodash";
-import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import * as _ from "lodash-es";
+import { Dispatch, SetStateAction, useCallback, useMemo } from "react";
+import { useMountedState } from "react-use";
 
 import { useGuaranteedContext } from "@foxglove/hooks";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
 import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourceDialog";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
+import {
+  LayoutData,
+  useCurrentLayoutActions,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   IDataSourceFactory,
   usePlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
-import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import {
-  WorkspaceContext,
-  WorkspaceContextStore,
-  SidebarItemKey,
   LeftSidebarItemKey,
   LeftSidebarItemKeys,
   RightSidebarItemKey,
   RightSidebarItemKeys,
+  WorkspaceContext,
+  WorkspaceContextStore,
 } from "./WorkspaceContext";
 import { useOpenFile } from "./useOpenFile";
 
@@ -49,18 +54,13 @@ export type WorkspaceActions = {
     finishTour: (tour: string) => void;
   };
 
-  openAccountSettings: () => void;
   openPanelSettings: () => void;
-  openLayoutBrowser: () => void;
 
   playbackControlActions: {
     setRepeat: Dispatch<SetStateAction<boolean>>;
   };
 
   sidebarActions: {
-    legacy: {
-      selectItem: (selectedSidebarItem: undefined | SidebarItemKey) => void;
-    };
     left: {
       selectItem: (item: undefined | LeftSidebarItemKey) => void;
       setOpen: Dispatch<SetStateAction<boolean>>;
@@ -72,9 +72,18 @@ export type WorkspaceActions = {
       setSize: (size: undefined | number) => void;
     };
   };
+
+  layoutActions: {
+    // Open a dialog for the user to select a layout file to import
+    // This will replace the current layout with the imported layout
+    importFromFile: () => void;
+    // Export the current layout to a file
+    // This will perform a browser download of the current layout to a file
+    exportToFile: () => void;
+  };
 };
 
-export function setterValue<T>(action: SetStateAction<T>, value: T): T {
+function setterValue<T>(action: SetStateAction<T>, value: T): T {
   if (action instanceof Function) {
     return action(value);
   }
@@ -88,16 +97,14 @@ export function setterValue<T>(action: SetStateAction<T>, value: T): T {
 export function useWorkspaceActions(): WorkspaceActions {
   const { setState } = useGuaranteedContext(WorkspaceContext);
 
-  const { signIn } = useCurrentUser();
-  const supportsAccountSettings = signIn != undefined;
-
-  const [currentEnableNewTopNav = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_NEW_TOPNAV,
-  );
-  const [initialEnableNewTopNav] = useState(currentEnableNewTopNav);
-  const enableNewTopNav = isDesktopApp() ? initialEnableNewTopNav : currentEnableNewTopNav;
-
   const { availableSources } = usePlayerSelection();
+
+  const analytics = useAnalytics();
+  const appContext = useAppContext();
+
+  const isMounted = useMountedState();
+
+  const { getCurrentLayoutState, setCurrentLayout } = useCurrentLayoutActions();
 
   const openFile = useOpenFile(availableSources);
 
@@ -107,6 +114,68 @@ export function useWorkspaceActions(): WorkspaceActions {
     },
     [setState],
   );
+
+  const importLayoutFromFile = useCallbackWithToast(async () => {
+    const fileHandles = await showOpenFilePicker({
+      multiple: false,
+      excludeAcceptAllOption: false,
+      types: [
+        {
+          description: "JSON Files",
+          accept: {
+            "application/json": [".json"],
+          },
+        },
+      ],
+    });
+    if (!isMounted()) {
+      return;
+    }
+
+    const file = await fileHandles[0].getFile();
+    const content = await file.text();
+
+    if (!isMounted()) {
+      return;
+    }
+
+    let parsedState: unknown;
+    try {
+      parsedState = JSON.parse(content);
+    } catch (err) {
+      throw new Error(`${file.name} is not a valid layout: ${err.message}`);
+    }
+
+    if (typeof parsedState !== "object" || !parsedState) {
+      throw new Error(`${file.name} is not a valid layout`);
+    }
+
+    const data = parsedState as LayoutData;
+
+    // If there's an app context handler for this we let it take over from here
+    if (appContext.importLayoutFile) {
+      await appContext.importLayoutFile(file.name, data);
+      return;
+    }
+
+    setCurrentLayout({ data });
+
+    void analytics.logEvent(AppEvent.LAYOUT_IMPORT);
+  }, [analytics, appContext, isMounted, setCurrentLayout]);
+
+  const exportLayoutToFile = useCallback(() => {
+    // Use a stable getter to fetch the current layout to avoid thrashing the
+    // dependencies array for our hook.
+    const layoutData = getCurrentLayoutState().selectedLayout?.data;
+    if (!layoutData) {
+      return;
+    }
+
+    const name = getCurrentLayoutState().selectedLayout?.name ?? "foxglove-layout";
+    const content = JSON.stringify(layoutData, undefined, 2) ?? "";
+    downloadTextFile(content, `${name}.json`);
+    void analytics.logEvent(AppEvent.LAYOUT_EXPORT);
+  }, [analytics, getCurrentLayoutState]);
 
   return useMemo(() => {
     return {
@@ -140,10 +209,11 @@ export function useWorkspaceActions(): WorkspaceActions {
         },
 
         preferences: {
-          close: () =>
+          close: () => {
             set((draft) => {
               draft.dialogs.preferences = { open: false, initialTab: undefined };
-            }),
+            });
+          },
           open: (initialTab?: AppSettingsTab) => {
             set((draft) => {
               draft.dialogs.preferences = { open: true, initialTab };
@@ -161,31 +231,17 @@ export function useWorkspaceActions(): WorkspaceActions {
         finishTour: (tour: string) => {
           set((draft) => {
             draft.featureTours.active = undefined;
-            draft.featureTours.shown = union(draft.featureTours.shown, [tour]);
+            draft.featureTours.shown = _.union(draft.featureTours.shown, [tour]);
           });
         },
       },
 
-      openAccountSettings: () =>
-        supportsAccountSettings &&
+      openPanelSettings: () => {
         set((draft) => {
-          draft.sidebars.legacy.item = "account";
-        }),
-
-      openPanelSettings: () =>
-        enableNewTopNav
-          ? set((draft) => {
-              draft.sidebars.left.item = "panel-settings";
-              draft.sidebars.left.open = true;
-            })
-          : set((draft) => {
-              draft.sidebars.legacy.item = "panel-settings";
-            }),
-
-      openLayoutBrowser: () =>
-        set((draft) => {
-          draft.sidebars.legacy.item = "layouts";
-        }),
+          draft.sidebars.left.item = "panel-settings";
+          draft.sidebars.left.open = true;
+        });
+      },
 
       playbackControlActions: {
         setRepeat: (setter: SetStateAction<boolean>) => {
@@ -197,23 +253,6 @@ export function useWorkspaceActions(): WorkspaceActions {
       },
 
       sidebarActions: {
-        legacy: {
-          selectItem: (selectedSidebarItem: undefined | SidebarItemKey) => {
-            if (selectedSidebarItem === "app-settings") {
-              set((draft) => {
-                draft.dialogs.preferences = { open: true, initialTab: undefined };
-              });
-            } else if (selectedSidebarItem === "app-bar-tour") {
-              set((draft) => {
-                draft.featureTours.active = "appBar";
-              });
-            } else {
-              set((draft) => {
-                draft.sidebars.legacy.item = selectedSidebarItem;
-              });
-            }
-          },
-        },
         left: {
           selectItem: (selectedLeftSidebarItem: undefined | LeftSidebarItemKey) => {
             set((draft) => {
@@ -237,10 +276,11 @@ export function useWorkspaceActions(): WorkspaceActions {
             });
           },
 
-          setSize: (leftSidebarSize: undefined | number) =>
+          setSize: (leftSidebarSize: undefined | number) => {
             set((draft) => {
               draft.sidebars.left.size = leftSidebarSize;
-            }),
+            });
+          },
         },
         right: {
           selectItem: (selectedRightSidebarItem: undefined | RightSidebarItemKey) => {
@@ -265,12 +305,18 @@ export function useWorkspaceActions(): WorkspaceActions {
             });
           },
 
-          setSize: (rightSidebarSize: undefined | number) =>
+          setSize: (rightSidebarSize: undefined | number) => {
             set((draft) => {
               draft.sidebars.right.size = rightSidebarSize;
-            }),
+            });
+          },
         },
       },
+
+      layoutActions: {
+        importFromFile: importLayoutFromFile,
+        exportToFile: exportLayoutToFile,
+      },
     };
-  }, [enableNewTopNav, openFile, set, supportsAccountSettings]);
+  }, [exportLayoutToFile, importLayoutFromFile, openFile, set]);
 }

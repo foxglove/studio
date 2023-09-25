@@ -9,7 +9,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import ErrorIcon from "@mui/icons-material/Error";
 import { Button, Divider, IconButton, TextField, Tooltip, Typography } from "@mui/material";
 import { TFunction } from "i18next";
-import { isEqual, partition } from "lodash";
+import * as _ from "lodash-es";
 import memoizeWeak from "memoize-weak";
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,7 +34,7 @@ import { VisibilityToggle } from "./VisibilityToggle";
 import { icons } from "./icons";
 import { prepareSettingsNodes } from "./utils";
 
-export type NodeEditorProps = {
+type NodeEditorProps = {
   actionHandler: (action: SettingsTreeAction) => void;
   defaultOpen?: boolean;
   filter?: string;
@@ -43,7 +43,7 @@ export type NodeEditorProps = {
   settings?: Immutable<SettingsTreeNode>;
 };
 
-export const NODE_HEADER_MIN_HEIGHT = 35;
+const NODE_HEADER_MIN_HEIGHT = 35;
 
 const useStyles = makeStyles()((theme) => ({
   actionButton: {
@@ -184,7 +184,7 @@ const getSelectVisibilityFilterField = (t: TFunction<"settingsEditor">) =>
     label: t("filterList"),
     help: t("filterListHelp"),
     options: SelectVisibilityFilterOptions(t),
-  } as const);
+  }) as const;
 
 type State = {
   editing: boolean;
@@ -228,11 +228,11 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     actionHandler({ action: "perform-node-action", payload: { id: actionId, path: props.path } });
   };
 
-  const isFocused = isEqual(focusedPath, props.path);
+  const isFocused = _.isEqual(focusedPath, props.path);
 
   useEffect(() => {
     const isOnFocusedPath =
-      focusedPath != undefined && isEqual(props.path, focusedPath.slice(0, props.path.length));
+      focusedPath != undefined && _.isEqual(props.path, focusedPath.slice(0, props.path.length));
 
     if (isOnFocusedPath) {
       setState((draft) => {
@@ -321,7 +321,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
 
   const [inlineActions, menuActions] = useMemo(
     () =>
-      partition(
+      _.partition(
         settings.actions,
         (action): action is SettingsTreeNodeActionItem =>
           action.type === "action" && action.display === "inline",
@@ -369,7 +369,9 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               value={settings.label}
               onBlur={toggleEditing}
               onKeyDown={onLabelKeyDown}
-              onFocus={(event) => event.target.select()}
+              onFocus={(event) => {
+                event.target.select();
+              }}
               InputProps={{
                 endAdornment: (
                   <IconButton
@@ -425,11 +427,12 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           )}
           {inlineActions.map((action) => {
             const Icon = action.icon ? icons[action.icon] : undefined;
-            const handler = () =>
+            const handler = () => {
               actionHandler({
                 action: "perform-node-action",
                 payload: { id: action.id, path: props.path },
               });
+            };
             return Icon ? (
               <IconButton
                 key={action.id}
@@ -479,12 +482,15 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
         </>
       )}
       {state.open && selectVisibilityFilterEnabled && hasChildren && (
-        <FieldEditor
-          key="visibilityFilter"
-          field={{ ...getSelectVisibilityFilterField(t), value: state.visibilityFilter }}
-          path={makeStablePath(props.path, "visibilityFilter")}
-          actionHandler={selectVisibilityFilter}
-        />
+        <>
+          <Stack paddingBottom={0.5} style={{ gridColumn: "span 2" }} />
+          <FieldEditor
+            key="visibilityFilter"
+            field={{ ...getSelectVisibilityFilterField(t), value: state.visibilityFilter }}
+            path={makeStablePath(props.path, "visibilityFilter")}
+            actionHandler={selectVisibilityFilter}
+          />
+        </>
       )}
       {state.open && childNodes}
       {indent === 1 && <Divider style={{ gridColumn: "span 2" }} />}

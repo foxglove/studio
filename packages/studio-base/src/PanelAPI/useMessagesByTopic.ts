@@ -11,11 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { groupBy } from "lodash";
+import * as _ from "lodash-es";
 import { useCallback } from "react";
 
 import { useDeepMemo } from "@foxglove/hooks";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { MessageEvent, SubscribePayload } from "@foxglove/studio-base/players/types";
 import concatAndTruncate from "@foxglove/studio-base/util/concatAndTruncate";
 
 import { useMessageReducer } from "./useMessageReducer";
@@ -31,7 +31,7 @@ type UnknownMessageEventsByTopic = Record<string, readonly MessageEvent[]>;
  * - During live playback the panel will re-render when new messages arrive.
  */
 export function useMessagesByTopic(params: {
-  topics: readonly string[];
+  topics: readonly string[] | SubscribePayload[];
   historySize: number;
 }): Record<string, readonly MessageEvent[]> {
   const { historySize, topics } = params;
@@ -39,7 +39,7 @@ export function useMessagesByTopic(params: {
 
   const addMessages = useCallback(
     (prevMessagesByTopic: UnknownMessageEventsByTopic, messages: readonly MessageEvent[]) => {
-      const newMessagesByTopic = groupBy(messages, "topic");
+      const newMessagesByTopic = _.groupBy(messages, "topic");
       const ret: UnknownMessageEventsByTopic = { ...prevMessagesByTopic };
       Object.entries(newMessagesByTopic).forEach(([topic, newMessages]) => {
         const retTopic = ret[topic];
@@ -58,8 +58,9 @@ export function useMessagesByTopic(params: {
       // When changing topics, we try to keep as many messages around from the previous set of
       // topics as possible.
       for (const topic of requestedTopics) {
-        const prevMessages = prevMessagesByTopic?.[topic];
-        newMessagesByTopic[topic] = prevMessages?.slice(-historySize) ?? [];
+        const topicName = typeof topic === "string" ? topic : topic.topic;
+        const prevMessages = prevMessagesByTopic?.[topicName];
+        newMessagesByTopic[topicName] = prevMessages?.slice(-historySize) ?? [];
       }
       return newMessagesByTopic;
     },

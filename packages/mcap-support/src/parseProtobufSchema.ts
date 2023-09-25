@@ -25,10 +25,12 @@ export function parseProtobufSchema(
   root.resolveAll();
   const rootType = root.lookupType(schemaName);
 
-  // Modify the definition of google.protobuf.Timestamp and Duration so they get deserialized as
+  // Modify the definition of google.protobuf.Timestamp and Duration so they are interpreted as
   // {sec: number, nsec: number}, compatible with the rest of Studio. The standard Protobuf types
   // use different names (`seconds` and `nanos`), and `seconds` is an `int64`, which would be
   // deserialized as a bigint by default.
+  //
+  // protobufDefinitionsToDatatypes also has matching logic to rename the fields.
   const fixTimeType = (
     type: protobufjs.ReflectionObject | null /* eslint-disable-line no-restricted-syntax */,
   ) => {

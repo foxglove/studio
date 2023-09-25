@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { cloneDeep } from "lodash";
+import { screen, userEvent } from "@storybook/testing-library";
+import * as _ from "lodash-es";
 import { useEffect, useState } from "react";
 
 import { ImageAnnotations, PointsAnnotationType } from "@foxglove/schemas";
@@ -12,6 +13,7 @@ import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRe
 import { makeRawImageAndCalibration } from "@foxglove/studio-base/panels/ThreeDeeRender/stories/ImageMode/imageCommon";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
+import delay from "@foxglove/studio-base/util/delay";
 
 import { ImagePanel } from "../../index";
 
@@ -23,7 +25,10 @@ export default {
   },
 };
 
-const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}): JSX.Element => {
+const AnnotationsStory = (
+  args: { debugPicking?: boolean; imageModeConfigOverride?: Partial<ImageModeConfig> } = {},
+): JSX.Element => {
+  const { debugPicking, imageModeConfigOverride } = args;
   const width = 60;
   const height = 45;
   const { calibrationMessage, cameraMessage } = makeRawImageAndCalibration({
@@ -91,9 +96,9 @@ const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}
           outline_color: { r: 0, g: 0, b: 0, a: 1 },
           outline_colors: [
             { r: 1, g: 0, b: 0, a: 1 },
-            { r: 0, g: 1, b: 0, a: 1 },
+            { r: 0, g: 1, b: 0, a: 0.75 },
             { r: 0, g: 0, b: 1, a: 1 },
-            { r: 0, g: 1, b: 1, a: 1 },
+            { r: 0, g: 1, b: 1, a: 0.75 },
           ],
           fill_color: { r: 0, g: 0, b: 0, a: 0 },
           thickness: 2,
@@ -126,7 +131,7 @@ const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}
             // 1 color per point
             { r: 1, g: 0, b: 0, a: 1 },
             { r: 0, g: 1, b: 0, a: 1 },
-            { r: 0, g: 0, b: 1, a: 1 },
+            { r: 0, g: 0, b: 1, a: 0.75 },
             { r: 0, g: 1, b: 1, a: 1 },
           ],
           fill_color: { r: 0, g: 0, b: 0, a: 0 },
@@ -145,7 +150,7 @@ const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}
           outline_colors: [
             // 1 color per line
             { r: 1, g: 0, b: 0, a: 1 },
-            { r: 0, g: 1, b: 0, a: 1 },
+            { r: 0, g: 1, b: 0, a: 0.75 },
           ],
           fill_color: { r: 0, g: 0, b: 0, a: 0 },
           thickness: 2,
@@ -201,7 +206,7 @@ const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}
             { x: 10 + 2, y: 30 + 6 },
             { x: 10 + 5, y: 30 + 2 },
           ],
-          outline_color: { r: 1, g: 1, b: 0, a: 1 },
+          outline_color: { r: 1, g: 0.5, b: 0, a: 0.5 },
           outline_colors: [],
           fill_color: { r: 1, g: 0, b: 1, a: 1 },
           thickness: 0.5,
@@ -247,19 +252,22 @@ const AnnotationsStory = (imageModeConfigOverride: Partial<ImageModeConfig> = {}
     },
   };
   return (
-    <PanelSetup fixture={fixture}>
-      <ImagePanel
-        overrideConfig={{
-          ...ImagePanel.defaultConfig,
-          imageMode: {
-            calibrationTopic: "calibration",
-            imageTopic: "camera",
-            annotations: { annotations: { visible: true } },
-            ...imageModeConfigOverride,
-          },
-        }}
-      />
-    </PanelSetup>
+    <div style={{ width: 1200, height: 900, flexShrink: 0 }}>
+      <PanelSetup fixture={fixture}>
+        <ImagePanel
+          debugPicking={debugPicking}
+          overrideConfig={{
+            ...ImagePanel.defaultConfig,
+            imageMode: {
+              calibrationTopic: "calibration",
+              imageTopic: "camera",
+              annotations: { annotations: { visible: true } },
+              ...imageModeConfigOverride,
+            },
+          }}
+        />
+      </PanelSetup>
+    </div>
   );
 };
 
@@ -267,9 +275,28 @@ export const Annotations: StoryObj = {
   render: AnnotationsStory,
 };
 
+export const AnnotationsPicking: StoryObj = {
+  render: AnnotationsStory,
+  args: {
+    debugPicking: true,
+  },
+  async play() {
+    await delay(1000);
+    await userEvent.hover(await screen.findByTestId(/panel-mouseenter-container/));
+    await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
+    await userEvent.pointer({
+      target: document.querySelector("canvas")!,
+      keys: "[MouseLeft]",
+      coords: { clientX: 0, clientY: 0 },
+    });
+  },
+};
+
 export const AnnotationsWithoutCalibration: StoryObj = {
   render: AnnotationsStory,
-  args: { calibrationTopic: undefined },
+  args: {
+    imageModeConfigOverride: { calibrationTopic: undefined },
+  },
 };
 
 export const MessageConverterSupport: StoryObj = {
@@ -596,7 +623,7 @@ const AnnotationsUpdateStory = (
             { x: 10 + 2, y: 20 + 6 },
             { x: 10 + 5, y: 20 + 2 },
           ],
-          outline_color: { r: 1, g: 1, b: 0, a: 1 },
+          outline_color: { r: 1, g: 1, b: 0, a: 0.75 },
           outline_colors: [],
           fill_color: { r: 1, g: 0, b: 1, a: 1 },
           thickness: 0.5,
@@ -728,7 +755,9 @@ const AnnotationsUpdateStory = (
         };
         return newFixture;
       });
-      timeOutID2 = setTimeout(() => readySignal(), 100);
+      timeOutID2 = setTimeout(() => {
+        readySignal();
+      }, 100);
     }, 500);
 
     return () => {
@@ -756,7 +785,7 @@ const AnnotationsUpdateStory = (
 };
 
 function moveAnnotations(annotation: Partial<ImageAnnotations>, vector: { x: number; y: number }) {
-  const newAnnotation = cloneDeep(annotation);
+  const newAnnotation = _.cloneDeep(annotation);
 
   newAnnotation.circles?.forEach(({ position }) => {
     position.x += vector.x;
@@ -984,5 +1013,83 @@ export const UpdateLineEnableVertexColors: StoryObj<UpdateLineArgs> = {
 
   play: async (ctx) => {
     await ctx.parameters.storyReady;
+  },
+};
+
+export const OddLengthLineList: StoryObj = {
+  render: function Story() {
+    const width = 60;
+    const height = 45;
+    const { calibrationMessage, cameraMessage } = makeRawImageAndCalibration({
+      width,
+      height,
+      frameId: "camera",
+      imageTopic: "camera",
+      calibrationTopic: "calibration",
+    });
+
+    const annotationsMessage: MessageEvent<Partial<ImageAnnotations>> = {
+      topic: "annotations",
+      receiveTime: { sec: 10, nsec: 0 },
+      message: {
+        points: [
+          {
+            timestamp: { sec: 0, nsec: 0 },
+            type: PointsAnnotationType.LINE_LIST,
+            points: [
+              { x: 20 + 0, y: 10 + 0 },
+              { x: 20 + 0, y: 10 + 8 },
+              { x: 20 + 2, y: 10 + 6 },
+              { x: 20 + 5, y: 10 + 2 },
+              { x: 20 + 3, y: 10 + 1 },
+            ],
+            outline_color: { r: 0, g: 0, b: 0, a: 1 },
+            outline_colors: [
+              // 1 color per line
+              { r: 1, g: 0, b: 0, a: 1 },
+              { r: 0, g: 1, b: 0, a: 0.75 },
+              { r: 0, g: 0, b: 1, a: 0.75 },
+            ],
+            fill_color: { r: 0, g: 0, b: 0, a: 0 },
+            thickness: 2,
+          },
+        ],
+      },
+      schemaName: "foxglove.ImageAnnotations",
+      sizeInBytes: 0,
+    };
+
+    const fixture: Fixture = {
+      topics: [
+        { name: "calibration", schemaName: "foxglove.CameraCalibration" },
+        { name: "camera", schemaName: "foxglove.RawImage" },
+        { name: "annotations", schemaName: "foxglove.ImageAnnotations" },
+      ],
+      frame: {
+        calibration: [calibrationMessage],
+        camera: [cameraMessage],
+        annotations: [annotationsMessage],
+      },
+      capabilities: [],
+      activeData: {
+        currentTime: { sec: 0, nsec: 0 },
+      },
+    };
+    return (
+      <div style={{ width: 1200, height: 900, flexShrink: 0 }}>
+        <PanelSetup fixture={fixture} includeSettings>
+          <ImagePanel
+            overrideConfig={{
+              ...ImagePanel.defaultConfig,
+              imageMode: {
+                calibrationTopic: "calibration",
+                imageTopic: "camera",
+                annotations: { annotations: { visible: true } },
+              },
+            }}
+          />
+        </PanelSetup>
+      </div>
+    );
   },
 };

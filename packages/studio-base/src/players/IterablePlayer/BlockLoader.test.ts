@@ -4,14 +4,15 @@
 
 import { MessageEvent } from "@foxglove/studio";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
+import { mockTopicSelection } from "@foxglove/studio-base/test/mocks/mockTopicSelection";
 
 import { BlockLoader } from "./BlockLoader";
 import {
+  GetBackfillMessagesArgs,
   IIterableSource,
   Initalization,
-  MessageIteratorArgs,
   IteratorResult,
-  GetBackfillMessagesArgs,
+  MessageIteratorArgs,
 } from "./IIterableSource";
 
 class TestSource implements IIterableSource {
@@ -36,7 +37,9 @@ class TestSource implements IIterableSource {
     return [];
   }
 }
+
 const consoleErrorMock = console.error as ReturnType<typeof jest.fn>;
+
 describe("BlockLoader", () => {
   it("should make an empty block loader", async () => {
     const loader = new BlockLoader({
@@ -92,8 +95,7 @@ describe("BlockLoader", () => {
     source.messageIterator = async function* messageIterator(
       _args: MessageIteratorArgs,
     ): AsyncIterableIterator<Readonly<IteratorResult>> {
-      for (let i = 0; i < msgEvents.length; ++i) {
-        const msgEvent = msgEvents[i]!;
+      for (const msgEvent of msgEvents) {
         yield {
           type: "message-event",
           msgEvent,
@@ -101,11 +103,11 @@ describe("BlockLoader", () => {
       }
     };
 
-    loader.setTopics(new Set("a"));
+    loader.setTopics(mockTopicSelection("a"));
     let count = 0;
     await loader.startLoading({
       progress: async (progress) => {
-        if (++count < 4) {
+        if (++count < 5) {
           return;
         }
 
@@ -122,35 +124,35 @@ describe("BlockLoader", () => {
                 messagesByTopic: {
                   a: [msgEvents[0]],
                 },
-                needTopics: new Set(),
+                needTopics: new Map(),
                 sizeInBytes: 1,
               },
               {
                 messagesByTopic: {
                   a: [msgEvents[1]],
                 },
-                needTopics: new Set(),
+                needTopics: new Map(),
                 sizeInBytes: 1,
               },
               {
                 messagesByTopic: {
                   a: [],
                 },
-                needTopics: new Set(),
+                needTopics: new Map(),
                 sizeInBytes: 0,
               },
               {
                 messagesByTopic: {
                   a: [msgEvents[2]],
                 },
-                needTopics: new Set(),
+                needTopics: new Map(),
                 sizeInBytes: 1,
               },
               {
                 messagesByTopic: {
                   a: [msgEvents[3]],
                 },
-                needTopics: new Set(),
+                needTopics: new Map(),
                 sizeInBytes: 1,
               },
             ],
@@ -161,6 +163,7 @@ describe("BlockLoader", () => {
         await loader.stopLoading();
       },
     });
+
     expect.assertions(1);
   });
 
@@ -191,8 +194,7 @@ describe("BlockLoader", () => {
     source.messageIterator = async function* messageIterator(
       _args: MessageIteratorArgs,
     ): AsyncIterableIterator<Readonly<IteratorResult>> {
-      for (let i = 0; i < msgEvents.length; ++i) {
-        const msgEvent = msgEvents[i]!;
+      for (const msgEvent of msgEvents) {
         yield {
           type: "message-event",
           msgEvent,
@@ -200,7 +202,7 @@ describe("BlockLoader", () => {
       }
     };
 
-    loader.setTopics(new Set("a"));
+    loader.setTopics(mockTopicSelection("a"));
     await loader.startLoading({
       progress: async (progress) => {
         expect(progress).toEqual({
@@ -216,7 +218,7 @@ describe("BlockLoader", () => {
                 messagesByTopic: {
                   a: [msgEvents[0], msgEvents[1]],
                 },
-                needTopics: new Set(),
+                needTopics: new Map(),
                 sizeInBytes: 2,
               },
             ],
@@ -229,7 +231,7 @@ describe("BlockLoader", () => {
     });
     expect(consoleErrorMock.mock.calls[0] ?? []).toContain("cache-full");
     consoleErrorMock.mockClear();
-    expect.assertions(2);
+    expect.assertions(3);
   });
 
   it("should remove unused topics on blocks if cache is full", async () => {
@@ -266,10 +268,9 @@ describe("BlockLoader", () => {
     source.messageIterator = async function* messageIterator(
       _args: MessageIteratorArgs,
     ): AsyncIterableIterator<Readonly<IteratorResult>> {
-      for (let i = 0; i < msgEvents.length; ++i) {
-        const msgEvent = msgEvents[i]!;
+      for (const msgEvent of msgEvents) {
         // need to filter iterator by requested topics since there's messages from more than 1 topic in here
-        if (_args.topics.includes(msgEvent.topic)) {
+        if (_args.topics.has(msgEvent.topic)) {
           yield {
             type: "message-event",
             msgEvent,
@@ -278,7 +279,7 @@ describe("BlockLoader", () => {
       }
     };
 
-    loader.setTopics(new Set("a"));
+    loader.setTopics(mockTopicSelection("a"));
     let count = 0;
     await loader.startLoading({
       progress: async (progress) => {
@@ -299,14 +300,14 @@ describe("BlockLoader", () => {
                     a: [msgEvents[0], msgEvents[2], msgEvents[4]],
                   },
                   sizeInBytes: 3,
-                  needTopics: new Set(),
+                  needTopics: new Map(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[6]],
                   },
                   sizeInBytes: 1,
-                  needTopics: new Set(),
+                  needTopics: new Map(),
                 },
               ],
               startTime: { sec: 0, nsec: 0 },
@@ -317,7 +318,7 @@ describe("BlockLoader", () => {
       },
     });
 
-    loader.setTopics(new Set("b"));
+    loader.setTopics(mockTopicSelection("b"));
 
     count = 0;
     // at the end of loading "b" topic it should have removed the "a" topic as its no longer used.
@@ -340,14 +341,14 @@ describe("BlockLoader", () => {
                     b: [msgEvents[1], msgEvents[3], msgEvents[5]],
                   },
                   sizeInBytes: 3,
-                  needTopics: new Set(),
+                  needTopics: new Map(),
                 },
                 {
                   messagesByTopic: {
                     b: [msgEvents[7]],
                   },
                   sizeInBytes: 1,
-                  needTopics: new Set(),
+                  needTopics: new Map(),
                 },
               ],
               startTime: { sec: 0, nsec: 0 },
@@ -387,8 +388,7 @@ describe("BlockLoader", () => {
     source.messageIterator = async function* messageIterator(
       _args: MessageIteratorArgs,
     ): AsyncIterableIterator<Readonly<IteratorResult>> {
-      for (let i = 0; i < msgEvents.length; ++i) {
-        const msgEvent = msgEvents[i]!;
+      for (const msgEvent of msgEvents) {
         yield {
           type: "message-event",
           msgEvent,
@@ -396,7 +396,7 @@ describe("BlockLoader", () => {
       }
     };
 
-    loader.setTopics(new Set("a"));
+    loader.setTopics(mockTopicSelection("a"));
     let count = 0;
     await loader.startLoading({
       progress: async (progress) => {
@@ -421,14 +421,14 @@ describe("BlockLoader", () => {
                     a: [msgEvents[0], msgEvents[1], msgEvents[2]],
                   },
                   sizeInBytes: 0,
-                  needTopics: new Set(),
+                  needTopics: new Map(),
                 },
                 {
                   messagesByTopic: {
                     a: [msgEvents[3]],
                   },
                   sizeInBytes: 0,
-                  needTopics: new Set(),
+                  needTopics: new Map(),
                 },
               ],
               startTime: { sec: 0, nsec: 0 },

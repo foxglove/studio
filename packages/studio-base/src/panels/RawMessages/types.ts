@@ -3,7 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 // Terse to save space in layout. c = collapsed, e = expanded.
-type NodeExpansion = "all" | "none" | Record<string, "e" | "c">;
+export enum NodeState {
+  Collapsed = "c",
+  Expanded = "e",
+}
+
+export type NodeExpansion = "all" | "none" | Record<string, NodeState>;
 
 export type RawMessagesPanelConfig = {
   diffEnabled: boolean;
@@ -13,3 +18,9 @@ export type RawMessagesPanelConfig = {
   showFullMessageForDiff: boolean;
   topicPath: string;
 };
+
+export const Constants = {
+  CUSTOM_METHOD: "custom",
+  PREV_MSG_METHOD: "previous message",
+  FONT_SIZE_OPTIONS: [8, 9, 10, 11, 12, 14, 16, 18, 24, 30, 36, 48, 60, 72],
+} as const;

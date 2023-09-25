@@ -31,10 +31,8 @@ const StyledIconButton = withStyles(HoverableIconButton, (theme) => ({
   root: {
     "&.MuiIconButton-root": {
       fontSize: theme.typography.pxToRem(16),
+      opacity: 0.6,
       padding: 0,
-
-      "&:hover": { backgroundColor: "transparent" },
-      "&:not(:hover)": { opacity: 0.6 },
     },
   },
 }));
@@ -90,30 +88,35 @@ function Value(props: ValueProps): JSX.Element {
   const [copied, setCopied] = useState(false);
 
   const openPlotPanel = useCallback(
-    (pathSuffix: string) => () =>
-      openSiblingPlotPanel(openSiblingPanel, `${basePath}${pathSuffix}`),
+    (pathSuffix: string) => () => {
+      openSiblingPlotPanel(openSiblingPanel, `${basePath}${pathSuffix}`);
+    },
     [basePath, openSiblingPanel],
   );
 
   const openStateTransitionsPanel = useCallback(
-    (pathSuffix: string) => () =>
-      openSiblingStateTransitionsPanel(openSiblingPanel, `${basePath}${pathSuffix}`),
+    (pathSuffix: string) => () => {
+      openSiblingStateTransitionsPanel(openSiblingPanel, `${basePath}${pathSuffix}`);
+    },
     [basePath, openSiblingPanel],
   );
 
-  const onFilter = useCallback(
-    () => onTopicPathChange(`${basePath}${valueAction?.filterPath}`),
-    [basePath, valueAction, onTopicPathChange],
-  );
+  const onFilter = useCallback(() => {
+    onTopicPathChange(`${basePath}${valueAction?.filterPath}`);
+  }, [basePath, valueAction, onTopicPathChange]);
 
   const handleCopy = useCallback((value: string) => {
     clipboard
       .copy(value)
       .then(() => {
         setCopied(true);
-        timeOutID.current = setTimeout(() => setCopied(false), 1500);
+        timeOutID.current = setTimeout(() => {
+          setCopied(false);
+        }, 1500);
       })
-      .catch((e) => console.warn(e));
+      .catch((e) => {
+        console.warn(e);
+      });
   }, []);
 
   const availableActions = useMemo(() => {
@@ -124,7 +127,9 @@ function Value(props: ValueProps): JSX.Element {
         activeColor: copied ? "success" : "primary",
         tooltip: copied ? "Copied" : "Copy to Clipboard",
         icon: copied ? <CheckIcon fontSize="inherit" /> : <CopyAllIcon fontSize="inherit" />,
-        onClick: () => handleCopy(JSON.stringify(itemValue, copyMessageReplacer, 2) ?? ""),
+        onClick: () => {
+          handleCopy(JSON.stringify(itemValue, copyMessageReplacer, 2) ?? "");
+        },
       });
     }
     if (valueAction != undefined) {
@@ -196,27 +201,46 @@ function Value(props: ValueProps): JSX.Element {
     };
   }, []);
 
+  // The Tooltip and StyledIconButton components seem to be expensive to render so we
+  // track our hover state and render them conditionally only when this component is
+  // hovered.
+  const [pointerOver, setPointerOver] = useState(false);
+
   return (
-    <Stack inline flexWrap="wrap" direction="row" alignItems="center" gap={0.25}>
+    <Stack
+      inline
+      flexWrap="wrap"
+      direction="row"
+      alignItems="center"
+      gap={0.25}
+      onPointerEnter={() => {
+        setPointerOver(true);
+      }}
+      onPointerLeave={() => {
+        setPointerOver(false);
+      }}
+    >
       <HighlightedValue itemLabel={itemLabel} />
       {arrLabel}
-      {availableActions.map((action) => (
-        <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-          <StyledIconButton
-            size="small"
-            activeColor={action.activeColor}
-            onClick={action.onClick}
-            color="inherit"
-            icon={action.icon}
-          />
-        </Tooltip>
-      ))}
-      <span className={cx(classes.placeholderActionContainer)}>
-        {placeholderActionsForSpacing.map((action) => (
+      {pointerOver &&
+        availableActions.map((action) => (
           <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
-            <StyledIconButton size="small" color="inherit" icon={action.icon} />
+            <StyledIconButton
+              size="small"
+              activeColor={action.activeColor}
+              onClick={action.onClick}
+              color="inherit"
+              icon={action.icon}
+            />
           </Tooltip>
         ))}
+      <span className={cx(classes.placeholderActionContainer)}>
+        {pointerOver &&
+          placeholderActionsForSpacing.map((action) => (
+            <Tooltip key={action.key} arrow title={action.tooltip} placement="top">
+              <StyledIconButton size="small" color="inherit" icon={action.icon} />
+            </Tooltip>
+          ))}
       </span>
     </Stack>
   );

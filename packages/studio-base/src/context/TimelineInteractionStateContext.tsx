@@ -85,38 +85,45 @@ export function useSetHoverValue(): TimelineInteractionStateStore["setHoverValue
   return useTimelineInteractionState(selectSetHoverValue);
 }
 
+const undefinedSelector = () => undefined;
+
 /**
- * Encapsulates logic for selecting the current hover value depending
- * on which component registered the hover value.
+ * Select the current hover value.
+ *
+ * By default this hook will return the latest hover value regardless of origin. Use options to
+ * control when hover value updates cause the hook to return the updated value.
+ *
+ * @param componentId allow updates from hover values to those matching this componentId. If undefined, any component's hover values are returned.
+ * @param disableUpdates disable any updates regardless of origin. If set the hook will not update with hover values even if other options would cause a match.
+ * @param isPlaybackSeconds allow updates from hover values for PLAYBACK_SECONDS
  */
-export function useHoverValue(args?: {
-  componentId: string;
-  isTimestampScale: boolean;
+export function useHoverValue(opt?: {
+  componentId?: string;
+  disableUpdates?: boolean;
+  isPlaybackSeconds?: boolean;
 }): HoverValue | undefined {
-  const hasArgs = !!args;
-  const componentId = args?.componentId;
-  const isTimestampScale = args?.isTimestampScale ?? false;
+  const enabled = opt?.disableUpdates !== true;
+  const componentId = opt?.componentId;
+  const isPlaybackSeconds = opt?.isPlaybackSeconds ?? false;
 
   const selector = useCallback(
     (store: TimelineInteractionStateStore) => {
-      if (!hasArgs) {
-        // Raw form -- user needs to check that the value should be shown.
-        return store.hoverValue;
-      }
       if (store.hoverValue == undefined) {
         return undefined;
       }
-      if (store.hoverValue.type === "PLAYBACK_SECONDS" && isTimestampScale) {
+      if (store.hoverValue.type === "PLAYBACK_SECONDS" && isPlaybackSeconds) {
         // Always show playback-time hover values for timestamp-based charts.
         return store.hoverValue;
       }
-      // Otherwise just show hover bars when hovering over the panel itself.
-      return store.hoverValue.componentId === componentId ? store.hoverValue : undefined;
+      // Otherwise only show hover bars when hovering over the component that set the hover value
+      return componentId == undefined || store.hoverValue.componentId === componentId
+        ? store.hoverValue
+        : undefined;
     },
-    [hasArgs, componentId, isTimestampScale],
+    [componentId, isPlaybackSeconds],
   );
 
-  return useTimelineInteractionState(selector);
+  return useTimelineInteractionState(enabled ? selector : undefinedSelector);
 }
 
 /**
@@ -125,8 +132,7 @@ export function useHoverValue(args?: {
  */
 export function useTimelineInteractionState<T>(
   selector: (store: TimelineInteractionStateStore) => T,
-  equalityFn?: (a: T, b: T) => boolean,
 ): T {
   const context = useGuaranteedContext(TimelineInteractionStateContext);
-  return useStore(context, selector, equalityFn);
+  return useStore(context, selector);
 }

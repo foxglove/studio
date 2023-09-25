@@ -83,7 +83,13 @@ const CloseSnackbarAction = ({ id }: { id: SnackbarKey }) => {
   const { closeSnackbar } = useSnackbar();
   const { classes } = useStyles();
   return (
-    <IconButton size="small" className={classes.dismissButton} onClick={() => closeSnackbar(id)}>
+    <IconButton
+      size="small"
+      className={classes.dismissButton}
+      onClick={() => {
+        closeSnackbar(id);
+      }}
+    >
       <Dismiss16Filled />
     </IconButton>
   );
@@ -95,7 +101,7 @@ const Snackbar = forwardRef<HTMLDivElement, CustomContentProps>((props, ref) => 
 });
 Snackbar.displayName = "Snackbar";
 
-export default function StudioToastProvider({ children }: PropsWithChildren<unknown>): JSX.Element {
+export default function StudioToastProvider({ children }: PropsWithChildren): JSX.Element {
   const { classes: containerClasses } = useContainerStyles();
   const { classes } = useStyles();
   return (

@@ -2,14 +2,20 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ErrorCircle16Filled, Square24Filled, Square24Regular } from "@fluentui/react-icons";
-import { Checkbox, Tooltip, Typography } from "@mui/material";
-import { ComponentProps, useMemo, useState } from "react";
+import {
+  Dismiss12Regular,
+  ErrorCircle16Filled,
+  Square24Filled,
+  Square24Regular,
+} from "@fluentui/react-icons";
+import { ButtonBase, Checkbox, Tooltip, Typography } from "@mui/material";
+import { useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
+import { Immutable } from "@foxglove/studio";
+import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
@@ -17,11 +23,11 @@ import { plotPathDisplayName } from "@foxglove/studio-base/panels/Plot/types";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import { PlotPath } from "./internalTypes";
+import { PlotPath, TypedDataSet, TypedData } from "./internalTypes";
 
-type PlotLegendRowProps = {
+type PlotLegendRowProps = Immutable<{
   currentTime?: number;
-  datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
+  datasets: TypedDataSet[];
   hasMismatchedDataLength: boolean;
   index: number;
   onClickPath: () => void;
@@ -29,26 +35,28 @@ type PlotLegendRowProps = {
   paths: PlotPath[];
   savePaths: (paths: PlotPath[]) => void;
   showPlotValuesInLegend: boolean;
-};
+}>;
 
 const ROW_HEIGHT = 28;
 
-const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
+const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _params, classes) => ({
   root: {
     display: "contents",
     cursor: "pointer",
 
     "&:hover": {
-      "& > *:last-child": {
-        opacity: 1,
-      },
       "& > *": {
         backgroundColor: theme.palette.background.paper,
         backgroundImage: `linear-gradient(${[
           "0deg",
-          theme.palette.action.focus,
-          theme.palette.action.focus,
+          theme.palette.action.hover,
+          theme.palette.action.hover,
         ].join(" ,")})`,
+      },
+    },
+    ":not(:hover)": {
+      [`& .${classes.removeButton}`]: {
+        opacity: 0,
       },
     },
   },
@@ -73,6 +81,9 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     "svg:not(.MuiSvgIcon-root)": {
       fontSize: "1em",
     },
+    ":hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
   },
   disabledPathLabel: {
     opacity: 0.5,
@@ -81,7 +92,7 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
     display: "flex",
     alignItems: "center",
     height: ROW_HEIGHT,
-    padding: theme.spacing(0, 2.5, 0, 0.5),
+    paddingInline: theme.spacing(0.75, 2.5),
     gridColumn: "span 2",
     fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
 
@@ -97,6 +108,17 @@ const useStyles = makeStyles<void, "plotName">()((theme, _params, classes) => ({
   },
   errorIcon: {
     color: theme.palette.error.main,
+  },
+  removeButton: {
+    height: ROW_HEIGHT,
+    width: ROW_HEIGHT,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+
+    ":hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
   },
 }));
 
@@ -126,7 +148,8 @@ export function PlotLegendRow({
   const [hoverComponentId] = useState<string>(() => uuidv4());
   const hoverValue = useHoverValue({
     componentId: hoverComponentId,
-    isTimestampScale: true,
+    disableUpdates: !showPlotValuesInLegend,
+    isPlaybackSeconds: true,
   });
 
   const currentValue = useMemo(() => {
@@ -136,8 +159,8 @@ export function PlotLegendRow({
     const timeToCompare = hoverValue?.value ?? currentTime;
 
     let value;
-    for (const pt of correspondingData) {
-      if (timeToCompare == undefined || pt == undefined || pt.x > timeToCompare) {
+    for (const pt of iterateTyped(correspondingData as TypedData[])) {
+      if (timeToCompare == undefined || pt.x > timeToCompare) {
         break;
       }
       value = pt.y;
@@ -165,7 +188,9 @@ export function PlotLegendRow({
           style={{ color: getLineColor(path.color, index) }}
           icon={<Square24Regular />}
           checkedIcon={<Square24Filled />}
-          onClick={(event) => event.stopPropagation()} // prevent toggling from opening settings
+          onClick={(event) => {
+            event.stopPropagation();
+          }} // prevent toggling from opening settings
           onChange={() => {
             const newPaths = paths.slice();
             const newPath = newPaths[index];
@@ -209,6 +234,22 @@ export function PlotLegendRow({
           </Typography>
         </div>
       )}
+      <div>
+        <ButtonBase
+          title="Delete series"
+          aria-label="Delete series"
+          className={classes.removeButton}
+          onClick={() => {
+            const newPaths = paths.slice();
+            if (newPaths.length > 0) {
+              newPaths.splice(index, 1);
+            }
+            savePaths(newPaths);
+          }}
+        >
+          <Dismiss12Regular />
+        </ButtonBase>
+      </div>
     </div>
   );
 }

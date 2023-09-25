@@ -12,7 +12,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { act, renderHook } from "@testing-library/react-hooks";
+import { act, renderHook } from "@testing-library/react";
 import React, { PropsWithChildren } from "react";
 
 import useMessagesByPath from "@foxglove/studio-base/components/MessagePathSyntax/useMessagesByPath";
@@ -59,7 +59,7 @@ function makeMessagePipelineWrapper(initialProps?: WrapperProps) {
   let datatypes: RosDatatypes = initialProps?.datatypes ?? new Map();
   let messages = initialProps?.messages ?? [];
   let activeData = initialProps?.activeData;
-  const wrapper = ({ children }: PropsWithChildren<unknown>) => (
+  const wrapper = ({ children }: PropsWithChildren) => (
     <MockCurrentLayoutProvider initialState={{ globalVariables: initialProps?.globalVariables }}>
       <MockMessagePipelineProvider
         topics={topics}
@@ -100,10 +100,11 @@ describe("useMessagesByPath", () => {
     const { unmount, rerender } = renderHook(Hooks, {
       wrapper,
       initialProps: {
-        paths: ["/some/topic", "/some/other/topic"],
+        paths: ["/some/topic", "/some/other/topic", "/sliced_topic.field"],
         topics: [
           { name: "/some/topic", schemaName: "dummy" },
           { name: "/some/other/topic", schemaName: "dummy" },
+          { name: "/sliced_topic", schemaName: "dummy" },
         ],
       },
     });
@@ -117,6 +118,12 @@ describe("useMessagesByPath", () => {
         [
           { topic: "/some/topic", preloadType: "partial", requestor: undefined },
           { topic: "/some/other/topic", preloadType: "partial", requestor: undefined },
+          {
+            topic: "/sliced_topic",
+            preloadType: "partial",
+            fields: ["field"],
+            requestor: undefined,
+          },
         ],
       ],
       [

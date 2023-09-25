@@ -13,8 +13,7 @@
 
 import { StoryObj } from "@storybook/react";
 
-import RawMessages, { PREV_MSG_METHOD } from "@foxglove/studio-base/panels/RawMessages";
-import { RawMessagesPanelConfig } from "@foxglove/studio-base/panels/RawMessages/types";
+import RawMessages from "@foxglove/studio-base/panels/RawMessages";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import {
@@ -27,6 +26,8 @@ import {
   topicsWithIdsToDiffFixture,
   withMissingData,
 } from "./fixture";
+import type { RawMessagesPanelConfig } from "./types";
+import { Constants, NodeState } from "./types";
 
 const noDiffConfig = {
   diffMethod: "custom",
@@ -113,7 +114,7 @@ export const Overridden: StoryObj = {
         overrideConfig={{
           ...noDiffConfig,
           topicPath: "/msgs/big_topic",
-          expansion: { LotsOfStuff: "c", timestamp_array: "e" },
+          expansion: { LotsOfStuff: NodeState.Collapsed, timestamp_array: NodeState.Expanded },
         }}
       />
     </PanelSetup>
@@ -313,7 +314,7 @@ export const DiffConsecutiveMessages: StoryObj = {
       <RawMessages
         overrideConfig={{
           topicPath: "/foo",
-          diffMethod: PREV_MSG_METHOD,
+          diffMethod: Constants.PREV_MSG_METHOD,
           diffTopicPath: "",
           diffEnabled: true,
           showFullMessageForDiff: true,
@@ -330,7 +331,7 @@ export const DiffConsecutiveMessagesWithFilter: StoryObj = {
       <RawMessages
         overrideConfig={{
           topicPath: "/foo{type==2}",
-          diffMethod: PREV_MSG_METHOD,
+          diffMethod: Constants.PREV_MSG_METHOD,
           diffTopicPath: "",
           diffEnabled: true,
           showFullMessageForDiff: true,
@@ -347,7 +348,7 @@ export const DiffConsecutiveMessagesWithBigint: StoryObj = {
       <RawMessages
         overrideConfig={{
           topicPath: "/baz/bigint",
-          diffMethod: PREV_MSG_METHOD,
+          diffMethod: Constants.PREV_MSG_METHOD,
           diffTopicPath: "",
           diffEnabled: true,
           showFullMessageForDiff: true,
@@ -364,7 +365,7 @@ export const DisplayCorrectMessageWhenDiffIsDisabledEvenWithDiffMethodTopicSet: 
       <RawMessages
         overrideConfig={{
           topicPath: "/foo",
-          diffMethod: PREV_MSG_METHOD,
+          diffMethod: Constants.PREV_MSG_METHOD,
           diffTopicPath: "/another/baz/enum_advanced",
           diffEnabled: false,
           showFullMessageForDiff: true,

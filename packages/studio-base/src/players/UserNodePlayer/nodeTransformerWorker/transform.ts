@@ -21,7 +21,7 @@ import {
   DatatypeExtractionError,
   findReturnType,
 } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/ast";
-import { getNodeProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
+import { getUserScriptProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
 import {
   baseCompilerOptions,
   transformDiagnosticToMarkerData,
@@ -76,6 +76,7 @@ export const getInputTopics = (nodeData: NodeData): NodeData => {
 
   const inputsExport = typeChecker
     .getExportsOfModule(symbol)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     .find((node) => node.escapedName === "inputs");
   if (!inputsExport) {
     const error: Diagnostic = {
@@ -218,7 +219,7 @@ export const compile = (nodeData: NodeData): NodeData => {
 
   const options: ts.CompilerOptions = baseCompilerOptions;
   const nodeFileName = "/studio_script/index.ts";
-  const projectConfig = getNodeProjectConfig();
+  const projectConfig = getUserScriptProjectConfig();
   const projectCode = new Map<string, string>();
 
   const sourceCodeMap = new Map<string, string>();

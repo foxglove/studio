@@ -24,7 +24,14 @@ import {
   Typography,
   inputClasses,
 } from "@mui/material";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ImperativePanelHandle,
+  PanelGroup,
+  PanelResizeHandle,
+  Panel as ResizablePanel,
+} from "react-resizable-panels";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
@@ -58,8 +65,11 @@ import { Input, Message } from "./types";
 // Your script can output well-known message types, any of your custom message types, or
 // complete custom message types.
 //
-// Use \`Message\` to access your data source types or well-known types:
+// Use \`Message\` to access types from the schemas defined in your data source:
 // type Twist = Message<"geometry_msgs/Twist">;
+//
+// Import from the @foxglove/schemas package to use foxglove schema types:
+// import { Pose, LocationFix } from "@foxglove/schemas";
 //
 // Conventionally, it's common to make a _type alias_ for your script's output type
 // and use that type name as the return type for your script function.
@@ -108,6 +118,27 @@ const useStyles = makeStyles()((theme) => ({
       padding: theme.spacing(1),
     },
   },
+  resizeHandle: {
+    position: "relative",
+    height: 10,
+    marginTop: -10,
+
+    ":hover": {
+      backgroundPosition: "50% 0",
+      backgroundSize: "100% 50px",
+      backgroundImage: `radial-gradient(${[
+        "at center center",
+        `${theme.palette.action.focus} 0%`,
+        "transparent 70%",
+        "transparent 100%",
+      ].join(",")})`,
+      boxShadow: `0 2px 0 0 ${
+        theme.palette.mode === "dark"
+          ? tc(theme.palette.divider).lighten().toString()
+          : tc(theme.palette.divider).darken().toString()
+      }`,
+    },
+  },
 }));
 
 export type Explorer = undefined | "nodes" | "utils" | "templates";
@@ -149,7 +180,9 @@ const WelcomeScreen = ({ addNewNode }: { addNewNode: (code?: string) => void }) 
           <Button
             color="inherit"
             variant="contained"
-            onClick={() => addNewNode()}
+            onClick={() => {
+              addNewNode();
+            }}
             startIcon={<AddIcon />}
           >
             New script
@@ -320,6 +353,31 @@ function NodePlayground(props: Props) {
     [scriptBackStack],
   );
 
+  const saveOnLeave = useCallback(() => {
+    if (isNodeSaved) {
+      return;
+    }
+    // automatically save script on panel leave
+    saveCurrentNode();
+  }, [isNodeSaved, saveCurrentNode]);
+
+  // The cleanup function below should only run when this component unmounts.
+  // We're using a ref here so that the cleanup useEffect doesn't run whenever one of the callback
+  // dependencies changes, only when the component unmounts and with the most up-to-date callback.
+  const saveOnLeaveRef = useRef(saveOnLeave);
+  saveOnLeaveRef.current = saveOnLeave;
+  useEffect(() => {
+    return () => {
+      saveOnLeaveRef.current();
+    };
+  }, []);
+
+  const bottomBarRef = useRef<ImperativePanelHandle>(ReactNull);
+
+  const onChangeBottomBarTab = useCallback(() => {
+    bottomBarRef.current?.expand();
+  }, []);
+
   return (
     <Stack fullHeight>
       <PanelToolbar />
@@ -382,23 +440,17 @@ function NodePlayground(props: Props) {
               title="New node"
               data-testid="new-node"
               size="small"
-              onClick={() => addNewNode()}
+              onClick={() => {
+                addNewNode();
+              }}
             >
               <AddIcon />
             </IconButton>
           </Stack>
 
-          <Stack flexGrow={1} overflow="hidden ">
+          <PanelGroup direction="vertical" units="pixels">
             {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}
-            <Stack
-              flexGrow={1}
-              fullWidth
-              overflow="hidden"
-              style={{
-                display: selectedNodeId != undefined ? "flex" : "none",
-                /* Ensures the monaco-editor starts loading before the user opens it */
-              }}
-            >
+            <ResizablePanel>
               <Suspense
                 fallback={
                   <Stack
@@ -429,17 +481,27 @@ function NodePlayground(props: Props) {
                   />
                 )}
               </Suspense>
-            </Stack>
-            <Stack>
+            </ResizablePanel>
+            <PanelResizeHandle className={classes.resizeHandle} />
+            <ResizablePanel
+              collapsible
+              minSize={38}
+              collapsedSize={38}
+              defaultSize={38}
+              ref={bottomBarRef}
+            >
               <BottomBar
-                nodeId={selectedNodeId}
-                isSaved={isNodeSaved}
-                save={() => saveNode(currentScript?.code)}
                 diagnostics={selectedNodeDiagnostics}
+                isSaved={isNodeSaved}
                 logs={selectedNodeLogs}
+                nodeId={selectedNodeId}
+                onChangeTab={onChangeBottomBarTab}
+                save={() => {
+                  saveNode(currentScript?.code);
+                }}
               />
-            </Stack>
-          </Stack>
+            </ResizablePanel>
+          </PanelGroup>
         </Stack>
       </Stack>
     </Stack>

@@ -22,7 +22,6 @@ jobs:
             command: |
               # lint steps
               set -x
-              yarn constraints
               yarn license-check
               yarn dedupe --check
               yarn run tsc --noEmit # typecheck files that are not included by webpack or package builds
@@ -46,17 +45,17 @@ jobs:
     name: ${{ matrix.config.name }} (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4.1.0
         with:
           lfs: true
 
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v3.8.1
         with:
           node-version: 16.17
       - run: corepack enable yarn
 
       - name: Restore cache
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: |
             .yarn/cache
@@ -73,18 +72,18 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4.1.0
         with:
           fetch-depth: 0 # Required for Chromatic
           lfs: true
 
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v3.8.1
         with:
           node-version: 16.17
       - run: corepack enable yarn
 
       - name: Restore cache
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: |
             .yarn/cache
@@ -117,17 +116,17 @@ jobs:
     name: integration (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4.1.0
         with:
           lfs: true
 
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v3.8.1
         with:
           node-version: 16.17
       - run: corepack enable yarn
 
       - name: Restore cache
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: |
             .yarn/cache

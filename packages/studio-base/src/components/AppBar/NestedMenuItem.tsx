@@ -3,21 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ChevronRight12Regular } from "@fluentui/react-icons";
-import { Divider, Menu, MenuItem, MenuItemProps } from "@mui/material";
-import { PropsWithChildren, ReactNode, useState } from "react";
+import { Divider, Menu, MenuItem, Typography } from "@mui/material";
+import { PropsWithChildren, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
-export type MenuItem =
-  | {
-      type: "item";
-      label: ReactNode;
-      key: string;
-      disabled?: boolean;
-      shortcut?: string;
-      onClick?: MenuItemProps["onClick"];
-      external?: boolean;
-    }
-  | { type: "divider" };
+import { AppBarMenuItem } from "./types";
 
 const useStyles = makeStyles<void, "endIcon">()((theme, _params, classes) => ({
   menu: {
@@ -55,7 +45,7 @@ const useStyles = makeStyles<void, "endIcon">()((theme, _params, classes) => ({
 export function NestedMenuItem(
   props: PropsWithChildren<{
     id?: string;
-    items: MenuItem[];
+    items: AppBarMenuItem[];
     open: boolean;
     onPointerEnter: (itemId: string) => void;
   }>,
@@ -74,7 +64,9 @@ export function NestedMenuItem(
     <>
       <MenuItem
         id={id}
-        ref={(element) => setAnchorEl(element ?? undefined)}
+        ref={(element) => {
+          setAnchorEl(element ?? undefined);
+        }}
         selected={open}
         className={classes.menuItem}
         onPointerEnter={handlePointerEnter}
@@ -91,7 +83,9 @@ export function NestedMenuItem(
         open={open}
         disablePortal
         anchorEl={anchorEl}
-        onClose={() => setAnchorEl(undefined)}
+        onClose={() => {
+          setAnchorEl(undefined);
+        }}
         onMouseLeave={() => {
           setAnchorEl(undefined);
         }}
@@ -102,21 +96,30 @@ export function NestedMenuItem(
         disableEnforceFocus
         hideBackdrop
       >
-        {items.map((item, idx) =>
-          item.type !== "divider" ? (
-            <MenuItem
-              className={classes.menuItem}
-              key={item.key}
-              onClick={item.onClick}
-              disabled={item.disabled}
-            >
-              {item.label}
-              {item.shortcut ? <kbd>{item.shortcut}</kbd> : undefined}
-            </MenuItem>
-          ) : (
-            <Divider key={`${idx}-divider`} variant="middle" />
-          ),
-        )}
+        {items.map((item, idx) => {
+          switch (item.type) {
+            case "item":
+              return (
+                <MenuItem
+                  className={classes.menuItem}
+                  key={item.key}
+                  onClick={item.onClick}
+                  disabled={item.disabled}
+                >
+                  {item.label}
+                  {item.shortcut && <kbd>{item.shortcut}</kbd>}
+                </MenuItem>
+              );
+            case "divider":
+              return <Divider variant="middle" key={`divider${idx}`} />;
+            case "subheader":
+              return (
+                <MenuItem disabled key={item.key}>
+                  <Typography variant="overline">{item.label}</Typography>
+                </MenuItem>
+              );
+          }
+        })}
       </Menu>
     </>
   );

@@ -2,12 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { isEqual, sortedIndexBy } from "lodash";
+import EventEmitter from "eventemitter3";
+import * as _ from "lodash-es";
 
 import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import { subtract, add, toNanoSec, compare } from "@foxglove/rostime";
-import { Time, MessageEvent } from "@foxglove/studio";
+import { add, compare, subtract, toNanoSec } from "@foxglove/rostime";
+import { MessageEvent, Time } from "@foxglove/studio";
+import { TopicSelection } from "@foxglove/studio-base/players/types";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
 import {
@@ -22,6 +24,9 @@ const log = Log.getLogger(__filename);
 
 // An individual cache item represents a continuous range of CacheIteratorItems
 type CacheBlock = {
+  // Unique id of the cache item.
+  id: bigint;
+
   // The start time of the cache item (inclusive).
   //
   // When reading a data source, the first message may come after the requested "start" time.
@@ -52,6 +57,11 @@ type Options = {
   maxTotalSize?: number;
 };
 
+interface EventTypes {
+  /** Dispatched when the loaded ranges have changed. Use `loadedRanges()` to get the new ranges. */
+  loadedRangesChange: () => void;
+}
+
 /**
  * CachingIterableSource proxies access to IIterableSource through a memory buffer.
  *
@@ -59,11 +69,11 @@ type Options = {
  * buffer for previously read messages, then the underlying source is used and the messages are
  * cached when read.
  */
-class CachingIterableSource implements IIterableSource {
+class CachingIterableSource extends EventEmitter<EventTypes> implements IIterableSource {
   #source: IIterableSource;
 
   // Stores which topics we have been caching. See notes at usage site for why we store this.
-  #cachedTopics: string[] = [];
+  #cachedTopics: TopicSelection = new Map();
 
   // The producer loads results into the cache and the consumer reads from the cache.
   #cache: CacheBlock[] = [];
@@ -81,7 +91,15 @@ class CachingIterableSource implements IIterableSource {
   // Maximum size per block
   #maxBlockSizeBytes: number;
 
+  // The current read head, used for determining which blocks are evictable
+  #currentReadHead: Time = { sec: 0, nsec: 0 };
+
+  #nextBlockId: bigint = BigInt(0);
+  #evictableBlockCandidates: CacheBlock["id"][] = [];
+
   public constructor(source: IIterableSource, opt?: Options) {
+    super();
+
     this.#source = source;
     this.#maxTotalSizeBytes = opt?.maxTotalSize ?? 1073741824; // 1GB
     this.#maxBlockSizeBytes = opt?.maxBlockSize ?? 52428800; // 50MB
@@ -94,7 +112,7 @@ class CachingIterableSource implements IIterableSource {
 
   public async terminate(): Promise<void> {
     this.#cache.length = 0;
-    this.#cachedTopics.length = 0;
+    this.#cachedTopics.clear();
   }
 
   public loadedRanges(): Range[] {
@@ -111,13 +129,12 @@ class CachingIterableSource implements IIterableSource {
     const maxEnd = args.end ?? this.#initResult.end;
     const maxEndNanos = toNanoSec(maxEnd);
 
-    const newTopics = [...args.topics].sort();
-
     // When the list of topics we want changes we purge the entire cache and start again.
+    //
     // This is heavy-handed but avoids dealing with how to handle disjoint cached ranges across topics.
-    if (!isEqual(newTopics, this.#cachedTopics)) {
+    if (!_.isEqual(args.topics, this.#cachedTopics)) {
       log.debug("topics changed - clearing cache, resetting range");
-      this.#cachedTopics = newTopics;
+      this.#cachedTopics = args.topics;
       this.#cache.length = 0;
       this.#totalSizeBytes = 0;
       this.#recomputeLoadedRangeCache();
@@ -127,14 +144,27 @@ class CachingIterableSource implements IIterableSource {
     // moves forward to track the next place we should be reading.
     let readHead = args.start ?? this.#initResult.start;
 
+    const findIndexContainingPredicate = (item: CacheBlock) => {
+      return compare(item.start, readHead) <= 0 && compare(item.end, readHead) >= 0;
+    };
+
+    const findAfterPredicate = (item: CacheBlock) => {
+      // Find the first index where readHead is less than an existing start
+      return compare(readHead, item.start) < 0;
+    };
+
+    this.#currentReadHead = readHead;
+
+    // Compute evictable block candiates such that canReadMore() returns a correct result as the
+    // callee may stop iterating when canReadMore() returns false.
+    this.#evictableBlockCandidates = this.#findEvictableBlockCandidates(this.#currentReadHead);
+
     for (;;) {
       if (compare(readHead, maxEnd) > 0) {
         break;
       }
 
-      const cacheBlockIndex = this.#cache.findIndex((item) => {
-        return compare(item.start, readHead) <= 0 && compare(item.end, readHead) >= 0;
-      });
+      const cacheBlockIndex = this.#cache.findIndex(findIndexContainingPredicate);
 
       let block = this.#cache[cacheBlockIndex];
 
@@ -187,10 +217,7 @@ class CachingIterableSource implements IIterableSource {
       const sourceReadStart = readHead;
 
       // Look for the block that comes after our read head
-      const nextBlockIndex = this.#cache.findIndex((item) => {
-        // Find the first index where readHead is less than an existing start
-        return compare(readHead, item.start) < 0;
-      });
+      const nextBlockIndex = this.#cache.findIndex(findAfterPredicate);
 
       // If we have a next block (this is the block ours would come before), then we only need
       // to read up to that block.
@@ -226,6 +253,7 @@ class CachingIterableSource implements IIterableSource {
         // if there is no block, we make a new block
         if (!block) {
           const newBlock: CacheBlock = {
+            id: this.#nextBlockId++,
             start: readHead,
             end: readHead,
             items: [],
@@ -235,7 +263,9 @@ class CachingIterableSource implements IIterableSource {
 
           // Find where we need to insert our new block.
           // It should come before any blocks with a start time > than new block start time.
-          const insertIndex = sortedIndexBy(this.#cache, newBlock, (item) => toNanoSec(item.start));
+          const insertIndex = _.sortedIndexBy(this.#cache, newBlock, (item) =>
+            toNanoSec(item.start),
+          );
           this.#cache.splice(insertIndex, 0, newBlock);
 
           block = newBlock;
@@ -286,7 +316,12 @@ class CachingIterableSource implements IIterableSource {
 
         const sizeInBytes =
           iterResult.type === "message-event" ? iterResult.msgEvent.sizeInBytes : 0;
-        if (this.#maybePurgeCache({ activeBlock: block, sizeInBytes })) {
+        if (
+          this.#maybePurgeCache({
+            activeBlock: block,
+            sizeInBytes,
+          })
+        ) {
           this.#recomputeLoadedRangeCache();
         }
 
@@ -323,6 +358,7 @@ class CachingIterableSource implements IIterableSource {
         // Since we never loop again we need to insert an empty block from the readHead
         // to sourceReadEnd because we know there's nothing else in that range.
         const newBlock: CacheBlock = {
+          id: this.#nextBlockId++,
           start: readHead,
           end: sourceReadEnd,
           items: pendingIterResults,
@@ -338,7 +374,7 @@ class CachingIterableSource implements IIterableSource {
 
         // Find where we need to insert our new block.
         // It should come before any blocks with a start time > than new block start time.
-        const insertIndex = sortedIndexBy(this.#cache, newBlock, (item) => toNanoSec(item.start));
+        const insertIndex = _.sortedIndexBy(this.#cache, newBlock, (item) => toNanoSec(item.start));
         this.#cache.splice(insertIndex, 0, newBlock);
 
         this.#recomputeLoadedRangeCache();
@@ -363,7 +399,7 @@ class CachingIterableSource implements IIterableSource {
     });
 
     const out: MessageEvent[] = [];
-    const needsTopics = new Set(args.topics);
+    const needsTopics = new Map(args.topics);
 
     // Starting at the block we found for args.time, work backwards through blocks until:
     // * we've loaded all the topics
@@ -430,7 +466,7 @@ class CachingIterableSource implements IIterableSource {
     // fallback to the source for any topics we weren't able to load
     const sourceBackfill = await this.#source.getBackfillMessages({
       ...args,
-      topics: Array.from(needsTopics),
+      topics: needsTopics,
     });
 
     out.push(...sourceBackfill);
@@ -450,11 +486,13 @@ class CachingIterableSource implements IIterableSource {
     const rangeNs = Number(toNanoSec(subtract(this.#initResult.end, this.#initResult.start)));
     if (rangeNs === 0) {
       this.#loadedRangesCache = [{ start: 0, end: 1 }];
+      this.emit("loadedRangesChange");
       return;
     }
 
     if (this.#cache.length === 0) {
       this.#loadedRangesCache = [{ start: 0, end: 0 }];
+      this.emit("loadedRangesChange");
       return;
     }
 
@@ -488,9 +526,98 @@ class CachingIterableSource implements IIterableSource {
     }
 
     this.#loadedRangesCache = ranges;
+    this.emit("loadedRangesChange");
   }
 
-  // Purge the oldest cache block if adding sizeInBytes to the cache would exceed the maxTotalSizeBytes
+  /**
+   * Update the current read head, such that the source can determine which blocks are evictable.
+   * @param readHead current read head
+   */
+  public setCurrentReadHead(readHead: Time): void {
+    this.#currentReadHead = readHead;
+  }
+
+  /**
+   * Checks if the current cache size allows reading more messages into the cache or if there are
+   * blocks that can be evicted.
+   * @returns True if more messages can be read, false otherwise.
+   */
+  public canReadMore(): boolean {
+    if (this.#totalSizeBytes < this.#maxTotalSizeBytes) {
+      // Still room for reading new messages from the source.
+      return true;
+    }
+
+    return this.#evictableBlockCandidates.length > 0;
+  }
+
+  /**
+   * Determines which cache blocks can be evicted. A cache block is evictable, if
+   * - its end time is before the given readHead
+   * - it is not part of the continuous block chain starting from the block that contains
+   *   the given readHead
+   * @param readHead current read head
+   * @returns A list of evictable blocks (ordered by most evictable first) or an empty list
+   * if there is no evictable block.
+   */
+  #findEvictableBlockCandidates(readHead: Time): CacheBlock["id"][] {
+    if (this.#cache.length === 0) {
+      return [];
+    }
+
+    // Create a light, mutable copy of the current cache.
+    const mappedCache = this.#cache.map((block) => ({
+      id: block.id,
+      start: block.start,
+      end: block.end,
+    }));
+    // Sort blocks by time (earlier blocks first).
+    mappedCache.sort((a, b) => compare(a.end, b.end));
+    // Find the index of the block that contains the current read head.
+    const readHeadIdx = mappedCache.findIndex(
+      (block) => compare(block.start, readHead) <= 0 && compare(block.end, readHead) >= 0,
+    );
+
+    if (readHeadIdx === -1) {
+      // No block contains current read head, return the oldest cache block.
+      // This can only happen when seeked to a new time and no message has been read yet, as
+      // reading a new message that does not fit in any block will always create a new cache block.
+      const oldestBlockIdx = minIndexBy(this.#cache, (a, b) => a.lastAccess - b.lastAccess);
+      const oldestBlock = this.#cache[oldestBlockIdx];
+      if (!oldestBlock) {
+        // This should never happen as the cache is not empty and the index is valid.
+        throw new Error("Failed to retrieve oldest block from cache");
+      }
+      return [oldestBlock.id];
+    }
+
+    // Blocks that are before the read head can be evicted.
+    const blockIdsBeforeReadHead = mappedCache.splice(0, readHeadIdx).map((item) => item.id);
+
+    // Iterate through remaining blocks until we find a gap in the block chain
+    let prevEnd: bigint | undefined;
+    let idx = 0;
+    for (idx = 0; idx < mappedCache.length; ++idx) {
+      const block = mappedCache[idx]!;
+      const start = toNanoSec(block.start);
+      const end = toNanoSec(block.end);
+      if (prevEnd == undefined || prevEnd + 1n === start) {
+        prevEnd = end;
+      } else {
+        break;
+      }
+    }
+
+    // All blocks that are not part of the first block chain can be considered evictable.
+    const blockIdsAfterGap = mappedCache.splice(idx).map((item) => item.id);
+
+    return [
+      ...blockIdsBeforeReadHead,
+      ...blockIdsAfterGap.reverse(), // Reverse order (furthest away from read head first)
+    ];
+  }
+
+  // Attempt to purge a cache block if adding sizeInBytes to the cache would exceed the maxTotalSizeBytes
   // @return true if a block was purged
   //
   // Throws if the cache block we want to purge is the active block.
@@ -502,16 +629,22 @@ class CachingIterableSource implements IIterableSource {
       return false;
     }
 
-    // Find the oldest cache item
-    const oldestIdx = minIndexBy(this.#cache, (a, b) => a.lastAccess - b.lastAccess);
+    // Find evictable block candidates
+    this.#evictableBlockCandidates = this.#findEvictableBlockCandidates(this.#currentReadHead);
+    if (this.#evictableBlockCandidates.length === 0) {
+      return false;
+    }
 
-    const oldestBlock = this.#cache[oldestIdx];
-    if (oldestBlock) {
-      if (oldestBlock === activeBlock) {
+    // Evict the first evictable candidate
+    const blockId = this.#evictableBlockCandidates.splice(0, 1)[0];
+    const idx = this.#cache.findIndex((item) => item.id === blockId);
+    const block = this.#cache[idx];
+    if (block) {
+      if (block === activeBlock) {
         throw new Error("Cannot evict the active cache block.");
       }
-      this.#totalSizeBytes -= oldestBlock.size;
-      this.#cache.splice(oldestIdx, 1);
+      this.#totalSizeBytes -= block.size;
+      this.#cache.splice(idx, 1);
       return true;
     }
 

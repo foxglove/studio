@@ -12,7 +12,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import { QUAT_IDENTITY, rad2deg } from "./common";
 import useDelayedFixture from "./useDelayedFixture";
-import { ThreeDeePanel } from "../index";
+import ThreeDeePanel from "../index";
 import { OccupancyGrid, TransformStamped } from "../ros";
 
 export default {
@@ -166,7 +166,7 @@ export const Occupancy_Grid_Costmap_With_Settings: StoryObj = {
 
   play: async () => {
     const label = await screen.findByText("/custom");
-    userEvent.click(label);
+    await userEvent.click(label);
   },
 };
 

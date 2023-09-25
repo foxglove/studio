@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { screen, userEvent } from "@storybook/testing-library";
+import { screen, userEvent, within } from "@storybook/testing-library";
 import tinycolor from "tinycolor2";
 
 import { ImageAnnotations, LineType, PointsAnnotationType, SceneUpdate } from "@foxglove/schemas";
@@ -14,13 +14,13 @@ import { xyzrpyToPose } from "@foxglove/studio-base/panels/ThreeDeeRender/transf
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 
-import { ImagePanel, ThreeDeePanel } from "../../index";
+import { ImagePanel } from "../../index";
 import { TransformStamped } from "../../ros";
 import { QUAT_IDENTITY, makeColor } from "../common";
 
 export default {
   title: "panels/ThreeDeeRender/Images",
-  component: ThreeDeePanel,
+  component: ImagePanel,
   parameters: { colorScheme: "light" },
 };
 
@@ -209,6 +209,24 @@ const ImageWith3D = (initialConfig: ImageModeConfig): JSX.Element => {
           thickness: 0.5,
         },
       ],
+      texts: [
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          position: { x: 20, y: 30 },
+          text: "Hi",
+          font_size: 5,
+          text_color: { r: 1, g: 0, b: 0, a: 1 },
+          background_color: { r: 1, g: 1, b: 0, a: 1 },
+        },
+        {
+          timestamp: { sec: 0, nsec: 0 },
+          position: { x: 20, y: 32 },
+          text: "hello",
+          font_size: 3,
+          text_color: { r: 0.3, g: 0.5, b: 0.5, a: 0.8 },
+          background_color: { r: 1, g: 1, b: 1, a: 0.2 },
+        },
+      ],
     },
     schemaName: "foxglove.ImageAnnotations",
     sizeInBytes: 0,
@@ -291,12 +309,10 @@ export const ImageOnlyModeOff: StoryObj<React.ComponentProps<typeof ImageWith3D>
 export const ImageOnlyModeOn: StoryObj<React.ComponentProps<typeof ImageWith3D>> = {
   render: ImageWith3D,
   args: { imageTopic: "camera/img", calibrationTopic: undefined },
-  play: async () => {
-    const icons = await screen.findAllByTestId("ErrorIcon");
-    if (icons.length !== 1) {
-      throw new Error("Expected 1 error icon");
-    }
-    userEvent.hover(icons[0]!);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const icon = await canvas.findByTestId("ErrorIcon");
+    await userEvent.hover(icon);
   },
 };
 
@@ -313,30 +329,9 @@ export const ImageOnlyModeOffWithAutoSelectedCalibration: StoryObj<
   render: ImageWith3D,
   args: { imageTopic: "abc", calibrationTopic: undefined },
   play: async () => {
-    userEvent.click(await screen.findByText("abc", { selector: ".MuiSelect-select" }));
-    userEvent.click(await screen.findByText("camera/img"));
-  },
-};
-
-export const ImageModeForegroundOpacity50Percent: StoryObj<
-  React.ComponentProps<typeof ImageWith3D>
-> = {
-  render: ImageWith3D,
-  args: {
-    imageTopic: "camera/img",
-    calibrationTopic: "camera/calibration",
-    foregroundOpacity: 0.5,
-  },
-};
-
-export const ImageModeForegroundOpacity100Percent: StoryObj<
-  React.ComponentProps<typeof ImageWith3D>
-> = {
-  render: ImageWith3D,
-  args: {
-    imageTopic: "camera/img",
-    calibrationTopic: "camera/calibration",
-    foregroundOpacity: 1.0,
+    const { click } = userEvent.setup();
+    await click(await screen.findByText("abc", { selector: ".MuiSelect-select" }));
+    await click(await screen.findByText("camera/img"));
   },
 };
 

@@ -238,6 +238,39 @@ export type RenderState = {
   appSettings?: Map<string, AppSettingValue>;
 };
 
+export type DraggedMessagePath = {
+  /** The full message path */
+  path: string;
+  /** The schema name of the top-level topic being dragged */
+  rootSchemaName: string | undefined;
+  /** True if the path represents a whole topic (no message path component). */
+  isTopic: boolean;
+  /** True if the path represents a primitive value inside a message. */
+  isLeaf: boolean;
+};
+
+export type MessagePathDropStatus = {
+  /** True if the panel would be able to accept this dragged message path. */
+  canDrop: boolean;
+  /**
+   * Indicate the type of operation that would occur if this path were dropped. Used to change the
+   * mouse cursor.
+   */
+  effect?: "replace" | "add";
+  /**
+   * A message to display to the user indicating what will happen when the path is dropped.
+   */
+  message?: string;
+};
+
+export type MessagePathDropConfig = {
+  /** Called when the user drags message paths over the panel. */
+  getDropStatus: (paths: readonly DraggedMessagePath[]) => MessagePathDropStatus;
+
+  /** Called when the user drops message paths on the panel. */
+  handleDrop: (paths: readonly DraggedMessagePath[]) => void;
+};
+
 export type PanelExtensionContext = {
   /**
    * The root element for the panel. Add your panel elements as children under this element.
@@ -394,6 +427,12 @@ export type PanelExtensionContext = {
    * manually. A value of `undefined` will display the panel's name in the title bar.
    */
   setDefaultPanelTitle(defaultTitle: string | undefined): void;
+
+  /**
+   * Updates the configuration for message path drag & drop support. A value of `undefined`
+   * indicates that the panel does not accept any dragged message paths.
+   */
+  EXPERIMENTAL_setMessagePathDropConfig: (config: MessagePathDropConfig | undefined) => void;
 };
 
 export type ExtensionPanelRegistration = {
@@ -417,6 +456,20 @@ export type RegisterMessageConverterArgs<Src> = {
   converter: (msg: Src, event: Immutable<MessageEvent<Src>>) => unknown;
 };
 
+type BaseTopic = { name: string; schemaName?: string };
+type TopicAlias = { name: string; sourceTopicName: string };
+
+/**
+ * An AliasFunction takes a list of data source topics and variables and outputs
+ * a list of aliased topics.
+ */
+export type TopicAliasFunction = (
+  args: Immutable<{
+    topics: BaseTopic[];
+    globalVariables: Readonly<Record<string, VariableValue>>;
+  }>,
+) => TopicAlias[];
+
 export interface ExtensionContext {
   /** The current _mode_ of the application. */
   readonly mode: "production" | "development" | "test";
@@ -424,11 +477,16 @@ export interface ExtensionContext {
   registerPanel(params: ExtensionPanelRegistration): void;
 
   registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>): void;
+
+  /**
+   * Registers a new alias function with the extension context. The function will be
+   * called every time there is a new set of topics and variables and returns an array of
+   * topic aliases.
+   */
+  registerTopicAliases(aliasFunction: TopicAliasFunction): void;
 }
 
-export interface ExtensionActivate {
-  (extensionContext: ExtensionContext): void;
-}
+export type ExtensionActivate = (extensionContext: ExtensionContext) => void;
 
 // ExtensionModule describes the interface your extension entry level module must export
 // as its default export
@@ -481,7 +539,16 @@ export type SettingsIcon =
  * in the settings editor.
  */
 export type SettingsTreeFieldValue =
-  | { input: "autocomplete"; value?: string; items: string[] }
+  | {
+      input: "autocomplete";
+      value?: string;
+      items: string[];
+
+      /**
+       * Optional placeholder text displayed in the field input when value is undefined
+       */
+      placeholder?: string;
+    }
   | { input: "boolean"; value?: boolean }
   | {
       input: "rgb";
@@ -535,12 +602,12 @@ export type SettingsTreeFieldValue =
   | {
       input: "select";
       value?: number | number[];
-      options: Array<{ label: string; value: undefined | number }>;
+      options: Array<{ label: string; value: undefined | number; disabled?: boolean }>;
     }
   | {
       input: "select";
       value?: string | string[];
-      options: Array<{ label: string; value: undefined | string }>;
+      options: Array<{ label: string; value: undefined | string; disabled?: boolean }>;
     }
   | {
       input: "string";

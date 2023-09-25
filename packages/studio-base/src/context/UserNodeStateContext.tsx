@@ -20,7 +20,7 @@ type UserNodeState = {
   };
 };
 
-export const UserNodeStateContext = createContext<
+const UserNodeStateContext = createContext<
   | {
       state: UserNodeState;
       setUserNodeDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
@@ -33,7 +33,7 @@ export const UserNodeStateContext = createContext<
 >(undefined);
 UserNodeStateContext.displayName = "UserNodeStateContext";
 
-export function UserNodeStateProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
+export function UserNodeStateProvider({ children }: React.PropsWithChildren): JSX.Element {
   const [state, setState] = useState<UserNodeState>({
     rosLib: ros_lib_dts,
     typesLib: generateEmptyTypesLib(),

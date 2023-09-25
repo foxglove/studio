@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PinholeCameraModel } from "@foxglove/den/image";
-import { getAnnotationAtPath } from "@foxglove/studio-base/panels/Image/lib/normalizeAnnotations";
-import { TextAnnotation as NormalizedTextAnnotation } from "@foxglove/studio-base/panels/Image/types";
-import { ANNOTATION_RENDER_ORDER } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/annotations/annotationRenderOrder";
 import { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 import { Label, LabelPool } from "@foxglove/three-text";
 
+import { ANNOTATION_RENDER_ORDER } from "./annotationRenderOrder";
+import { getAnnotationAtPath } from "./normalizeAnnotations";
+import { TextAnnotation as NormalizedTextAnnotation } from "./types";
 import { BaseUserData, Renderable } from "../../../Renderable";
 import { SRGBToLinear, getLuminance } from "../../../color";
 
@@ -113,15 +113,15 @@ export class RenderableTextAnnotation extends Renderable<BaseUserData, /*TRender
         SRGBToLinear(textColor.r),
         SRGBToLinear(textColor.g),
         SRGBToLinear(textColor.b),
+        textColor.a,
       );
-      // Need to keep it transparent so that other transparent objects aren't rendered over it
-      this.#label.setOpacity(Math.min(textColor.a, 0.999));
 
       if (backgroundColor) {
         this.#label.setBackgroundColor(
           SRGBToLinear(backgroundColor.r),
           SRGBToLinear(backgroundColor.g),
           SRGBToLinear(backgroundColor.b),
+          backgroundColor.a,
         );
       } else {
         const foregroundIsDark = getLuminance(textColor.r, textColor.g, textColor.b) < 0.5;

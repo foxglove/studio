@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { set } from "lodash";
+import { t } from "i18next";
+import * as _ from "lodash-es";
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction } from "@foxglove/studio";
@@ -34,8 +35,9 @@ const DEFAULT_SETTINGS: LayerSettingsMarker = {
 };
 
 export class Markers extends SceneExtension<TopicMarkers> {
-  public constructor(renderer: IRenderer) {
-    super("foxglove.Markers", renderer);
+  public static extensionId = "foxglove.Markers";
+  public constructor(renderer: IRenderer, name: string = Markers.extensionId) {
+    super(name, renderer);
   }
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
     return [
@@ -71,12 +73,16 @@ export class Markers extends SceneExtension<TopicMarkers> {
         icon: "Shapes",
         order: topic.name.toLocaleLowerCase(),
         fields: {
-          color: { label: "Color", input: "rgba", value: config.color },
-          showOutlines: { label: "Show outline", input: "boolean", value: config.showOutlines },
+          color: { label: t("threeDee:color"), input: "rgba", value: config.color },
+          showOutlines: {
+            label: t("threeDee:showOutline"),
+            input: "boolean",
+            value: config.showOutlines ?? DEFAULT_SETTINGS.showOutlines,
+          },
           selectedIdVariable: {
-            label: "Selection Variable",
+            label: t("threeDee:selectionVariable"),
             input: "string",
-            help: "When selecting a marker, this global variable will be set to the marker ID",
+            help: t("threeDee:selectionVariableHelp"),
             value: config.selectedIdVariable,
             placeholder: SELECTED_ID_VARIABLE,
           },
@@ -158,7 +164,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
       // but the config is stored with paths of the form
       //   ["topics", <topic>, "namespaces", <namespace>, "visible"]
       const actualPath = ["topics", topicName, "namespaces", namespace, fieldName];
-      set(draft, actualPath, action.payload.value);
+      _.set(draft, actualPath, action.payload.value);
     });
 
     // Update the MarkersNamespace settings

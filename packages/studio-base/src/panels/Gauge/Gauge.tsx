@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { last } from "lodash";
+import * as _ from "lodash-es";
 import { useCallback, useEffect, useLayoutEffect, useReducer, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -33,7 +33,7 @@ type State = {
   path: string;
   parsedPath: RosPath | undefined;
   latestMessage: MessageEvent | undefined;
-  latestMatchingQueriedData: unknown | undefined;
+  latestMatchingQueriedData: unknown;
   error: Error | undefined;
   pathParseError: string | undefined;
 };
@@ -55,7 +55,7 @@ function reducer(state: State, action: Action): State {
     switch (action.type) {
       case "frame": {
         if (state.pathParseError != undefined) {
-          return { ...state, latestMessage: last(action.messages), error: undefined };
+          return { ...state, latestMessage: _.last(action.messages), error: undefined };
         }
         let latestMatchingQueriedData = state.latestMatchingQueriedData;
         let latestMessage = state.latestMessage;
@@ -88,7 +88,7 @@ function reducer(state: State, action: Action): State {
         ) {
           pathParseError = "Message paths using variables are not currently supported";
         }
-        let latestMatchingQueriedData: unknown | undefined;
+        let latestMatchingQueriedData: unknown;
         let error: Error | undefined;
         try {
           latestMatchingQueriedData =
@@ -144,7 +144,7 @@ function getConicGradient(config: Config, width: number, height: number, gaugeAn
           break;
         case "turbo": {
           const numStops = 20;
-          colorStops = new Array(numStops).fill(undefined).map((_, i) => ({
+          colorStops = new Array(numStops).fill(undefined).map((_x, i) => ({
             color: turboColorString(i / (numStops - 1)),
             location: i / (numStops - 1),
           }));
@@ -225,8 +225,9 @@ export function Gauge({ context }: Props): JSX.Element {
   }, [context]);
 
   const settingsActionHandler = useCallback(
-    (action: SettingsTreeAction) =>
-      setConfig((prevConfig) => settingsActionReducer(prevConfig, action)),
+    (action: SettingsTreeAction) => {
+      setConfig((prevConfig) => settingsActionReducer(prevConfig, action));
+    },
     [setConfig],
   );
 
@@ -242,7 +243,9 @@ export function Gauge({ context }: Props): JSX.Element {
     if (state.parsedPath?.topicName != undefined) {
       context.subscribe([state.parsedPath.topicName]);
     }
-    return () => context.unsubscribeAll();
+    return () => {
+      context.unsubscribeAll();
+    };
   }, [context, state.parsedPath?.topicName]);
 
   // Indicate render is complete - the effect runs after the dom is updated

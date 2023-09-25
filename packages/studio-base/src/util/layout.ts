@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { compact, flatMap, xor, uniq } from "lodash";
+import * as _ from "lodash-es";
 import {
   createRemoveUpdate,
   getLeaves,
@@ -267,13 +267,13 @@ export function getPanelIdsInsideTabPanels(panelIds: string[], savedProps: Saved
     if (tabProps?.tabs) {
       tabProps.tabs.forEach((tab: TabConfig) => {
         tabLayouts.push(
-          tab.layout as MosaicNode<string>,
+          tab.layout!,
           ...getPanelIdsInsideTabPanels(getLeaves(tab.layout ?? ReactNull), savedProps),
         );
       });
     }
   });
-  return flatMap(tabLayouts, getLeaves);
+  return _.flatMap(tabLayouts, getLeaves);
 }
 
 export const DEFAULT_TAB_PANEL_CONFIG: TabPanelConfig = {
@@ -345,7 +345,7 @@ export const removePanelFromTabPanel = (
     newTree = undefined;
   } else {
     const update = createRemoveUpdate(currentTabLayout ?? ReactNull, path);
-    newTree = updateTree<string>(currentTabLayout as MosaicNode<string>, [update]);
+    newTree = updateTree<string>(currentTabLayout!, [update]);
   }
 
   const saveConfigsPayload = {
@@ -363,7 +363,7 @@ export const createAddUpdates = (
   if (tree == undefined) {
     return [];
   }
-  const node = getNodeAtPath(tree, newPath) as MosaicNode<string>;
+  const node = getNodeAtPath(tree, newPath)!;
   const before = position === "left" || position === "top";
   const [first, second] = before ? [panelId, node] : [node, panelId];
   const direction: MosaicDirection = position === "left" || position === "right" ? "row" : "column";
@@ -503,11 +503,11 @@ export const replaceAndRemovePanels = (
 ): MosaicNode<string> | undefined => {
   const { originalId, newId, idsToRemove = [] } = panelArgs;
   const panelIds = getLeaves(layout);
-  if (xor(panelIds, idsToRemove).length === 0) {
+  if (_.xor(panelIds, idsToRemove).length === 0) {
     return newId;
   }
 
-  return uniq(compact([...idsToRemove, originalId])).reduce(
+  return _.uniq(_.compact([...idsToRemove, originalId])).reduce(
     (currentLayout: MosaicNode<string> | undefined, panelIdToRemove) => {
       if (!panelIds.includes(panelIdToRemove)) {
         return currentLayout;

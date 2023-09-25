@@ -6,7 +6,6 @@ import { StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom";
 
 import { useCrash } from "@foxglove/hooks";
-import { PanelExtensionContext } from "@foxglove/studio";
 import { CaptureErrorBoundary } from "@foxglove/studio-base/components/CaptureErrorBoundary";
 import {
   ForwardAnalyticsContextProvider,
@@ -14,19 +13,26 @@ import {
   useForwardAnalytics,
 } from "@foxglove/studio-base/components/ForwardAnalyticsContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
-import { PanelExtensionAdapter } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import {
+  BuiltinPanelExtensionContext,
+  PanelExtensionAdapter,
+} from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { TestOptions } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { ThreeDeeRender } from "./ThreeDeeRender";
 import { InterfaceMode } from "./types";
 
-function initPanel(
-  crash: ReturnType<typeof useCrash>,
-  forwardedAnalytics: ForwardedAnalytics,
-  interfaceMode: InterfaceMode,
-  onDownloadImage: ((blob: Blob, fileName: string) => void) | undefined,
-  context: PanelExtensionContext,
-) {
+type InitPanelArgs = {
+  crash: ReturnType<typeof useCrash>;
+  forwardedAnalytics: ForwardedAnalytics;
+  interfaceMode: InterfaceMode;
+  testOptions: TestOptions;
+};
+
+function initPanel(args: InitPanelArgs, context: BuiltinPanelExtensionContext) {
+  const { crash, forwardedAnalytics, interfaceMode, testOptions } = args;
+  // eslint-disable-next-line react/no-deprecated
   ReactDOM.render(
     <StrictMode>
       <CaptureErrorBoundary onError={crash}>
@@ -34,7 +40,7 @@ function initPanel(
           <ThreeDeeRender
             context={context}
             interfaceMode={interfaceMode}
-            onDownloadImage={onDownloadImage}
+            testOptions={testOptions}
           />
         </ForwardAnalyticsContextProvider>
       </CaptureErrorBoundary>
@@ -42,6 +48,7 @@ function initPanel(
     context.panelElement,
   );
   return () => {
+    // eslint-disable-next-line react/no-deprecated
     ReactDOM.unmountComponentAtNode(context.panelElement);
   };
 }
@@ -50,6 +57,7 @@ type Props = {
   config: Record<string, unknown>;
   saveConfig: SaveConfig<Record<string, unknown>>;
   onDownloadImage?: (blob: Blob, fileName: string) => void;
+  debugPicking?: boolean;
 };
 
 function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
@@ -58,8 +66,13 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const forwardedAnalytics = useForwardAnalytics();
   const boundInitPanel = useMemo(
     () =>
-      initPanel.bind(undefined, crash, forwardedAnalytics, interfaceMode, props.onDownloadImage),
-    [crash, forwardedAnalytics, interfaceMode, props.onDownloadImage],
+      initPanel.bind(undefined, {
+        crash,
+        forwardedAnalytics,
+        interfaceMode,
+        testOptions: { onDownloadImage: props.onDownloadImage, debugPicking: props.debugPicking },
+      }),
+    [crash, forwardedAnalytics, interfaceMode, props.onDownloadImage, props.debugPicking],
   );
 
   return (
@@ -72,16 +85,19 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   );
 }
 
-export const ThreeDeePanel = Panel(
-  Object.assign(ThreeDeeRenderAdapter.bind(undefined, "3d"), {
-    panelType: "3D",
+/**
+ * The Image panel is a special case of the 3D panel with `interfaceMode` set to `"image"`.
+ */
+export const ImagePanel = Panel<Record<string, unknown>, Props>(
+  Object.assign(ThreeDeeRenderAdapter.bind(undefined, "image"), {
+    panelType: "Image",
     defaultConfig: {},
   }),
 );
 
-export const ImagePanel = Panel<Record<string, unknown>, Props>(
-  Object.assign(ThreeDeeRenderAdapter.bind(undefined, "image"), {
-    panelType: "Image",
+export default Panel(
+  Object.assign(ThreeDeeRenderAdapter.bind(undefined, "3d"), {
+    panelType: "3D",
     defaultConfig: {},
   }),
 );

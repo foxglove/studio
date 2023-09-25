@@ -11,25 +11,27 @@ import {
   ArrowMinimize24Filled,
 } from "@fluentui/react-icons";
 import { IconButton } from "@mui/material";
-import { clamp } from "lodash";
-import { ComponentProps, useCallback, useMemo, useRef } from "react";
+import * as _ from "lodash-es";
+import { useCallback, useMemo, useRef } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
+import { Immutable } from "@foxglove/studio";
 import { PANEL_TOOLBAR_MIN_HEIGHT } from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
-import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { PlotLegendRow } from "@foxglove/studio-base/panels/Plot/PlotLegendRow";
 import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
+import { TypedDataSet } from "./internalTypes";
+
 const minLegendWidth = 25;
 const maxLegendWidth = 800;
 
-type Props = {
+type Props = Immutable<{
   currentTime?: number;
-  datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
+  datasets: TypedDataSet[];
   legendDisplay: "floating" | "top" | "left";
   onClickPath: (index: number) => void;
   paths: PlotPath[];
@@ -38,7 +40,7 @@ type Props = {
   showLegend: boolean;
   showPlotValuesInLegend: boolean;
   sidebarDimension: number;
-};
+}>;
 
 const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonFloating">()(
   ({ palette, shadows, shape, spacing }, _params, classes) => ({
@@ -58,6 +60,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
       alignItems: "flex-start",
       height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px - ${spacing(5.25)})`,
       overflow: "hidden",
+      minWidth: 200,
 
       [`.${classes.container}`]: {
         pointerEvents: "auto",
@@ -105,7 +108,8 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
       alignItems: "center",
       overflow: "auto",
       display: "grid",
-      gridTemplateColumns: "auto minmax(0, 1fr) auto",
+      gridTemplateColumns: "auto minmax(0, 1fr) auto auto",
+      columnGap: 1,
     },
     dragHandle: {
       userSelect: "none",
@@ -142,7 +146,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
   }),
 );
 
-export function PlotLegend(props: Props): JSX.Element {
+function PlotLegendComponent(props: Props): JSX.Element {
   const {
     currentTime,
     datasets,
@@ -159,10 +163,9 @@ export function PlotLegend(props: Props): JSX.Element {
 
   const dragStart = useRef({ x: 0, y: 0, sidebarDimension: 0 });
 
-  const toggleLegend = useCallback(
-    () => saveConfig({ showLegend: !showLegend }),
-    [showLegend, saveConfig],
-  );
+  const toggleLegend = useCallback(() => {
+    saveConfig({ showLegend: !showLegend });
+  }, [showLegend, saveConfig]);
 
   const legendIcon = useMemo(() => {
     switch (legendDisplay) {
@@ -184,7 +187,7 @@ export function PlotLegend(props: Props): JSX.Element {
         legendDisplay === "left"
           ? event.clientX - dragStart.current.x
           : event.clientY - dragStart.current.y;
-      const newDimension = clamp(
+      const newDimension = _.clamp(
         dragStart.current.sidebarDimension + delta,
         minLegendWidth,
         maxLegendWidth,
@@ -249,14 +252,16 @@ export function PlotLegend(props: Props): JSX.Element {
             <div className={classes.container}>
               {paths.map((path, index) => (
                 <PlotLegendRow
-                  key={index}
+                  currentTime={currentTime}
+                  datasets={datasets}
+                  hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
                   index={index}
-                  onClickPath={() => onClickPath(index)}
+                  key={index}
+                  onClickPath={() => {
+                    onClickPath(index);
+                  }}
                   path={path}
                   paths={paths}
-                  hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
-                  datasets={datasets}
-                  currentTime={currentTime}
                   savePaths={savePaths}
                   showPlotValuesInLegend={showPlotValuesInLegend}
                 />
@@ -293,3 +298,5 @@ export function PlotLegend(props: Props): JSX.Element {
     </div>
   );
 }
+
+export const PlotLegend = React.memo(PlotLegendComponent);

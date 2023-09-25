@@ -11,9 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import DownloadIcon from "@mui/icons-material/Download";
 import { useTheme } from "@mui/material";
-import { compact, isNumber, uniq } from "lodash";
+import * as _ from "lodash-es";
 import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -29,13 +28,16 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
+import {
+  PanelContextMenu,
+  PanelContextMenuItem,
+} from "@foxglove/studio-base/components/PanelContextMenu";
 import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
 } from "@foxglove/studio-base/components/PanelToolbar";
-import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { ChartDefaultView } from "@foxglove/studio-base/components/TimeBasedChart";
-import { usePlotPanelMessageData } from "@foxglove/studio-base/panels/Plot/usePlotPanelMessageData";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
@@ -43,14 +45,18 @@ import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 import PlotChart from "./PlotChart";
 import { PlotLegend } from "./PlotLegend";
 import { downloadCSV } from "./csv";
-import { getDatasets } from "./datasets";
+import { TypedDataSet } from "./internalTypes";
+import { EmptyPlotData, EmptyData } from "./plotData";
 import { usePlotPanelSettings } from "./settings";
 import { PlotConfig } from "./types";
+import useDatasets from "./useDatasets";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig } from "./types";
 
 const defaultSidebarDimension = 240;
+
+const EmptyDatasets: TypedDataSet[] = [];
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
@@ -58,7 +64,7 @@ export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicNa
     updateIfExists: true,
     siblingConfigCreator: (config: PanelConfig) => ({
       ...config,
-      paths: uniq(
+      paths: _.uniq(
         (config as PlotConfig).paths
           .concat([{ value: topicName, enabled: true, timestampMethod: "receiveTime" }])
           .filter(({ value }) => value),
@@ -72,8 +78,6 @@ type Props = {
   saveConfig: SaveConfig<PlotConfig>;
 };
 
-const ZERO_TIME = { sec: 0, nsec: 0 };
-
 function selectStartTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.startTime;
 }
@@ -85,6 +89,8 @@ function selectCurrentTime(ctx: MessagePipelineContext) {
 function selectEndTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.endTime;
 }
+
+const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
 
 function Plot(props: Props) {
   const { saveConfig, config } = props;
@@ -108,6 +114,36 @@ function Plot(props: Props) {
     [PANEL_TITLE_CONFIG_KEY]: customTitle,
   } = config;
 
+  const { setMessagePathDropConfig } = usePanelContext();
+
+  useEffect(() => {
+    setMessagePathDropConfig({
+      getDropStatus(paths) {
+        if (paths.some((path) => !path.isLeaf)) {
+          return { canDrop: false };
+        }
+        return { canDrop: true, effect: "add" };
+      },
+      handleDrop(paths) {
+        saveConfig((prevConfig) => ({
+          ...prevConfig,
+          paths: [
+            // If there was only a single series and its path was empty (the default state of the
+            // panel), replace the series rather than adding to it
+            ...(prevConfig.paths.length === 1 && prevConfig.paths[0]?.value === ""
+              ? []
+              : prevConfig.paths),
+            ...paths.map((path) => ({
+              value: path.path,
+              enabled: true,
+              timestampMethod: "receiveTime" as const,
+            })),
+          ],
+        }));
+      },
+    });
+  }, [saveConfig, setMessagePathDropConfig]);
+
   useEffect(() => {
     if (legacyTitle && (customTitle == undefined || customTitle === "")) {
       // Migrate legacy Plot-specific title setting to new global title setting
@@ -119,15 +155,11 @@ function Plot(props: Props) {
     }
   }, [customTitle, legacyTitle, saveConfig]);
 
-  const theme = useTheme();
-
   useEffect(() => {
     if (yAxisPaths.length === 0) {
       saveConfig({ paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }] });
     }
   }, [saveConfig, yAxisPaths.length]);
-
-  const showSingleCurrentMessage = xAxisVal === "currentCustom" || xAxisVal === "index";
 
   const startTime = useMessagePipeline(selectStartTime);
   const currentTime = useMessagePipeline(selectCurrentTime);
@@ -155,11 +187,11 @@ function Plot(props: Props) {
   const endTimeSinceStart = timeSincePreloadedStart(endTime);
   const fixedView = useMemo<ChartDefaultView | undefined>(() => {
     // Apply min/max x-value if either min or max or both is defined.
-    if ((isNumber(minXValue) && isNumber(endTimeSinceStart)) || isNumber(maxXValue)) {
+    if ((_.isNumber(minXValue) && _.isNumber(endTimeSinceStart)) || _.isNumber(maxXValue)) {
       return {
         type: "fixed",
-        minXValue: isNumber(minXValue) ? minXValue : 0,
-        maxXValue: isNumber(maxXValue) ? maxXValue : endTimeSinceStart ?? 0,
+        minXValue: _.isNumber(minXValue) ? minXValue : 0,
+        maxXValue: _.isNumber(maxXValue) ? maxXValue : endTimeSinceStart ?? 0,
       };
     }
     if (xAxisVal === "timestamp" && startTime && endTimeSinceStart != undefined) {
@@ -173,28 +205,52 @@ function Plot(props: Props) {
     return followingView ?? fixedView ?? undefined;
   }, [fixedView, followingView]);
 
-  const allPaths = useMemo(() => {
-    return yAxisPaths.map(({ value }) => value).concat(compact([xAxisPath?.value]));
-  }, [xAxisPath?.value, yAxisPaths]);
+  const theme = useTheme();
 
-  const combinedPlotData = usePlotPanelMessageData({
-    allPaths,
-    followingView,
-    showSingleCurrentMessage,
+  const {
+    data: plotData,
+    provider,
+    getFullData,
+  } = useDatasets({
+    startTime: startTime ?? ZERO_TIME,
+    paths: yAxisPaths,
+    invertedTheme: theme.palette.mode === "dark",
+    xAxisPath,
+    xAxisVal,
+    minXValue,
+    maxXValue,
+    minYValue,
+    maxYValue,
+    followingViewWidth,
   });
 
-  // Keep disabled paths when passing into getDatasets, because we still want
-  // easy access to the history when turning the disabled paths back on.
-  const { datasets, pathsWithMismatchedDataLengths } = useMemo(() => {
-    return getDatasets({
-      paths: yAxisPaths,
-      itemsByPath: combinedPlotData,
-      startTime: startTime ?? ZERO_TIME,
-      xAxisVal,
-      xAxisPath,
-      invertedTheme: theme.palette.mode === "dark",
-    });
-  }, [yAxisPaths, combinedPlotData, startTime, xAxisVal, xAxisPath, theme.palette.mode]);
+  const {
+    datasets,
+    bounds: datasetBounds,
+    pathsWithMismatchedDataLengths,
+  } = useMemo(() => {
+    const data = plotData ?? EmptyPlotData;
+    return {
+      bounds: data.bounds,
+      pathsWithMismatchedDataLengths: data.pathsWithMismatchedDataLengths,
+      // Return a dataset for all paths here so that the ordering of datasets corresponds
+      // to yAxisPaths as expected by downstream components like the legend.
+      //
+      // Label is needed so that TimeBasedChart doesn't discard the empty dataset and mess
+      // up the ordering.
+      datasets: yAxisPaths.map((path) => {
+        for (const [otherPath, dataset] of data.datasets.entries()) {
+          if (
+            otherPath.value === path.value &&
+            otherPath.timestampMethod === path.timestampMethod
+          ) {
+            return dataset;
+          }
+        }
+        return { label: path.label ?? path.value, data: [EmptyData] };
+      }),
+    };
+  }, [plotData, yAxisPaths]);
 
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(
@@ -223,6 +279,32 @@ function Plot(props: Props) {
     [legendDisplay],
   );
 
+  const getPanelContextMenuItems = useCallback(() => {
+    const items: PanelContextMenuItem[] = [
+      {
+        type: "item",
+        label: "Download plot data as CSV",
+        onclick: async () => {
+          // Because the full dataset is never in the rendering thread, we have to request it from the worker.
+          const data = await getFullData();
+          if (data == undefined) {
+            return;
+          }
+          const csvDatasets = [];
+          for (const dataset of data.datasets.values()) {
+            csvDatasets.push(dataset);
+          }
+          downloadCSV(csvDatasets, xAxisVal);
+        },
+      },
+    ];
+    return items;
+  }, [getFullData, xAxisVal]);
+
+  const onClickPath = useCallback((index: number) => {
+    setFocusedPath(["paths", String(index)]);
+  }, []);
+
   return (
     <Stack
       flex="auto"
@@ -231,50 +313,44 @@ function Plot(props: Props) {
       overflow="hidden"
       position="relative"
     >
-      <PanelToolbar
-        additionalIcons={
-          <ToolbarIconButton
-            onClick={() => downloadCSV(datasets, xAxisVal)}
-            title="Download plot data as CSV"
-          >
-            <DownloadIcon fontSize="small" />
-          </ToolbarIconButton>
-        }
-      />
+      <PanelToolbar />
       <Stack
         direction={stackDirection}
         flex="auto"
         fullWidth
         style={{ height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)` }}
       >
+        {/* Pass stable values here for properties when not showing values so that the legend memoization remains stable. */}
         {legendDisplay !== "none" && (
           <PlotLegend
+            currentTime={showPlotValuesInLegend ? currentTimeSinceStart : undefined}
+            datasets={showPlotValuesInLegend ? datasets : EmptyDatasets}
+            legendDisplay={legendDisplay}
+            onClickPath={onClickPath}
             paths={yAxisPaths}
-            datasets={datasets}
-            currentTime={currentTimeSinceStart}
-            onClickPath={(index: number) => setFocusedPath(["paths", String(index)])}
+            pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
             saveConfig={saveConfig}
             showLegend={showLegend}
-            pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
-            legendDisplay={legendDisplay}
             showPlotValuesInLegend={showPlotValuesInLegend}
             sidebarDimension={sidebarDimension}
           />
         )}
         <Stack flex="auto" alignItems="center" justifyContent="center" overflow="hidden">
           <PlotChart
+            currentTime={currentTimeSinceStart}
+            datasetBounds={datasetBounds}
+            provider={provider}
+            defaultView={defaultView}
             isSynced={xAxisVal === "timestamp" && isSynced}
-            paths={yAxisPaths}
-            minYValue={parseFloat((minYValue ?? "").toString())}
             maxYValue={parseFloat((maxYValue ?? "").toString())}
+            minYValue={parseFloat((minYValue ?? "").toString())}
+            onClick={onClick}
+            paths={yAxisPaths}
             showXAxisLabels={showXAxisLabels}
             showYAxisLabels={showYAxisLabels}
-            datasets={datasets}
             xAxisVal={xAxisVal}
-            currentTime={currentTimeSinceStart}
-            onClick={onClick}
-            defaultView={defaultView}
           />
+          <PanelContextMenu getItems={getPanelContextMenuItems} />
         </Stack>
       </Stack>
     </Stack>
@@ -282,7 +358,6 @@ function Plot(props: Props) {
 }
 
 const defaultConfig: PlotConfig = {
-  title: "Plot",
   paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }],
   minYValue: undefined,
   maxYValue: undefined,

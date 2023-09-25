@@ -12,7 +12,7 @@ import { LaunchingInDesktopScreen } from "./LaunchingInDesktopScreen";
 import { AppSetting } from "../AppSetting";
 import { useAppConfigurationValue } from "../hooks";
 
-export function LaunchPreference(props: PropsWithChildren<unknown>): JSX.Element {
+export function LaunchPreference(props: PropsWithChildren): JSX.Element {
   const [globalLaunchPreference] = useAppConfigurationValue<string>(AppSetting.LAUNCH_PREFERENCE);
   const [sessionLaunchPreference] = useSessionStorageValue(AppSetting.LAUNCH_PREFERENCE);
 
@@ -33,8 +33,10 @@ export function LaunchPreference(props: PropsWithChildren<unknown>): JSX.Element
 
   const hasParams = Array.from(url.searchParams.entries()).length > 0;
   // Ask the user in which environment they want to open this session.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
   if (activePreference === LaunchPreferenceValue.ASK && hasParams) {
     return <LaunchPreferenceScreen />;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
   } else if (activePreference === LaunchPreferenceValue.DESKTOP && hasParams) {
     return <LaunchingInDesktopScreen />;
   } else {

@@ -3,23 +3,23 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { simplify } from "intervals-fn";
-import { isEqual } from "lodash";
+import * as _ from "lodash-es";
 
 import { Condvar } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import {
   Time,
+  add,
+  clampTime,
+  fromNanoSec,
   subtract as subtractTimes,
   toNanoSec,
-  add,
-  fromNanoSec,
-  clampTime,
 } from "@foxglove/rostime";
-import { MessageEvent } from "@foxglove/studio";
+import { Immutable, MessageEvent } from "@foxglove/studio";
 import { IteratorCursor } from "@foxglove/studio-base/players/IterablePlayer/IteratorCursor";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
-import { MessageBlock, Progress } from "@foxglove/studio-base/players/types";
+import { MessageBlock, Progress, TopicSelection } from "@foxglove/studio-base/players/types";
 
 import { IIterableSource, MessageIteratorArgs } from "./IIterableSource";
 
@@ -36,7 +36,7 @@ type BlockLoaderArgs = {
 };
 
 type CacheBlock = MessageBlock & {
-  needTopics: Set<string>;
+  needTopics: Immutable<TopicSelection>;
 };
 
 type Blocks = (CacheBlock | undefined)[];
@@ -54,7 +54,7 @@ export class BlockLoader {
   #start: Time;
   #end: Time;
   #blockDurationNanos: number;
-  #topics: Set<string> = new Set();
+  #topics: TopicSelection = new Map();
   #maxCacheSize: number = 0;
   #problemManager: PlayerProblemManager;
   #stopped: boolean = false;
@@ -84,13 +84,12 @@ export class BlockLoader {
     this.#blocks = Array.from({ length: blockCount });
   }
 
-  public setTopics(topics: Set<string>): void {
-    if (isEqual(topics, this.#topics)) {
+  public setTopics(topics: TopicSelection): void {
+    if (_.isEqual(topics, this.#topics)) {
       return;
     }
 
     this.#abortController.abort();
-    this.#topics = topics;
     this.#activeChangeCondvar.notifyAll();
     log.debug(`Preloaded topics: ${[...topics].join(", ")}`);
 
@@ -98,13 +97,19 @@ export class BlockLoader {
     for (const block of this.#blocks) {
       if (block) {
         const blockTopics = Object.keys(block.messagesByTopic);
-        const needTopics = new Set(topics);
+        const needTopics = new Map(topics);
         for (const topic of blockTopics) {
-          needTopics.delete(topic);
+          // We need the topic unless the subscription is identical to the subscription for this
+          // topic at the time the block was loaded.
+          if (this.#topics.get(topic) === topics.get(topic)) {
+            needTopics.delete(topic);
+          }
         }
         block.needTopics = needTopics;
       }
     }
+
+    this.#topics = topics;
   }
 
   /**
@@ -187,15 +192,13 @@ export class BlockLoader {
     }
 
     log.debug("loading blocks", { topics });
-    const beginBlockId = 0;
-    const lastBlockId = this.#blocks.length;
 
     const { progress } = args;
     let totalBlockSizeBytes = this.#cacheSize();
 
-    for (let blockId = beginBlockId; blockId < lastBlockId; ++blockId) {
+    for (let blockId = 0; blockId < this.#blocks.length; ++blockId) {
       // Topics we will fetch for this range
-      let topicsToFetch = new Set<string>();
+      let topicsToFetch: Immutable<TopicSelection>;
 
       // Keep looking for a block that needs loading
       {
@@ -215,25 +218,23 @@ export class BlockLoader {
       // This creates a continuous span of the same topics to fetch
       let endBlockId = blockId;
       for (let endIdx = blockId + 1; endIdx < this.#blocks.length; ++endIdx) {
-        const nextBlock = this.#blocks[endIdx];
-
-        const needTopics = nextBlock?.needTopics ?? topics;
-
         // if needtopics is undefined cause there's no block, then needTopics is all topics
+        const needTopics = this.#blocks[endIdx]?.needTopics ?? topics;
 
         // The topics we need to fetch no longer match the topics we need so we stop the range
-        if (!isEqual(topicsToFetch, needTopics)) {
+        if (!_.isEqual(topicsToFetch, needTopics)) {
           break;
         }
 
         endBlockId = endIdx;
       }
 
+      // Compute the cursor start/end time from the range of blocks we need to load
       const cursorStartTime = this.#blockIdToStartTime(blockId);
       const cursorEndTime = clampTime(this.#blockIdToEndTime(endBlockId), this.#start, this.#end);
 
-      const iteratorArgs: MessageIteratorArgs = {
-        topics: Array.from(topicsToFetch),
+      const iteratorArgs: Immutable<MessageIteratorArgs> = {
+        topics: topicsToFetch,
         start: cursorStartTime,
         end: cursorEndTime,
         consumptionType: "full",
@@ -248,12 +249,17 @@ export class BlockLoader {
           this.#abortController.signal,
         );
 
+      log.debug("Loading range", { blockId, endBlockId });
+      // Loop through the blocks corresponding to the range of our cursor
       for (let currentBlockId = blockId; currentBlockId <= endBlockId; ++currentBlockId) {
+        // Until time is the end time of the current block, we want all the messages from the cursor
+        // until (inclusive) of the end of of the block
         const untilTime = clampTime(this.#blockIdToEndTime(currentBlockId), this.#start, this.#end);
 
         const results = await cursor.readUntil(untilTime);
         // No results means cursor aborted or eof
         if (!results) {
+          await cursor.end();
           return;
         }
 
@@ -262,23 +268,8 @@ export class BlockLoader {
         // Set all topics to empty arrays. Since our cursor requested all the topicsToFetch we either will
         // have message on the topic or we don't have message on the topic. Either way the topic entry
         // starts as an empty array.
-        for (const topic of topicsToFetch) {
+        for (const topic of topicsToFetch.keys()) {
           messagesByTopic[topic] = [];
-        }
-
-        // Empty result set does not require further processing and does not change the size
-        if (results.length === 0) {
-          const existingBlock = this.#blocks[currentBlockId];
-          this.#blocks[currentBlockId] = {
-            needTopics: new Set(),
-            messagesByTopic: {
-              ...existingBlock?.messagesByTopic,
-              // Any new topics override the same previous topic
-              ...messagesByTopic,
-            },
-            sizeInBytes: existingBlock?.sizeInBytes ?? 0,
-          };
-          continue;
         }
 
         let sizeInBytes = 0;
@@ -332,13 +323,16 @@ export class BlockLoader {
               )}] has stopped on block ${currentBlockId + 1}/${this.#blocks.length}.`,
               tip: "Try reducing the number of topics that require preloading at a given time (e.g. in plots), or try to reduce the time range of the file.",
             });
+            // We need to emit progress here so the player will emit a new state
+            // containing the problem.
+            progress(this.#calculateProgress(topics));
             return;
           }
         }
 
         const existingBlock = this.#blocks[currentBlockId];
         this.#blocks[currentBlockId] = {
-          needTopics: new Set(),
+          needTopics: new Map(),
           messagesByTopic: {
             ...existingBlock?.messagesByTopic,
             // Any new topics override the same previous topic
@@ -351,18 +345,18 @@ export class BlockLoader {
       }
 
       await cursor.end();
-      blockId = endBlockId + 1;
+      blockId = endBlockId;
     }
   }
 
-  #calculateProgress(topics: Set<string>): Progress {
+  #calculateProgress(topics: TopicSelection): Progress {
     const fullyLoadedFractionRanges = simplify(
       filterMap(this.#blocks, (thisBlock, blockIndex) => {
         if (!thisBlock) {
           return;
         }
 
-        for (const topic of topics) {
+        for (const topic of topics.keys()) {
           if (!thisBlock.messagesByTopic[topic]) {
             return;
           }

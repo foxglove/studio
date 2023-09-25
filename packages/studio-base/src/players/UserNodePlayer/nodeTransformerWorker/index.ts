@@ -26,6 +26,10 @@ let unsentErrors: string[] = [];
   unsentErrors.push(String(event.reason instanceof Error ? event.reason.message : event.reason));
 };
 
+// Workaround for missing process.versions in worker.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(process as any).versions ??= {};
+
 if (!inSharedWorker()) {
   // In Chrome, web workers currently (as of March 2020) inherit their Content Security Policy from
   // their associated page, ignoring any policy in the headers of their source file. SharedWorkers
@@ -44,7 +48,9 @@ if (!inSharedWorker()) {
   const rpc = new Rpc(port);
 
   // If any errors occurred while nobody was connected, send them now
-  unsentErrors.forEach(async (message) => await rpc.send("error", message));
+  unsentErrors.forEach(async (message) => {
+    await rpc.send("error", message);
+  });
   unsentErrors = [];
   (global as unknown as SharedWorkerGlobalScope).onerror = (event: ErrorEvent) => {
     void rpc.send("error", event.error.toString());
