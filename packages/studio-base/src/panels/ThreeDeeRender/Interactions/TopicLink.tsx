@@ -40,7 +40,7 @@ export default function TopicLink({ addPanel, onShowTopicSettings, topic }: Prop
   return (
     <Stack direction="row" alignItems="center" justifyContent="space-between" padding={1}>
       <Typography variant="body2">{topic}</Typography>
-      <Stack direction="row">
+      <Stack direction="row" padding={0}>
         {onShowTopicSettings && (
           <IconButton
             onClick={() => {
