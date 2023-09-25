@@ -22,6 +22,7 @@ import {
   rebuildClient,
   keepEffects,
   Client,
+  initClient,
 } from "./state";
 import { PlotParams } from "../internalTypes";
 import { getParamTopics, getParamPaths, isSingleMessage, isBounded } from "../params";
@@ -123,17 +124,7 @@ export function register(
   const { clients } = state;
   const newState = {
     ...state,
-    clients: [
-      ...clients,
-      {
-        id,
-        params,
-        topics: [],
-        view: undefined,
-        blocks: initAccumulated([]),
-        current: initAccumulated([]),
-      },
-    ],
+    clients: [...clients, initClient(id, params)],
   };
 
   if (params == undefined) {

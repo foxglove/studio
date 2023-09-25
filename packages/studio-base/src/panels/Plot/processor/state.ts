@@ -7,7 +7,7 @@ import * as R from "ramda";
 import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 
-import { Accumulated } from "./accumulate";
+import { Accumulated, initAccumulated } from "./accumulate";
 import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
 import { PlotData } from "../plotData";
 
@@ -19,6 +19,17 @@ export type Client = {
   blocks: Accumulated;
   current: Accumulated;
 };
+
+export function initClient(id: string, params: PlotParams | undefined): Client {
+  return {
+    id,
+    params,
+    topics: [],
+    view: undefined,
+    blocks: initAccumulated([]),
+    current: initAccumulated([]),
+  };
+}
 
 export type State = {
   isLive: boolean;
