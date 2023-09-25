@@ -274,7 +274,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     this.#scene = new THREE.Scene();
 
-    this.#dirLight = new THREE.DirectionalLight();
+    this.#dirLight = new THREE.DirectionalLight(0xffffff, Math.PI);
     this.#dirLight.position.set(1, 1, 1);
     this.#dirLight.castShadow = true;
     this.#dirLight.layers.enableAll();
@@ -285,7 +285,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#dirLight.shadow.camera.far = 500;
     this.#dirLight.shadow.bias = -0.00001;
 
-    this.#hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5);
+    this.#hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5 * Math.PI);
     this.#hemiLight.layers.enableAll();
 
     this.#scene.add(this.#dirLight);
