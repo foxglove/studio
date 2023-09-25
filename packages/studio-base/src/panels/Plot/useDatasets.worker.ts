@@ -29,7 +29,6 @@ import {
   sortPlotDataByHeaderStamp,
   getProvidedData,
 } from "./plotData";
-
 import {
   SideEffectType,
   State as ProcessorState,
