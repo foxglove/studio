@@ -14,7 +14,7 @@
 import {
   ArrowRepeatAll20Regular,
   ArrowRepeatAllOff20Regular,
-  Info24Regular,
+  Info20Regular,
   Next20Filled,
   Next20Regular,
   Pause20Filled,
@@ -215,7 +215,7 @@ export default function PlaybackControls(props: {
                   [classes.disabled]: disableControls,
                 })}
                 size="small"
-                icon={<Info24Regular />}
+                icon={<Info20Regular />}
               />
             </Tooltip>
             <PlaybackTimeDisplay onSeek={seek} onPause={pause} />
