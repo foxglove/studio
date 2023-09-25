@@ -37,6 +37,7 @@ import {
   unregister,
   updateParams,
   updateView,
+  compressClients,
 } from "./processor";
 
 type Setter = ProviderStateSetter<TypedData[]>;
@@ -155,36 +156,9 @@ function handleEffects([newState, effects]: StateAndEffects): void {
   }
 }
 
-//const MESSAGE_CULL_THRESHOLD = 15_000;
-
-//function compressClients(): void {
-//if (!isLive) {
-//return;
-//}
-
-//current = R.map(
-//(messages) =>
-//messages.length > MESSAGE_CULL_THRESHOLD
-//? messages.slice(messages.length - MESSAGE_CULL_THRESHOLD)
-//: messages,
-//current,
-//);
-
-//for (const client of R.values(clients)) {
-//const { params } = client;
-//if (params == undefined) {
-//continue;
-//}
-
-//const accumulated = accumulate(initAccumulated(client.topics), params, current);
-//mutateClient(client.id, {
-//...client,
-//current: accumulated,
-//});
-//client.setProvided?.(getProvidedData(accumulated.data));
-//}
-//}
-//setInterval(compressClients, 2000);
+setInterval(() => {
+  handleEffects(compressClients(state));
+}, 2000);
 
 export const service = {
   addBlock(block: Messages, resetTopics: string[]): void {

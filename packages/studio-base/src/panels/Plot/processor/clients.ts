@@ -150,6 +150,26 @@ export function unregister(id: string, state: State): State {
   });
 }
 
+const MESSAGE_CULL_THRESHOLD = 15_000;
+
+export function compressClients(state: State): StateAndEffects {
+  const { isLive, current } = state;
+  if (!isLive) {
+    return noEffects(state);
+  }
+
+  return mapClients(refreshClient)({
+    ...state,
+    current: R.map(
+      (messages) =>
+        messages.length > MESSAGE_CULL_THRESHOLD
+          ? messages.slice(messages.length - MESSAGE_CULL_THRESHOLD)
+          : messages,
+      current,
+    ),
+  });
+}
+
 export function getClientData(client: Client): PlotData | undefined {
   const {
     params,
