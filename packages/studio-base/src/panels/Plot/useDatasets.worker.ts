@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
-import * as R from "ramda";
 
 import { Immutable } from "@foxglove/studio";
 import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
@@ -20,32 +19,24 @@ import strPack from "@foxglove/studio-base/util/strPack";
 import { resolveTypedIndices } from "./datasets";
 import { PlotParams, TypedData, Messages } from "./internalTypes";
 import { isSingleMessage } from "./params";
-import {
-  reducePlotData,
-  PlotData,
-  StateHandler,
-  mapDatasets,
-  applyDerivativeToPlotData,
-  sortPlotDataByHeaderStamp,
-  getProvidedData,
-} from "./plotData";
+import { PlotData, StateHandler, mapDatasets, getProvidedData } from "./plotData";
 import {
   SideEffectType,
   State as ProcessorState,
   StateAndEffects,
-  init as initProcessor,
-  Client,
+  addBlock,
+  addCurrent,
+  clearCurrent,
   findClient,
-  register as registerPure,
-  addBlock as addBlockPure,
-  receiveMetadata as receiveMetadataPure,
-  clearCurrent as clearCurrentPure,
-  addCurrent as addCurrentPure,
-  receiveVariables as receiveVariablesPure,
-  updateParams as updateParamsPure,
-  updateView as updateViewPure,
-  unregister as unregisterPure,
-  setLive as setLivePure,
+  getClientData,
+  init as initProcessor,
+  receiveMetadata,
+  receiveVariables,
+  register,
+  setLive,
+  unregister,
+  updateParams,
+  updateView,
 } from "./processor";
 
 type Setter = ProviderStateSetter<TypedData[]>;
@@ -97,33 +88,6 @@ function sendPlotData(clientCallbacks: Callbacks, data: PlotData) {
   clientCallbacks.setProvided?.(getProvidedData(data));
 }
 
-function getClientData(client: Client): PlotData | undefined {
-  const {
-    params,
-    view,
-    blocks: { data: blockData },
-    current: { data: currentData },
-  } = client;
-
-  if (params == undefined || view == undefined) {
-    return undefined;
-  }
-
-  const { bounds: blockBounds } = blockData;
-  const { bounds: currentBounds } = currentData;
-
-  let datasets: PlotData[] = [];
-  if (blockBounds.x.min <= currentBounds.x.min && blockBounds.x.max > currentBounds.x.max) {
-    // ignore current data if block data covers it already
-    datasets = [blockData];
-  } else {
-    // unbounded plots should also use current data
-    datasets = [blockData, currentData];
-  }
-
-  return R.pipe(reducePlotData, applyDerivativeToPlotData, sortPlotDataByHeaderStamp)(datasets);
-}
-
 function rebuild(id: string) {
   const client = findClient(state, id);
   const clientCallbacks = callbacks[id];
@@ -169,72 +133,26 @@ function handleEffects([newState, effects]: StateAndEffects): void {
   state = newState;
 
   for (const effect of effects) {
+    const clientCallbacks = callbacks[effect.clientId];
+    if (clientCallbacks == undefined) {
+      continue;
+    }
+
     switch (effect.type) {
       case SideEffectType.Rebuild: {
-        const clientCallbacks = callbacks[effect.clientId];
-        if (clientCallbacks == undefined) {
-          continue;
-        }
         clientCallbacks.queueRebuild();
         break;
       }
       case SideEffectType.Data: {
-        const clientCallbacks = callbacks[effect.clientId];
-        if (clientCallbacks == undefined) {
-          continue;
-        }
         sendPlotData(clientCallbacks, effect.data);
         break;
       }
       case SideEffectType.Partial: {
-        const clientCallbacks = callbacks[effect.clientId];
-        if (clientCallbacks == undefined) {
-          continue;
-        }
         clientCallbacks.addPartial?.(getProvidedData(effect.data));
         break;
       }
     }
   }
-}
-
-// eslint-disable-next-line @foxglove/no-boolean-parameters
-function setLive(value: boolean): void {
-  state = setLivePure(value, state);
-}
-
-function unregister(id: string): void {
-  const { [id]: _, ...newCallbacks } = callbacks;
-  callbacks = newCallbacks;
-  state = unregisterPure(id, state);
-}
-
-function receiveMetadata(topics: readonly Topic[], datatypes: Immutable<RosDatatypes>): void {
-  state = receiveMetadataPure(topics, strPack(datatypes), state);
-}
-
-function receiveVariables(variables: GlobalVariables): void {
-  handleEffects(receiveVariablesPure(variables, state));
-}
-
-function addBlock(block: Messages, resetTopics: string[]): void {
-  handleEffects(addBlockPure(strPack(block), resetTopics, state));
-}
-
-function clearCurrent(): void {
-  handleEffects(clearCurrentPure(state));
-}
-
-function addCurrent(events: readonly MessageEvent[]): void {
-  handleEffects(addCurrentPure(events, state));
-}
-
-function updateParams(id: string, params: PlotParams): void {
-  handleEffects(updateParamsPure(id, params, state));
-}
-
-function updateView(id: string, view: PlotViewport): void {
-  handleEffects(updateViewPure(id, view, state));
 }
 
 //const MESSAGE_CULL_THRESHOLD = 15_000;
@@ -268,43 +186,60 @@ function updateView(id: string, view: PlotViewport): void {
 //}
 //setInterval(compressClients, 2000);
 
-function register(
-  id: string,
-  setProvided: Setter,
-  setPanel: StateHandler,
-  addPartial: Setter,
-  params: PlotParams | undefined,
-): void {
-  callbacks[id] = {
-    setProvided,
-    addPartial,
-    setPanel,
-    queueRebuild: makeRebuilder(id),
-  };
-
-  handleEffects(registerPure(id, params, state));
-}
-
-function getFullData(id: string): PlotData | undefined {
-  const client = findClient(state, id);
-  if (client == undefined) {
-    return;
-  }
-
-  return getClientData(client);
-}
-
 export const service = {
-  addBlock,
-  addCurrent,
-  clearCurrent,
-  getFullData,
-  receiveMetadata,
-  receiveVariables,
-  register,
-  setLive,
-  unregister,
-  updateParams,
-  updateView,
+  addBlock(block: Messages, resetTopics: string[]): void {
+    handleEffects(addBlock(strPack(block), resetTopics, state));
+  },
+  addCurrent(events: readonly MessageEvent[]): void {
+    handleEffects(addCurrent(events, state));
+  },
+  clearCurrent(): void {
+    handleEffects(clearCurrent(state));
+  },
+  getFullData(id: string): PlotData | undefined {
+    const client = findClient(state, id);
+    if (client == undefined) {
+      return;
+    }
+
+    return getClientData(client);
+  },
+  receiveMetadata(topics: readonly Topic[], datatypes: Immutable<RosDatatypes>): void {
+    state = receiveMetadata(topics, strPack(datatypes), state);
+  },
+  receiveVariables(variables: GlobalVariables): void {
+    handleEffects(receiveVariables(variables, state));
+  },
+  register(
+    id: string,
+    setProvided: Setter,
+    setPanel: StateHandler,
+    addPartial: Setter,
+    params: PlotParams | undefined,
+  ): void {
+    callbacks[id] = {
+      setProvided,
+      addPartial,
+      setPanel,
+      queueRebuild: makeRebuilder(id),
+    };
+
+    handleEffects(register(id, params, state));
+  },
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  setLive(value: boolean): void {
+    state = setLive(value, state);
+  },
+  unregister(id: string): void {
+    const { [id]: _client, ...newCallbacks } = callbacks;
+    callbacks = newCallbacks;
+    state = unregister(id, state);
+  },
+  updateParams(id: string, params: PlotParams): void {
+    handleEffects(updateParams(id, params, state));
+  },
+  updateView(id: string, view: PlotViewport): void {
+    handleEffects(updateView(id, view, state));
+  },
 };
 Comlink.expose(service);

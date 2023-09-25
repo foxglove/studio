@@ -24,7 +24,13 @@ import {
   Client,
 } from "./state";
 import { PlotParams } from "../internalTypes";
-import { getParamTopics, getParamPaths } from "../params";
+import { getParamTopics, getParamPaths, isSingleMessage, isBounded } from "../params";
+import {
+  reducePlotData,
+  PlotData,
+  applyDerivativeToPlotData,
+  sortPlotDataByHeaderStamp,
+} from "../plotData";
 
 export function refreshClient(client: Client, state: State): [Client, SideEffects] {
   const { blocks, current, metadata, globalVariables } = state;
@@ -142,4 +148,31 @@ export function unregister(id: string, state: State): State {
     ...state,
     clients: R.filter(({ id: clientId }: Client) => clientId !== id, state.clients),
   });
+}
+
+export function getClientData(client: Client): PlotData | undefined {
+  const {
+    params,
+    view,
+    blocks: { data: blockData },
+    current: { data: currentData },
+  } = client;
+
+  if (params == undefined || view == undefined) {
+    return undefined;
+  }
+
+  const { bounds: blockBounds } = blockData;
+  const { bounds: currentBounds } = currentData;
+
+  let datasets: PlotData[] = [];
+  if (blockBounds.x.min <= currentBounds.x.min && blockBounds.x.max > currentBounds.x.max) {
+    // ignore current data if block data covers it already
+    datasets = [blockData];
+  } else {
+    // unbounded plots should also use current data
+    datasets = [blockData, currentData];
+  }
+
+  return R.pipe(reducePlotData, applyDerivativeToPlotData, sortPlotDataByHeaderStamp)(datasets);
 }

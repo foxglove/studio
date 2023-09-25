@@ -3,5 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export * from "./state";
-export { register, unregister, updateParams, updateView, receiveVariables } from "./clients";
+export {
+  register,
+  unregister,
+  updateParams,
+  updateView,
+  receiveVariables,
+  getClientData,
+} from "./clients";
 export { addBlock, addCurrent, clearCurrent, receiveMetadata } from "./messages";
