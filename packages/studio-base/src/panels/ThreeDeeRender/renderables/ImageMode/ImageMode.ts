@@ -24,6 +24,7 @@ import {
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
   ImageRenderableSettings,
+  ImageUserData,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageRenderable";
 import {
   AnyImage,
@@ -619,7 +620,7 @@ export class ImageMode
       this.#removeImageTimeout = undefined;
     }
 
-    const renderable = this.getImageRenderable(topic, receiveTime, image, frameId);
+    const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
 
     this.#latestImage = { topic: messageEvent.topic, image };
 
@@ -659,7 +660,7 @@ export class ImageMode
     this.#camera.updateProjectionMatrix();
   };
 
-  protected getImageRenderable(
+  #getImageRenderable(
     topicName: string,
     receiveTime: bigint,
     image: AnyImage | undefined,
@@ -681,7 +682,7 @@ export class ImageMode
       // planarProjectionFactor must be 1 to avoid imprecise projection due to small number of grid subdivisions
       planarProjectionFactor: 1,
     };
-    renderable = new ImageRenderable(topicName, this.renderer, {
+    renderable = this.initRenderable(topicName, {
       receiveTime,
       messageTime: image ? toNanoSec("header" in image ? image.header.stamp : image.timestamp) : 0n,
       frameId: this.renderer.normalizeFrameId(frameId),
@@ -703,6 +704,10 @@ export class ImageMode
     renderable.setRenderBehindScene();
     renderable.visible = true;
     return renderable;
+  }
+
+  protected initRenderable(topicName: string, userData: ImageUserData): IImageRenderable {
+    return new ImageRenderable(topicName, this.renderer, userData);
   }
 
   /** Gets frame from active info or image message if info does not have one*/
