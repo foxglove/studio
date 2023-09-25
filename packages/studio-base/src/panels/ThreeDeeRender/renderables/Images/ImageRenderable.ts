@@ -22,7 +22,7 @@ import { DECODE_IMAGE_ERR_KEY, IMAGE_TOPIC_PATH } from "../ImageMode/constants";
 import { ColorModeSettings } from "../colorMode";
 
 const log = Logger.getLogger(__filename);
-export const IMAGE_FORMATS = new Set(["jpeg", "png", "webp"]);
+const IMAGE_FORMATS = new Set(["jpeg", "png", "webp"]);
 export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
   visible: boolean;
   frameLocked?: boolean;
