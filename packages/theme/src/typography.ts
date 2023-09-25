@@ -51,34 +51,22 @@ export function typography({
   };
   return {
     fontFamily: baseFontFamily,
+    fontSize: 12,
     fontFeatureSettings,
     body1: {
-      fontSize: "0.875rem",
       ...baseFontStyles,
     },
     body2: {
-      fontSize: "0.75rem",
       ...baseFontStyles,
-    },
-    subtitle1: {
-      fontSize: "0.875rem",
-    },
-    subtitle2: {
-      fontSize: "0.75rem",
-    },
-    caption: {
-      fontSize: "0.625rem",
     },
     button: {
       ...baseFontStyles,
-      fontSize: "0.875rem",
       textTransform: "none",
       fontWeight: 700,
       letterSpacing: "-0.0125em",
     },
     overline: {
       ...baseFontStyles,
-      fontSize: "0.625rem",
       letterSpacing: "0.05em",
       lineHeight: "1.5",
     },
