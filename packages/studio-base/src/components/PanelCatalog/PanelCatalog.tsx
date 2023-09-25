@@ -220,7 +220,6 @@ export const PanelCatalog = forwardRef<HTMLDivElement, Props>(function PanelCata
           onChange={handleSearchChange}
           onKeyDown={onKeyDown}
           autoFocus
-          color="secondary"
           data-testid="panel-list-textfield"
           InputProps={{
             startAdornment: (
