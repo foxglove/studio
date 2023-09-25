@@ -304,15 +304,6 @@ export class ImageMode
     super.removeAllRenderables();
   }
 
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  #setHasCalibrationTopic = (hasCalibrationTopic: boolean): void => {
-    if (hasCalibrationTopic) {
-      this.renderer.disableImageOnlySubscriptionMode();
-    } else {
-      this.renderer.enableImageOnlySubscriptionMode();
-    }
-  };
-
   /**
    * If no image topic is selected, automatically select the first available one from `renderer.topics`.
    * Also auto-select a new calibration topic to match the new image topic.
