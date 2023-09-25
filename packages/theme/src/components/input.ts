@@ -8,6 +8,7 @@ import { OverrideComponentReturn } from "../types";
 
 export const MuiInput: OverrideComponentReturn<"MuiInput"> = {
   defaultProps: {
+    color: "secondary",
     disableUnderline: true,
   },
   styleOverrides: {

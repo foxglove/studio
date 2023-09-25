@@ -11,7 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { MenuItem, Autocomplete as MuiAutocomplete, TextField, alpha } from "@mui/material";
+import {
+  MenuItem,
+  Autocomplete as MuiAutocomplete,
+  TextField,
+  TextFieldProps,
+  alpha,
+} from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
 import * as React from "react";
 import {
@@ -35,6 +41,7 @@ const MAX_FZF_MATCHES = 200;
 const FAST_FIND_ITEM_CUTOFF = 1_000;
 
 type AutocompleteProps<T> = {
+  className?: string;
   autoSize?: boolean;
   disableAutoSelect?: boolean;
   disabled?: boolean;
@@ -55,6 +62,7 @@ type AutocompleteProps<T> = {
   selectOnFocus?: boolean;
   sortWhenFiltering?: boolean;
   value?: string;
+  variant?: TextFieldProps["variant"];
 };
 
 export interface IAutocomplete {
@@ -63,57 +71,37 @@ export interface IAutocomplete {
   blur(): void;
 }
 
-const useStyles = makeStyles()((theme) => {
-  const prefersDarkMode = theme.palette.mode === "dark";
-  const inputBackgroundColor = prefersDarkMode
-    ? "rgba(255, 255, 255, 0.09)"
-    : "rgba(0, 0, 0, 0.06)";
+const useStyles = makeStyles()((theme) => ({
+  inputError: {
+    input: {
+      color: theme.palette.error.main,
+    },
+  },
+  item: {
+    padding: 6,
+    cursor: "pointer",
+    minHeight: "100%",
+    lineHeight: "calc(100% - 10px)",
+    overflowWrap: "break-word",
+    color: theme.palette.text.primary,
 
-  return {
-    root: {
-      ".MuiInputBase-root.MuiInputBase-sizeSmall": {
-        backgroundColor: "transparent",
-        paddingInline: 0,
-
-        "&:focus-within": {
-          backgroundColor: inputBackgroundColor,
-        },
-        "&:hover, &:focus-within": {
-          paddingRight: theme.spacing(2.5),
-        },
-      },
+    // re-establish the <mark /> styles because the autocomplete is in a Portal
+    mark: {
+      backgroundColor: "transparent",
+      color: theme.palette.info.main,
+      fontWeight: 700,
     },
-    inputError: {
-      input: {
-        color: theme.palette.error.main,
-      },
-    },
-    item: {
-      padding: 6,
-      cursor: "pointer",
-      minHeight: "100%",
-      lineHeight: "calc(100% - 10px)",
-      overflowWrap: "break-word",
-      color: theme.palette.text.primary,
-
-      // re-establish the <mark /> styles because the autocomplete is in a Portal
-      mark: {
-        backgroundColor: "transparent",
-        color: theme.palette.info.main,
-        fontWeight: 700,
-      },
-    },
-    itemSelected: {
-      backgroundColor: alpha(
-        theme.palette.primary.main,
-        theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity,
-      ),
-    },
-    itemHighlighted: {
-      backgroundColor: theme.palette.action.hover,
-    },
-  };
-});
+  },
+  itemSelected: {
+    backgroundColor: alpha(
+      theme.palette.primary.main,
+      theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity,
+    ),
+  },
+  itemHighlighted: {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
 
 function defaultGetText(name: string): (item: unknown) => string {
   return function (item: unknown) {
@@ -169,6 +157,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
 
   // Props
   const {
+    className,
     selectedItem,
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     value = stateValue ?? (selectedItem ? getItemText(selectedItem) : undefined),
@@ -182,6 +171,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     readOnly,
     selectOnFocus,
     sortWhenFiltering = true,
+    variant,
   }: AutocompleteProps<T> = props;
 
   const fzfUnfiltered = useMemo(() => {
@@ -269,7 +259,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
 
   return (
     <MuiAutocomplete
-      className={classes.root}
+      className={className}
       componentsProps={{
         paper: { elevation: 8 },
       }}
@@ -293,7 +283,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
       renderInput={(params) => (
         <TextField
           {...params}
-          variant="filled"
+          variant={variant}
           inputRef={inputRef}
           data-testid="autocomplete-textfield"
           placeholder={placeholder}
