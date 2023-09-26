@@ -38,7 +38,13 @@ export default function TopicLink({ addPanel, onShowTopicSettings, topic }: Prop
   }, [addPanel, topic]);
 
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between" padding={1}>
+    <Stack
+      direction="row"
+      alignItems="center"
+      justifyContent="space-between"
+      paddingInlineStart={1}
+      paddingBlock={0}
+    >
       <Typography variant="body2">{topic}</Typography>
       <Stack direction="row" padding={0}>
         {onShowTopicSettings && (
