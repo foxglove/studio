@@ -123,7 +123,6 @@ function ToolbarComponent(props: Props): JSX.Element {
               index={1}
               path={diffTopicPath}
               onChange={onDiffTopicPathChange}
-              inputStyle={{ height: "100%" }}
               {...(topic ? { prioritizedDatatype: topic.schemaName } : {})}
             />
           )}
