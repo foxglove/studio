@@ -3,10 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  ChevronDown20Regular,
-  ChevronUp20Regular,
-  ChevronLeft20Regular,
-  ChevronRight20Regular,
+  ChevronDown16Regular,
+  ChevronUp16Regular,
+  ChevronLeft16Regular,
+  ChevronRight16Regular,
   TextBulletListLtr20Filled,
   ArrowMinimize20Filled,
 } from "@fluentui/react-icons";
@@ -172,9 +172,9 @@ function PlotLegendComponent(props: Props): JSX.Element {
       case "floating":
         return showLegend ? <ArrowMinimize20Filled /> : <TextBulletListLtr20Filled />;
       case "left":
-        return showLegend ? <ChevronLeft20Regular /> : <ChevronRight20Regular />;
+        return showLegend ? <ChevronLeft16Regular /> : <ChevronRight16Regular />;
       case "top":
-        return showLegend ? <ChevronUp20Regular /> : <ChevronDown20Regular />;
+        return showLegend ? <ChevronUp16Regular /> : <ChevronDown16Regular />;
     }
   }, [showLegend, legendDisplay]);
 
