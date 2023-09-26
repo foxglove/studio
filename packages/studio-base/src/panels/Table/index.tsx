@@ -33,9 +33,8 @@ type Config = { topicPath: string };
 type Props = { config: Config; saveConfig: SaveConfig<Config> };
 
 const useStyles = makeStyles()({
-  inputWrapper: {
-    width: "100%",
-    lineHeight: "20px",
+  toolbar: {
+    paddingBlock: 0,
   },
   monospace: {
     fontFamily: fonts.MONOSPACE,
@@ -84,15 +83,8 @@ function TablePanel({ config, saveConfig }: Props) {
 
   return (
     <Stack flex="auto" overflow="hidden" position="relative">
-      <PanelToolbar>
-        <div className={classes.inputWrapper}>
-          <MessagePathInput
-            index={0}
-            path={topicPath}
-            onChange={onTopicPathChange}
-            inputStyle={{ height: 20 }}
-          />
-        </div>
+      <PanelToolbar className={classes.toolbar}>
+        <MessagePathInput index={0} path={topicPath} onChange={onTopicPathChange} />
       </PanelToolbar>
       {topicPath.length === 0 && <EmptyState>No topic selected</EmptyState>}
       {topicPath.length !== 0 && cachedMessages.length === 0 && (
