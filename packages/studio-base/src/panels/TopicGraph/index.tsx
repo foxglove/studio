@@ -171,7 +171,7 @@ function unionInto<T>(dest: Set<T>, ...iterables: ReadonlySet<T>[]): void {
 }
 
 function TopicGraph() {
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
   const [selectedTab, setSelectedTab] = useState<"Topics" | undefined>(undefined);
 
   const publishedTopics = useMessagePipeline(
