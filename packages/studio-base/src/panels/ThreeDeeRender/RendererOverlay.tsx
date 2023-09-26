@@ -39,9 +39,9 @@ import { PublishClickType } from "./renderables/PublishClickTool";
 import { InterfaceMode } from "./types";
 
 const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
-  pose: <PublishGoalIcon fontSize="inherit" />,
-  point: <PublishPointIcon fontSize="inherit" />,
-  pose_estimate: <PublishPoseEstimateIcon fontSize="inherit" />,
+  pose: <PublishGoalIcon fontSize="small" />,
+  point: <PublishPointIcon fontSize="small" />,
+  pose_estimate: <PublishPoseEstimateIcon fontSize="small" />,
 };
 
 const useStyles = makeStyles()((theme) => ({
@@ -205,13 +205,13 @@ export function RendererOverlay(props: {
     <>
       <IconButton
         {...longPressPublishEvent}
+        className={classes.iconButton}
         size="small"
         color={props.publishActive ? "info" : "inherit"}
         title={props.publishActive ? "Click to cancel" : "Click to publish"}
         ref={publickClickButtonRef}
         onClick={props.onClickPublish}
         data-testid="publish-button"
-        style={{ fontSize: "1rem", pointerEvents: "auto" }}
       >
         {selectedPublishClickIcon}
         <div
