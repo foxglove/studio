@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { filledInputClasses, inputBaseClasses, selectClasses } from "@mui/material";
+import { inputBaseClasses, selectClasses } from "@mui/material";
 
 import { OverrideComponentReturn } from "../types";
 
@@ -11,7 +11,7 @@ export const MuiSelect: OverrideComponentReturn<"MuiSelect"> = {
     root: {
       transition: "none",
 
-      [`&.${filledInputClasses.root}.${inputBaseClasses.sizeSmall}`]: {
+      [`&.${inputBaseClasses.sizeSmall}`]: {
         lineHeight: "1.25em !important",
       },
     },
