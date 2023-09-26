@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Ruler20Filled } from "@fluentui/react-icons";
+import { Ruler20Filled, Ruler20Regular } from "@fluentui/react-icons";
 import {
   Button,
   IconButton,
@@ -47,21 +47,19 @@ const PublishClickIcons: Record<PublishClickType, React.ReactNode> = {
 const useStyles = makeStyles()((theme) => ({
   iconButton: {
     position: "relative",
-    fontSize: "1rem !important",
     pointerEvents: "auto",
-    aspectRatio: "1",
-
-    "& svg:not(.MuiSvgIcon-root)": {
-      fontSize: "1rem !important",
-    },
+    aspectRatio: "1/1",
   },
   rulerIcon: {
     transform: "rotate(45deg)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   threeDeeButton: {
     fontFamily: fonts.MONOSPACE,
-    fontFeatureSettings: theme.typography.body2.fontFeatureSettings,
-    fontSize: theme.typography.body2.fontSize,
+    fontFeatureSettings: theme.typography.caption.fontFeatureSettings,
+    fontSize: theme.typography.caption.fontSize,
     fontWeight: theme.typography.fontWeightBold,
     lineHeight: "1em",
   },
@@ -207,6 +205,7 @@ export function RendererOverlay(props: {
     <>
       <IconButton
         {...longPressPublishEvent}
+        size="small"
         color={props.publishActive ? "info" : "inherit"}
         title={props.publishActive ? "Click to cancel" : "Click to publish"}
         ref={publickClickButtonRef}
@@ -324,6 +323,7 @@ export function RendererOverlay(props: {
           <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
             <IconButton
               className={classes.iconButton}
+              size="small"
               color={props.perspective ? "info" : "inherit"}
               title={props.perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
               onClick={props.onTogglePerspective}
@@ -333,11 +333,14 @@ export function RendererOverlay(props: {
             <IconButton
               data-testid="measure-button"
               className={classes.iconButton}
+              size="small"
               color={props.measureActive ? "info" : "inherit"}
               title={props.measureActive ? "Cancel measuring" : "Measure distance"}
               onClick={props.onClickMeasure}
             >
-              <Ruler20Filled className={classes.rulerIcon} />
+              <div className={classes.rulerIcon}>
+                {props.measureActive ? <Ruler20Filled /> : <Ruler20Regular />}
+              </div>
             </IconButton>
 
             {publishControls}

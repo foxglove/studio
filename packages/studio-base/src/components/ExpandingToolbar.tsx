@@ -29,14 +29,18 @@ const useStyles = makeStyles()((theme) => ({
     },
     [`.${tabClasses.root}`]: {
       minWidth: "auto",
-      padding: theme.spacing(1, 1.5, 1.125),
+      minHeight: "auto",
+      padding: theme.spacing(0.875, 1.5, 1),
       color: theme.palette.text.secondary,
-      minHeight: 36,
 
       "&.Mui-selected": {
         color: theme.palette.text.primary,
       },
     },
+  },
+  minimizeButton: {
+    borderRadius: 0,
+    borderTopRightRadius: theme.shape.borderRadius,
   },
 }));
 
@@ -86,6 +90,7 @@ export default function ExpandingToolbar<T extends string>({
     return (
       <Paper square={false} elevation={4} style={{ pointerEvents: "auto" }}>
         <IconButton
+          size="small"
           color={checked === true ? "info" : "default"}
           title={tooltip}
           data-testid={`ExpandingToolbar-${tooltip}`}
@@ -127,6 +132,8 @@ export default function ExpandingToolbar<T extends string>({
             ))}
           </Tabs>
           <IconButton
+            size="small"
+            className={classes.minimizeButton}
             onClick={() => {
               onSelectTab(undefined);
             }}

@@ -225,6 +225,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
       })}
     >
       <IconButton
+        size="small"
         onClick={toggleLegend}
         className={cx(classes.toggleButton, {
           [classes.toggleButtonFloating]: legendDisplay === "floating",
