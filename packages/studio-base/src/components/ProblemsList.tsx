@@ -46,7 +46,7 @@ const useStyles = makeStyles()((theme) => ({
   accordionDetails: {
     display: "flex",
     flexDirection: "column",
-    fontFamily: theme.typography.fontSansSerif,
+    fontFamily: theme.typography.fontMonospace,
     fontSize: "0.6875rem",
     padding: theme.spacing(1.125),
     gap: theme.spacing(1),

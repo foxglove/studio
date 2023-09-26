@@ -33,7 +33,7 @@ const useStyles = makeStyles()((theme) => ({
   textarea: {
     [`.${outlinedInputClasses.root}`]: {
       backgroundColor: theme.palette.action.hover,
-      fontFamily: theme.typography.fontSansSerif,
+      fontFamily: theme.typography.fontMonospace,
       maxHeight: "60vh",
       overflowY: "auto",
       padding: theme.spacing(0.25),
