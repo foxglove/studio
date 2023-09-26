@@ -3,7 +3,6 @@
   "include": ["**/*"],
   "compilerOptions": {
     "module": "commonjs",
-    "jsx": "react-jsx",
     "noEmit": true,
     "experimentalDecorators": true
   }

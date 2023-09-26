@@ -4,7 +4,6 @@
   "compilerOptions": {
     "lib": ["dom", "es2022", "esnext.disposable"],
     "module": "commonjs",
-    "noEmit": true,
-    "jsx": "react-jsx"
+    "noEmit": true
   }
 }
