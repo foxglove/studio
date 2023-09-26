@@ -12,7 +12,7 @@ import type { Configuration as WebpackDevServerConfiguration } from "webpack-dev
 
 import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
 import { makeConfig } from "@foxglove/studio-base/webpack";
-import { palette } from "@foxglove/theme";
+import * as palette from "@foxglove/theme/src/palette";
 
 export interface WebpackConfiguration extends Configuration {
   devServer?: WebpackDevServerConfiguration;

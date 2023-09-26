@@ -10,7 +10,7 @@ import { Configuration, WebpackPluginInstance } from "webpack";
 
 import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
 import { makeConfig } from "@foxglove/studio-base/webpack";
-import { palette } from "@foxglove/theme";
+import * as palette from "@foxglove/theme/src/palette";
 
 import { WebpackConfigParams } from "./WebpackConfigParams";
 
