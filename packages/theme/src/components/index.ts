@@ -14,6 +14,7 @@ export * from "./cardContent";
 export * from "./cardHeader";
 export * from "./checkbox";
 export * from "./cssBaseline";
+export * from "./chip";
 export * from "./dialog";
 export * from "./dialogActions";
 export * from "./dialogContent";
