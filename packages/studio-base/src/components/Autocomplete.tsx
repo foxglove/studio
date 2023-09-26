@@ -171,7 +171,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     readOnly,
     selectOnFocus,
     sortWhenFiltering = true,
-    variant,
+    variant = "filled",
   }: AutocompleteProps<T> = props;
 
   const fzfUnfiltered = useMemo(() => {
