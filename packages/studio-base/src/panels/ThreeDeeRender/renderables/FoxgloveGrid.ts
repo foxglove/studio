@@ -847,7 +847,7 @@ function createMaterial(texture: THREE.DataTexture, topic: string): GridShaderMa
         if(PICKING == 1) {
           gl_FragColor = objectId;
         } else {
-          #include <encodings_fragment>
+          #include <colorspace_fragment>
         }
       }
     `,
