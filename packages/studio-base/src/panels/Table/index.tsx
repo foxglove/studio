@@ -25,21 +25,20 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import Table from "./Table";
 
 type Config = { topicPath: string };
 type Props = { config: Config; saveConfig: SaveConfig<Config> };
 
-const useStyles = makeStyles()({
+const useStyles = makeStyles()((theme) => ({
   toolbar: {
     paddingBlock: 0,
   },
   monospace: {
-    fontFamily: fonts.MONOSPACE,
+    fontFamily: theme.typography.fontMonospace,
   },
-});
+}));
 
 function TablePanel({ config, saveConfig }: Props) {
   const { topicPath } = config;

@@ -27,7 +27,6 @@ import PublishGoalIcon from "@foxglove/studio-base/components/PublishGoalIcon";
 import PublishPointIcon from "@foxglove/studio-base/components/PublishPointIcon";
 import PublishPoseEstimateIcon from "@foxglove/studio-base/components/PublishPoseEstimateIcon";
 import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { InteractionContextMenu, Interactions, SelectionObject, TabType } from "./Interactions";
 import type { PickedRenderable } from "./Picker";
@@ -57,7 +56,7 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: "center",
   },
   threeDeeButton: {
-    fontFamily: fonts.MONOSPACE,
+    fontFamily: theme.typography.fontMonospace,
     fontFeatureSettings: theme.typography.caption.fontFeatureSettings,
     fontSize: theme.typography.caption.fontSize,
     fontWeight: theme.typography.fontWeightBold,

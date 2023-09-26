@@ -21,7 +21,6 @@ import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 export type ShareJsonModalProps = {
   onRequestClose: () => void;
@@ -34,7 +33,7 @@ const useStyles = makeStyles()((theme) => ({
   textarea: {
     [`.${outlinedInputClasses.root}`]: {
       backgroundColor: theme.palette.action.hover,
-      fontFamily: fonts.MONOSPACE,
+      fontFamily: theme.typography.fontSansSerif,
       maxHeight: "60vh",
       overflowY: "auto",
       padding: theme.spacing(0.25),

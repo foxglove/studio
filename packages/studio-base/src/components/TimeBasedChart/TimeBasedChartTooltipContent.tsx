@@ -18,7 +18,6 @@ import { makeStyles } from "tss-react/mui";
 
 import { Immutable } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 export type TimeBasedChartTooltipData = {
   datasetIndex: number;
@@ -36,7 +35,7 @@ type Props = Immutable<{
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    fontFamily: fonts.MONOSPACE,
+    fontFamily: theme.typography.fontMonospace,
     fontSize: theme.typography.caption.fontSize,
     lineHeight: theme.typography.caption.lineHeight,
     overflowWrap: "break-word",
@@ -46,7 +45,7 @@ const useStyles = makeStyles()((theme) => ({
     display: "grid",
     gridTemplateColumns: "auto minmax(0px, max-content) minmax(auto, max-content)",
     alignItems: "center",
-    fontFamily: fonts.MONOSPACE,
+    fontFamily: theme.typography.fontMonospace,
     fontSize: theme.typography.caption.fontSize,
     lineHeight: theme.typography.caption.lineHeight,
     overflowWrap: "break-word",

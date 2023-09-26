@@ -17,7 +17,7 @@ import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Language } from "@foxglove/studio-base/i18n";
-import { createMuiTheme } from "@foxglove/studio-base/theme";
+import { createMuiTheme } from "@foxglove/theme";
 
 const MINIMUM_CHROME_VERSION = 76;
 const BANNER_HEIGHT = 54;

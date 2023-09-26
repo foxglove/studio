@@ -2,15 +2,19 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ThemeOptions as MuiThemeOptions, TypographyStyle } from "@mui/material";
+import { TypographyOptions, TypographyStyle } from "@mui/material/styles/createTypography";
 
 import { Language } from "./types";
 
 declare module "@mui/material/styles/createTypography" {
   interface Typography {
+    fontMonospace: string;
+    fontSansSerif: string;
     fontFeatureSettings: string;
   }
   interface TypographyOptions {
+    fontMonospace: string;
+    fontSansSerif: string;
     fontFeatureSettings: string;
   }
 }
@@ -21,7 +25,7 @@ declare module "@mui/material/styles/createTypography" {
 // ends up crashing in DWriteFontFamily::GetFirstMatchingFont() or DWriteFont::Create().
 //
 // https://bugs.chromium.org/p/chromium/issues/detail?id=1261577
-export const baseFontFamily = "'Inter'";
+export const fontSansSerif = "'Inter'";
 export const fontMonospace = "'IBM Plex Mono'";
 
 // enable font features https://rsms.me/inter/lab
@@ -30,11 +34,7 @@ export const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
 // contextual alternates create undesired changes in Chinese/Japanese
 export const fontFeatureSettingsCJK = "'tnum'";
 
-export function typography({
-  locale,
-}: {
-  locale: Language | undefined;
-}): MuiThemeOptions["typography"] {
+export function typography({ locale }: { locale: Language | undefined }): TypographyOptions {
   let fontSetttings: string;
   switch (locale) {
     case "zh":
@@ -50,7 +50,9 @@ export function typography({
     fontFeatureSettings: fontSetttings,
   };
   return {
-    fontFamily: baseFontFamily,
+    fontMonospace,
+    fontSansSerif,
+    fontFamily: fontSansSerif,
     fontSize: 12,
     fontFeatureSettings,
     body1: {
