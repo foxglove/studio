@@ -7950,7 +7950,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"app-builder-lib@npm:*, app-builder-lib@npm:24.6.4":
+"app-builder-lib@npm:*":
+  version: 24.6.5
+  resolution: "app-builder-lib@npm:24.6.5"
+  dependencies:
+    7zip-bin: ~5.1.1
+    "@develar/schema-utils": ~2.6.5
+    "@electron/notarize": 2.1.0
+    "@electron/osx-sign": 1.0.5
+    "@electron/universal": 1.4.1
+    "@malept/flatpak-bundler": ^0.4.0
+    "@types/fs-extra": 9.0.13
+    async-exit-hook: ^2.0.1
+    bluebird-lst: ^1.0.9
+    builder-util: 24.5.0
+    builder-util-runtime: 9.2.1
+    chromium-pickle-js: ^0.2.0
+    debug: ^4.3.4
+    ejs: ^3.1.8
+    electron-publish: 24.5.0
+    form-data: ^4.0.0
+    fs-extra: ^10.1.0
+    hosted-git-info: ^4.1.0
+    is-ci: ^3.0.0
+    isbinaryfile: ^5.0.0
+    js-yaml: ^4.1.0
+    lazy-val: ^1.0.5
+    minimatch: ^5.1.1
+    read-config-file: 6.3.2
+    sanitize-filename: ^1.6.3
+    semver: ^7.3.8
+    tar: ^6.1.12
+    temp-file: ^3.4.0
+  checksum: c9ce87fe33bd2ff0a7f7aa0a573603e175099475b58b86963b5d2bcf9ce6070b792e46b4128b5ce7eec011704c97d8fb5322baf38e33693b16094db546e6c54e
+  languageName: node
+  linkType: hard
+
+"app-builder-lib@npm:24.6.4":
   version: 24.6.4
   resolution: "app-builder-lib@npm:24.6.4"
   dependencies:
