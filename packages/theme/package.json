@@ -18,7 +18,6 @@
     "@fluentui/react-icons": "2.0.218",
     "@foxglove/tsconfig": "2.0.0",
     "@mui/icons-material": "5.14.9",
-    "@mui/lab": "5.0.0-alpha.145",
     "@mui/material": "5.14.10",
     "@storybook/react": "7.4.5",
     "@types/react": "18.2.22",
