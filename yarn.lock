@@ -2761,7 +2761,7 @@ __metadata:
     "@types/react-virtualized": 9.21.22
     "@types/react-window": ^1.8.5
     "@types/sanitize-html": 2.9.0
-    "@types/seedrandom": 3.0.5
+    "@types/seedrandom": 3.0.6
     "@types/shallowequal": 1.1.1
     "@types/string-hash": 1.1.1
     "@types/text-metrics": "workspace:*"
@@ -6918,10 +6918,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/seedrandom@npm:3.0.5":
-  version: 3.0.5
-  resolution: "@types/seedrandom@npm:3.0.5"
-  checksum: d63d56ebc609203cf8cbe2ab7e7934237446bc2463ade664be130dcd4a3d74915d529909de2e1b18141cfabc9e42784998b7e5ff30c016919ac5b83911a700f0
+"@types/seedrandom@npm:3.0.6":
+  version: 3.0.6
+  resolution: "@types/seedrandom@npm:3.0.6"
+  checksum: 6d50b4ec8db13af2435886659323fa2fc47945f368193ca61eb5e3af9fe4d14db2c862ffbc887769f482e5dacb4b9456c0827507e5baf04ea5696d866e56ac51
   languageName: node
   linkType: hard
 
