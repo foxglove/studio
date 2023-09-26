@@ -39,7 +39,7 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
 
     /// --- child and element styling follows ---
     "code, pre, tt": {
-      fontFamily: typography.fontSansSerif,
+      fontFamily: typography.fontMonospace,
       overflowWrap: "break-word",
     },
     mark: {
