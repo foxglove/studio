@@ -7,6 +7,7 @@ import { OverrideComponentReturn } from "../types";
 export const MuiOutlinedInput: OverrideComponentReturn<"MuiOutlinedInput"> = {
   defaultProps: {
     notched: false,
+    color: "primary",
   },
   styleOverrides: {
     input: ({ theme }) => ({
