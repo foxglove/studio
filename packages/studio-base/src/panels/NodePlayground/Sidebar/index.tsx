@@ -48,7 +48,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export type TabOption =
+type TabOption =
   | false // false means no tab is selected
   | "nodes"
   | "utils"
