@@ -6738,17 +6738,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/plist@npm:^3.0.1":
-  version: 3.0.2
-  resolution: "@types/plist@npm:3.0.2"
-  dependencies:
-    "@types/node": "*"
-    xmlbuilder: ">=11.0.1"
-  checksum: b8f9e6b21fb41a7e8ea5250717da972cde40b120109d5d2ed79e0a25406a9f6793abcba048d9b8ecc3df4b25735d9e4223b4d8a56dff893665c4a8c8573b77ad
-  languageName: node
-  linkType: hard
-
-"@types/plist@npm:^3.0.3":
+"@types/plist@npm:^3.0.1, @types/plist@npm:^3.0.3":
   version: 3.0.3
   resolution: "@types/plist@npm:3.0.3"
   dependencies:
