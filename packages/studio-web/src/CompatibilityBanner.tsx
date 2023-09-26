@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Warning24Filled, Dismiss20Regular } from "@fluentui/react-icons";
+import { Warning24Filled, Dismiss20Filled } from "@fluentui/react-icons";
 import {
   IconButton,
   Typography,
@@ -136,7 +136,7 @@ function CompatibilityBannerBase({
 
         {isDismissable && (
           <IconButton edge="end" color="inherit" size="small" onClick={onDismiss}>
-            <Dismiss20Regular />
+            <Dismiss20Filled />
           </IconButton>
         )}
       </Stack>
