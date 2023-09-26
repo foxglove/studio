@@ -8,7 +8,7 @@ import {
   ChevronLeft20Regular,
   ChevronRight20Regular,
   TextBulletListLtr20Filled,
-  ArrowMinimize24Filled,
+  ArrowMinimize20Filled,
 } from "@fluentui/react-icons";
 import { IconButton } from "@mui/material";
 import * as _ from "lodash-es";
@@ -170,7 +170,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
   const legendIcon = useMemo(() => {
     switch (legendDisplay) {
       case "floating":
-        return showLegend ? <ArrowMinimize24Filled /> : <TextBulletListLtr20Filled />;
+        return showLegend ? <ArrowMinimize20Filled /> : <TextBulletListLtr20Filled />;
       case "left":
         return showLegend ? <ChevronLeft20Regular /> : <ChevronRight20Regular />;
       case "top":

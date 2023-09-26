@@ -15,7 +15,7 @@ import {
   ArrowBidirectionalUpDown16Regular,
   PageFit16Regular,
   RectangleLandscape16Regular,
-  Diamond32Filled,
+  Diamond20Filled,
 } from "@fluentui/react-icons";
 import { FormControlLabel, IconButton, Paper, Radio, RadioGroup } from "@mui/material";
 import Cytoscape from "cytoscape";
@@ -404,7 +404,7 @@ function TopicGraph() {
           checked={topicVisibility !== "none"}
           dataTest="set-topic-visibility"
           tooltip={topicVisibilityTooltip}
-          icon={<Diamond32Filled />}
+          icon={<Diamond20Filled />}
           selectedTab={selectedTab}
           onSelectTab={(newSelectedTab) => {
             setSelectedTab(newSelectedTab);

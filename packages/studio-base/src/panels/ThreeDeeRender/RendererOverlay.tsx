@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Ruler24Filled } from "@fluentui/react-icons";
+import { Ruler20Filled } from "@fluentui/react-icons";
 import {
   Button,
   IconButton,
@@ -60,8 +60,8 @@ const useStyles = makeStyles()((theme) => ({
   },
   threeDeeButton: {
     fontFamily: fonts.MONOSPACE,
-    fontFeatureSettings: theme.typography.caption.fontFeatureSettings,
-    fontSize: theme.typography.caption.fontSize,
+    fontFeatureSettings: theme.typography.body2.fontFeatureSettings,
+    fontSize: theme.typography.body2.fontSize,
     fontWeight: theme.typography.fontWeightBold,
     lineHeight: "1em",
   },
@@ -337,7 +337,7 @@ export function RendererOverlay(props: {
               title={props.measureActive ? "Cancel measuring" : "Measure distance"}
               onClick={props.onClickMeasure}
             >
-              <Ruler24Filled className={classes.rulerIcon} />
+              <Ruler20Filled className={classes.rulerIcon} />
             </IconButton>
 
             {publishControls}

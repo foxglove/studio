@@ -5,8 +5,8 @@
 import {
   Dismiss12Regular,
   ErrorCircle16Filled,
-  Square24Filled,
-  Square24Regular,
+  Square12Filled,
+  Square12Regular,
 } from "@fluentui/react-icons";
 import { ButtonBase, Checkbox, Tooltip, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
@@ -186,8 +186,8 @@ export function PlotLegendRow({
           size="small"
           title="Toggle visibility"
           style={{ color: getLineColor(path.color, index) }}
-          icon={<Square24Regular />}
-          checkedIcon={<Square24Filled />}
+          icon={<Square12Regular />}
+          checkedIcon={<Square12Filled />}
           onClick={(event) => {
             event.stopPropagation();
           }} // prevent toggling from opening settings
