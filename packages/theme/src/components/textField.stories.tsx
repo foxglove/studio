@@ -38,7 +38,7 @@ export const Default = {
   ),
 };
 
-export const Variants = {
+export const VariantsLight = {
   render: (): JSX.Element => (
     <div
       style={{
@@ -139,4 +139,10 @@ export const Variants = {
       ))}
     </div>
   ),
+  parameters: { colorScheme: "light" },
+};
+
+export const VariantsDark = {
+  ...VariantsLight,
+  parameters: { colorScheme: "dark" },
 };
