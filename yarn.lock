@@ -2753,7 +2753,7 @@ __metadata:
     "@types/moment-duration-format": 2.2.3
     "@types/nearley": 2.11.2
     "@types/prettier": 3.0.0
-    "@types/ramda": 0.29.4
+    "@types/ramda": 0.29.5
     "@types/react": 18.2.23
     "@types/react-dom": 18.2.7
     "@types/react-hover-observer": "workspace:*"
@@ -6816,12 +6816,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ramda@npm:0.29.4":
-  version: 0.29.4
-  resolution: "@types/ramda@npm:0.29.4"
+"@types/ramda@npm:0.29.5":
+  version: 0.29.5
+  resolution: "@types/ramda@npm:0.29.5"
   dependencies:
     types-ramda: ^0.29.4
-  checksum: ff373b32ed83f2b2287c05a1357224a0ee62e99b569b35f03059eb6657bb1190f0fc81e7c49c3f0c8897fbe8b7619848288096a91cf94ed574df971b91c71de3
+  checksum: 01aa02655f712b5a1411a2399f94a77d8651da0cea95f753a3482ba00af558f54928b692cbb5629cd231aca461b5b9eeddeaeb46f25f4f224d1bba5e4334a7e7
   languageName: node
   linkType: hard
 

@@ -72,7 +72,7 @@
     "@types/moment-duration-format": "2.2.3",
     "@types/nearley": "2.11.2",
     "@types/prettier": "3.0.0",
-    "@types/ramda": "0.29.4",
+    "@types/ramda": "0.29.5",
     "@types/react": "18.2.23",
     "@types/react-dom": "18.2.7",
     "@types/react-hover-observer": "workspace:*",
