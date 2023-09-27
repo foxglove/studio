@@ -7,7 +7,7 @@ import { StoryObj } from "@storybook/react";
 
 export default {
   component: ScopedCssBaseline,
-  title: "components/ScopedCssBaseline",
+  title: "components/CssBaseline",
   parameters: {
     colorScheme: "light",
   },
