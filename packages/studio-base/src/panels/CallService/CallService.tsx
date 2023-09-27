@@ -196,9 +196,6 @@ function CallServiceContent(
     <Stack flex="auto" gap={1} padding={1.5} position="relative" fullHeight>
       <Stack gap={1} flexGrow="1" direction={config.layout === "horizontal" ? "row" : "column"}>
         <Stack flexGrow="1">
-          <Typography variant="caption" noWrap>
-            Request
-          </Typography>
           <TextField
             variant="outlined"
             className={classes.textarea}
@@ -209,18 +206,12 @@ function CallServiceContent(
             onChange={(event) => {
               setConfig({ ...config, requestPayload: event.target.value });
             }}
+            label="Request"
             error={requestParseError != undefined}
+            helperText={requestParseError}
           />
-          {requestParseError && (
-            <Typography variant="caption" noWrap color={requestParseError ? "error" : undefined}>
-              {requestParseError}
-            </Typography>
-          )}
         </Stack>
         <Stack flexGrow="1">
-          <Typography variant="caption" noWrap>
-            Response
-          </Typography>
           <TextField
             variant="outlined"
             className={classes.textarea}
@@ -229,6 +220,7 @@ function CallServiceContent(
             placeholder="Response"
             value={state?.value}
             error={state?.status === "error"}
+            label="Response"
           />
         </Stack>
       </Stack>
