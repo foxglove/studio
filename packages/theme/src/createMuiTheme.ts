@@ -6,7 +6,6 @@ import { createTheme, Theme } from "@mui/material/styles";
 
 import * as components from "./components";
 import * as palette from "./palette";
-import { Language } from "./types";
 import { typography } from "./typography";
 
 type ThemePreference = "dark" | "light";
@@ -20,14 +19,11 @@ declare module "@mui/material/styles" {
   }
 }
 
-export const createMuiTheme = (
-  themePreference: ThemePreference,
-  locale: Language | undefined,
-): Theme =>
+export const createMuiTheme = (themePreference: ThemePreference): Theme =>
   createTheme({
     name: themePreference,
     palette: palette[themePreference],
     shape: { borderRadius: 2 },
-    typography: typography({ locale }),
+    typography,
     components,
   });

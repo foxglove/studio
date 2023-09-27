@@ -11,12 +11,10 @@ import {
   ThemeProvider as MuiThemeProvider,
   Portal,
 } from "@mui/material";
-import { useState, useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
-import { Language } from "@foxglove/studio-base/i18n";
 import { createMuiTheme } from "@foxglove/theme";
 
 const MINIMUM_CHROME_VERSION = 76;
@@ -154,11 +152,7 @@ export function CompatibilityBanner({
   isDismissable: boolean;
 }): JSX.Element | ReactNull {
   const { classes } = useStyles();
-  const { i18n } = useTranslation();
-  const muiTheme = useMemo(
-    () => createMuiTheme("dark", i18n.language as Language | undefined),
-    [i18n.language],
-  );
+  const muiTheme = createMuiTheme("dark");
   const [showBanner, setShowBanner] = useState(true);
 
   if (!showBanner || currentVersion >= MINIMUM_CHROME_VERSION) {
