@@ -20,7 +20,7 @@ const colors: ButtonProps["color"][] = [
 
 export default {
   component: ButtonGroup,
-  title: "Theme/Inputs/Button Grpup",
+  title: "Theme/Inputs/Button Group",
   decorators: [
     (Story) => {
       return (
