@@ -37,10 +37,6 @@ export const MuiScopedCssBaseline: OverrideComponentReturn<"MuiScopedCssBaseline
       lineHeight: 1.15,
 
       /// --- child and element styling follows ---
-      svg: {
-        display: "block",
-        maxWidth: "100%",
-      },
       "code, pre, tt": {
         fontFamily: theme.typography.fontMonospace,
         overflowWrap: "break-word",
