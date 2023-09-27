@@ -47,17 +47,6 @@ import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { ImageModeCamera } from "./ImageModeCamera";
 import { IMessageHandler, MessageHandler, MessageRenderState } from "./MessageHandler";
 import { ImageAnnotations } from "./annotations/ImageAnnotations";
-import {
-  REMOVE_IMAGE_TIMEOUT_MS,
-  IMAGE_TOPIC_PATH,
-  IMAGE_TOPIC_UNAVAILABLE,
-  CALIBRATION_TOPIC_PATH,
-  CALIBRATION_TOPIC_UNAVAILABLE,
-  DEFAULT_FOCAL_LENGTH,
-  IMAGE_TOPIC_DIFFERENT_FRAME,
-  MISSING_CAMERA_INFO,
-  CAMERA_MODEL,
-} from "./constants";
 import type {
   AnyRendererSubscription,
   IRenderer,
@@ -84,7 +73,24 @@ import { ColorModeSettings, colorModeSettingsFields } from "../colorMode";
 
 const log = Logger.getLogger(__filename);
 
-type ImageModeEvent = { type: "hasModifiedViewChanged" };
+const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
+const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
+
+const IMAGE_TOPIC_UNAVAILABLE = "IMAGE_TOPIC_UNAVAILABLE";
+const CALIBRATION_TOPIC_UNAVAILABLE = "CALIBRATION_TOPIC_UNAVAILABLE";
+
+const MISSING_CAMERA_INFO = "MISSING_CAMERA_INFO";
+const IMAGE_TOPIC_DIFFERENT_FRAME = "IMAGE_TOPIC_DIFFERENT_FRAME";
+
+const CAMERA_MODEL = "CameraModel";
+
+const DEFAULT_FOCAL_LENGTH = 500;
+
+const REMOVE_IMAGE_TIMEOUT_MS = 50;
+
+interface ImageModeEventMap extends THREE.Object3DEventMap {
+  hasModifiedViewChanged: object;
+}
 
 export const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
   ...ROS_IMAGE_DATATYPES,
@@ -108,7 +114,7 @@ const DEFAULT_CONFIG = {
 
 type ConfigWithDefaults = ImageModeConfig & typeof DEFAULT_CONFIG;
 export class ImageMode
-  extends SceneExtension<IImageRenderable, ImageModeEvent>
+  extends SceneExtension<ImageRenderable, ImageModeEventMap>
   implements ICameraHandler
 {
   public static extensionId = "foxglove.ImageMode";
