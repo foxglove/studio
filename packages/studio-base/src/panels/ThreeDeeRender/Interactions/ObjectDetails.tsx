@@ -65,7 +65,7 @@ function ObjectDetails({ interactionData, selectedObject, timezone }: Props): JS
         data={originalObject}
         shouldExpandNode={() => false}
         invertTheme={false}
-        theme={{ ...jsonTreeTheme, tree: { margin: 0, whiteSpace: "pre-line" } }}
+        theme={{ ...jsonTreeTheme, tree: { margin: 0, whiteSpace: "pre-line", lineHeight: 1.15 } }}
         hideRoot
         getItemString={(nodeType, data, itemType, itemString, keyPath) =>
           getItemString(nodeType, data, itemType, itemString, keyPath, timezone)
