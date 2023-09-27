@@ -40,6 +40,7 @@ export * from "./MuiPopover";
 export * from "./MuiRadio";
 export * from "./MuiScopedCssBaseline";
 export * from "./MuiSelect";
+export * from "./MuiSvgIcon";
 export * from "./MuiTab";
 export * from "./MuiTableCell";
 export * from "./MuiTabs";
