@@ -69,7 +69,7 @@ export const MuiScopedCssBaseline: OverrideComponentReturn<"MuiScopedCssBaseline
       },
       "h1, h2, h3, h4, h5, h6": {
         "&:not([class^='Mui'])": {
-          marginBlock: "1em",
+          marginBlock: "0.75em",
 
           "&:last-child": {
             marginBottom: 0,
