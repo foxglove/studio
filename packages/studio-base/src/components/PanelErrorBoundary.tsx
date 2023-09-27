@@ -42,7 +42,7 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
           showErrorDetails={this.props.showErrorDetails}
           hideErrorSourceLocations={this.props.hideErrorSourceLocations}
           content={
-            <p>
+            <>
               Something went wrong in this panel.{" "}
               <Link
                 color="inherit"
@@ -53,7 +53,7 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
                 Dismiss this error
               </Link>{" "}
               to continue using this panel. If the issue persists, try resetting the panel.
-            </p>
+            </>
           }
           actions={
             <>
