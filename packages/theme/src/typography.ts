@@ -39,8 +39,8 @@ export const typography: TypographyOptions = {
   fontFeatureSettings: "'tnum'",
   body1: { fontFeatureSettings, fontSize: "0.875rem" },
   body2: { fontFeatureSettings, fontSize: "0.75rem" },
-  subtitle1: { fontFeatureSettings, fontSize: "0.875rem" },
-  subtitle2: { fontFeatureSettings, fontSize: "0.75rem" },
+  subtitle1: { fontFeatureSettings, fontSize: "0.875rem", fontWeight: 600 },
+  subtitle2: { fontFeatureSettings, fontSize: "0.75rem", fontWeight: 600 },
   caption: { fontFeatureSettings, fontSize: "0.625rem" },
   button: {
     fontFeatureSettings,

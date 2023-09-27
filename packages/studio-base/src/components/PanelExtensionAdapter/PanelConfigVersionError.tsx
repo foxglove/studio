@@ -27,8 +27,12 @@ export function PanelConfigVersionError(): JSX.Element {
     <Paper className={classes.root}>
       <Card>
         <CardContent>
-          <Typography variant="subtitle1">{t("warning")}</Typography>
-          <Typography variant="subtitle1">{t("instructions")}</Typography>
+          <Typography variant="subtitle1" align="center">
+            {t("warning")}
+          </Typography>
+          <Typography variant="body1" align="center">
+            {t("instructions")}
+          </Typography>
         </CardContent>
       </Card>
     </Paper>
