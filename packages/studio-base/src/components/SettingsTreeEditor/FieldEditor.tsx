@@ -414,20 +414,14 @@ function FieldLabel({ field }: { field: Immutable<SettingsTreeField> }): JSX.Ele
     return (
       <>
         <div className={classes.multiLabelWrapper}>
-          <Typography
-            title={field.label}
-            variant="subtitle2"
-            color="text.secondary"
-            noWrap
-            flex="auto"
-          >
+          <Typography title={field.label} variant="body2" color="text.secondary" noWrap flex="auto">
             {field.label}
           </Typography>
           {labels.map((label, index) => (
             <Typography
               key={label}
               title={field.label}
-              variant="subtitle2"
+              variant="body2"
               color="text.secondary"
               noWrap
               style={{ gridColumn: index === 0 ? "span 1" : "2 / span 1" }}
@@ -444,20 +438,14 @@ function FieldLabel({ field }: { field: Immutable<SettingsTreeField> }): JSX.Ele
     return (
       <>
         <div className={classes.multiLabelWrapper}>
-          <Typography
-            title={field.label}
-            variant="subtitle2"
-            color="text.secondary"
-            noWrap
-            flex="auto"
-          >
+          <Typography title={field.label} variant="body2" color="text.secondary" noWrap flex="auto">
             {field.label}
           </Typography>
           {labels.map((label, index) => (
             <Typography
               key={label}
               title={field.label}
-              variant="subtitle2"
+              variant="body2"
               color="text.secondary"
               noWrap
               style={{ gridColumn: index === 0 ? "span 1" : "2 / span 1" }}
@@ -475,7 +463,7 @@ function FieldLabel({ field }: { field: Immutable<SettingsTreeField> }): JSX.Ele
         <Typography
           className={classes.fieldLabel}
           title={field.help ?? field.label}
-          variant="subtitle2"
+          variant="body2"
         >
           {field.label}
         </Typography>
