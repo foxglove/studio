@@ -19,6 +19,7 @@ import {
 } from "@foxglove/studio";
 import { PanelContextMenuItem } from "@foxglove/studio-base/components/PanelContextMenu";
 import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
+import { IMAGE_TOPIC_PATH } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/constants";
 import {
   IImageRenderable,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
@@ -73,7 +74,6 @@ import { ColorModeSettings, colorModeSettingsFields } from "../colorMode";
 
 const log = Logger.getLogger(__filename);
 
-const IMAGE_TOPIC_PATH = ["imageMode", "imageTopic"];
 const CALIBRATION_TOPIC_PATH = ["imageMode", "calibrationTopic"];
 
 const IMAGE_TOPIC_UNAVAILABLE = "IMAGE_TOPIC_UNAVAILABLE";
