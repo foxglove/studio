@@ -4,9 +4,6 @@
 
 import { OverrideComponentReturn } from "../types";
 
-import "../fonts/inter.css";
-import "../fonts/ibm-plex-mono.css";
-
 export const MuiCssBaseline: OverrideComponentReturn<"MuiCssBaseline"> = {
   styleOverrides: (theme) => ({
     "html, body": {
