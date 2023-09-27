@@ -46,7 +46,7 @@ function DummyPanel(): JSX.Element {
           height: "100%",
         }}
       >
-        <p>Panel Context Menu</p>
+        Panel Context Menu
       </div>
     </>
   );
@@ -63,7 +63,7 @@ export const Default: StoryObj = {
   render: () => {
     return (
       <PanelSetup>
-        <Dummy></Dummy>
+        <Dummy />
       </PanelSetup>
     );
   },
