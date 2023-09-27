@@ -2731,7 +2731,7 @@ __metadata:
     "@foxglove/ws-protocol": 0.7.1
     "@foxglove/xmlrpc": 1.3.0
     "@mcap/core": 1.3.0
-    "@mui/icons-material": 5.14.9
+    "@mui/icons-material": 5.14.11
     "@mui/material": 5.14.10
     "@popperjs/core": 2.11.8
     "@protobufjs/base64": 1.1.2
@@ -2963,7 +2963,7 @@ __metadata:
     "@emotion/styled": 11.11.0
     "@fluentui/react-icons": 2.0.218
     "@foxglove/tsconfig": 2.0.0
-    "@mui/icons-material": 5.14.9
+    "@mui/icons-material": 5.14.11
     "@mui/material": 5.14.10
     "@storybook/react": 7.4.5
     "@types/react": 18.2.23
@@ -3574,9 +3574,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/icons-material@npm:5.14.9":
-  version: 5.14.9
-  resolution: "@mui/icons-material@npm:5.14.9"
+"@mui/icons-material@npm:5.14.11":
+  version: 5.14.11
+  resolution: "@mui/icons-material@npm:5.14.11"
   dependencies:
     "@babel/runtime": ^7.22.15
   peerDependencies:
@@ -3586,7 +3586,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 89cf661d6417c4769df483ff5c4aa23365a8763ba13f2b6ceb4337351ece02379af96eced84afcfd0709ad7b1e3e51cd0c956af195b3dfeaafb76bebd18a833d
+  checksum: 69262147025d3e9ef45219bcaf5cb38eb84b4198ddb290a17b21a0877fcb01682caaeadce3c905b36a9cf127bbf6f9469f9fc9e1d3592b12476d6e758d900e41
   languageName: node
   linkType: hard
 
