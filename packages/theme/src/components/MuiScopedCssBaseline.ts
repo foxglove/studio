@@ -26,15 +26,13 @@ export const MuiScopedCssBaseline: OverrideComponentReturn<"MuiScopedCssBaseline
       fontFeatureSettings: theme.typography.fontFeatureSettings,
       fontFamily: theme.typography.body2.fontFamily,
       fontWeight: theme.typography.body2.fontWeight,
+      lineHeight: theme.typography.body2.lineHeight,
       zIndex: 0,
 
       // Prevent scroll "bouncing" since the app workspace is not scrollable. Allows individual
       // scrollable elements to be scrolled without the whole page moving (even if they don't
       // preventDefault on scroll events).
       overscrollBehavior: "none",
-
-      // https://github.com/necolas/normalize.css/blob/master/normalize.css#L12
-      lineHeight: 1.15,
 
       /// --- child and element styling follows ---
       "code, pre, tt": {
