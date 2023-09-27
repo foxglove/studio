@@ -21,7 +21,7 @@ interface IAppContext {
     durationNanos: string;
     metadata: Record<string, string>;
   }) => Promise<void>;
-  verifiedFeatureStore?: VerifiedFeatureStore;
+  verifiedFeatures?: VerifiedFeatures;
   importLayoutFile?: (fileName: string, data: LayoutData) => Promise<void>;
   layoutEmptyState?: JSX.Element;
   syncAdapters?: readonly JSX.Element[];
@@ -30,15 +30,16 @@ interface IAppContext {
     initialState?: Partial<WorkspaceContextStore>,
   ) => StoreApi<WorkspaceContextStore>;
 }
+
 export type VerifiedFeatureMap = {
   "ThreeDeeRender.customSceneExtensions"?: {
     customSceneExtensions: DeepPartial<SceneExtensionConfig>;
   };
 };
 
-export interface VerifiedFeatureStore {
+export type VerifiedFeatures = {
   availableFeatures: VerifiedFeatureMap;
-}
+};
 
 const AppContext = createContext<IAppContext>({});
 AppContext.displayName = "AppContext";

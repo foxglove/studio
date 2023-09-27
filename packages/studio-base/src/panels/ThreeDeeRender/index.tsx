@@ -69,7 +69,7 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const crash = useCrash();
 
   const forwardedAnalytics = useForwardAnalytics();
-  const { verifiedFeatureStore } = useAppContext();
+  const { verifiedFeatures: verifiedFeatureStore } = useAppContext();
   const sceneExtensionConfig = useMemo(() => {
     if (verifiedFeatureStore == undefined) {
       return undefined;
