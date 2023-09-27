@@ -540,6 +540,7 @@ function RawMessages(props: Props) {
                     paddingBottom: 2,
                     marginTop: 2,
                     textDecoration: "inherit",
+                    lineHeight: 1.15,
                   };
                   if (!diffEnabled) {
                     return { style: baseStyle };

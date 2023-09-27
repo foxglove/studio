@@ -12,9 +12,6 @@ export const MuiCssBaseline: OverrideComponentReturn<"MuiCssBaseline"> = {
       padding: 0,
       height: "100%",
       width: "100%",
-
-      // https://github.com/necolas/normalize.css/blob/master/normalize.css#L12
-      lineHeight: 1.15,
     },
     "*, *:before, *:after": {
       boxSizing: "inherit",
