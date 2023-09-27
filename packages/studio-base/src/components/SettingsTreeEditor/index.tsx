@@ -4,7 +4,7 @@
 
 import CancelIcon from "@mui/icons-material/Cancel";
 import SearchIcon from "@mui/icons-material/Search";
-import { IconButton, TextField } from "@mui/material";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
 import memoizeWeak from "memoize-weak";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -40,9 +40,6 @@ const useStyles = makeStyles()((theme) => ({
     ".MuiOutlinedInput-notchedOutline": {
       border: "none",
     },
-  },
-  startAdornment: {
-    display: "flex",
   },
 }));
 
@@ -132,9 +129,9 @@ export default function SettingsTreeEditor({
             InputProps={{
               size: "small",
               startAdornment: (
-                <label className={classes.startAdornment} htmlFor="settings-filter">
+                <InputAdornment position="start">
                   <SearchIcon fontSize="small" />
-                </label>
+                </InputAdornment>
               ),
               endAdornment: filterText && (
                 <IconButton
