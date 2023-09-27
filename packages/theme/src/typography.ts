@@ -29,25 +29,25 @@ export const fontSansSerif = "'Inter'";
 export const fontMonospace = "'IBM Plex Mono'";
 
 // enable font features https://rsms.me/inter/lab
-export const fontFeatureSettings = "'cv08', 'cv10', 'tnum'";
+export const fontFeatureSettingsLatin = "'cv08', 'cv10', 'tnum'";
 
 // contextual alternates create undesired changes in Chinese/Japanese
 export const fontFeatureSettingsCJK = "'tnum'";
 
 export function typography({ locale }: { locale: Language | undefined }): TypographyOptions {
-  let fontSetttings: string;
+  let fontFeatureSettings: string;
   switch (locale) {
     case "zh":
     case "ja":
-      fontSetttings = fontFeatureSettingsCJK;
+      fontFeatureSettings = fontFeatureSettingsCJK;
       break;
     case "en":
     default:
-      fontSetttings = fontFeatureSettings;
+      fontFeatureSettings = fontFeatureSettingsLatin;
       break;
   }
   const baseFontStyles: TypographyStyle = {
-    fontFeatureSettings: fontSetttings,
+    fontFeatureSettings,
   };
   return {
     fontMonospace,
