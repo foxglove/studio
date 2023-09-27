@@ -25,6 +25,7 @@ import {
   Topic,
   VariableValue,
 } from "@foxglove/studio";
+import { PanelContextMenuItem } from "@foxglove/studio-base/components/PanelContextMenu";
 import {
   Asset,
   BuiltinPanelExtensionContext,
@@ -32,8 +33,8 @@ import {
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { SceneExtensionConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
-import { dark, light } from "@foxglove/studio-base/theme/palette";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import IAnalytics from "@foxglove/studio-base/services/IAnalytics";
+import { palette, fontMonospace } from "@foxglove/theme";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 
 import {
@@ -42,6 +43,7 @@ import {
   RendererConfig,
   RendererEvents,
   RendererSubscription,
+  TestOptions,
 } from "./IRenderer";
 import { Input } from "./Input";
 import { DEFAULT_MESH_UP_AXIS, ModelCache } from "./ModelCache";
@@ -63,7 +65,6 @@ import {
 } from "./normalizeMessages";
 import { CameraStateSettings } from "./renderables/CameraStateSettings";
 import { ImageMode } from "./renderables/ImageMode/ImageMode";
-import { DownloadImageInfo } from "./renderables/Images/ImageTypes";
 import { MeasurementTool } from "./renderables/MeasurementTool";
 import { PublishClickTool } from "./renderables/PublishClickTool";
 import { MarkerPool } from "./renderables/markers/MarkerPool";
@@ -94,8 +95,8 @@ const MAX_SELECTIONS = 10;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
-const LIGHT_BACKDROP = new THREE.Color(light.background?.default);
-const DARK_BACKDROP = new THREE.Color(dark.background?.default);
+const LIGHT_BACKDROP = new THREE.Color(palette.light.background?.default);
+const DARK_BACKDROP = new THREE.Color(palette.dark.background?.default);
 
 // Define rendering layers for multipass rendering used for the selection effect
 const LAYER_DEFAULT = 0;
@@ -142,6 +143,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #canvas: HTMLCanvasElement;
   public readonly gl: THREE.WebGLRenderer;
   public maxLod = DetailLevel.High;
+
   public debugPicking: boolean;
   public config: Immutable<RendererConfig>;
   public settings: SettingsManager;
@@ -192,7 +194,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public fixedFrameId: string | undefined;
   public followFrameId: string | undefined;
 
-  public labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
+  public labelPool = new LabelPool({ fontFamily: fontMonospace });
   public markerPool = new MarkerPool(this);
   public sharedGeometry = new SharedGeometry();
 
@@ -204,15 +206,22 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #devicePixelRatioMediaQuery?: MediaQueryList;
   #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
 
+  public readonly displayTemporaryError?: (str: string) => void;
+  /** Options passed for local testing and storybook. */
+  public readonly testOptions: TestOptions;
+  public analytics?: IAnalytics;
+
   public constructor(args: {
     canvas: HTMLCanvasElement;
     config: Immutable<RendererConfig>;
     interfaceMode: InterfaceMode;
     fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
+    displayTemporaryError?: (message: string) => void;
+    testOptions: TestOptions;
     sceneExtensionConfig: SceneExtensionConfig;
-    debugPicking?: boolean;
   }) {
     super();
+    this.displayTemporaryError = args.displayTemporaryError;
     // NOTE: Global side effect
     THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
 
@@ -220,7 +229,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const canvas = (this.#canvas = args.canvas);
     const config = (this.config = args.config);
     this.#fetchAsset = args.fetchAsset;
-    this.debugPicking = args.debugPicking ?? false;
+    this.testOptions = args.testOptions;
+    this.debugPicking = args.testOptions.debugPicking ?? false;
 
     this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
@@ -238,7 +248,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     if (!this.gl.capabilities.isWebGL2) {
       throw new Error("WebGL2 is not supported");
     }
-    this.gl.outputEncoding = THREE.sRGBEncoding;
     this.gl.toneMapping = THREE.NoToneMapping;
     this.gl.autoClear = false;
     this.gl.info.autoReset = false;
@@ -264,7 +273,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     this.#scene = new THREE.Scene();
 
-    this.#dirLight = new THREE.DirectionalLight();
+    this.#dirLight = new THREE.DirectionalLight(0xffffff, Math.PI);
     this.#dirLight.position.set(1, 1, 1);
     this.#dirLight.castShadow = true;
     this.#dirLight.layers.enableAll();
@@ -275,7 +284,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#dirLight.shadow.camera.far = 500;
     this.#dirLight.shadow.bias = -0.00001;
 
-    this.#hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5);
+    this.#hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5 * Math.PI);
     this.#hemiLight.layers.enableAll();
 
     this.#scene.add(this.#dirLight);
@@ -765,7 +774,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
 
-    const bgColor = backgroundColor ? stringToRgb(tempColor, backgroundColor) : undefined;
+    const bgColor = backgroundColor
+      ? stringToRgb(tempColor, backgroundColor).convertSRGBToLinear()
+      : undefined;
 
     for (const extension of this.sceneExtensions.values()) {
       extension.setColorScheme(colorScheme, bgColor);
@@ -836,10 +847,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public resetView(): void {
     this.#imageModeExtension?.resetViewModifications();
     this.queueAnimationFrame();
-  }
-
-  public getCurrentImage(): DownloadImageInfo | undefined {
-    return this.#imageModeExtension?.getLatestImage();
   }
 
   public setSelectedRenderable(selection: PickedRenderable | undefined): void {
@@ -1316,6 +1323,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     this.settings.errors.remove(FOLLOW_TF_PATH, FOLLOW_FRAME_NOT_FOUND);
   }
+  public getContextMenuItems = (): PanelContextMenuItem[] => {
+    return Array.from(this.sceneExtensions.values()).flatMap((extension) =>
+      extension.getContextMenuItems(),
+    );
+  };
 
   #updateResolution(): void {
     const resolution = this.input.canvasSize;
@@ -1373,6 +1385,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       }
     });
   };
+
+  public setAnalytics(analytics: IAnalytics): void {
+    this.analytics = analytics;
+  }
 }
 
 function handleMessage(
