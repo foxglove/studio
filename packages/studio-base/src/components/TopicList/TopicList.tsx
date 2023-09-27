@@ -6,6 +6,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   IconButton,
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
@@ -56,9 +57,6 @@ const useStyles = makeStyles()((theme) => ({
     padding: theme.spacing(0.5),
     position: "sticky",
     backgroundColor: theme.palette.background.paper,
-  },
-  filterStartAdornment: {
-    display: "flex",
   },
   skeletonText: {
     marginTop: theme.spacing(0.5),
@@ -207,7 +205,11 @@ export function TopicList(): JSX.Element {
             placeholder={t("waitingForData")}
             InputProps={{
               size: "small",
-              startAdornment: <SearchIcon fontSize="small" />,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
             }}
           />
         </header>
@@ -245,9 +247,9 @@ export function TopicList(): JSX.Element {
               inputProps: { "data-testid": "topic-filter" },
               size: "small",
               startAdornment: (
-                <label className={classes.filterStartAdornment} htmlFor="topic-filter">
+                <InputAdornment position="start">
                   <SearchIcon fontSize="small" />
-                </label>
+                </InputAdornment>
               ),
               endAdornment: undebouncedFilterText && (
                 <IconButton
