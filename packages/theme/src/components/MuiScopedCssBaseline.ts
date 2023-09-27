@@ -38,6 +38,7 @@ export const MuiScopedCssBaseline: OverrideComponentReturn<"MuiScopedCssBaseline
       "code, pre, tt": {
         fontFamily: theme.typography.fontMonospace,
         overflowWrap: "break-word",
+        lineHeight: 1.15,
       },
       mark: {
         color: theme.palette.info.main,

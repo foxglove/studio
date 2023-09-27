@@ -58,7 +58,7 @@ const useStyles = makeStyles()((theme) => ({
   threeDeeButton: {
     fontFamily: theme.typography.fontMonospace,
     fontFeatureSettings: theme.typography.caption.fontFeatureSettings,
-    fontSize: theme.typography.caption.fontSize,
+    fontSize: theme.typography.body2.fontSize,
     fontWeight: theme.typography.fontWeightBold,
     lineHeight: "1em",
   },
