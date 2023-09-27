@@ -31,9 +31,9 @@ import {
 } from "chart.js";
 import AnnotationPlugin from "chartjs-plugin-annotation";
 
-import PlexMono from "@foxglove/studio-base/styles/assets/PlexMono.woff2";
 import Rpc from "@foxglove/studio-base/util/Rpc";
 import { setupWorker } from "@foxglove/studio-base/util/RpcWorkerUtils";
+import PlexMono from "@foxglove/theme/src/fonts/PlexMono.woff2";
 
 import ChartJSManager, { InitOpts } from "./ChartJSManager";
 import { TypedChartData } from "../types";

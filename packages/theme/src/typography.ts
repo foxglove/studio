@@ -4,8 +4,8 @@
 
 import { TypographyOptions } from "@mui/material/styles/createTypography";
 
-import "../fonts/inter.css";
-import "../fonts/ibm-plex-mono.css";
+import "./fonts/inter.css";
+import "./fonts/plex-mono.css";
 
 declare module "@mui/material/styles/createTypography" {
   interface Typography {
