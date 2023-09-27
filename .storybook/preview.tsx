@@ -2,14 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { GlobalStyles } from "@mui/material";
+import { GlobalStyles, CssBaseline, ScopedCssBaseline } from "@mui/material";
 import { Story, StoryContext } from "@storybook/react";
 import { useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Condvar } from "@foxglove/den/async";
-import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
-import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import StudioToastProvider from "@foxglove/studio-base/components/StudioToastProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
@@ -115,7 +113,7 @@ function StudioContextProviders({
         // for some story that depends on inheriting body styles, you can split the story into one
         // per color scheme.
         <ThemeProvider isDark={colorScheme === "dark" || colorScheme.startsWith("both")}>
-          <GlobalCss />
+          <CssBaseline />
         </ThemeProvider>
       }
 
@@ -133,9 +131,9 @@ function StudioContextProviders({
             value={needsCombinedReadySignal ? readySignal1 : readySignal}
           >
             <ThemeProvider isDark={false}>
-              <CssBaseline>
+              <ScopedCssBaseline>
                 <MultiProvider providers={providers}>{children}</MultiProvider>
-              </CssBaseline>
+              </ScopedCssBaseline>
             </ThemeProvider>
           </ReadySignalContext.Provider>
         </div>
@@ -154,9 +152,9 @@ function StudioContextProviders({
             value={needsCombinedReadySignal ? readySignal2 : readySignal}
           >
             <ThemeProvider isDark={true}>
-              <CssBaseline>
+              <ScopedCssBaseline>
                 <MultiProvider providers={providers}>{children}</MultiProvider>
-              </CssBaseline>
+              </ScopedCssBaseline>
             </ThemeProvider>
           </ReadySignalContext.Provider>
         </div>

@@ -2,11 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { CssBaseline, ScopedCssBaseline } from "@mui/material";
 import { Fragment, Suspense, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import ProblemsContextProvider from "@foxglove/studio-base/providers/ProblemsContextProvider";
 import { StudioLogsSettingsProvider } from "@foxglove/studio-base/providers/StudioLogsSettingsProvider";
@@ -15,7 +15,6 @@ import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/Ti
 import Workspace from "./Workspace";
 import { CustomWindowControlsProps } from "./components/AppBar/CustomWindowControls";
 import { ColorSchemeThemeProvider } from "./components/ColorSchemeThemeProvider";
-import CssBaseline from "./components/CssBaseline";
 import DocumentTitleAdapter from "./components/DocumentTitleAdapter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import MultiProvider from "./components/MultiProvider";
@@ -114,8 +113,8 @@ export function App(props: AppProps): JSX.Element {
   return (
     <AppConfigurationContext.Provider value={appConfiguration}>
       <ColorSchemeThemeProvider>
-        {enableGlobalCss && <GlobalCss />}
-        <CssBaseline>
+        {enableGlobalCss && <CssBaseline />}
+        <ScopedCssBaseline>
           <ErrorBoundary>
             <MaybeLaunchPreference>
               <MultiProvider providers={providers}>
@@ -141,7 +140,7 @@ export function App(props: AppProps): JSX.Element {
               </MultiProvider>
             </MaybeLaunchPreference>
           </ErrorBoundary>
-        </CssBaseline>
+        </ScopedCssBaseline>
       </ColorSchemeThemeProvider>
     </AppConfigurationContext.Provider>
   );

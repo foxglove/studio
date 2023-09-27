@@ -4,8 +4,8 @@
 
 export * from "./MuiAutocomplete";
 export * from "./MuiAvatar";
-export * from "./MuiBadge";
 export * from "./MuiBackdrop";
+export * from "./MuiBadge";
 export * from "./MuiButton";
 export * from "./MuiButtonBase";
 export * from "./MuiCard";
@@ -38,6 +38,7 @@ export * from "./MuiOutlinedInput";
 export * from "./MuiPaper";
 export * from "./MuiPopover";
 export * from "./MuiRadio";
+export * from "./MuiScopedCssBaseline";
 export * from "./MuiSelect";
 export * from "./MuiTab";
 export * from "./MuiTableCell";
