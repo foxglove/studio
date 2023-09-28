@@ -15,7 +15,7 @@ export type Accumulated = {
   data: PlotData;
 };
 
-export function getPathData(
+function getPathData(
   metadata: MetadataEnums,
   globalVariables: GlobalVariables,
   messages: Messages,
