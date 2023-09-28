@@ -95,7 +95,7 @@ export function addBlock(block: Messages, resetTopics: string[], state: State): 
 
 export function addCurrent(events: readonly MessageEvent[], state: State): StateAndEffects {
   const { current: oldCurrent } = state;
-  const newState = {
+  const newState: State = {
     ...state,
     current: R.pipe(
       R.groupBy((v: MessageEvent) => v.topic),

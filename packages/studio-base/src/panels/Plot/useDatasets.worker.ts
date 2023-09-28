@@ -148,10 +148,6 @@ function handleEffects([newState, effects]: StateAndEffects): void {
         sendPlotData(clientCallbacks, effect.data);
         break;
       }
-      case SideEffectType.Partial: {
-        clientCallbacks.addPartial?.(getProvidedData(effect.data));
-        break;
-      }
     }
   }
 }

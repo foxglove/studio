@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as R from "ramda";
-
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -17,7 +15,7 @@ export type Accumulated = {
   data: PlotData;
 };
 
-function getPathData(
+export function getPathData(
   metadata: MetadataEnums,
   globalVariables: GlobalVariables,
   messages: Messages,
@@ -91,10 +89,6 @@ export function accumulate(
 ): Accumulated {
   const { cursors: oldCursors, data: oldData } = previous;
   const [newCursors, newMessages] = getNewMessages(oldCursors, messages);
-
-  if (R.isEmpty(newMessages)) {
-    return previous;
-  }
 
   return {
     cursors: newCursors,

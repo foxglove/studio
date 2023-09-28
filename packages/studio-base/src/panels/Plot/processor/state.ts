@@ -68,19 +68,7 @@ export const sendData = (id: string, data: PlotData): DataEffect => ({
   data,
 });
 
-type PartialEffect = {
-  type: SideEffectType.Partial;
-  clientId: string;
-  data: PlotData;
-};
-
-export const sendPartial = (id: string, data: PlotData): PartialEffect => ({
-  type: SideEffectType.Partial,
-  clientId: id,
-  data,
-});
-
-type SideEffect = RebuildEffect | DataEffect | PartialEffect;
+type SideEffect = RebuildEffect | DataEffect;
 
 export type SideEffects = SideEffect[];
 
@@ -108,13 +96,6 @@ export function noEffects<T>(state: T): [T, SideEffects] {
 
 // eslint-disable-next-line @foxglove/no-boolean-parameters
 export const setLive = (isLive: boolean, state: State): State => ({ ...state, isLive });
-
-export const appendEffects =
-  (mutator: (state: State) => StateAndEffects) =>
-  ([state, effects]: StateAndEffects): StateAndEffects => {
-    const [newState, newEffects] = mutator(state);
-    return [newState, [...effects, ...newEffects]];
-  };
 
 export const keepEffects =
   (mutator: (state: State) => State) =>
