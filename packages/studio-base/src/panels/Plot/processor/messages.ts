@@ -94,18 +94,18 @@ export function addBlock(block: Messages, resetTopics: string[], state: State): 
 }
 
 export function addCurrent(events: readonly MessageEvent[], state: State): StateAndEffects {
-  const { current } = state;
+  const { current: oldCurrent } = state;
   const newState = {
     ...state,
     current: R.pipe(
       R.groupBy((v: MessageEvent) => v.topic),
-      R.mergeWith(R.concat, current),
+      R.mergeWith(R.concat, oldCurrent),
     )(events),
   };
 
   return R.pipe(
-    mapClients((client, state): [Client, SideEffects] => {
-      const { current, metadata, globalVariables } = state;
+    mapClients((client): [Client, SideEffects] => {
+      const { current, metadata, globalVariables } = newState;
       const { id, params } = client;
       if (params == undefined) {
         return noEffects(client);

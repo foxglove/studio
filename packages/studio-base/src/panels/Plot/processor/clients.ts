@@ -25,7 +25,7 @@ import {
   initClient,
 } from "./state";
 import { PlotParams } from "../internalTypes";
-import { getParamTopics, getParamPaths, isSingleMessage, isBounded } from "../params";
+import { getParamTopics, getParamPaths } from "../params";
 import {
   reducePlotData,
   PlotData,
