@@ -9,8 +9,7 @@ import { StoreApi } from "zustand";
 import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { WorkspaceContextStore } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
-
-import { SceneExtensionConfig } from "../panels/ThreeDeeRender/SceneExtensionConfig";
+import { SceneExtensionConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 
 interface IAppContext {
   appBarLayoutButton?: JSX.Element;
@@ -21,7 +20,7 @@ interface IAppContext {
     durationNanos: string;
     metadata: Record<string, string>;
   }) => Promise<void>;
-  verifiedFeatures?: VerifiedFeatures;
+  injectedFeatures?: InjectedFeatures;
   importLayoutFile?: (fileName: string, data: LayoutData) => Promise<void>;
   layoutEmptyState?: JSX.Element;
   syncAdapters?: readonly JSX.Element[];
@@ -31,14 +30,14 @@ interface IAppContext {
   ) => StoreApi<WorkspaceContextStore>;
 }
 
-export type VerifiedFeatureMap = {
+export type InjectedFeatureMap = {
   "ThreeDeeRender.customSceneExtensions"?: {
     customSceneExtensions: DeepPartial<SceneExtensionConfig>;
   };
 };
 
-export type VerifiedFeatures = {
-  availableFeatures: VerifiedFeatureMap;
+export type InjectedFeatures = {
+  availableFeatures: InjectedFeatureMap;
 };
 
 const AppContext = createContext<IAppContext>({});

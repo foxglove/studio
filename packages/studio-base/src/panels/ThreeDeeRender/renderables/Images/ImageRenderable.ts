@@ -55,7 +55,7 @@ export type ImageUserData = BaseUserData & {
   mesh: THREE.Mesh | undefined;
 };
 
-export class ImageRenderable extends Renderable<ImageUserData> implements IImageRenderable {
+export class ImageRenderable extends Renderable<ImageUserData> {
   // Make sure that everything is build the first time we render
   // set when camera info or image changes
   #geometryNeedsUpdate = true;
@@ -385,22 +385,6 @@ export class ImageRenderable extends Renderable<ImageUserData> implements IImage
 
     this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
   }
-}
-
-export interface IImageRenderable extends Renderable<ImageUserData> {
-  setCameraModel: (cameraModel: PinholeCameraModel) => void;
-  setTopic(topicName: string): void;
-  dispose(): void;
-  updateHeaderInfo(): void;
-  details(): Record<string, RosValue>;
-  setRenderBehindScene(): void;
-  setSettings(newSettings: ImageRenderableSettings): void;
-  setImage(
-    image: AnyImage,
-    resizeWidth?: number,
-    onDecoded?: (result: { width: number; height: number }) => void,
-  ): void;
-  update(): void;
 }
 
 let tempColor = { r: 0, g: 0, b: 0, a: 0 };

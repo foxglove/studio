@@ -69,16 +69,16 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const crash = useCrash();
 
   const forwardedAnalytics = useForwardAnalytics();
-  const { verifiedFeatures: verifiedFeatureStore } = useAppContext();
-  const sceneExtensionConfig = useMemo(() => {
-    if (verifiedFeatureStore == undefined) {
+  const { injectedFeatures } = useAppContext();
+  const customSceneExtensions = useMemo(() => {
+    if (injectedFeatures == undefined) {
       return undefined;
     }
-    const extensionConfigOverride =
-      verifiedFeatureStore.availableFeatures["ThreeDeeRender.customSceneExtensions"]
+    const injectedSceneExtensions =
+      injectedFeatures.availableFeatures["ThreeDeeRender.customSceneExtensions"]
         ?.customSceneExtensions;
-    return extensionConfigOverride;
-  }, [verifiedFeatureStore]);
+    return injectedSceneExtensions;
+  }, [injectedFeatures]);
 
   const boundInitPanel = useMemo(
     () =>
@@ -87,7 +87,7 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
         forwardedAnalytics,
         interfaceMode,
         testOptions: { onDownloadImage: props.onDownloadImage, debugPicking: props.debugPicking },
-        customSceneExtensions: sceneExtensionConfig,
+        customSceneExtensions,
       }),
     [
       crash,
@@ -95,7 +95,7 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
       interfaceMode,
       props.onDownloadImage,
       props.debugPicking,
-      sceneExtensionConfig,
+      customSceneExtensions,
     ],
   );
 

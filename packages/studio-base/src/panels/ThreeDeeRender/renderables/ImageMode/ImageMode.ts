@@ -21,7 +21,6 @@ import { PanelContextMenuItem } from "@foxglove/studio-base/components/PanelCont
 import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { IMAGE_TOPIC_PATH } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/constants";
 import {
-  IImageRenderable,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
   ImageRenderableSettings,
@@ -128,7 +127,7 @@ export class ImageMode
 
   readonly #annotations: ImageAnnotations;
 
-  protected imageRenderable: IImageRenderable | undefined;
+  protected imageRenderable: ImageRenderable | undefined;
   #removeImageTimeout: ReturnType<typeof setTimeout> | undefined;
 
   protected readonly messageHandler: IMessageHandler;
@@ -662,7 +661,7 @@ export class ImageMode
     receiveTime: bigint,
     image: AnyImage | undefined,
     frameId: string,
-  ): IImageRenderable {
+  ): ImageRenderable {
     let renderable = this.imageRenderable;
     if (renderable) {
       return renderable;
@@ -703,7 +702,7 @@ export class ImageMode
     return renderable;
   }
 
-  protected initRenderable(topicName: string, userData: ImageUserData): IImageRenderable {
+  protected initRenderable(topicName: string, userData: ImageUserData): ImageRenderable {
     return new ImageRenderable(topicName, this.renderer, userData);
   }
 
@@ -939,7 +938,7 @@ export class ImageMode
     };
   };
 
-  public override getContextMenuItems = (): PanelContextMenuItem[] => {
+  public override getContextMenuItems(): PanelContextMenuItem[] {
     return [
       {
         type: "item",
@@ -948,7 +947,7 @@ export class ImageMode
         disabled: this.#latestImage == undefined,
       },
     ];
-  };
+  }
 }
 
 const createFallbackCameraInfoForImage = (options: {

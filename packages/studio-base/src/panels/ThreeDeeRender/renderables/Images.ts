@@ -14,7 +14,6 @@ import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 import { ALL_SUPPORTED_IMAGE_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
 
 import {
-  IImageRenderable,
   IMAGE_RENDERABLE_DEFAULT_SETTINGS,
   ImageRenderable,
   ImageUserData,
@@ -62,7 +61,7 @@ const DEFAULT_BITMAP_WIDTH = 512;
 const NO_CAMERA_INFO_ERR = "NoCameraInfo";
 const CAMERA_MODEL = "CameraModel";
 
-export class Images extends SceneExtension<IImageRenderable> {
+export class Images extends SceneExtension<ImageRenderable> {
   public static extensionId = "foxglove.Images";
   /* All known camera info topics */
   #cameraInfoTopics = new Set<string>();
@@ -392,7 +391,7 @@ export class Images extends SceneExtension<IImageRenderable> {
    *
    * This function will set a topic error on the image topic if the camera model creation fails.
    */
-  #recomputeCameraModel(renderable: IImageRenderable, newCameraInfo: CameraInfo) {
+  #recomputeCameraModel(renderable: ImageRenderable, newCameraInfo: CameraInfo) {
     // If the camera info has not changed, we don't need to make a new model and can return the existing one
     const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, newCameraInfo);
     if (dataEqual && renderable.userData.cameraModel != undefined) {
@@ -417,7 +416,7 @@ export class Images extends SceneExtension<IImageRenderable> {
     receiveTime: bigint,
     image: AnyImage | undefined,
     frameId: string,
-  ): IImageRenderable {
+  ): ImageRenderable {
     let renderable = this.renderables.get(imageTopic);
     if (renderable) {
       return renderable;
@@ -449,7 +448,7 @@ export class Images extends SceneExtension<IImageRenderable> {
     this.renderables.set(imageTopic, renderable);
     return renderable;
   }
-  protected initRenderable(topicName: string, userData: ImageUserData): IImageRenderable {
+  protected initRenderable(topicName: string, userData: ImageUserData): ImageRenderable {
     return new ImageRenderable(topicName, this.renderer, userData);
   }
 }
