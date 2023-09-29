@@ -111,7 +111,7 @@ describe("remapVirtualSubscriptions", () => {
     ]);
   });
 
-  it("upgrades to a full subscription from fields", () => {
+  it("upgrades to a whole-message subscription from fields", () => {
     expect(
       call(
         [
