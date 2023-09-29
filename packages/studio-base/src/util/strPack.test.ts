@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { pack } from "./strPack";
+import strPack from "./strPack";
 
 describe("strPack", () => {
   it("rewrites an object", () => {
@@ -13,6 +13,6 @@ describe("strPack", () => {
       ok: ["ok"],
       map,
     };
-    expect(pack(before)).toEqual(before);
+    expect(strPack(before)).toEqual(before);
   });
 });
