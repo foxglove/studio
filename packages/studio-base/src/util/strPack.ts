@@ -58,7 +58,7 @@ const packValue = (value: unknown, map: Mapping): unknown => {
  * useful to do after `postMessage()`, since `structuredClone()` duplicates
  * strings.
  */
-export function pack<T>(data: T): T {
+export default function strPack<T>(data: T): T {
   const map: Mapping = {};
   return packValue(data, map) as T;
 }
