@@ -25,6 +25,11 @@ const packValue = (value: unknown, map: Mapping): unknown => {
     return transformed;
   }
 
+  if (value instanceof Set) {
+    // we do not dedupe in sets for now
+    return value;
+  }
+
   switch (typeof value) {
     case "object": {
       const transformed: Record<string, unknown> = {};
