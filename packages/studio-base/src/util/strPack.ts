@@ -48,6 +48,11 @@ const packValue = (value: unknown, map: Mapping): unknown => {
   }
 };
 
+/**
+ * Deduplicate all string references in the given data structure. This is
+ * useful to do after `postMessage()`, since `structuredClone()` duplicates
+ * strings.
+ */
 export function pack<T>(data: T): T {
   const map: Mapping = {};
   return packValue(data, map) as T;
