@@ -7,6 +7,7 @@
 
 import { StrictMode, useEffect } from "react";
 import ReactDOM from "react-dom";
+import { RouterProvider, createHashRouter } from "react-router-dom";
 
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
@@ -15,11 +16,9 @@ import {
   overwriteFetch,
   waitForFonts,
   initI18n,
-  IDataSourceFactory,
-  IAppConfiguration,
 } from "@foxglove/studio-base";
 
-import Root from "./Root";
+type Router = ReturnType<typeof createHashRouter>;
 
 const log = Logger.getLogger(__filename);
 
@@ -32,13 +31,7 @@ function LogAfterRender(props: React.PropsWithChildren): JSX.Element {
   return <>{props.children}</>;
 }
 
-type MainParams = {
-  dataSources?: IDataSourceFactory[];
-  extraProviders?: JSX.Element[];
-  appConfiguration: IAppConfiguration;
-};
-
-export async function main(params: MainParams): Promise<void> {
+export async function main(getRouter: () => Promise<Router>): Promise<void> {
   log.debug("initializing renderer");
 
   installDevtoolsFormatters();
@@ -58,15 +51,13 @@ export async function main(params: MainParams): Promise<void> {
   await waitForFonts();
   await initI18n();
 
+  const router = await getRouter();
+
   // eslint-disable-next-line react/no-deprecated
   ReactDOM.render(
     <StrictMode>
       <LogAfterRender>
-        <Root
-          appConfiguration={params.appConfiguration}
-          extraProviders={params.extraProviders}
-          dataSources={params.dataSources}
-        />
+        <RouterProvider router={router} />
       </LogAfterRender>
     </StrictMode>,
     rootEl,
