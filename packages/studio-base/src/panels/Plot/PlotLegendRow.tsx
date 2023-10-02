@@ -170,6 +170,9 @@ export function PlotLegendRow({
     return value;
   }, [showPlotValuesInLegend, hoverValue?.value, currentTime, correspondingData]);
 
+  // When there are no series configured we render an extra row to show an "add series" button.
+  const isAddSeriesRow = index === paths.length;
+
   return (
     <div
       className={cx(classes.root, {
@@ -214,7 +217,7 @@ export function PlotLegendRow({
           variant="body2"
           className={cx({ [classes.disabledPathLabel]: !path.enabled })}
         >
-          {index === paths.length ? t("clickToAddASeries") : plotPathDisplayName(path, index)}
+          {isAddSeriesRow ? t("clickToAddASeries") : plotPathDisplayName(path, index)}
         </Typography>
         {hasMismatchedDataLength && (
           <Tooltip
