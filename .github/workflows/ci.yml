@@ -30,8 +30,6 @@ jobs:
               yarn run lint:dependencies
           - name: packages
             command: yarn run build:packages
-          - name: web
-            command: yarn run web:build:prod
           - name: build benchmark
             command: yarn run benchmark:build:prod
           - name: test
@@ -66,6 +64,47 @@ jobs:
       - run: yarn install --immutable
 
       - run: ${{ matrix.config.command }}
+
+  web:
+    # Run each command in parallel with the same setup steps.
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-20.04
+
+    name: web (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4.1.0
+        with:
+          lfs: true
+
+      - uses: actions/setup-node@v3.8.1
+        with:
+          node-version: 16.17
+
+      - run: corepack enable yarn
+
+      - name: Restore cache
+        uses: actions/cache@v3.3.2
+        with:
+          path: |
+            .yarn/cache
+            **/node_modules
+          key: v5-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: v5-${{ runner.os }}-yarn-
+
+      - run: yarn install --immutable
+
+      - run: yarn run web:build:prod
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: studio-web
+          path: web/.webpack
+          retention-days: 1
 
   storybook:
     name: storybook (ubuntu-20.04)
