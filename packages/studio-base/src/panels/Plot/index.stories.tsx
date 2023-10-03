@@ -1317,7 +1317,7 @@ export const CustomXAxisTopicWithXLimits: StoryObj = {
 
 export const CurrentCustomXAxisTopic: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 4 });
+    const readySignal = useReadySignal({ count: 2 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     // As above, but just shows a single point instead of the whole line.
