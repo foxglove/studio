@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { makeStyles } from "tss-react/mui";
 
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
@@ -70,6 +71,7 @@ export function BetaAppMenu(props: BetaAppMenuProps): JSX.Element {
   const { dialogActions } = useWorkspaceActions();
   const analytics = useAnalytics();
   const user = useCurrentUserType();
+  const navigate = useNavigate();
 
   const handleAnalytics = useCallback(
     (cta: string) => void analytics.logEvent(AppEvent.APP_MENU_CLICK, { user, cta }),
@@ -89,6 +91,20 @@ export function BetaAppMenu(props: BetaAppMenuProps): JSX.Element {
         dense: true,
       }}
     >
+      <ListSubheader disableSticky>
+        <Typography variant="overline">Browse</Typography>
+      </ListSubheader>
+
+      <MenuItem
+        className={classes.menuItem}
+        onClick={() => {
+          navigate("/dashboard");
+          handleClose();
+        }}
+      >
+        <div className={classes.menuText}>Home</div>
+      </MenuItem>
+
       <ListSubheader disableSticky>
         <Typography variant="overline">{t("viewData")}</Typography>
       </ListSubheader>
