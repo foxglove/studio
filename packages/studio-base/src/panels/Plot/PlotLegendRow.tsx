@@ -171,7 +171,7 @@ export function PlotLegendRow({
   }, [showPlotValuesInLegend, hoverValue?.value, currentTime, correspondingData]);
 
   // When there are no series configured we render an extra row to show an "add series" button.
-  const isAddSeriesRow = index === paths.length;
+  const isAddSeriesRow = paths.length === 0;
 
   return (
     <div
