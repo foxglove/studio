@@ -9,6 +9,7 @@
 /// <reference types="./typings" />
 
 export { App } from "./App";
+export { StudioApp } from "./StudioApp";
 export type { NetworkInterface, OsContext } from "./OsContext";
 export type {
   IAppConfiguration,
