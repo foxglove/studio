@@ -26,10 +26,29 @@ $ yarn web:serve
 # To launch the storybook:
 $ yarn storybook
 
-# Advanced usage: running webpack and electron on different computers (or VMs) on the same network
-$ yarn desktop:serve --host 192.168.xxx.yyy         # the address where electron can reach the webpack dev server
-$ yarn dlx electron@22.1.0 .webpack # launch the version of electron for the current computer's platform
+
 ```
+
+### Serve desktop app to VM on same machine
+
+Requirements:
+
+- VM on that has access to the same shared folder system where the repo was cloned on the original OS
+
+Find your local network IP address from your wifi settings. Should be in the form of 192.168.xxx.yyy. Replace `<ip-address>` with this address in the `desktop:serve` command below.
+In your original OS run:
+
+```sh
+$ yarn desktop:serve --host <ip-address>         # the address where electron can reach the webpack dev server
+```
+
+Then, in your VM open up a terminal inside of the same cloned `foxglove/studio` folder, and run the following command, replacing `<studio-electron-version>` with the current electron version found in `studio/desktop/package.json`
+
+```sh
+$ yarn dlx electron@<studio-electron-version> desktop/.webpack # launch the version of electron for the current computer's platform
+```
+
+NOTE: Because the `window.location.href` of the electron window is pointing at the computer's IP address the app is not being run in a secure context (`https`). This may cause some issues with features that require it.
 
 ### Other useful commands
 
