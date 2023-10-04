@@ -58,17 +58,6 @@ export function remapVirtualSubscriptions(
 
       // Leave the subscription unmodified if it is not a user script topic
       if (topics == undefined) {
-        // If this is an input to a user script, we need to upgrade it to a
-        // subscription of all the fields
-        // if (neededInputTopics.includes(subscription.topic)) {
-        //   return [
-        //     {
-        //       topic: subscription.topic,
-        //       preloadType,
-        //     },
-        //   ];
-        // }
-
         return [subscription];
       }
 
