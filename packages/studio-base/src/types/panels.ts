@@ -33,7 +33,7 @@ export type PlaybackConfig = {
 
 export type UserScript = { name: string; sourceCode: string };
 export type UserScripts = {
-  [nodeId: string]: UserScript;
+  [scriptId: string]: UserScript;
 };
 
 export type SaveConfig<Config> = (

@@ -25,7 +25,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { UserScript } from "@foxglove/studio-base/types/panels";
 import { basicDatatypes } from "@foxglove/studio-base/util/basicDatatypes";
 import delay from "@foxglove/studio-base/util/delay";
-import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
+import { DEFAULT_STUDIO_SCRIPT_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 import UserScriptPlayer from ".";
 import MockUserScriptPlayerWorker from "./MockUserScriptPlayerWorker";
@@ -36,7 +36,7 @@ const nodeId = "nodeId";
 
 const nodeUserCode = `
   export const inputs = ["/np_input"];
-  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+  export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
   const stamp = Math.random(); // stamp used to distinguish different instances of a script.
   let lastStamp, lastReceiveTime;
   export default (message: { message: { payload: string } }): { custom_np_field: string, value: string, stamp: number } => {
@@ -54,7 +54,7 @@ const nodeUserCodeWithPointClouds = `
   import { convertToRangeView } from "./pointClouds";
   import { RGBA } from "./types";
   export const inputs = ["/np_input"];
-  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+  export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
   export default (message: { message: { payload: string } }): RGBA => {
     const colors = convertToRangeView([{x:0.1, y:0.2, z:0.3}], 0.4, true);
     return colors[0];
@@ -63,7 +63,7 @@ const nodeUserCodeWithPointClouds = `
 
 const nodeUserCodeWithGlobalVars = `
   export const inputs = ["/np_input"];
-  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+  export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
   let lastStamp, lastReceiveTime;
   type GlobalVariables = { globalValue: string };
   export default (message: { message: { payload: string } }, globalVars: GlobalVariables): { custom_np_field: string, value: string } => {
@@ -73,7 +73,7 @@ const nodeUserCodeWithGlobalVars = `
 
 const nodeUserCodeWithLogAndError = `
   export const inputs = ["/np_input"];
-  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+  export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
   export default (message: { message: { payload: string } }): { success: boolean } => {
     if (message.message.payload === "bar") {
       log('Running. Will fail.');
@@ -254,7 +254,7 @@ describe("UserScriptPlayer", () => {
       });
 
       void userScriptPlayer.setUserScripts({
-        nodeId: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        nodeId: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       const [done] = setListenerHelper(userScriptPlayer);
@@ -264,7 +264,7 @@ describe("UserScriptPlayer", () => {
           ...basicPlayerState,
           messages: [],
           currentTime: { sec: 0, nsec: 0 },
-          topics: [{ name: "/np_input", schemaName: `${DEFAULT_STUDIO_NODE_PREFIX}1` }],
+          topics: [{ name: "/np_input", schemaName: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }],
           datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
         },
       });
@@ -273,7 +273,7 @@ describe("UserScriptPlayer", () => {
 
       expect(mockSetNodeDiagnostics.mock.calls).toEqual([[nodeId, []]]);
       expect(messages.length).toEqual(0);
-      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
     });
 
     it("updates when topics change", async () => {
@@ -296,25 +296,25 @@ describe("UserScriptPlayer", () => {
       await fakePlayer.emit({ activeData });
 
       await userScriptPlayer.setUserScripts({
-        nodeId: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        nodeId: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
       await done1;
 
       await fakePlayer.emit({
         activeData: {
           ...activeData,
-          topics: [{ name: "/np_input", schemaName: `${DEFAULT_STUDIO_NODE_PREFIX}1` }],
+          topics: [{ name: "/np_input", schemaName: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }],
         },
       });
 
       let { topicNames, messages } = await done2!;
 
       expect(messages.length).toEqual(0);
-      expect(topicNames).toEqual([`${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+      expect(topicNames).toEqual([`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
 
       ({ topicNames, messages } = await done3!);
       expect(messages.length).toEqual(0);
-      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
 
       expect(mockSetNodeDiagnostics.mock.calls).toEqual([
         [
@@ -343,7 +343,7 @@ describe("UserScriptPlayer", () => {
       const [done1, done2, done3] = setListenerHelper(userScriptPlayer, 3);
 
       await userScriptPlayer.setUserScripts({
-        nodeId: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        nodeId: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       const activeData: PlayerStateActiveData = {
@@ -358,13 +358,13 @@ describe("UserScriptPlayer", () => {
       const { topics: firstTopics, datatypes: firstDatatypes } = (await done1)!;
       expect(firstTopics).toEqual<typeof firstTopics>([
         { name: "/np_input", schemaName: "/np_input_datatype" },
-        { name: "/studio_script/1", schemaName: `${DEFAULT_STUDIO_NODE_PREFIX}1` },
+        { name: "/studio_script/1", schemaName: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` },
       ]);
       expect(firstDatatypes).toEqual(
         new Map([
           ["foo", { definitions: [] }],
           [
-            `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+            `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
             {
               definitions: [
                 {
@@ -417,10 +417,10 @@ describe("UserScriptPlayer", () => {
         addUserScriptLogs: mockAddUserNodeLogs,
       });
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       const nodeUserCodeBefore = `
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         let lastStamp, lastReceiveTime;
         export default (message: { message: { payload: string } }): { custom_np_field: string, value: string } => {
           return { custom_np_field: "abc", value: message.message.payload };
@@ -428,7 +428,7 @@ describe("UserScriptPlayer", () => {
       `;
       await userScriptPlayer.setUserScripts({
         nodeId: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCodeBefore,
         },
       });
@@ -437,7 +437,9 @@ describe("UserScriptPlayer", () => {
 
       const [done, nextDone] = setListenerHelper(userScriptPlayer, 2);
 
-      const topics: Topic[] = [{ name: "/np_input", schemaName: `${DEFAULT_STUDIO_NODE_PREFIX}1` }];
+      const topics: Topic[] = [
+        { name: "/np_input", schemaName: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` },
+      ];
       const datatypes = new Map(Object.entries({ foo: { definitions: [] } }));
 
       await fakePlayer.emit({
@@ -454,7 +456,7 @@ describe("UserScriptPlayer", () => {
 
       const nodeUserCodeAfter = `
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         let lastStamp, lastReceiveTime;
         export default (message: { message: { payload: string } }): { custom_np_field: string, value: string } => {
           return { custom_np_field: "COMPLETELY_DIFFERENT", value: message.message.payload };
@@ -462,7 +464,7 @@ describe("UserScriptPlayer", () => {
       `;
       await userScriptPlayer.setUserScripts({
         nodeId: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCodeAfter,
         },
       });
@@ -507,10 +509,10 @@ describe("UserScriptPlayer", () => {
         addUserScriptLogs: mockAddUserNodeLogs,
       });
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       const nodeUserCodeBefore = `
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         let lastStamp, lastReceiveTime;
         export default (message: { message: { payload: string } }): { custom_np_field: string, value: string } => {
           return { custom_np_field: "abc", value: message.message.payload };
@@ -518,7 +520,7 @@ describe("UserScriptPlayer", () => {
       `;
       await userScriptPlayer.setUserScripts({
         nodeId: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCodeBefore,
         },
       });
@@ -527,7 +529,9 @@ describe("UserScriptPlayer", () => {
 
       const [done, nextDone] = setListenerHelper(userScriptPlayer, 2);
 
-      const topics: Topic[] = [{ name: "/np_input", schemaName: `${DEFAULT_STUDIO_NODE_PREFIX}1` }];
+      const topics: Topic[] = [
+        { name: "/np_input", schemaName: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` },
+      ];
       const datatypes = new Map(Object.entries({ foo: { definitions: [] } }));
 
       await fakePlayer.emit({
@@ -545,7 +549,7 @@ describe("UserScriptPlayer", () => {
 
       const nodeUserCodeAfter = `
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         let lastStamp, lastReceiveTime;
         export default (message: { message: { payload: string } }): { custom_np_field: string, value: string } => {
           return { custom_np_field: "COMPLETELY_DIFFERENT", value: message.message.payload };
@@ -553,7 +557,7 @@ describe("UserScriptPlayer", () => {
       `;
       await userScriptPlayer.setUserScripts({
         nodeId: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCodeAfter,
         },
       });
@@ -641,8 +645,8 @@ describe("UserScriptPlayer", () => {
       // Subscribe to a slice of the output topic and a slice of the input topic.
       userScriptPlayer.setSubscriptions([
         { topic: "/np_input", fields: ["a"] },
-        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, fields: ["a"], preloadType: "partial" },
-        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, fields: ["a"], preloadType: "full" },
+        { topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, fields: ["a"], preloadType: "partial" },
+        { topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, fields: ["a"], preloadType: "full" },
       ]);
 
       // Wait for subscriptions to take effect.
@@ -688,7 +692,7 @@ describe("UserScriptPlayer", () => {
       const [done] = setListenerHelper(userScriptPlayer);
 
       void userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       await fakePlayer.emit({
@@ -702,7 +706,7 @@ describe("UserScriptPlayer", () => {
       });
 
       const { messages, topicNames } = (await done)!;
-      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
       expect(messages).toEqual([upstreamFirst]);
     });
 
@@ -712,9 +716,9 @@ describe("UserScriptPlayer", () => {
 
       const [done] = setListenerHelper(userScriptPlayer);
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       await userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       await fakePlayer.emit({
@@ -732,7 +736,7 @@ describe("UserScriptPlayer", () => {
       expect(messages).toEqual([
         upstreamFirst,
         {
-          topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
           message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
           schemaName: "/studio_script/1",
@@ -749,10 +753,10 @@ describe("UserScriptPlayer", () => {
       const [done] = setListenerHelper(userScriptPlayer);
 
       userScriptPlayer.setSubscriptions([
-        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, preloadType: "full" },
+        { topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, preloadType: "full" },
       ]);
       await userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       await fakePlayer.emit({
@@ -779,7 +783,7 @@ describe("UserScriptPlayer", () => {
       expect(messages).toEqual([
         upstreamFirst,
         {
-          topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
           message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
           schemaName: "/studio_script/1",
@@ -795,9 +799,9 @@ describe("UserScriptPlayer", () => {
             {
               messagesByTopic: {
                 "/np_input": [upstreamFirst],
-                [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: [
+                [`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]: [
                   {
-                    topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+                    topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
                     receiveTime: {
                       sec: 0,
                       nsec: 1,
@@ -826,7 +830,7 @@ describe("UserScriptPlayer", () => {
       const messageWorkerStamp = (messages[1] as MessageEvent<{ stamp: number }>).message.stamp;
       const blockWorkerStamp = (
         progress?.messageCache?.blocks[0]?.messagesByTopic[
-          `${DEFAULT_STUDIO_NODE_PREFIX}1`
+          `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`
         ]?.[0] as MessageEvent<{ stamp: number }>
       ).message.stamp;
 
@@ -840,10 +844,10 @@ describe("UserScriptPlayer", () => {
       const [done1, done2] = setListenerHelper(userScriptPlayer, 2);
 
       userScriptPlayer.setSubscriptions([
-        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`, preloadType: "full" },
+        { topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, preloadType: "full" },
       ]);
       await userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       await fakePlayer.emit({
@@ -895,9 +899,9 @@ describe("UserScriptPlayer", () => {
             {
               messagesByTopic: {
                 "/np_input": [upstreamFirst],
-                [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: [
+                [`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]: [
                   {
-                    topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+                    topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
                     receiveTime: {
                       sec: 0,
                       nsec: 1,
@@ -917,9 +921,9 @@ describe("UserScriptPlayer", () => {
             {
               messagesByTopic: {
                 "/np_input": [upstreamFirst],
-                [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: [
+                [`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]: [
                   {
-                    topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+                    topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
                     receiveTime: {
                       sec: 0,
                       nsec: 1,
@@ -952,9 +956,9 @@ describe("UserScriptPlayer", () => {
 
       const [done] = setListenerHelper(userScriptPlayer);
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       await userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       await fakePlayer.emit({
@@ -986,10 +990,10 @@ describe("UserScriptPlayer", () => {
       const topics: Topic[] = [{ name: "/np_input", schemaName: "std_msgs/Header" }];
 
       const [done1, done2] = setListenerHelper(userScriptPlayer, 2);
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       await userScriptPlayer.setUserScripts({
         [nodeId]: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCodeWithLogAndError,
         },
       });
@@ -1042,10 +1046,10 @@ describe("UserScriptPlayer", () => {
 
       const [done] = setListenerHelper(userScriptPlayer);
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       await userScriptPlayer.setUserScripts({
         [nodeId]: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCodeWithPointClouds,
         },
       });
@@ -1066,7 +1070,7 @@ describe("UserScriptPlayer", () => {
       expect(messages).toEqual([
         upstreamFirst,
         {
-          topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
           message: { a: 1, b: 0.7483314773547883, g: 0.7483314773547883, r: 1 },
           schemaName: "/studio_script/1",
@@ -1083,7 +1087,7 @@ describe("UserScriptPlayer", () => {
 
       const unionTypeReturn = `
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         let lastStamp, lastReceiveTime;
         export default (message: { message: { payload: string } }): { custom_np_field: string, value: string } | undefined => {
           if (message.message.payload === "bar") {
@@ -1093,9 +1097,9 @@ describe("UserScriptPlayer", () => {
         };
       `;
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       await userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: unionTypeReturn },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: unionTypeReturn },
       });
 
       await fakePlayer.emit({
@@ -1125,7 +1129,7 @@ describe("UserScriptPlayer", () => {
       expect(nextResult.messages).toEqual([
         upstreamSecond,
         {
-          topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           receiveTime: upstreamSecond.receiveTime,
           message: { custom_np_field: "abc", value: "baz" },
           schemaName: "/studio_script/1",
@@ -1144,16 +1148,16 @@ describe("UserScriptPlayer", () => {
       const [done] = setListenerHelper(userScriptPlayer);
 
       void userScriptPlayer.setUserScripts({
-        [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+        [`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]: {
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCode,
         },
-        [`${DEFAULT_STUDIO_NODE_PREFIX}2`]: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}2`,
+        [`${DEFAULT_STUDIO_SCRIPT_PREFIX}2`]: {
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}2`,
           sourceCode: nodeUserCode,
         },
       });
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
 
       await fakePlayer.emit({
         activeData: {
@@ -1172,14 +1176,17 @@ describe("UserScriptPlayer", () => {
       expect(messages).toHaveLength(2);
       expect(topics).toEqual<typeof topics>([
         { name: "/np_input", schemaName: "std_msgs/Header" },
-        { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, schemaName: `${DEFAULT_STUDIO_NODE_PREFIX}1` },
+        {
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
+          schemaName: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
+        },
       ]);
-      expect(mockSetNodeDiagnostics).toHaveBeenCalledWith(`${DEFAULT_STUDIO_NODE_PREFIX}1`, []);
-      expect(mockSetNodeDiagnostics).toHaveBeenCalledWith(`${DEFAULT_STUDIO_NODE_PREFIX}2`, [
+      expect(mockSetNodeDiagnostics).toHaveBeenCalledWith(`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, []);
+      expect(mockSetNodeDiagnostics).toHaveBeenCalledWith(`${DEFAULT_STUDIO_SCRIPT_PREFIX}2`, [
         {
           source: Sources.OutputTopicChecker,
           severity: DiagnosticSeverity.Error,
-          message: `Output "${DEFAULT_STUDIO_NODE_PREFIX}1" must be unique`,
+          message: `Output "${DEFAULT_STUDIO_SCRIPT_PREFIX}1" must be unique`,
           code: ErrorCodes.OutputTopicChecker.NOT_UNIQUE,
         },
       ]);
@@ -1195,12 +1202,12 @@ describe("UserScriptPlayer", () => {
       const [done] = setListenerHelper(userScriptPlayer);
 
       void userScriptPlayer.setUserScripts({
-        [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+        [`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]: {
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCode,
         },
       });
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
 
       await fakePlayer.emit({
         activeData: {
@@ -1209,7 +1216,7 @@ describe("UserScriptPlayer", () => {
           currentTime: upstreamFirst.receiveTime,
           topics: [
             { name: "/np_input", schemaName: "std_msgs/Header" },
-            { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, schemaName: "Something" },
+            { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, schemaName: "Something" },
           ],
           datatypes: new Map(
             Object.entries({ foo: { definitions: [] }, "std_msgs/Header": { definitions: [] } }),
@@ -1222,13 +1229,13 @@ describe("UserScriptPlayer", () => {
       expect(messages).toHaveLength(1);
       expect(topics).toEqual<typeof topics>([
         { name: "/np_input", schemaName: "std_msgs/Header" },
-        { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, schemaName: "Something" },
+        { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, schemaName: "Something" },
       ]);
-      expect(mockSetNodeDiagnostics).toHaveBeenCalledWith(`${DEFAULT_STUDIO_NODE_PREFIX}1`, [
+      expect(mockSetNodeDiagnostics).toHaveBeenCalledWith(`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, [
         {
           source: Sources.OutputTopicChecker,
           severity: DiagnosticSeverity.Error,
-          message: `Output topic "${DEFAULT_STUDIO_NODE_PREFIX}1" is already present in the data source`,
+          message: `Output topic "${DEFAULT_STUDIO_SCRIPT_PREFIX}1" is already present in the data source`,
           code: ErrorCodes.OutputTopicChecker.EXISTING_TOPIC,
         },
       ]);
@@ -1241,27 +1248,27 @@ describe("UserScriptPlayer", () => {
       const [done] = setListenerHelper(userScriptPlayer);
 
       void userScriptPlayer.setUserScripts({
-        [`${DEFAULT_STUDIO_NODE_PREFIX}1`]: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+        [`${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]: {
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           sourceCode: nodeUserCode,
         },
       });
 
       const nodeUserCode2 = nodeUserCode.replace(
-        `${DEFAULT_STUDIO_NODE_PREFIX}1`,
-        `${DEFAULT_STUDIO_NODE_PREFIX}2`,
+        `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
+        `${DEFAULT_STUDIO_SCRIPT_PREFIX}2`,
       );
       void userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
         [`${nodeId}2`]: {
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}2`,
+          name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}2`,
           sourceCode: nodeUserCode2,
         },
       });
 
       userScriptPlayer.setSubscriptions([
-        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` },
-        { topic: `${DEFAULT_STUDIO_NODE_PREFIX}2` },
+        { topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` },
+        { topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}2` },
       ]);
 
       await fakePlayer.emit({
@@ -1281,14 +1288,14 @@ describe("UserScriptPlayer", () => {
       expect(messages).toEqual([
         upstreamFirst,
         {
-          topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+          topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
           message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
           schemaName: "/studio_script/1",
           sizeInBytes: 0,
         },
         {
-          topic: `${DEFAULT_STUDIO_NODE_PREFIX}2`,
+          topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}2`,
           receiveTime: upstreamFirst.receiveTime,
           message: { custom_np_field: "abc", value: "bar", stamp: expect.any(Number) },
           schemaName: "/studio_script/2",
@@ -1301,7 +1308,7 @@ describe("UserScriptPlayer", () => {
       const sourceCode = `
         let innerState = 0;
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         export default (): { innerState: number } => {
           innerState += 1;
           return { innerState };
@@ -1312,10 +1319,10 @@ describe("UserScriptPlayer", () => {
       const userScriptPlayer = new UserScriptPlayer(fakePlayer, defaultUserScriptActions);
 
       void userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode },
       });
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
 
       const [firstDone, secondDone] = setListenerHelper(userScriptPlayer, 2);
 
@@ -1356,7 +1363,7 @@ describe("UserScriptPlayer", () => {
       {
         code: `
           export const inputs = ["/np_input"];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+          export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
           export default (messages: any): { num: number } => {
             if (messages.message) {
               throw new Error("error path");
@@ -1368,7 +1375,7 @@ describe("UserScriptPlayer", () => {
       {
         code: `
           export const inputs = ["/np_input"];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+          export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
           export default (messages: any): { num: number } => {
             if (messages.message) {
              const badPropertyAccess = messages.message.message.message;
@@ -1380,7 +1387,7 @@ describe("UserScriptPlayer", () => {
       {
         code: `
           export const inputs = ["/np_input"];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+          export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
           const x: any = {};
           const y = x.bad.bad;
           export default (messages: any): { num: number } => {
@@ -1391,7 +1398,7 @@ describe("UserScriptPlayer", () => {
       {
         code: `
           export const inputs = ["/np_input"];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+          export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
           throw "";
           export default (messages: any): { num: number } => {
             return { num: 42 };
@@ -1401,7 +1408,7 @@ describe("UserScriptPlayer", () => {
       {
         code: `
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         export default (messages: any): { num: number } => {
           throw ""
           return { num: 42 };
@@ -1411,7 +1418,7 @@ describe("UserScriptPlayer", () => {
       {
         code: `
           export const inputs = ["/np_input"];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+          export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
           export default (messages: any): { num: number } => {
           if (messages.message) {
             throw new Error("");
@@ -1423,7 +1430,7 @@ describe("UserScriptPlayer", () => {
       {
         code: `
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         if (inputs.length) {
           throw new Error("");
         }
@@ -1440,9 +1447,9 @@ describe("UserScriptPlayer", () => {
         setUserScriptDiagnostics: mockSetNodeDiagnostics,
       });
 
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
       void userScriptPlayer.setUserScripts({
-        nodeId: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: code },
+        nodeId: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: code },
       });
 
       const [done] = setListenerHelper(userScriptPlayer);
@@ -1470,9 +1477,9 @@ describe("UserScriptPlayer", () => {
       ]);
       // Sanity check to ensure none of the user node messages made it through if there was an error.
       expect(messages.map(({ topic }: any) => topic)).not.toContain(
-        `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+        `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
       );
-      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+      expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
     });
 
     it("properly clears user node registrations", async () => {
@@ -1480,7 +1487,7 @@ describe("UserScriptPlayer", () => {
       const userScriptPlayer = new UserScriptPlayer(fakePlayer, defaultUserScriptActions);
 
       void userScriptPlayer.setUserScripts({
-        [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+        [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
       });
 
       const [firstDone, secondDone, thirdDone] = setListenerHelper(userScriptPlayer, 3);
@@ -1498,11 +1505,11 @@ describe("UserScriptPlayer", () => {
       });
 
       const { topicNames: firstTopicNames }: any = await firstDone;
-      expect(firstTopicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+      expect(firstTopicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
 
       await userScriptPlayer.setUserScripts({});
       const { topicNames: secondTopicNames }: any = await secondDone;
-      expect(secondTopicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+      expect(secondTopicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
 
       await fakePlayer.emit({
         activeData: {
@@ -1533,7 +1540,7 @@ describe("UserScriptPlayer", () => {
       });
 
       void userScriptPlayer.setUserScripts({
-        nodeId: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: code },
+        nodeId: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: code },
       });
 
       const [done] = setListenerHelper(userScriptPlayer);
@@ -1558,7 +1565,7 @@ describe("UserScriptPlayer", () => {
         type MarkerArray = { markers: Marker[] }
 
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         const publisher = (message: { message: any }): MarkerArray => {
           log("inside publisher", message.message);
           return { markers: [] };
@@ -1596,9 +1603,9 @@ describe("UserScriptPlayer", () => {
         });
         const [done] = setListenerHelper(userScriptPlayer);
 
-        userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+        userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
         void userScriptPlayer.setUserScripts({
-          [nodeId]: { name: `${DEFAULT_STUDIO_NODE_PREFIX}nodeName`, sourceCode: code },
+          [nodeId]: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}nodeName`, sourceCode: code },
         });
 
         await fakePlayer.emit({
@@ -1616,7 +1623,7 @@ describe("UserScriptPlayer", () => {
         const { topicNames } = (await done)!;
         expect(mockAddNodeLogs).toHaveBeenCalled();
         expect(mockAddNodeLogs.mock.calls).toEqual(logs.map((log) => [nodeId, log]));
-        expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_NODE_PREFIX}1`]);
+        expect(topicNames).toEqual(["/np_input", `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`]);
       });
 
       it("does not record logs if there is an error", async () => {
@@ -1627,7 +1634,7 @@ describe("UserScriptPlayer", () => {
         type MarkerArray = { markers: Marker[] }
 
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
         const publisher = (message: Message<InputTopicMsg>): MarkerArray => {
           log("inside publisher", message.message);
           return { markers: [] };
@@ -1658,7 +1665,7 @@ describe("UserScriptPlayer", () => {
           },
         });
 
-        userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+        userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
         void userScriptPlayer.setUserScripts({ nodeId: { name: "nodeName", sourceCode: code } });
 
         const { topicNames } = (await done)!;
@@ -1672,7 +1679,7 @@ describe("UserScriptPlayer", () => {
         const sourceCode = `
         let innerState = 0;
         export const inputs = ["/np_input"];
-        export const output = "${DEFAULT_STUDIO_NODE_PREFIX}innerState";
+        export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}innerState";
         export default (): { innerState: number } => {
           innerState += 1;
           return { innerState };
@@ -1681,7 +1688,7 @@ describe("UserScriptPlayer", () => {
 
         const fakePlayer = new FakePlayer();
         const userScriptPlayer = new UserScriptPlayer(fakePlayer, defaultUserScriptActions);
-        const firstName = `${DEFAULT_STUDIO_NODE_PREFIX}innerState`;
+        const firstName = `${DEFAULT_STUDIO_SCRIPT_PREFIX}innerState`;
 
         void userScriptPlayer.setUserScripts({
           [nodeId]: { name: firstName, sourceCode },
@@ -1689,7 +1696,7 @@ describe("UserScriptPlayer", () => {
         userScriptPlayer.setSubscriptions([{ topic: firstName }]);
 
         // Update the name of the node.
-        const secondName = `${DEFAULT_STUDIO_NODE_PREFIX}state`;
+        const secondName = `${DEFAULT_STUDIO_SCRIPT_PREFIX}state`;
         const secondSourceCode = sourceCode.replace(/innerState/g, "state");
 
         void userScriptPlayer.setUserScripts({
@@ -1718,8 +1725,8 @@ describe("UserScriptPlayer", () => {
         expect(topics).toEqual<typeof topics>([
           { name: "/np_input", schemaName: "std_msgs/Header" },
           {
-            name: `${DEFAULT_STUDIO_NODE_PREFIX}state`,
-            schemaName: `${DEFAULT_STUDIO_NODE_PREFIX}state`,
+            name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}state`,
+            schemaName: `${DEFAULT_STUDIO_SCRIPT_PREFIX}state`,
           },
         ]);
       });
@@ -1728,7 +1735,7 @@ describe("UserScriptPlayer", () => {
           import { Input, Messages } from 'ros';
           let innerState = 0;
           export const inputs = ["/np_input"];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}state";
+          export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}state";
           export default (message: Input<"/np_input">): Messages.std_msgs__Header => {
             return message.message;
           };
@@ -1736,7 +1743,7 @@ describe("UserScriptPlayer", () => {
 
         const fakePlayer = new FakePlayer();
         const userScriptPlayer = new UserScriptPlayer(fakePlayer, defaultUserScriptActions);
-        const firstName = `${DEFAULT_STUDIO_NODE_PREFIX}state`;
+        const firstName = `${DEFAULT_STUDIO_SCRIPT_PREFIX}state`;
 
         void userScriptPlayer.setUserScripts({
           [nodeId]: { name: firstName, sourceCode },
@@ -1758,14 +1765,14 @@ describe("UserScriptPlayer", () => {
         const { topics } = (await done)!;
         expect(topics).toEqual<typeof topics>([
           { name: "/np_input", schemaName: "std_msgs/Header" },
-          { name: `${DEFAULT_STUDIO_NODE_PREFIX}state`, schemaName: "std_msgs/Header" },
+          { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}state`, schemaName: "std_msgs/Header" },
         ]);
       });
       it("does not override dynamically generated datatypes with built-in datatypes", async () => {
         const fakePlayer = new FakePlayer();
         const userScriptPlayer = new UserScriptPlayer(fakePlayer, defaultUserScriptActions);
         void userScriptPlayer.setUserScripts({
-          nodeId: { name: `${DEFAULT_STUDIO_NODE_PREFIX}1`, sourceCode: nodeUserCode },
+          nodeId: { name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`, sourceCode: nodeUserCode },
         });
 
         const [done] = setListenerHelper(userScriptPlayer);
@@ -1801,10 +1808,10 @@ describe("UserScriptPlayer", () => {
         const [done, done2] = setListenerHelper(userScriptPlayer, 2);
 
         userScriptPlayer.setGlobalVariables({ globalValue: "aaa" });
-        userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}1` }]);
+        userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1` }]);
         await userScriptPlayer.setUserScripts({
           [nodeId]: {
-            name: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+            name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
             sourceCode: nodeUserCodeWithGlobalVars,
           },
         });
@@ -1822,7 +1829,7 @@ describe("UserScriptPlayer", () => {
         expect(messages).toEqual([
           upstreamFirst,
           {
-            topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+            topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
             receiveTime: upstreamFirst.receiveTime,
             message: { custom_np_field: "aaa", value: "aaa" },
             schemaName: "/studio_script/1",
@@ -1837,7 +1844,7 @@ describe("UserScriptPlayer", () => {
         expect(messages2).toEqual([
           upstreamFirst,
           {
-            topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
+            topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}1`,
             receiveTime: upstreamFirst.receiveTime,
             message: { custom_np_field: "bbb", value: "bbb" },
             schemaName: "/studio_script/1",
@@ -1883,7 +1890,7 @@ describe("UserScriptPlayer", () => {
         expect(messages).toEqual([
           upstreamFirst,
           {
-            topic: `${DEFAULT_STUDIO_NODE_PREFIX}0`,
+            topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}0`,
             receiveTime: upstreamFirst.receiveTime,
             message: { key: sourceIndex },
             schemaName: "/studio_script/0",
@@ -1898,10 +1905,10 @@ describe("UserScriptPlayer", () => {
 
     const [userNode0, userNode1, userNode2] = new Array(3).fill(0).map((_, i) => {
       return {
-        name: `${DEFAULT_STUDIO_NODE_PREFIX}0`,
+        name: `${DEFAULT_STUDIO_SCRIPT_PREFIX}0`,
         sourceCode: `
           export const inputs = ["/np_input"];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}0";
+          export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}0";
           export default (): { key: number } => {
             return { key: ${i} };
           };
@@ -1911,7 +1918,7 @@ describe("UserScriptPlayer", () => {
 
     it("creates node registrations when userNodes change", async () => {
       const donePromises = setListenerHelper(userScriptPlayer, 5);
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}0` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}0` }]);
 
       // New node 0, needs registration
       await userScriptPlayer.setUserScripts({ nodeId0: userNode0 });
@@ -1955,7 +1962,7 @@ describe("UserScriptPlayer", () => {
 
     it("re-transforms the code when topics change", async () => {
       const donePromises = setListenerHelper(userScriptPlayer, 5);
-      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_NODE_PREFIX}0` }]);
+      userScriptPlayer.setSubscriptions([{ topic: `${DEFAULT_STUDIO_SCRIPT_PREFIX}0` }]);
 
       // New node 0, needs registration
       await userScriptPlayer.setUserScripts({ nodeId0: userNode0 });

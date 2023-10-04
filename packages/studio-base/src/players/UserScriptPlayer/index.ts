@@ -71,13 +71,13 @@ declare let SharedWorker: {
 };
 
 type UserScriptActions = {
-  setUserScriptDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
-  addUserScriptLogs: (nodeId: string, logs: readonly UserScriptLog[]) => void;
+  setUserScriptDiagnostics: (scriptId: string, diagnostics: readonly Diagnostic[]) => void;
+  addUserScriptLogs: (scriptId: string, logs: readonly UserScriptLog[]) => void;
   setUserScriptRosLib: (rosLib: string) => void;
   setUserScriptTypesLib: (lib: string) => void;
 };
 
-type NodeRegistrationCacheItem = {
+type ScriptRegistrationCacheItem = {
   scriptId: string;
   userScript: UserScript;
   result: ScriptRegistration;
@@ -92,14 +92,14 @@ function maybePlainObject(rawVal: unknown) {
 
 /** Mutable state protected by a mutex lock */
 type ProtectedState = {
-  nodeRegistrationCache: NodeRegistrationCacheItem[];
-  nodeRegistrations: readonly ScriptRegistration[];
+  scriptRegistrationCache: ScriptRegistrationCacheItem[];
+  scriptRegistrations: readonly ScriptRegistration[];
   lastPlayerStateActiveData?: PlayerStateActiveData;
   userScripts: UserScripts;
 
   /**
    * Map of output topics to input topics. To produce an output we need to know the input topics
-   * that a script requires. When subscribers subscribe to the output topic, the user node player
+   * that a script requires. When subscribers subscribe to the output topic, the user script player
    * subscribes to the underlying input topics.
    */
   inputsByOutputTopic: Map<string, readonly string[]>;
@@ -108,20 +108,20 @@ type ProtectedState = {
 export default class UserScriptPlayer implements Player {
   #player: Player;
 
-  // Datatypes and topics are derived from nodeRegistrations, but memoized so they only change when needed
-  #memoizedNodeDatatypes: readonly RosDatatypes[] = [];
-  #memoizedNodeTopics: readonly Topic[] = [];
+  // Datatypes and topics are derived from scriptRegistrations, but memoized so they only change when needed
+  #memoizedScriptDatatypes: readonly RosDatatypes[] = [];
+  #memoizedScriptTopics: readonly Topic[] = [];
 
   #subscriptions: SubscribePayload[] = [];
-  #nodeSubscriptions: Record<string, SubscribePayload> = {};
+  #scriptSubscriptions: Record<string, SubscribePayload> = {};
 
   // listener for state updates
   #listener?: (arg0: PlayerState) => Promise<void>;
 
   // Not sure if there is perf issue with unused workers (may just go idle) - requires more research
   #unusedRuntimeWorkers: Rpc[] = [];
-  #setUserScriptDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
-  #addUserScriptLogs: (nodeId: string, logs: UserScriptLog[]) => void;
+  #setUserScriptDiagnostics: (scriptId: string, diagnostics: readonly Diagnostic[]) => void;
+  #addUserScriptLogs: (scriptId: string, logs: UserScriptLog[]) => void;
   #transformRpc?: Rpc;
   #globalVariables: GlobalVariables = {};
   #userScriptActions: UserScriptActions;
@@ -132,18 +132,18 @@ export default class UserScriptPlayer implements Player {
   // we may also emit state changes on internal errors
   #playerState?: PlayerState;
 
-  // The store tracks problems for individual userspace nodes
-  // a node may set its own problem or clear its problem
+  // The store tracks problems for individual user scripts
+  // a script may set its own problem or clear its problem
   #problemStore = new Map<string, PlayerProblem>();
 
-  // keep track of last message on all topics to recompute output topic messages when user nodes change
+  // keep track of last message on all topics to recompute output topic messages when user scripts change
   #lastMessageByInputTopic = new Map<string, MessageEvent>();
   #userScriptIdsNeedUpdate = new Set<string>();
 
   #protectedState = new MutexLocked<ProtectedState>({
     userScripts: {},
-    nodeRegistrations: [],
-    nodeRegistrationCache: [],
+    scriptRegistrations: [],
+    scriptRegistrationCache: [],
     lastPlayerStateActiveData: undefined,
     inputsByOutputTopic: new Map(),
   });
@@ -175,12 +175,12 @@ export default class UserScriptPlayer implements Player {
     this.#userScriptActions = userScriptActions;
     const { setUserScriptDiagnostics, addUserScriptLogs } = userScriptActions;
 
-    this.#setUserScriptDiagnostics = (nodeId: string, diagnostics: readonly Diagnostic[]) => {
-      setUserScriptDiagnostics(nodeId, diagnostics);
+    this.#setUserScriptDiagnostics = (scriptId: string, diagnostics: readonly Diagnostic[]) => {
+      setUserScriptDiagnostics(scriptId, diagnostics);
     };
-    this.#addUserScriptLogs = (nodeId: string, logs: UserScriptLog[]) => {
+    this.#addUserScriptLogs = (scriptId: string, logs: UserScriptLog[]) => {
       if (logs.length > 0) {
-        addUserScriptLogs(nodeId, logs);
+        addUserScriptLogs(scriptId, logs);
       }
     };
 
@@ -209,14 +209,14 @@ export default class UserScriptPlayer implements Player {
     });
   }
 
-  #getTopics = memoizeWeak((topics: readonly Topic[], nodeTopics: readonly Topic[]): Topic[] => [
+  #getTopics = memoizeWeak((topics: readonly Topic[], scriptTopics: readonly Topic[]): Topic[] => [
     ...topics,
-    ...nodeTopics,
+    ...scriptTopics,
   ]);
 
   #getDatatypes = memoizeWeak(
-    (datatypes: RosDatatypes, nodeDatatypes: readonly RosDatatypes[]): RosDatatypes => {
-      return nodeDatatypes.reduce(
+    (datatypes: RosDatatypes, scriptDatatypes: readonly RosDatatypes[]): RosDatatypes => {
+      return scriptDatatypes.reduce(
         (allDatatypes, userScriptDatatypes) => new Map([...allDatatypes, ...userScriptDatatypes]),
         new Map([...basicDatatypes, ...datatypes]),
       );
@@ -227,16 +227,16 @@ export default class UserScriptPlayer implements Player {
     input?: {
       blocks: readonly (MessageBlock | undefined)[];
       globalVariables: GlobalVariables;
-      nodeRegistrations: readonly ScriptRegistration[];
+      scriptRegistrations: readonly ScriptRegistration[];
     };
     result: (MessageBlock | undefined)[];
   } = { result: [] };
 
-  // Processes input messages through nodes to create messages on output topics
+  // Processes input messages through scripts to create messages on output topics
   async #getMessages(
     inputMessages: readonly MessageEvent[],
     globalVariables: GlobalVariables,
-    nodeRegistrations: readonly ScriptRegistration[],
+    scriptRegistrations: readonly ScriptRegistration[],
   ): Promise<readonly MessageEvent[]> {
     // fast-track if there's no input and return empty output
     if (inputMessages.length === 0) {
@@ -248,12 +248,12 @@ export default class UserScriptPlayer implements Player {
     const outputMessages: MessageEvent[] = [];
     for (const message of inputMessages) {
       const messagePromises = [];
-      for (const nodeRegistration of nodeRegistrations) {
+      for (const scriptRegistration of scriptRegistrations) {
         if (
-          this.#nodeSubscriptions[nodeRegistration.output.name] &&
-          nodeRegistration.inputs.includes(message.topic)
+          this.#scriptSubscriptions[scriptRegistration.output.name] &&
+          scriptRegistration.inputs.includes(message.topic)
         ) {
-          const messagePromise = nodeRegistration.processMessage(message, globalVariables);
+          const messagePromise = scriptRegistration.processMessage(message, globalVariables);
           messagePromises.push(messagePromise);
         }
       }
@@ -267,13 +267,13 @@ export default class UserScriptPlayer implements Player {
   async #getBlocks(
     blocks: readonly (MessageBlock | undefined)[],
     globalVariables: GlobalVariables,
-    nodeRegistrations: readonly ScriptRegistration[],
+    scriptRegistrations: readonly ScriptRegistration[],
   ): Promise<readonly (MessageBlock | undefined)[]> {
     if (
       shallowequal(this.#lastBlockRequest.input, {
         blocks,
         globalVariables,
-        nodeRegistrations,
+        scriptRegistrations,
       })
     ) {
       return this.#lastBlockRequest.result;
@@ -281,8 +281,8 @@ export default class UserScriptPlayer implements Player {
 
     // If no downstream subscriptions want blocks for our output topics we can just pass through
     // the blocks from the underlying player.
-    const fullRegistrations = nodeRegistrations.filter(
-      (reg) => this.#nodeSubscriptions[reg.output.name]?.preloadType === "full",
+    const fullRegistrations = scriptRegistrations.filter(
+      (reg) => this.#scriptSubscriptions[reg.output.name]?.preloadType === "full",
     );
     if (fullRegistrations.length === 0) {
       return blocks;
@@ -297,14 +297,14 @@ export default class UserScriptPlayer implements Player {
         continue;
       }
 
-      // Flatten and re-sort block messages so that nodes see them in the same order
-      // as the non-block nodes.
+      // Flatten and re-sort block messages so that scripts see them in the same order
+      // as the non-block scripts.
       const messagesByTopic = { ...block.messagesByTopic };
       const blockMessages = allInputTopics
         .flatMap((topic) => messagesByTopic[topic] ?? [])
         .sort((a, b) => compare(a.receiveTime, b.receiveTime));
-      for (const nodeRegistration of fullRegistrations) {
-        const outTopic = nodeRegistration.output.name;
+      for (const scriptRegistration of fullRegistrations) {
+        const outTopic = scriptRegistration.output.name;
         // Clear out any previously processed messages that were previously in the output topic.
         // otherwise it will contain duplicates.
         if (messagesByTopic[outTopic] != undefined) {
@@ -312,8 +312,8 @@ export default class UserScriptPlayer implements Player {
         }
 
         for (const message of blockMessages) {
-          if (nodeRegistration.inputs.includes(message.topic)) {
-            const outputMessage = await nodeRegistration.processBlockMessage(
+          if (scriptRegistration.inputs.includes(message.topic)) {
+            const outputMessage = await scriptRegistration.processBlockMessage(
               message,
               globalVariables,
             );
@@ -339,7 +339,7 @@ export default class UserScriptPlayer implements Player {
     }
 
     this.#lastBlockRequest = {
-      input: { blocks, globalVariables, nodeRegistrations },
+      input: { blocks, globalVariables, scriptRegistrations },
       result: outputBlocks,
     };
 
@@ -363,10 +363,10 @@ export default class UserScriptPlayer implements Player {
       }
       state.userScripts = userScripts;
 
-      // Prune the node registration cache so it doesn't grow forever.
-      // We add one to the count so we don't have to recompile nodes if users undo/redo node changes.
-      const maxNodeRegistrationCacheCount = Object.keys(userScripts).length + 1;
-      state.nodeRegistrationCache.splice(maxNodeRegistrationCacheCount);
+      // Prune the script registration cache so it doesn't grow forever.
+      // We add one to the count so we don't have to recompile scripts if users undo/redo script changes.
+      const maxScriptRegistrationCacheCount = Object.keys(userScripts).length + 1;
+      state.scriptRegistrationCache.splice(maxScriptRegistrationCacheCount);
       // This code causes us to reset workers twice because the seeking resets the workers too
       await this.#resetWorkersUnlocked(state);
       this.#setSubscriptionsUnlocked(this.#subscriptions, state);
@@ -386,7 +386,7 @@ export default class UserScriptPlayer implements Player {
             // We want to avoid re-emitting upstream data source messages into panels to maintain
             // the invariant that the player emits a data-source message into "currentFrame" only once.
             //
-            // Using an empty messages array will make user node player only emit the script output
+            // Using an empty messages array will make user script player only emit the script output
             // messages as a result of the updated script.
             messages: [],
           },
@@ -401,23 +401,23 @@ export default class UserScriptPlayer implements Player {
     }
   }
 
-  // Defines the inputs/outputs and worker interface of a user node.
-  async #createNodeRegistration(
+  // Defines the inputs/outputs and worker interface of a user script.
+  async #createScriptRegistration(
     scriptId: string,
     userScript: UserScript,
     state: ProtectedState,
     rosLib: string,
     typesLib: string,
   ): Promise<ScriptRegistration> {
-    for (const cacheEntry of state.nodeRegistrationCache) {
+    for (const cacheEntry of state.scriptRegistrationCache) {
       if (scriptId === cacheEntry.scriptId && _.isEqual(userScript, cacheEntry.userScript)) {
         return cacheEntry.result;
       }
     }
-    // Pass all the nodes a set of basic datatypes that we know how to render.
+    // Pass all the scripts a set of basic datatypes that we know how to render.
     // These could be overwritten later by bag datatypes, but these datatype definitions should be very stable.
     const { topics = [], datatypes = new Map() } = state.lastPlayerStateActiveData ?? {};
-    const nodeDatatypes: RosDatatypes = new Map([...basicDatatypes, ...datatypes]);
+    const scriptDatatypes: RosDatatypes = new Map([...basicDatatypes, ...datatypes]);
 
     const { name, sourceCode } = userScript;
     const transformMessage: TransformArgs = {
@@ -426,16 +426,16 @@ export default class UserScriptPlayer implements Player {
       topics,
       rosLib,
       typesLib,
-      datatypes: nodeDatatypes,
+      datatypes: scriptDatatypes,
     };
     const transformWorker = this.#getTransformWorker();
-    const nodeData = await transformWorker.send<ScriptData>("transform", transformMessage);
-    const { inputTopics, outputTopic, transpiledCode, projectCode, outputDatatype } = nodeData;
+    const scriptData = await transformWorker.send<ScriptData>("transform", transformMessage);
+    const { inputTopics, outputTopic, transpiledCode, projectCode, outputDatatype } = scriptData;
 
-    // problemKey is a unique identifier for each userspace node so we can manage problems from
-    // a specific node. A node may have a problem that may later clear. Using the key we can add/remove
-    // problems for specific userspace nodes independently of other userspace nodes.
-    const problemKey = `node-id-${scriptId}`;
+    // problemKey is a unique identifier for each user script so we can manage problems from
+    // a specific script. A script may have a problem that may later clear. Using the key we can add/remove
+    // problems for specific user scripts independently of other user scripts.
+    const problemKey = `script-id-${scriptId}`;
     const buildMessageProcessor = (): {
       registration: ScriptRegistration["processMessage"];
       terminate: () => void;
@@ -445,7 +445,7 @@ export default class UserScriptPlayer implements Player {
       let rpc: undefined | Rpc;
 
       const registration = async (msgEvent: MessageEvent, globalVariables: GlobalVariables) => {
-        // Register the node within a web worker to be executed.
+        // Register the script within a web worker to be executed.
         if (!rpc) {
           rpc = this.#unusedRuntimeWorkers.pop();
 
@@ -494,7 +494,7 @@ export default class UserScriptPlayer implements Player {
           const { error, userScriptDiagnostics, userScriptLogs } =
             await rpc.send<RegistrationOutput>("registerScript", {
               projectCode,
-              nodeCode: transpiledCode,
+              scriptCode: transpiledCode,
             });
           if (error != undefined) {
             this.#setUserScriptDiagnostics(scriptId, [
@@ -556,8 +556,8 @@ export default class UserScriptPlayer implements Player {
           return;
         }
 
-        // At this point we've received a message successfully from the userspace node, therefore
-        // we clear any previous problem from this node.
+        // At this point we've received a message successfully from the user script, therefore
+        // we clear any previous problem from this script.
         this.#problemStore.delete(problemKey);
 
         return {
@@ -586,7 +586,7 @@ export default class UserScriptPlayer implements Player {
 
     const result: ScriptRegistration = {
       scriptId,
-      scriptData: nodeData,
+      scriptData,
       inputs: inputTopics,
       output: { name: outputTopic, schemaName: outputDatatype },
       processMessage: messageProcessor.registration,
@@ -596,7 +596,7 @@ export default class UserScriptPlayer implements Player {
         blockProcessor.terminate();
       },
     };
-    state.nodeRegistrationCache.push({ scriptId, userScript, result });
+    state.scriptRegistrationCache.push({ scriptId, userScript, result });
     return result;
   }
 
@@ -649,7 +649,7 @@ export default class UserScriptPlayer implements Player {
   }
 
   // We need to reset workers in a variety of circumstances:
-  // - When a user node is updated, added or deleted
+  // - When a user script is updated, added or deleted
   // - When we seek (in order to reset state)
   // - When a new child player is added
   async #resetWorkersUnlocked(state: ProtectedState): Promise<void> {
@@ -658,43 +658,43 @@ export default class UserScriptPlayer implements Player {
     }
 
     // This early return is an optimization measure so that the
-    // `nodeRegistrations` array is not re-defined, which will invalidate
+    // `scriptRegistrations` array is not re-defined, which will invalidate
     // downstream caches. (i.e. `this._getTopics`)
-    if (state.nodeRegistrations.length === 0 && Object.entries(state.userScripts).length === 0) {
+    if (state.scriptRegistrations.length === 0 && Object.entries(state.userScripts).length === 0) {
       return;
     }
 
-    // teardown and cleanup any existing node registrations
-    for (const nodeRegistration of state.nodeRegistrations) {
-      nodeRegistration.terminate();
+    // teardown and cleanup any existing script registrations
+    for (const scriptRegistration of state.scriptRegistrations) {
+      scriptRegistration.terminate();
     }
-    state.nodeRegistrations = [];
+    state.scriptRegistrations = [];
 
     const rosLib = await this.#getRosLib(state);
     const typesLib = await this.#getTypesLib(state);
 
-    const allNodeRegistrations = await Promise.all(
+    const allScriptRegistrations = await Promise.all(
       Object.entries(state.userScripts).map(
         async ([scriptId, userScript]) =>
-          await this.#createNodeRegistration(scriptId, userScript, state, rosLib, typesLib),
+          await this.#createScriptRegistration(scriptId, userScript, state, rosLib, typesLib),
       ),
     );
 
-    const validNodeRegistrations: ScriptRegistration[] = [];
+    const validScriptRegistrations: ScriptRegistration[] = [];
     const playerTopics = new Set(state.lastPlayerStateActiveData.topics.map((topic) => topic.name));
-    const allNodeOutputs = new Set(
-      allNodeRegistrations.map(({ scriptData: nodeData }) => nodeData.outputTopic),
+    const allScriptOutputs = new Set(
+      allScriptRegistrations.map(({ scriptData }) => scriptData.outputTopic),
     );
 
-    // Clear the output -> input map and re-populate it again with with all the node registrations
+    // Clear the output -> input map and re-populate it again with with all the script registrations
     state.inputsByOutputTopic.clear();
 
-    for (const nodeRegistration of allNodeRegistrations) {
-      const { scriptData: nodeData, scriptId: nodeId } = nodeRegistration;
+    for (const scriptRegistration of allScriptRegistrations) {
+      const { scriptData, scriptId } = scriptRegistration;
 
-      if (!nodeData.outputTopic) {
-        this.#setUserScriptDiagnostics(nodeId, [
-          ...nodeData.diagnostics,
+      if (!scriptData.outputTopic) {
+        this.#setUserScriptDiagnostics(scriptId, [
+          ...scriptData.diagnostics,
           {
             severity: DiagnosticSeverity.Error,
             message: `Output topic cannot be an empty string.`,
@@ -705,13 +705,13 @@ export default class UserScriptPlayer implements Player {
         continue;
       }
 
-      // Create diagnostic errors if more than one node outputs to the same topic
-      if (state.inputsByOutputTopic.has(nodeData.outputTopic)) {
-        this.#setUserScriptDiagnostics(nodeId, [
-          ...nodeData.diagnostics,
+      // Create diagnostic errors if more than one script outputs to the same topic
+      if (state.inputsByOutputTopic.has(scriptData.outputTopic)) {
+        this.#setUserScriptDiagnostics(scriptId, [
+          ...scriptData.diagnostics,
           {
             severity: DiagnosticSeverity.Error,
-            message: `Output "${nodeData.outputTopic}" must be unique`,
+            message: `Output "${scriptData.outputTopic}" must be unique`,
             source: Sources.OutputTopicChecker,
             code: ErrorCodes.OutputTopicChecker.NOT_UNIQUE,
           },
@@ -720,15 +720,15 @@ export default class UserScriptPlayer implements Player {
       }
 
       // Record the required input topics to service this output topic
-      state.inputsByOutputTopic.set(nodeData.outputTopic, nodeData.inputTopics);
+      state.inputsByOutputTopic.set(scriptData.outputTopic, scriptData.inputTopics);
 
-      // Create diagnostic errors if node outputs overlap with real topics
-      if (playerTopics.has(nodeData.outputTopic)) {
-        this.#setUserScriptDiagnostics(nodeId, [
-          ...nodeData.diagnostics,
+      // Create diagnostic errors if script outputs overlap with real topics
+      if (playerTopics.has(scriptData.outputTopic)) {
+        this.#setUserScriptDiagnostics(scriptId, [
+          ...scriptData.diagnostics,
           {
             severity: DiagnosticSeverity.Error,
-            message: `Output topic "${nodeData.outputTopic}" is already present in the data source`,
+            message: `Output topic "${scriptData.outputTopic}" is already present in the data source`,
             source: Sources.OutputTopicChecker,
             code: ErrorCodes.OutputTopicChecker.EXISTING_TOPIC,
           },
@@ -736,38 +736,40 @@ export default class UserScriptPlayer implements Player {
         continue;
       }
 
-      // Filter out nodes with compilation errors
-      if (hasTransformerErrors(nodeData)) {
-        this.#setUserScriptDiagnostics(nodeId, nodeData.diagnostics);
+      // Filter out scripts with compilation errors
+      if (hasTransformerErrors(scriptData)) {
+        this.#setUserScriptDiagnostics(scriptId, scriptData.diagnostics);
         continue;
       }
 
-      // Throw if nodes use other nodes' outputs as inputs. We should never get here because we
+      // Throw if scripts use other scripts' outputs as inputs. We should never get here because we
       // already prevent outputs from being the same as real topics in the data source, and we
       // already filter out input topics that aren't present in the data source.
-      for (const input of nodeData.inputTopics) {
-        if (allNodeOutputs.has(input)) {
-          throw new Error(`Input "${input}" cannot equal another node's output`);
+      for (const input of scriptData.inputTopics) {
+        if (allScriptOutputs.has(input)) {
+          throw new Error(`Input "${input}" cannot equal another script's output`);
         }
       }
 
-      validNodeRegistrations.push(nodeRegistration);
+      validScriptRegistrations.push(scriptRegistration);
     }
 
     let changedTopicsRequireEmitState = false;
-    state.nodeRegistrations = validNodeRegistrations;
-    const nodeTopics = state.nodeRegistrations.map(({ output }) => output);
-    if (!_.isEqual(nodeTopics, this.#memoizedNodeTopics)) {
-      this.#memoizedNodeTopics = nodeTopics;
+    state.scriptRegistrations = validScriptRegistrations;
+    const scriptTopics = state.scriptRegistrations.map(({ output }) => output);
+    if (!_.isEqual(scriptTopics, this.#memoizedScriptTopics)) {
+      this.#memoizedScriptTopics = scriptTopics;
       changedTopicsRequireEmitState = true;
     }
-    const nodeDatatypes = state.nodeRegistrations.map(({ scriptData: { datatypes } }) => datatypes);
-    if (!_.isEqual(nodeDatatypes, this.#memoizedNodeDatatypes)) {
-      this.#memoizedNodeDatatypes = nodeDatatypes;
+    const scriptDatatypes = state.scriptRegistrations.map(
+      ({ scriptData: { datatypes } }) => datatypes,
+    );
+    if (!_.isEqual(scriptDatatypes, this.#memoizedScriptDatatypes)) {
+      this.#memoizedScriptDatatypes = scriptDatatypes;
       changedTopicsRequireEmitState = true;
     }
 
-    // We need to set the user node diagnostics, which is a react set state
+    // We need to set the user script diagnostics, which is a react set state
     // function. This is called once per user script. Since this is in an async
     // function, the state updates will not be batched below React 18 and React
     // will update components synchronously during the set state. In a complex
@@ -780,24 +782,24 @@ export default class UserScriptPlayer implements Player {
     //
     // Moving to React 18 should remove the need for this call.
     ReactDOM.unstable_batchedUpdates(() => {
-      for (const nodeRegistration of state.nodeRegistrations) {
-        this.#setUserScriptDiagnostics(nodeRegistration.scriptId, []);
+      for (const scriptRegistration of state.scriptRegistrations) {
+        this.#setUserScriptDiagnostics(scriptRegistration.scriptId, []);
       }
     });
 
-    // If we have new topics after processing the node registrations we need to emit a new
+    // If we have new topics after processing the script registrations we need to emit a new
     // state to let downstream clients subscribe to newly available topics. This is
     // necessary because we won't emit a new state otherwise if there are no other active
     // subscriptions.
     if (changedTopicsRequireEmitState && this.#playerState?.activeData) {
       const newTopics = _.unionBy(
         this.#playerState.activeData.topics,
-        this.#memoizedNodeTopics,
+        this.#memoizedScriptTopics,
         (top) => top.name,
       );
       const newDatatypes = this.#getDatatypes(
         this.#playerState.activeData.datatypes,
-        this.#memoizedNodeDatatypes,
+        this.#memoizedScriptDatatypes,
       );
       this.#playerState = {
         ...this.#playerState,
@@ -853,7 +855,7 @@ export default class UserScriptPlayer implements Player {
       const { messages, topics, datatypes } = activeData;
 
       // If we do not have active player data from a previous call, then our
-      // player just spun up, meaning we should re-run our user nodes in case
+      // player just spun up, meaning we should re-run our user scripts in case
       // they have inputs that now exist in the current player context.
       const newPlayerState = await this.#protectedState.runExclusive(async (state) => {
         if (!state.lastPlayerStateActiveData) {
@@ -861,17 +863,17 @@ export default class UserScriptPlayer implements Player {
           await this.#resetWorkersUnlocked(state);
           this.#setSubscriptionsUnlocked(this.#subscriptions, state);
         } else {
-          // Reset node state after seeking
+          // Reset script state after seeking
           let shouldReset =
             activeData.lastSeekTime !== state.lastPlayerStateActiveData.lastSeekTime;
 
-          // When topics or datatypes change we also need to re-build the nodes so we clear the cache
+          // When topics or datatypes change we also need to re-build the scripts so we clear the cache
           if (
             activeData.topics !== state.lastPlayerStateActiveData.topics ||
             activeData.datatypes !== state.lastPlayerStateActiveData.datatypes
           ) {
             shouldReset = true;
-            state.nodeRegistrationCache = [];
+            state.scriptRegistrationCache = [];
           }
 
           state.lastPlayerStateActiveData = activeData;
@@ -880,23 +882,23 @@ export default class UserScriptPlayer implements Player {
           }
         }
 
-        const allDatatypes = this.#getDatatypes(datatypes, this.#memoizedNodeDatatypes);
+        const allDatatypes = this.#getDatatypes(datatypes, this.#memoizedScriptDatatypes);
 
         /**
-         * if nodes have been updated we need to add their previous input messages
+         * if scripts have been updated we need to add their previous input messages
          * to our list of messages to be parsed so that subscribers can refresh with
          * the new output topic messages
          */
         const inputTopicsForRecompute = new Set<string>();
 
         for (const userScriptId of this.#userScriptIdsNeedUpdate) {
-          const nodeRegistration = state.nodeRegistrations.find(
-            ({ scriptId: nodeId }) => nodeId === userScriptId,
+          const scriptRegistration = state.scriptRegistrations.find(
+            ({ scriptId }) => scriptId === userScriptId,
           );
-          if (!nodeRegistration) {
+          if (!scriptRegistration) {
             continue;
           }
-          const inputTopics = nodeRegistration.inputs;
+          const inputTopics = scriptRegistration.inputs;
 
           for (const topic of inputTopics) {
             inputTopicsForRecompute.add(topic);
@@ -927,14 +929,14 @@ export default class UserScriptPlayer implements Player {
         const computed = await this.#getMessages(
           messages,
           globalVariables,
-          state.nodeRegistrations,
+          state.scriptRegistrations,
         );
 
         // These are messages generated from previously saved messages on input topics
         const recomputed = await this.#getMessages(
           messagesForRecompute,
           globalVariables,
-          state.nodeRegistrations,
+          state.scriptRegistrations,
         );
 
         // The current frame messages are the input messages + recomputed + computed sorted by
@@ -952,7 +954,7 @@ export default class UserScriptPlayer implements Player {
           const newBlocks = await this.#getBlocks(
             playerProgress.messageCache.blocks,
             globalVariables,
-            state.nodeRegistrations,
+            state.scriptRegistrations,
           );
 
           playerProgress.messageCache = {
@@ -967,7 +969,7 @@ export default class UserScriptPlayer implements Player {
           activeData: {
             ...activeData,
             messages: currentFrameMessages,
-            topics: this.#getTopics(topics, this.#memoizedNodeTopics),
+            topics: this.#getTopics(topics, this.#memoizedScriptTopics),
             datatypes: allDatatypes,
           },
         };
@@ -991,7 +993,7 @@ export default class UserScriptPlayer implements Player {
   }
 
   async #queueEmitState() {
-    // Wrap in mutex in case the emitState triggered by changed node registrations happens
+    // Wrap in mutex in case the emitState triggered by changed script registrations happens
     // to run at the same time as an emitstate triggered by the underlying player.
     await this.#emitLock.runExclusive(async () => {
       if (!this.#playerState) {
@@ -1040,7 +1042,7 @@ export default class UserScriptPlayer implements Player {
   }
 
   #setSubscriptionsUnlocked(subscriptions: SubscribePayload[], state: ProtectedState): void {
-    this.#nodeSubscriptions = getPreloadTypes(subscriptions);
+    this.#scriptSubscriptions = getPreloadTypes(subscriptions);
     this.#player.setSubscriptions(
       remapVirtualSubscriptions(subscriptions, state.inputsByOutputTopic),
     );
@@ -1048,8 +1050,8 @@ export default class UserScriptPlayer implements Player {
 
   public close = (): void => {
     void this.#protectedState.runExclusive(async (state) => {
-      for (const nodeRegistration of state.nodeRegistrations) {
-        nodeRegistration.terminate();
+      for (const scriptRegistration of state.scriptRegistrations) {
+        scriptRegistration.terminate();
       }
     });
     this.#player.close();

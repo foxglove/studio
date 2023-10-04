@@ -22,7 +22,7 @@ import rawUserUtils from "@foxglove/studio-base/players/UserScriptPlayer/transfo
 import { UserScriptLog } from "@foxglove/studio-base/players/UserScriptPlayer/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { ExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
-import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
+import { DEFAULT_STUDIO_SCRIPT_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 const userScripts = {
   nodeId1: { name: "/studio_script/script", sourceCode: "const someVariableName = 1;" },
@@ -70,7 +70,7 @@ const sourceCodeWithLogs = `
   import { Messages } from "ros";
 
   export const inputs = ["/my_topic"];
-  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
+  export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}";
 
   const publisher = (): Messages.std_msgs__ColorRGBA => {
     log({ "someKey": { "nestedKey": "nestedValue" } });
@@ -107,7 +107,7 @@ import { Input } from "ros";
 import { ${generatedSchemas} } from "@foxglove/schemas";
 
 export const inputs = ["/my_topic"];
-export const output = "${DEFAULT_STUDIO_NODE_PREFIX}1";
+export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}1";
 
 export default function script(event: Input<"/my_topic">): Log {
   return {
@@ -126,7 +126,7 @@ const sourceCodeWithUtils = `
   import { norm } from "./pointClouds";
 
   export const inputs = ["/my_topic"];
-  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}/1";
+  export const output = "${DEFAULT_STUDIO_SCRIPT_PREFIX}/1";
 
   const publisher = (message: Input<"/my_topic">): { val: number } => {
     const val = norm({x:1, y:2, z:3});

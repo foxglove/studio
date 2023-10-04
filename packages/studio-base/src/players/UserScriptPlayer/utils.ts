@@ -15,5 +15,5 @@ import {
   ScriptData,
 } from "@foxglove/studio-base/players/UserScriptPlayer/types";
 
-export const hasTransformerErrors = (nodeData: ScriptData): boolean =>
-  nodeData.diagnostics.some(({ severity }) => severity === DiagnosticSeverity.Error);
+export const hasTransformerErrors = (scriptData: ScriptData): boolean =>
+  scriptData.diagnostics.some(({ severity }) => severity === DiagnosticSeverity.Error);

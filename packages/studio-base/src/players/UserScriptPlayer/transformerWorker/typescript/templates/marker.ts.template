@@ -4,7 +4,7 @@
 // data.
 //
 // For example, if your robot calculates some projected paths and publishes them between two
-// subsystems as a message, you can make a node that visualizes the path as a line list marker and view it in the 3D
+// subsystems as a message, you can make a script that visualizes the path as a line list marker and view it in the 3D
 // panel.
 
 import { Input, Message } from "./types";
@@ -17,7 +17,7 @@ type GlobalVariables = { id: number };
 export const inputs = ["/input/topic"];
 export const output = "/studio_script/my_custom_topic";
 
-// Our node will output a Marker message.
+// Our script will output a Marker message.
 type Marker = Message<"visualization_msgs/Marker">;
 
 // If you want to output multiple markers for a single input message, use a MarkerArray.

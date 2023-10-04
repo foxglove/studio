@@ -12,11 +12,11 @@ type GlobalVariables = { id: number };
 export const inputs = ["/input/topic", "/input/another"];
 export const output = "/studio_script/output_topic";
 
-// Make an InputEvent type alias. Since our node will get a message from either input topic, we need to enumerate the topics.
+// Make an InputEvent type alias. Since our script will get a message from either input topic, we need to enumerate the topics.
 type InputEvent = Input<"/input/topic"> | Input<"/input/another">;
 
 export default function script(event: InputEvent, globalVars: GlobalVariables): Output {
-  // Remember that your node will get messages on each topic, so you
+  // Remember that your script will get messages on each topic, so you
   // need to check each event's topic to know which fields are available on the message.
   switch (event.topic) {
     case "/input/topic":
@@ -28,7 +28,7 @@ export default function script(event: InputEvent, globalVars: GlobalVariables): 
       break;
   }
 
-  // Nodes can only output one type of message regardless of the inputs
+  // Scripts can only output one type of message regardless of the inputs
   // Here we echo back the input topic as an example.
   return {
     topic: event.topic,

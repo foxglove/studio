@@ -28,7 +28,7 @@ import getPrettifiedCode from "@foxglove/studio-base/panels/UserScriptEditor/get
 import { Script } from "@foxglove/studio-base/panels/UserScriptEditor/script";
 import { getUserScriptProjectConfig } from "@foxglove/studio-base/players/UserScriptPlayer/transformerWorker/typescript/projectConfig";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
-import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
+import { DEFAULT_STUDIO_SCRIPT_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import { themes } from "./theme";
@@ -104,7 +104,7 @@ const Editor = ({
   }, [rosLib]);
 
   React.useEffect(() => {
-    const filePath = monacoApi.Uri.parse(`file://${DEFAULT_STUDIO_NODE_PREFIX}generatedTypes.ts`);
+    const filePath = monacoApi.Uri.parse(`file://${DEFAULT_STUDIO_SCRIPT_PREFIX}generatedTypes.ts`);
     const model =
       monacoApi.editor.getModel(filePath) ??
       monacoApi.editor.createModel(typesLib, "typescript", filePath);
@@ -141,7 +141,7 @@ const Editor = ({
           editor &&
           script &&
           requestedModel.uri.path ===
-            `${DEFAULT_STUDIO_NODE_PREFIX}${path.basename(script.filePath)}`
+            `${DEFAULT_STUDIO_SCRIPT_PREFIX}${path.basename(script.filePath)}`
         ) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           gotoSelection(editor, input.options.selection);
@@ -172,7 +172,7 @@ const Editor = ({
     // user's code to be in a file next to the utility files. For this we grab the basename
     // of the user's entered node name to remove any path-like sections.
     const basename = path.basename(script.filePath);
-    const filePath = monacoApi.Uri.parse(`file://${DEFAULT_STUDIO_NODE_PREFIX}${basename}`);
+    const filePath = monacoApi.Uri.parse(`file://${DEFAULT_STUDIO_SCRIPT_PREFIX}${basename}`);
     const model =
       monacoApi.editor.getModel(filePath) ??
       monacoApi.editor.createModel(script.code, "typescript", filePath);
@@ -273,7 +273,7 @@ const Editor = ({
       // user's code to be in a file next to the utility files. For this we grab the basename
       // of the user's entered node name to remove any path-like sections.
       const basename = path.basename(script.filePath);
-      const filePath = monacoApi.Uri.parse(`file://${DEFAULT_STUDIO_NODE_PREFIX}${basename}`);
+      const filePath = monacoApi.Uri.parse(`file://${DEFAULT_STUDIO_SCRIPT_PREFIX}${basename}`);
       const model =
         monaco.editor.getModel(filePath) ??
         monaco.editor.createModel(script.code, "typescript", filePath);

@@ -114,7 +114,7 @@ export type ScriptRegistration = {
   terminate: () => void;
 };
 
-export type ScriptDataTransformer = (nodeData: ScriptData, topics: Topic[]) => ScriptData;
+export type ScriptDataTransformer = (scriptData: ScriptData, topics: Topic[]) => ScriptData;
 
 export type UserScriptLog = {
   source: "registerScript" | "processMessage";

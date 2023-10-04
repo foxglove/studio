@@ -22,7 +22,7 @@ import {
   Sources,
   UserScriptLog,
 } from "@foxglove/studio-base/players/UserScriptPlayer/types";
-import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
+import { DEFAULT_STUDIO_SCRIPT_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 // Each node runtime worker runs one node at a time, hence why we have one
 // global declaration of 'nodeCallback'.
@@ -76,7 +76,7 @@ const getArgsToPrint = (args: unknown[]) => {
 
 // Exported for tests.
 export const requireImplementation = (id: string, projectCode: Map<string, string>): unknown => {
-  const requestedFile = `${path.join(DEFAULT_STUDIO_NODE_PREFIX, id)}.js`;
+  const requestedFile = `${path.join(DEFAULT_STUDIO_SCRIPT_PREFIX, id)}.js`;
   for (const [file, source] of projectCode.entries()) {
     if (requestedFile.endsWith(file)) {
       const sourceExports = {};
@@ -86,14 +86,14 @@ export const requireImplementation = (id: string, projectCode: Map<string, strin
       return sourceExports;
     }
   }
-  throw new Error(`User node required unknown module: '${id}'`);
+  throw new Error(`User script required unknown module: '${id}'`);
 };
 
 export const registerScript = ({
-  nodeCode,
+  scriptCode,
   projectCode,
 }: {
-  nodeCode: string;
+  scriptCode: string;
   projectCode: Map<string, string>;
 }): RegistrationOutput => {
   const userScriptLogs: UserScriptLog[] = [];
@@ -117,7 +117,7 @@ export const registerScript = ({
 
     // Using new Function in order to execute user-input text in User Scripts as code
     // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
-    new Function("exports", "require", nodeCode)(nodeExports, require);
+    new Function("exports", "require", scriptCode)(nodeExports, require);
     nodeCallback = nodeExports.default!;
     return {
       error: undefined,

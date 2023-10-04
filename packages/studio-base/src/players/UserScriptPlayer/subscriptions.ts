@@ -52,7 +52,7 @@ export function remapVirtualSubscriptions(
     R.filter(([, topics]: SubscriberInputs) => topics?.length !== 0),
   )(subscriptions);
 
-  // An array of all of the input topics used by the user nodes referenced by
+  // An array of all of the input topics used by the user scripts referenced by
   // `subscriptions`
   const neededInputTopics = R.pipe(
     R.chain(([, v]: SubscriberInputs): readonly string[] => v ?? []),
