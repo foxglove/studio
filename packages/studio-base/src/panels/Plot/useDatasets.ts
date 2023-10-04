@@ -60,9 +60,6 @@ async function waitService(): Promise<Service> {
 
 const getIsLive = (ctx: MessagePipelineContext) => ctx.seekPlayback == undefined;
 
-const getPayloadString = (payload: SubscribePayload): string =>
-  `${payload.topic}:${(payload.fields ?? []).join(",")}`;
-
 /**
  * Get the SubscribePayload for a single path by subscribing to all fields
  * referenced in leading MessagePathFilters and the first field of the
@@ -159,7 +156,7 @@ function chooseClient() {
 
   const blockTopics = R.pipe(
     R.filter((v: SubscribePayload) => v.preloadType === "full"),
-    R.map(getPayloadString),
+    R.map((v) => v.topic),
   )(subscriptions);
 
   // Also clear the status of any topics we're no longer using
@@ -234,57 +231,120 @@ function useData(id: string, params: PlotParams) {
 
   const blocks = useBlocks(blockSubscriptions);
   useEffect(() => {
-    for (const [index, block] of blocks.entries()) {
-      if (R.isEmpty(block)) {
+    const statuses: BlockStatus[] = blocks.map((_, i) => blockStatus[i] ?? {});
+    const blocksWithStatuses = R.zip(blocks, statuses);
+    const cursors: Record<string, number> = R.pipe(
+      R.map((v: SubscribePayload): [string, number] => [v.topic, lastBlockSent[v.topic] ?? 0]),
+      R.fromPairs,
+    )(blockSubscriptions);
+
+    type Range = [start: number, end: number];
+    type Work = [SubscribePayload, [Range, boolean]];
+    const work: Work[] = R.pipe(
+      R.map((v: SubscribePayload): [send: Range, shouldReset: boolean] => {
+        const { topic } = v;
+        const currentCursor = cursors[topic] ?? 0;
+        const newBlocks = R.takeWhile(
+          (block) => block[topic] != undefined,
+          blocks.slice(currentCursor),
+        );
+        const lastChanged = R.findLastIndex(([block, status]) => {
+          const topicMessages = block[topic];
+          if (topicMessages == undefined) {
+            return false;
+          }
+
+          const oldFirst = status[topic];
+          const newFirst = topicMessages[0]?.message;
+          if (R.equals(oldFirst, newFirst)) {
+            return false;
+          }
+
+          return oldFirst != undefined;
+        }, blocksWithStatuses);
+
+        const endCursor = lastChanged !== -1 ? lastChanged + 1 : currentCursor + newBlocks.length;
+
+        if (lastChanged !== -1 && lastChanged < currentCursor) {
+          return [[0, endCursor], true];
+        }
+
+        return [[currentCursor, endCursor], false];
+      }),
+      R.zip(blockSubscriptions),
+      // filter out any topics that neither changed nor had new data
+      R.filter(([, [[start, end], shouldReset]]) => shouldReset || start != end),
+    )(blockSubscriptions);
+
+    const resetWork: Work[] = R.filter(([, [, shouldReset]]) => shouldReset, work);
+
+    if (resetWork.length > 0) {
+      const resetTopics: string[] = resetWork.map(([{ topic }]) => topic);
+      void service?.addBlock(
+        R.pipe(
+          R.map((topic: string): [string, MessageEvent[]] => [topic, []]),
+          R.fromPairs,
+        )(resetTopics),
+        resetTopics,
+      );
+
+      for (const [{ topic }, [[, end]]] of resetWork) {
+        for (let i = 0; i < end; i++) {
+          const status = blockStatus[i];
+          if (status == undefined) {
+            continue;
+          }
+          status[topic] = undefined;
+        }
+      }
+    }
+
+    const bundles = R.reduce(
+      (a: string[][], v: [SubscribePayload, [Range, boolean]]): string[][] => {
+        const [{ topic }, [[start, end]]] = v;
+        for (let i = start; i < end; i++) {
+          const bucket = a[i];
+          if (bucket == undefined) {
+            continue;
+          }
+          bucket.push(topic);
+        }
+        return a;
+      },
+      blocks.map((): string[] => []),
+      work,
+    );
+
+    for (let i = 0; i < bundles.length; i++) {
+      const topics = bundles[i];
+      const block = blocks[i];
+      const status = blockStatus[i] ?? {};
+      if (topics == undefined || block == undefined) {
         continue;
       }
 
-      // Package any new messages into a single bundle to send to the worker
       const messages: Messages = {};
-      // Make a note of any topics that had new data so we can clear out
-      // accumulated points in the worker
-      const resetData: Set<string> = new Set<string>();
-      const status: BlockStatus = blockStatus[index] ?? {};
-      for (const payload of blockSubscriptions) {
-        const ref = getPayloadString(payload);
-        const topicMessages = block[payload.topic];
+      for (const topic of topics) {
+        const topicMessages = block[topic];
         if (topicMessages == undefined) {
           continue;
         }
+        messages[topic] = topicMessages as MessageEvent[];
 
-        const first = topicMessages[0]?.message;
-        const existing = status[ref];
-
-        // keep track of the block index that we last sent; if there's a new
-        // change BEFORE that index, we need to reset the plot data; otherwise
-        // we do not
-        const lastSent = lastBlockSent[ref];
-        if (R.equals(existing, first)) {
+        lastBlockSent[topic] = i + 1;
+        const first = topicMessages[0];
+        if (first == undefined) {
           continue;
         }
-
-        // we already had a message in this block, meaning the data itself has
-        // changed; we have to rebuild the plots
-        if (existing != undefined && lastSent != undefined && index < lastSent) {
-          resetData.add(payload.topic);
-
-          // clear out the status of all subsequent blocks for this ref
-          for (let i = index + 1; i < blockStatus.length; i++) {
-            blockStatus[i] = R.omit([ref], blockStatus[i]);
-          }
-        }
-
-        status[ref] = first;
-        messages[payload.topic] = topicMessages as MessageEvent[];
-        lastBlockSent[ref] = index;
+        status[topic] = first.message;
       }
-      blockStatus[index] = status;
 
+      blockStatus[i] = status;
       if (R.isEmpty(messages)) {
         continue;
       }
 
-      void service?.addBlock(messages, Array.from(resetData));
+      void service?.addBlock(messages, []);
     }
   }, [blockSubscriptions, blocks]);
 }
