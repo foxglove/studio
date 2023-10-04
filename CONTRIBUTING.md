@@ -39,7 +39,7 @@ Find your local network IP address from your wifi settings. Should be in the for
 In your original OS run:
 
 ```sh
-$ yarn desktop:serve --host <ip-address>         # the address where electron can reach the webpack dev server
+$ yarn desktop:serve --host <ip-address>  # the address where electron can reach the webpack dev server
 ```
 
 Then, in your VM open up a terminal inside of the same cloned `foxglove/studio` folder, and run the following command, replacing `<studio-electron-version>` with the current electron version found in `studio/desktop/package.json`
@@ -48,7 +48,8 @@ Then, in your VM open up a terminal inside of the same cloned `foxglove/studio` 
 $ yarn dlx electron@<studio-electron-version> desktop/.webpack # launch the version of electron for the current computer's platform
 ```
 
-NOTE: Because the `window.location.href` of the electron window is pointing at the computer's IP address the app is not being run in a secure context (`https`). This may cause some issues with features that require it.
+> [!NOTE]
+> Because the `window.location.href` of the electron window is pointing at the computer's IP address the app is not being run in a secure context (`https`). This may cause some issues with features that require it.
 
 ### Other useful commands
 
