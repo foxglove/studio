@@ -20,6 +20,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
+import strPack from "@foxglove/studio-base/util/strPack";
 
 import { resolveTypedIndices } from "./datasets";
 import {
@@ -30,7 +31,7 @@ import {
   TypedData,
   Messages,
 } from "./internalTypes";
-import { isSingleMessage, isBounded, getParamPaths, getParamTopics } from "./params";
+import { isSingleMessage, getParamPaths, getParamTopics } from "./params";
 import {
   buildPlotData,
   resolvePath,
@@ -195,10 +196,7 @@ function getClientData(client: Client): PlotData | undefined {
   const { bounds: currentBounds } = currentData;
 
   let datasets: PlotData[] = [];
-  if (isSingleMessage(params) || isBounded(params)) {
-    // bounded and single-message plots _only_ use current data
-    datasets = [currentData];
-  } else if (blockBounds.x.min <= currentBounds.x.min && blockBounds.x.max > currentBounds.x.max) {
+  if (blockBounds.x.min <= currentBounds.x.min && blockBounds.x.max > currentBounds.x.max) {
     // ignore current data if block data covers it already
     datasets = [blockData];
   } else {
@@ -277,15 +275,16 @@ function setLive(value: boolean): void {
 function unregister(id: string): void {
   const { [id]: _client, ...rest } = clients;
   clients = rest;
+  evictCache();
 }
 
 function receiveMetadata(topics: readonly Topic[], datatypes: Immutable<RosDatatypes>): void {
-  metadata = {
+  metadata = strPack({
     topics,
     datatypes,
     enumValues: enumValuesByDatatypeAndField(datatypes),
     structures: messagePathStructures(datatypes),
-  };
+  });
 }
 
 function refreshClient(id: string) {
@@ -358,7 +357,7 @@ function addBlock(block: Messages, resetTopics: string[]): void {
     // Remove data for any topics that have been reset
     R.omit(resetTopics),
     // Merge the new block into the existing blocks
-    (newBlocks) => R.mergeWith(R.concat, newBlocks, block),
+    (newBlocks) => R.mergeWith(R.concat, newBlocks, strPack(block)),
   )(blocks);
 
   for (const client of R.values(clients)) {
@@ -379,8 +378,6 @@ function addBlock(block: Messages, resetTopics: string[]): void {
     });
     client.queueRebuild();
   }
-
-  evictCache();
 }
 
 function clearCurrent(): void {
@@ -456,8 +453,6 @@ function addCurrent(events: readonly MessageEvent[]): void {
     }
 
     const newData = buildPlot(params, newMessages);
-    client.addPartial?.(getProvidedData(newData));
-
     mutateClient(client.id, {
       ...client,
       current: {
