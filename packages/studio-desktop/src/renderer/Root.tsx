@@ -22,6 +22,7 @@ import {
   VelodyneDataSourceFactory,
   OsContext,
 } from "@foxglove/studio-base";
+import { OutletNode } from "@foxglove/studio-base/App";
 
 import { DesktopExtensionLoader } from "./services/DesktopExtensionLoader";
 import { NativeAppMenu } from "./services/NativeAppMenu";
@@ -37,6 +38,7 @@ export default function Root(props: {
   appConfiguration: IAppConfiguration;
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
+  Outlet: OutletNode;
 }): JSX.Element {
   if (!storageBridge) {
     throw new Error("storageBridge is missing");
@@ -161,6 +163,7 @@ export default function Root(props: {
         onUnmaximizeWindow={onUnmaximizeWindow}
         onCloseWindow={onCloseWindow}
         extraProviders={props.extraProviders}
+        Outlet={props.Outlet}
       />
     </>
   );

@@ -5,7 +5,6 @@
 import { Fragment, Suspense, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { useOutletContext } from "react-router-dom";
 
 import { AppProps } from "@foxglove/studio-base/App";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
@@ -38,9 +37,7 @@ function contextMenuHandler(event: MouseEvent) {
   return false;
 }
 
-export function StudioApp(): JSX.Element {
-  const props = useOutletContext<AppProps>();
-
+export function StudioApp({ context: props }: { context: AppProps }): JSX.Element {
   const {
     dataSources,
     extensionLoaders,

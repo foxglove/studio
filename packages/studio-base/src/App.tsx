@@ -1,8 +1,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { Outlet } from "react-router-dom";
-
 import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 
 import { CustomWindowControlsProps } from "./components/AppBar/CustomWindowControls";
@@ -29,7 +27,9 @@ export type AppProps = CustomWindowControlsProps & {
   onAppBarDoubleClick?: () => void;
 };
 
-export function App(props: AppProps): JSX.Element {
+export type OutletNode = ({ context }: { context: AppProps }) => JSX.Element;
+
+export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
   const {
     appConfiguration,
     dataSources,
@@ -42,6 +42,7 @@ export function App(props: AppProps): JSX.Element {
     appBarLeftInset,
     extraProviders,
     onAppBarDoubleClick,
+    Outlet,
   } = props;
 
   return (

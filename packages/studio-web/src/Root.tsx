@@ -18,6 +18,7 @@ import {
   App,
   AppSetting,
 } from "@foxglove/studio-base";
+import { OutletNode } from "@foxglove/studio-base/App";
 
 import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";
 
@@ -26,6 +27,7 @@ const isDevelopment = process.env.NODE_ENV === "development";
 export function Root(props: {
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
+  Outlet: OutletNode;
 }): JSX.Element {
   const appConfiguration = useMemo(
     () =>
@@ -66,6 +68,7 @@ export function Root(props: {
         extensionLoaders={extensionLoaders}
         enableGlobalCss
         extraProviders={props.extraProviders}
+        Outlet={props.Outlet}
       />
     </>
   );
