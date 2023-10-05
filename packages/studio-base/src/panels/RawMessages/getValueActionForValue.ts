@@ -137,7 +137,7 @@ export function getValueActionForValue(
         primitiveType = "bool";
         break;
       case "number":
-        primitiveType = "float64";
+        primitiveType = "int32"; // compatible with both Plot and State Transitions
         break;
       case "string":
         primitiveType = "string";
