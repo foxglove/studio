@@ -133,7 +133,7 @@
     "moment": "2.29.4",
     "moment-duration-format": "2.3.2",
     "moment-timezone": "0.5.43",
-    "monaco-editor": "0.40.0",
+    "monaco-editor": "0.43.0",
     "monaco-editor-webpack-plugin": "7.1.0",
     "natsort": "2.0.3",
     "nearley": "2.20.1",
