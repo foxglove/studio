@@ -6,6 +6,7 @@ import * as R from "ramda";
 
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksSubscriptions";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
+
 import { Messages } from "./internalTypes";
 
 // We need to keep track of the block data we've already sent to the worker and
@@ -34,13 +35,11 @@ export function refreshBlockTopics(
   const topics = subscriptions.map((v) => v.topic);
   return {
     ...state,
-    messages: R.map(
-      (block) =>
-        R.pipe(
-          R.map((topic: string): [string, unknown] => [topic, block[topic]]),
-          R.fromPairs,
-        )(topics),
-      messages,
+    messages: messages.map((block) =>
+      R.pipe(
+        R.map((topic: string): [string, unknown] => [topic, block[topic]]),
+        R.fromPairs,
+      )(topics),
     ),
     cursors: R.pipe(
       R.map((topic: string): [string, number] => [topic, cursors[topic] ?? 0]),
@@ -50,7 +49,11 @@ export function refreshBlockTopics(
 }
 
 type Range = [start: number, end: number];
-type Work = [SubscribePayload, [Range, boolean]];
+type Update = {
+  topic: string;
+  range: Range;
+  shouldReset: boolean;
+};
 
 export function processBlocks(
   blocks: readonly MessageBlock[],
@@ -65,44 +68,51 @@ export function processBlocks(
   const messages: FirstMessages[] = blocks.map((_, i) => state.messages[i] ?? {});
   const blocksWithStatuses = R.zip(blocks, messages);
 
-  const work: Work[] = R.pipe(
-    R.map((v: SubscribePayload): [send: Range, shouldReset: boolean] => {
+  const updates: Update[] = R.pipe(
+    R.map((v: SubscribePayload): Update => {
       const { topic } = v;
       const currentCursor = cursors[topic] ?? 0;
 
-      // find the last new block from the cursor to the end
+      // 1. check for any new, non-empty unsent blocks
       const lastNew = R.findLastIndex(
         (block) => block[topic] != undefined,
         blocks.slice(currentCursor),
       );
       const newCursor = lastNew === -1 ? currentCursor : lastNew + currentCursor + 1;
 
+      // 2. check whether any blocks below the current cursor have changed
       const changes = blocksWithStatuses.map(([block, status]) => {
         const oldFirst = status[topic];
         return !R.equals(oldFirst, block[topic]?.[0]?.message) && oldFirst != undefined;
       });
       const lastChanged = R.findLastIndex(R.identity, changes);
-      const haveChanged = lastChanged !== -1;
+      const haveChanged = lastChanged !== -1 && lastChanged < currentCursor;
 
-      if (!haveChanged || lastChanged >= currentCursor) {
-        return [[currentCursor, newCursor], false];
+      if (!haveChanged) {
+        return {
+          topic,
+          range: [currentCursor, newCursor],
+          shouldReset: false,
+        };
       }
 
+      // if only a single block changed (not all of them from 0), which can
+      // happen with a non-deterministic user script, resend the loaded range.
+      // otherwise, the blocks on this topic are changing completely. this
+      // happens due to changes in message slicing and user scripts.
       const didAllChange = R.all(R.identity, changes.slice(0, Math.max(0, lastChanged)));
-      if (didAllChange) {
-        return [[0, lastChanged + 1], true];
-      }
-
-      return [[0, currentCursor], true];
+      return {
+        topic,
+        range: [0, didAllChange ? lastChanged + 1 : currentCursor],
+        shouldReset: true,
+      };
     }),
-    R.zip(subscriptions),
     // filter out any topics that neither changed nor had new data
-    R.filter(([, [[start, end], shouldReset]]) => shouldReset || start != end),
+    R.filter(({ shouldReset, range: [start, end] }: Update) => shouldReset || start !== end),
   )(subscriptions);
 
   const newMessages = R.reduce(
-    (a: FirstMessages[], work: Work) => {
-      const [{ topic }, [[start, end]]] = work;
+    (a: FirstMessages[], { topic, range: [start, end] }: Update) => {
       return R.pipe(
         (v: FirstMessages[]): [MessageBlock, FirstMessages][] => R.zip(blocks.slice(start, end), v),
         R.map(
@@ -116,22 +126,25 @@ export function processBlocks(
       )(a.slice(start, end));
     },
     messages,
-    work,
+    updates,
   );
 
   const newCursors = R.reduce(
-    (a: Cursors, [{ topic }, [[, end]]]: Work): Cursors => ({
+    (a: Cursors, { topic, range: [, end] }: Update): Cursors => ({
       ...a,
       [topic]: end,
     }),
     cursors,
-    work,
+    updates,
   );
 
   const newData: Messages[] = R.pipe(
     R.reduce(
-      (a: string[][], v: [SubscribePayload, [Range, boolean]]): string[][] => {
-        const [{ topic }, [[start, end]]] = v;
+      (a: string[][], v: Update): string[][] => {
+        const {
+          topic,
+          range: [start, end],
+        } = v;
         for (let i = start; i < end; i++) {
           const bucket = a[i];
           if (bucket == undefined) {
@@ -147,14 +160,14 @@ export function processBlocks(
     // remove all blocks that are empty or have no topics
     R.filter(([block, topics]) => !R.isEmpty(block) && topics.length > 0),
     R.map(([block, topics]) => R.pick(topics, block) as Messages),
-  )(work);
+  )(updates);
 
   return {
     state: {
       messages: newMessages,
       cursors: newCursors,
     },
-    resetTopics: R.chain(([{ topic }, [, shouldReset]]) => (shouldReset ? [topic] : []), work),
+    resetTopics: R.chain(({ topic, shouldReset }) => (shouldReset ? [topic] : []), updates),
     newData,
   };
 }

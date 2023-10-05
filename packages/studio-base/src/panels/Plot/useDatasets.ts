@@ -25,9 +25,9 @@ import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedCha
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
 
+import { initBlockState, refreshBlockTopics, processBlocks } from "./blocks";
 import { PlotParams } from "./internalTypes";
 import { getPaths } from "./params";
-import { initBlockState, refreshBlockTopics, processBlocks } from "./blocks";
 import { PlotData } from "./plotData";
 
 type Service = Comlink.Remote<(typeof import("./useDatasets.worker"))["service"]>;

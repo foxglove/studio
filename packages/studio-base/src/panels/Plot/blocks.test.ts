@@ -2,10 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { fromSec } from "@foxglove/rostime";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksSubscriptions";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
+
 import { initBlockState, processBlocks, refreshBlockTopics } from "./blocks";
-import { fromSec } from "@foxglove/rostime";
 
 const FAKE_TOPIC = "/foo";
 const createSubscription = (topic: string): SubscribePayload => ({
@@ -72,6 +73,18 @@ describe("processBlocks", () => {
       expect(resetTopics).toEqual([]);
       expect(newData).toEqual([block]);
     }
+  });
+
+  it("should skip empty blocks", () => {
+    const {
+      state: { messages, cursors },
+      resetTopics,
+      newData,
+    } = processBlocks([block, {}, block, {}], subscriptions, initial);
+    expect(messages[2]?.[FAKE_TOPIC]).toEqual(1);
+    expect(cursors[FAKE_TOPIC]).toEqual(3);
+    expect(resetTopics).toEqual([]);
+    expect(newData).toEqual([block, block]);
   });
 
   it("should not send data beyond changed data if change is from beginning", () => {
