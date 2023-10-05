@@ -197,8 +197,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         this.update();
 
         onDecoded?.(result);
-        this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, DECODE_IMAGE_ERR_KEY);
-        this.renderer.settings.errors.removeFromTopic(this.userData.topic, DECODE_IMAGE_ERR_KEY);
+        this.removeError(DECODE_IMAGE_ERR_KEY);
         this.renderer.queueAnimationFrame();
       })
       .catch((err) => {
@@ -206,16 +205,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         if (this.isDisposed()) {
           return;
         }
-        this.renderer.settings.errors.add(
-          IMAGE_TOPIC_PATH,
-          DECODE_IMAGE_ERR_KEY,
-          `Error decoding image: ${err.message}`,
-        );
-        this.renderer.settings.errors.addToTopic(
-          this.userData.topic,
-          DECODE_IMAGE_ERR_KEY,
-          `Error decoding image: ${err.message}`,
-        );
+        this.addError(DECODE_IMAGE_ERR_KEY, `Error decoding image: ${err.message}`);
       });
   }
 
@@ -384,6 +374,20 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     }
 
     this.userData.mesh.renderOrder = -1 * Number.MAX_SAFE_INTEGER;
+  }
+
+  protected addError(key: string, message: string): void {
+    if (this.isDisposed()) {
+      return;
+    }
+    // must account for if the renderable is part of `ImageMode` or `Images` scene extension
+    this.renderer.settings.errors.add(IMAGE_TOPIC_PATH, key, message);
+    this.renderer.settings.errors.addToTopic(this.userData.topic, key, message);
+  }
+
+  protected removeError(key: string): void {
+    this.renderer.settings.errors.remove(IMAGE_TOPIC_PATH, key);
+    this.renderer.settings.errors.removeFromTopic(this.userData.topic, key);
   }
 }
 
