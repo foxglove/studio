@@ -2895,7 +2895,7 @@ __metadata:
     async-mutex: 0.4.0
     builder-util: "*"
     clean-webpack-plugin: 4.0.0
-    electron: 25.5.0
+    electron: 25.8.4
     electron-builder: 24.6.4
     electron-devtools-installer: 3.2.0
     electron-squirrel-startup: 1.0.0
@@ -11041,6 +11041,19 @@ __metadata:
   bin:
     electron: cli.js
   checksum: 070e482de16420e1ea1372886426ff5fdbc7f87e171a2bf9de4df351fc90c7a32d56b26a577b4a4e3d95c0a98869faab8d59bf40ee77356912c05dda6d5fd678
+  languageName: node
+  linkType: hard
+
+"electron@npm:25.8.4":
+  version: 25.8.4
+  resolution: "electron@npm:25.8.4"
+  dependencies:
+    "@electron/get": ^2.0.0
+    "@types/node": ^18.11.18
+    extract-zip: ^2.0.1
+  bin:
+    electron: cli.js
+  checksum: 1e021cf83747d73d1629027a82a344ed22c9256309f712cf785eec622a9112c53936209a74ef8de546c28fa9961e831d03dc66a8115ce3835c7616dc7a6d2293
   languageName: node
   linkType: hard
 
