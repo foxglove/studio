@@ -47,7 +47,7 @@ import { SubscribePayload } from "@foxglove/studio-base/players/types";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { fontMonospace } from "@foxglove/theme";
 
 import messagesToDatasets from "./messagesToDatasets";
 import { useStateTransitionsPanelSettings } from "./settings";
@@ -68,7 +68,6 @@ export const transitionableRosTypes = [
   "json",
 ];
 
-const fontFamily = fonts.MONOSPACE;
 const fontSize = 10;
 const fontWeight = "bold";
 const EMPTY_ITEMS_BY_PATH: MessageDataItemsByPath = {};
@@ -125,7 +124,7 @@ const plugins: ChartOptions["plugins"] = {
     offset: 0,
     clip: true,
     font: {
-      family: fontFamily,
+      family: fontMonospace,
       size: fontSize,
       weight: fontWeight,
     },
@@ -203,8 +202,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         saveConfig((prevConfig) => ({
           ...prevConfig,
           paths: [
-            // If there was only a single series and its path was empty (the default state of the
-            // panel), replace the series rather than adding to it
             ...prevConfig.paths,
             ...draggedPaths.map((path) => ({
               value: path.path,
@@ -462,7 +459,9 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
                   }}
                 >
                   <Typography variant="inherit" noWrap>
-                    {stateTransitionPathDisplayName(path, "Click to add a series")}
+                    {paths.length === 0
+                      ? "Click to add a series"
+                      : stateTransitionPathDisplayName(path, index)}
                   </Typography>
                 </Button>
               </div>

@@ -1598,11 +1598,11 @@ __metadata:
   linkType: hard
 
 "@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.1.2, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.13.10, @babel/runtime@npm:^7.17.8, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.18.6, @babel/runtime@npm:^7.19.4, @babel/runtime@npm:^7.22.15, @babel/runtime@npm:^7.22.5, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.7.2, @babel/runtime@npm:^7.7.6, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7, @babel/runtime@npm:^7.9.2":
-  version: 7.22.15
-  resolution: "@babel/runtime@npm:7.22.15"
+  version: 7.23.1
+  resolution: "@babel/runtime@npm:7.23.1"
   dependencies:
     regenerator-runtime: ^0.14.0
-  checksum: 793296df1e41599a935a3d77ec01eb6088410d3fd4dbe4e92f06c6b7bb2f8355024e6d78621a3a35f44e0e23b0b59107f23d585384df4f3123256a1e1492040e
+  checksum: 0cd0d43e6e7dc7f9152fda8c8312b08321cda2f56ef53d6c22ebdd773abdc6f5d0a69008de90aa41908d00e2c1facb24715ff121274e689305c858355ff02c70
   languageName: node
   linkType: hard
 
@@ -2493,7 +2493,7 @@ __metadata:
     "@foxglove/rosmsg": 4.2.2
     "@foxglove/rosmsg-serialization": 2.0.2
     "@foxglove/rosmsg2-serialization": 2.0.2
-    "@foxglove/schemas": 1.5.1
+    "@foxglove/schemas": 1.6.0
     "@foxglove/tsconfig": 2.0.0
     "@foxglove/wasm-bz2": 0.1.1
     "@foxglove/wasm-lz4": 1.0.2
@@ -2674,13 +2674,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/schemas@npm:1.5.1, @foxglove/schemas@npm:^1.3.1":
-  version: 1.5.1
-  resolution: "@foxglove/schemas@npm:1.5.1"
+"@foxglove/schemas@npm:1.6.0, @foxglove/schemas@npm:^1.3.1":
+  version: 1.6.0
+  resolution: "@foxglove/schemas@npm:1.6.0"
   dependencies:
     "@foxglove/rosmsg-msgs-common": ^3.0.0
     tslib: ^2.5.0
-  checksum: 4dd054a318ead308ce980e51eb50c3bcd1c59f9c94707234f8e293bc9b52f2727a21fdad4516f3c4ba0d19ec8058cd60315fe526b90ed9085d52519aa98d12ad
+  checksum: ff3552a9d22ed47dd05730735abbab4008502e1db76941605b850bddc65b8376a3a613a9885014b2744b4621901b21ee4d0071f899e89248c04165af0226e8a0
   languageName: node
   linkType: hard
 
@@ -2718,9 +2718,10 @@ __metadata:
     "@foxglove/rosmsg-serialization": 2.0.2
     "@foxglove/rosmsg2-serialization": 2.0.2
     "@foxglove/rostime": 1.1.2
-    "@foxglove/schemas": 1.5.1
+    "@foxglove/schemas": 1.6.0
     "@foxglove/studio": "workspace:*"
-    "@foxglove/three-text": 0.2.0
+    "@foxglove/theme": "workspace:*"
+    "@foxglove/three-text": 0.2.2
     "@foxglove/tsconfig": 2.0.0
     "@foxglove/typescript-transformers": "workspace:*"
     "@foxglove/ulog": 2.1.2
@@ -2748,13 +2749,13 @@ __metadata:
     "@types/geojson": 7946.0.11
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.42
-    "@types/leaflet": 1.9.5
+    "@types/leaflet": 1.9.6
     "@types/memoize-weak": "workspace:*"
     "@types/moment-duration-format": 2.2.3
     "@types/nearley": 2.11.2
     "@types/prettier": 3.0.0
     "@types/ramda": 0.29.4
-    "@types/react": 18.2.22
+    "@types/react": 18.2.23
     "@types/react-dom": 18.2.7
     "@types/react-hover-observer": "workspace:*"
     "@types/react-transition-group": ^4.4.6
@@ -2765,7 +2766,7 @@ __metadata:
     "@types/shallowequal": 1.1.1
     "@types/string-hash": 1.1.1
     "@types/text-metrics": "workspace:*"
-    "@types/three": ^0.149.0
+    "@types/three": 0.156.0
     "@types/tinycolor2": 1.4.4
     "@types/use-sync-external-store": 0.0.4
     "@types/uuid": 9.0.4
@@ -2850,7 +2851,7 @@ __metadata:
     string-replace-loader: 3.1.0
     style-loader: 3.3.3
     text-metrics: 3.0.0
-    three: "patch:three@0.149.0#../../patches/three.patch"
+    three: "patch:three@0.156.1#../../patches/three.patch"
     tinycolor2: 1.6.0
     ts-essentials: 9.4.0
     ts-key-enum: 2.0.12
@@ -2879,6 +2880,7 @@ __metadata:
     "@foxglove/rosbag": 0.4.0
     "@foxglove/rostime": 1.1.2
     "@foxglove/studio-base": "workspace:*"
+    "@foxglove/theme": "workspace:*"
     "@foxglove/tsconfig": 2.0.0
     "@mcap/core": 1.3.0
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.11
@@ -2927,6 +2929,7 @@ __metadata:
     "@fluentui/react-icons": 2.0.218
     "@foxglove/log": "workspace:*"
     "@foxglove/studio-base": "workspace:*"
+    "@foxglove/theme": "workspace:*"
     "@foxglove/tsconfig": 2.0.0
     "@mui/material": 5.14.10
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.11
@@ -2937,7 +2940,6 @@ __metadata:
     html-webpack-plugin: 5.5.3
     react: 18.2.0
     react-dom: 18.2.0
-    react-i18next: 13.2.2
     tss-react: 4.9.2
     webpack: 5.88.2
     webpack-dev-server: 4.15.1
@@ -2953,14 +2955,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/three-text@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@foxglove/three-text@npm:0.2.0"
+"@foxglove/theme@workspace:*, @foxglove/theme@workspace:packages/theme":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/theme@workspace:packages/theme"
+  dependencies:
+    "@emotion/react": 11.11.1
+    "@emotion/styled": 11.11.0
+    "@fluentui/react-icons": 2.0.218
+    "@foxglove/tsconfig": 2.0.0
+    "@mui/icons-material": 5.14.9
+    "@mui/material": 5.14.10
+    "@storybook/react": 7.4.5
+    "@types/react": 18.2.23
+    react: 18.2.0
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/three-text@npm:0.2.2":
+  version: 0.2.2
+  resolution: "@foxglove/three-text@npm:0.2.2"
   dependencies:
     "@mapbox/tiny-sdf": 2.0.6
   peerDependencies:
     three: ">=0.140.2"
-  checksum: 5dcc517c8e893cac0ccf858658c1831ac011d0c8b6dd5238e7bd7643f4b16004fb995927db34a1b33d32cbdcab775fa0e44a5ea7e1ff619b3968b2525ba92cda
+  checksum: 9dc10c9adaa8c1ca1731bc133d4ab8f07345a4aa51197efc6c2bb899cbefa5ee8ccf69d16a93d2569429c2a53a921fe5d62281228a6ed6ebadd7b6fb117a0ce1
   languageName: node
   linkType: hard
 
@@ -6604,12 +6622,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/leaflet@npm:1.9.5":
-  version: 1.9.5
-  resolution: "@types/leaflet@npm:1.9.5"
+"@types/leaflet@npm:1.9.6":
+  version: 1.9.6
+  resolution: "@types/leaflet@npm:1.9.6"
   dependencies:
     "@types/geojson": "*"
-  checksum: 0973ab5d8ff90ff648c5887cfa397a4e16d5bfa20a2ac4e89a27186d990fadf4dd0927e8b6e46eea0dd45b003c26ed0fcd677a950614b443202c418c44f87d67
+  checksum: 64776f0ffb005950d4e07f1cccce861307c9c2b6be3151050b83f1c94eb837951856933fed91e8cdfa1ca9fdc72873af27c9a53a7ffe9981097f21373e3a1322
   languageName: node
   linkType: hard
 
@@ -6875,14 +6893,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:18.2.22, @types/react@npm:>=16":
-  version: 18.2.22
-  resolution: "@types/react@npm:18.2.22"
+"@types/react@npm:*, @types/react@npm:18.2.23, @types/react@npm:>=16":
+  version: 18.2.23
+  resolution: "@types/react@npm:18.2.23"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 44289523dabaadcd3fd85689abb98f9ebcc8492d7e978348d1c986138acef4801030b279e89a19e38a6319e294bcea77559e37e0c803e4bacf2b8ae3a56ba587
+  checksum: efb9d1ed1940c0e7ba08a21ffba5e266d8dbbb8fe618cfb97bc902dfc96385fdd8189e3f7f64b4aa13134f8e61947d60560deb23be151253c3a97b0d070897ca
   languageName: node
   linkType: hard
 
@@ -6925,19 +6943,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/semver@npm:^7.3.12, @types/semver@npm:^7.3.4, @types/semver@npm:^7.5.0, @types/semver@npm:^7.5.2":
-  version: 7.5.2
-  resolution: "@types/semver@npm:7.5.2"
-  checksum: 743aa8a2b58e20b329c19bd2459152cb049d12fafab7279b90ac11e0f268c97efbcb606ea0c681cca03f79015381b40d9b1244349b354270bec3f939ed49f6e9
+"@types/semver@npm:^7.3.12, @types/semver@npm:^7.3.4, @types/semver@npm:^7.5.0, @types/semver@npm:^7.5.3":
+  version: 7.5.3
+  resolution: "@types/semver@npm:7.5.3"
+  checksum: 349fdd1ab6c213bac5c991bac766bd07b8b12e63762462bb058740dcd2eb09c8193d068bb226f134661275f2022976214c0e727a4e5eb83ec1b131127c980d3e
   languageName: node
   linkType: hard
 
 "@types/serve-handler@npm:^6":
-  version: 6.1.1
-  resolution: "@types/serve-handler@npm:6.1.1"
+  version: 6.1.2
+  resolution: "@types/serve-handler@npm:6.1.2"
   dependencies:
     "@types/node": "*"
-  checksum: f519f83b18d7dea80f188f387a56dfe30fe944196849c470902fabf9db344c083c470f67e3362ad3f2294512950bc55924282c5c7a911ec8d507c37c6861d8ce
+  checksum: 6b206cba18bf77b938e340e1015c631d92b492918ba78dfdff57590a25da8c4bc63fba90f43d763f854c5aa523b243c283ba84d14cfeb1841795337c8b978bd6
   languageName: node
   linkType: hard
 
@@ -6990,6 +7008,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/stats.js@npm:*":
+  version: 0.17.0
+  resolution: "@types/stats.js@npm:0.17.0"
+  checksum: ac8dc5e622fa3b7cc37b9e21663193a2f171a4f5896285e4dfc04f2874acbb75edc958f077bffbd85b0ae358daa5bf4ecbc71210386a4300bff05d09435e35f9
+  languageName: node
+  linkType: hard
+
 "@types/string-hash@npm:1.1.1":
   version: 1.1.1
   resolution: "@types/string-hash@npm:1.1.1"
@@ -7010,12 +7035,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@types/three@npm:^0.149.0":
-  version: 0.149.0
-  resolution: "@types/three@npm:0.149.0"
+"@types/three@npm:0.156.0":
+  version: 0.156.0
+  resolution: "@types/three@npm:0.156.0"
   dependencies:
+    "@types/stats.js": "*"
     "@types/webxr": "*"
-  checksum: 5def82bd5d4fb0eb6046e747eecced06d68fbf1747ab8f3e7657872e42e58ce7a92218d7c5e4ca26204257927638ad14da5d1cce7310aca15eb8a9bd484ea191
+    fflate: ~0.6.10
+    meshoptimizer: ~0.18.1
+  checksum: c81b3d656c22d400a180cd54af96b3dd7c3f41b7dba71f714a623474de43c77afe92395889e60765eb86221fd79d07a4730d4c4f1b441933daf9460b6bdba47f
   languageName: node
   linkType: hard
 
@@ -8594,12 +8622,12 @@ __metadata:
     "@foxglove/den": "workspace:*"
     "@foxglove/log": "workspace:*"
     "@foxglove/rostime": 1.1.2
-    "@foxglove/schemas": 1.5.1
+    "@foxglove/schemas": 1.6.0
     "@foxglove/studio": "workspace:*"
     "@foxglove/studio-base": "workspace:*"
     "@foxglove/tsconfig": 2.0.0
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.11
-    "@types/react": 18.2.22
+    "@types/react": 18.2.23
     "@types/react-dom": 18.2.7
     clean-webpack-plugin: 4.0.0
     html-webpack-plugin: 5.5.3
@@ -12318,6 +12346,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fflate@npm:~0.6.10":
+  version: 0.6.10
+  resolution: "fflate@npm:0.6.10"
+  checksum: 96384bc4090987fe565c0de8204e3830f538144ec950576fea50aee1b42adbe9fc3ed5e7905dfa7979faaa20979def330dbebce548f3dcafc3e118cc9838526d
+  languageName: node
+  linkType: hard
+
 "file-entry-cache@npm:^6.0.1":
   version: 6.0.1
   resolution: "file-entry-cache@npm:6.0.1"
@@ -12594,7 +12629,7 @@ __metadata:
     "@types/case-sensitive-paths-webpack-plugin": 2.1.7
     "@types/jest": 29.5.5
     "@types/license-checker": ^25.0.4
-    "@types/semver": ^7.5.2
+    "@types/semver": ^7.5.3
     "@typescript-eslint/eslint-plugin": 6.7.3
     "@typescript-eslint/parser": 6.7.3
     babel-plugin-transform-import-meta: 2.2.1
@@ -16066,6 +16101,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"meshoptimizer@npm:~0.18.1":
+  version: 0.18.1
+  resolution: "meshoptimizer@npm:0.18.1"
+  checksum: 101dbed8abd4cf167cdb7a0bc13db90dd0743332c689e43b18cc5254d238f0766750752432401fa63dc7e9e32399ef68daacf48f0d89db1484042c1761c7362d
+  languageName: node
+  linkType: hard
+
 "methods@npm:~1.1.2":
   version: 1.1.2
   resolution: "methods@npm:1.1.2"
@@ -17788,13 +17830,13 @@ __metadata:
   linkType: hard
 
 "postcss@npm:^8.1.10, postcss@npm:^8.3.11, postcss@npm:^8.4.21":
-  version: 8.4.23
-  resolution: "postcss@npm:8.4.23"
+  version: 8.4.31
+  resolution: "postcss@npm:8.4.31"
   dependencies:
     nanoid: ^3.3.6
     picocolors: ^1.0.0
     source-map-js: ^1.0.2
-  checksum: 8bb9d1b2ea6e694f8987d4f18c94617971b2b8d141602725fedcc2222fdc413b776a6e1b969a25d627d7b2681ca5aabb56f59e727ef94072e1b6ac8412105a2f
+  checksum: 1d8611341b073143ad90486fcdfeab49edd243377b1f51834dc4f6d028e82ce5190e4f11bb2633276864503654fb7cab28e67abdc0fbf9d1f88cad4a0ff0beea
   languageName: node
   linkType: hard
 
@@ -20777,17 +20819,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three@npm:0.149.0":
-  version: 0.149.0
-  resolution: "three@npm:0.149.0"
-  checksum: bb11e28054ce11ecfbe94150c2f253fe149cd7532b7b9253cf0806022d234ba3711944f42d65131d146193e7396b92c9965d88cd779b979f007795e13dfb44e9
+"three@npm:0.156.1":
+  version: 0.156.1
+  resolution: "three@npm:0.156.1"
+  checksum: 18b3381efadb6a2bb10ca09f6de0cea8f6f5369acc7bd5531dfdc80f60c3d075e28151f56194dd19144352e646a50664a243111060985e1f428bff9484461d08
   languageName: node
   linkType: hard
 
-"three@patch:three@0.149.0#../../patches/three.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
-  version: 0.149.0
-  resolution: "three@patch:three@npm%3A0.149.0#../../patches/three.patch::version=0.149.0&hash=752558&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
-  checksum: f8fb90a94def61dd5f7fc17a58ff133af92f43685761b9f40af8f524254e2475e59811fadcda0380436fba3889436fee8784ecda8a4ba687b6eb8f2b98c0683f
+"three@patch:three@0.156.1#../../patches/three.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
+  version: 0.156.1
+  resolution: "three@patch:three@npm%3A0.156.1#../../patches/three.patch::version=0.156.1&hash=752558&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
+  checksum: f27bd732af649aba7bed78db71882d6acb8ff1c8c48476514acd90aac57621ed29494ac51ea5315f9317f6188187e1e693b0b309473b1ddecf07503eb83f437a
   languageName: node
   linkType: hard
 
