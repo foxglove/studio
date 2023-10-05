@@ -194,15 +194,15 @@ function UserScriptEditor(props: Props) {
 
   const selectedNodeDiagnostics =
     (selectedNodeId != undefined ? userScriptStates[selectedNodeId]?.diagnostics : undefined) ?? [];
-  const selectedNode = selectedNodeId != undefined ? userScripts[selectedNodeId] : undefined;
+  const selectedScript = selectedNodeId != undefined ? userScripts[selectedNodeId] : undefined;
   const [scriptBackStack, setScriptBackStack] = useState<Script[]>([]);
   // Holds the currently active script
   const currentScript =
     scriptBackStack.length > 0 ? scriptBackStack[scriptBackStack.length - 1] : undefined;
   const isCurrentScriptSelectedNode =
-    !!selectedNode && !!currentScript && currentScript.filePath === selectedNode.name;
+    !!selectedScript && !!currentScript && currentScript.filePath === selectedScript.name;
   const isNodeSaved =
-    !isCurrentScriptSelectedNode || currentScript.code === selectedNode.sourceCode;
+    !isCurrentScriptSelectedNode || currentScript.code === selectedScript.sourceCode;
   const selectedNodeLogs =
     (selectedNodeId != undefined ? userScriptStates[selectedNodeId]?.logs : undefined) ?? [];
 
@@ -241,14 +241,14 @@ function UserScriptEditor(props: Props) {
   }, [actionHandler, config, updatePanelSettingsTree]);
 
   useLayoutEffect(() => {
-    if (selectedNode) {
+    if (selectedScript) {
       const testItems = props.config.additionalBackStackItems ?? [];
       setScriptBackStack([
-        { filePath: selectedNode.name, code: selectedNode.sourceCode, readOnly: false },
+        { filePath: selectedScript.name, code: selectedScript.sourceCode, readOnly: false },
         ...testItems,
       ]);
     }
-  }, [props.config.additionalBackStackItems, selectedNode]);
+  }, [props.config.additionalBackStackItems, selectedScript]);
 
   useLayoutEffect(() => {
     setInputTitle(() => {
@@ -261,40 +261,40 @@ function UserScriptEditor(props: Props) {
   const saveCurrentNode = useCallback(() => {
     if (
       selectedNodeId != undefined &&
-      selectedNode &&
+      selectedScript &&
       currentScript &&
       isCurrentScriptSelectedNode
     ) {
       setUserScripts({
-        [selectedNodeId]: { ...selectedNode, sourceCode: currentScript.code },
+        [selectedNodeId]: { ...selectedScript, sourceCode: currentScript.code },
       });
     }
-  }, [currentScript, isCurrentScriptSelectedNode, selectedNode, selectedNodeId, setUserScripts]);
+  }, [currentScript, isCurrentScriptSelectedNode, selectedScript, selectedNodeId, setUserScripts]);
 
   const addNewNode = useCallback(
     (code?: string) => {
       saveCurrentNode();
-      const newNodeId = uuidv4();
+      const newScriptId = uuidv4();
       const sourceCode = code ?? skeletonBody;
       setUserScripts({
-        [newNodeId]: {
+        [newScriptId]: {
           sourceCode,
-          name: `${newNodeId.split("-")[0]}`,
+          name: `${newScriptId.split("-")[0]}`,
         },
       });
-      saveConfig({ selectedNodeId: newNodeId });
+      saveConfig({ selectedNodeId: newScriptId });
     },
     [saveConfig, saveCurrentNode, setUserScripts],
   );
 
   const saveNode = useCallback(
     (script: string | undefined) => {
-      if (selectedNodeId == undefined || script == undefined || script === "" || !selectedNode) {
+      if (selectedNodeId == undefined || script == undefined || script === "" || !selectedScript) {
         return;
       }
-      setUserScripts({ [selectedNodeId]: { ...selectedNode, sourceCode: script } });
+      setUserScripts({ [selectedNodeId]: { ...selectedScript, sourceCode: script } });
     },
-    [selectedNode, selectedNodeId, setUserScripts],
+    [selectedScript, selectedNodeId, setUserScripts],
   );
 
   const setScriptOverride = useCallback(
@@ -357,11 +357,11 @@ function UserScriptEditor(props: Props) {
       <Divider />
       <Stack direction="row" fullHeight overflow="hidden">
         <Sidebar
-          selectNode={(nodeId) => {
+          selectScript={(scriptId) => {
             saveCurrentNode();
-            saveConfig({ selectedNodeId: nodeId });
+            saveConfig({ selectedNodeId: scriptId });
           }}
-          deleteNode={(scriptId) => {
+          deleteScript={(scriptId) => {
             setUserScripts({ ...userScripts, [scriptId]: undefined });
             saveConfig({
               selectedNodeId:
@@ -373,8 +373,8 @@ function UserScriptEditor(props: Props) {
           script={currentScript}
           setScriptOverride={setScriptOverride}
           setUserScripts={setUserScripts}
-          selectedScript={selectedNode}
-          addNewNode={addNewNode}
+          selectedScript={selectedScript}
+          addNewScript={addNewNode}
         />
         <Stack
           flexGrow={1}
@@ -391,7 +391,7 @@ function UserScriptEditor(props: Props) {
                   <ArrowBackIcon />
                 </IconButton>
               )}
-              {selectedNodeId != undefined && selectedNode && (
+              {selectedNodeId != undefined && selectedScript && (
                 <div style={{ position: "relative" }}>{inputTitle}</div>
               )}
             </Stack>
@@ -443,7 +443,7 @@ function UserScriptEditor(props: Props) {
                 diagnostics={selectedNodeDiagnostics}
                 isSaved={isNodeSaved}
                 logs={selectedNodeLogs}
-                nodeId={selectedNodeId}
+                scriptId={selectedNodeId}
                 onChangeTab={onChangeBottomBarTab}
                 save={() => {
                   saveNode(currentScript?.code);

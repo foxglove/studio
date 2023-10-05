@@ -241,13 +241,13 @@ function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull
       actions.changePanelLayout({ layout });
     }
     if (userScriptDiagnostics) {
-      for (const [nodeId, diagnostics] of Object.entries(userScriptDiagnostics)) {
-        userScriptActions.setUserScriptDiagnostics(nodeId, diagnostics);
+      for (const [scriptId, diagnostics] of Object.entries(userScriptDiagnostics)) {
+        userScriptActions.setUserScriptDiagnostics(scriptId, diagnostics);
       }
     }
     if (userScriptLogs) {
-      for (const [nodeId, logs] of Object.entries(userScriptLogs)) {
-        userScriptActions.addUserScriptLogs(nodeId, logs);
+      for (const [scriptId, logs] of Object.entries(userScriptLogs)) {
+        userScriptActions.addUserScriptLogs(scriptId, logs);
       }
     }
     if (userScriptRosLib != undefined) {

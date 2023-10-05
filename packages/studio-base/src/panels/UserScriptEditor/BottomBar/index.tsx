@@ -26,7 +26,7 @@ type Props = {
   diagnostics: readonly Diagnostic[];
   isSaved: boolean;
   logs: readonly UserScriptLog[];
-  nodeId?: string;
+  scriptId?: string;
   onChangeTab: () => void;
   save: () => void;
 };
@@ -77,7 +77,7 @@ const BottomBar = ({
   diagnostics,
   isSaved,
   logs,
-  nodeId,
+  scriptId,
   onChangeTab,
   save,
 }: Props): ReactElement => {
@@ -155,8 +155,8 @@ const BottomBar = ({
                 data-testid="np-logs-clear"
                 disabled={logs.length === 0}
                 onClick={() => {
-                  if (nodeId != undefined) {
-                    clearUserScriptLogs(nodeId);
+                  if (scriptId != undefined) {
+                    clearUserScriptLogs(scriptId);
                   }
                 }}
               >
@@ -170,9 +170,9 @@ const BottomBar = ({
               disabled={isSaved}
               title="Ctrl/Cmd + S"
               onClick={() => {
-                if (nodeId != undefined) {
+                if (scriptId != undefined) {
                   save();
-                  clearUserScriptLogs(nodeId);
+                  clearUserScriptLogs(scriptId);
                 }
               }}
             >

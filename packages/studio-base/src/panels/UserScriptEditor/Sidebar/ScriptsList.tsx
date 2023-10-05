@@ -9,7 +9,7 @@ import { makeStyles } from "tss-react/mui";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { UserScript, UserScripts } from "@foxglove/studio-base/types/panels";
 
-import { NodeListItem } from "./NodeListItem";
+import { ScriptListItem } from "./ScriptListItem";
 import { SidebarHeader } from "./SidebarHeader";
 
 const useStyles = makeStyles()((theme) => ({
@@ -19,7 +19,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-type NodesListProps = {
+type ScriptsListProps = {
   scripts: UserScripts;
   addNewScript: () => void;
   selectScript: (id: string) => void;
@@ -27,42 +27,42 @@ type NodesListProps = {
   onClose: () => void;
   selectedScriptId?: string;
   selectedScript?: UserScript;
-  setUserScripts: (nodes: Partial<UserScripts>) => void;
+  setUserScripts: (scripts: Partial<UserScripts>) => void;
 };
 
-export function NodesList({
-  scripts: nodes,
-  addNewScript: addNewNode,
-  selectScript: selectNode,
-  deleteScript: deleteNode,
+export function ScriptsList({
+  scripts,
+  addNewScript,
+  selectScript,
+  deleteScript,
   onClose,
-  selectedScriptId: selectedNodeId,
-  selectedScript: selectedNode,
+  selectedScriptId,
+  selectedScript,
   setUserScripts,
-}: NodesListProps): JSX.Element {
+}: ScriptsListProps): JSX.Element {
   const { classes } = useStyles();
 
   return (
     <Stack flex="auto">
       <SidebarHeader title="Scripts" onClose={onClose} />
       <List>
-        {Object.keys(nodes).map((nodeId) => {
+        {Object.keys(scripts).map((scriptId) => {
           return (
-            <NodeListItem
-              key={nodeId}
-              title={nodes[nodeId]?.name ?? "Untitled script"}
-              selected={selectedNodeId === nodeId}
+            <ScriptListItem
+              key={scriptId}
+              title={scripts[scriptId]?.name ?? "Untitled script"}
+              selected={selectedScriptId === scriptId}
               onClick={() => {
-                selectNode(nodeId);
+                selectScript(scriptId);
               }}
               onDelete={() => {
-                deleteNode(nodeId);
+                deleteScript(scriptId);
               }}
               onRename={(name: string) => {
-                if (selectedNodeId != undefined && selectedNode != undefined) {
+                if (selectedScriptId != undefined && selectedScript != undefined) {
                   setUserScripts({
-                    ...nodes,
-                    [selectedNodeId]: { ...selectedNode, name },
+                    ...scripts,
+                    [selectedScriptId]: { ...selectedScript, name },
                   });
                 }
               }}
@@ -76,7 +76,7 @@ export function NodesList({
             variant="contained"
             color="inherit"
             onClick={() => {
-              addNewNode();
+              addNewScript();
             }}
           >
             New script

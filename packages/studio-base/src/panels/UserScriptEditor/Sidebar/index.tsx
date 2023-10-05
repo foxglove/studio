@@ -17,7 +17,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { Script } from "@foxglove/studio-base/panels/UserScriptEditor/script";
 import { UserScript, UserScripts } from "@foxglove/studio-base/types/panels";
 
-import { NodesList } from "./NodesList";
+import { ScriptsList } from "./ScriptsList";
 import { Templates } from "./Templates";
 import { Utilities } from "./Utilities";
 
@@ -55,9 +55,9 @@ type TabOption =
   | "templates";
 
 type SidebarProps = {
-  addNewNode: (sourceCode?: string) => void;
-  selectNode: (scriptId: string) => void;
-  deleteNode: (scriptId: string) => void;
+  addNewScript: (sourceCode?: string) => void;
+  selectScript: (scriptId: string) => void;
+  deleteScript: (scriptId: string) => void;
   setScriptOverride: (script: Script, maxDepth?: number) => void;
   setUserScripts: (scripts: Partial<UserScripts>) => void;
   userScripts: UserScripts;
@@ -68,14 +68,14 @@ type SidebarProps = {
 
 export function Sidebar({
   userScripts,
-  selectNode,
-  deleteNode,
-  selectedScriptId: selectedNodeId,
-  selectedScript: selectedNode,
+  selectScript,
+  deleteScript,
+  selectedScriptId,
+  selectedScript,
   setScriptOverride,
   setUserScripts,
   script,
-  addNewNode,
+  addNewScript: addNewNode,
 }: SidebarProps): JSX.Element {
   const { classes } = useStyles();
   const [activeTab, setActiveTab] = useState<TabOption>(false);
@@ -118,14 +118,14 @@ export function Sidebar({
   const tabPanels = useMemo(
     () => ({
       nodes: (
-        <NodesList
+        <ScriptsList
           scripts={userScripts}
-          selectScript={selectNode}
-          deleteScript={deleteNode}
+          selectScript={selectScript}
+          deleteScript={deleteScript}
           addNewScript={addNewNode}
           onClose={handleClose}
-          selectedScriptId={selectedNodeId}
-          selectedScript={selectedNode}
+          selectedScriptId={selectedScriptId}
+          selectedScript={selectedScript}
           setUserScripts={setUserScripts}
         />
       ),
@@ -134,12 +134,12 @@ export function Sidebar({
     }),
     [
       addNewNode,
-      deleteNode,
+      deleteScript,
       gotoUtils,
       script,
-      selectNode,
-      selectedNode,
-      selectedNodeId,
+      selectScript,
+      selectedScript,
+      selectedScriptId,
       setUserScripts,
       userScripts,
     ],

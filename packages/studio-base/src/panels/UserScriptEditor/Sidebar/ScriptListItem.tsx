@@ -36,7 +36,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export function NodeListItem({
+export function ScriptListItem({
   onClick,
   onDelete,
   onRename,
