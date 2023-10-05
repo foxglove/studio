@@ -18,12 +18,11 @@ import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
-import { AppMenu } from "@foxglove/studio-base/components/AppBar/AppMenu";
+import { AppMenu, AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
 import {
   CustomWindowControls,
   CustomWindowControlsProps,
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
-import { BetaAppMenu } from "@foxglove/studio-base/components/BetaAppMenu";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -172,6 +171,7 @@ type AppBarProps = CustomWindowControlsProps & {
   onDoubleClick?: () => void;
   debugDragRegion?: boolean;
   disableSignIn?: boolean;
+  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
 };
 
 const selectHasCurrentLayout = (state: LayoutState) => state.selectedLayout != undefined;
@@ -189,6 +189,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onMinimizeWindow,
     onUnmaximizeWindow,
     showCustomWindowControls = false,
+    AppMenuComponent,
   } = props;
   const { classes, cx, theme } = useStyles({ debugDragRegion });
   const { currentUser, signIn } = useCurrentUser();
@@ -247,8 +248,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   primaryFill={theme.palette.common.white}
                 />
               </IconButton>
-              {enableNewAppMenu ? (
-                <BetaAppMenu
+              {enableNewAppMenu && AppMenuComponent ? (
+                <AppMenuComponent
                   open={appMenuOpen}
                   anchorEl={appMenuEl}
                   handleClose={() => {

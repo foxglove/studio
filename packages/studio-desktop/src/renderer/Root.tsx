@@ -23,6 +23,7 @@ import {
   OsContext,
 } from "@foxglove/studio-base";
 import { OutletNode } from "@foxglove/studio-base/App";
+import { AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
 
 import { DesktopExtensionLoader } from "./services/DesktopExtensionLoader";
 import { NativeAppMenu } from "./services/NativeAppMenu";
@@ -39,6 +40,7 @@ export default function Root(props: {
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
   Outlet: OutletNode;
+  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
 }): JSX.Element {
   if (!storageBridge) {
     throw new Error("storageBridge is missing");
@@ -164,6 +166,7 @@ export default function Root(props: {
         onCloseWindow={onCloseWindow}
         extraProviders={props.extraProviders}
         Outlet={props.Outlet}
+        AppMenuComponent={props.AppMenuComponent}
       />
     </>
   );

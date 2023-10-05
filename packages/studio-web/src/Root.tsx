@@ -19,6 +19,7 @@ import {
   AppSetting,
 } from "@foxglove/studio-base";
 import { OutletNode } from "@foxglove/studio-base/App";
+import { AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
 
 import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";
 
@@ -28,6 +29,7 @@ export function Root(props: {
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
   Outlet: OutletNode;
+  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
 }): JSX.Element {
   const appConfiguration = useMemo(
     () =>
@@ -69,6 +71,7 @@ export function Root(props: {
         enableGlobalCss
         extraProviders={props.extraProviders}
         Outlet={props.Outlet}
+        AppMenuComponent={props.AppMenuComponent}
       />
     </>
   );

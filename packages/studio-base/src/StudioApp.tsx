@@ -106,6 +106,7 @@ export function StudioApp({ context: props }: { context: AppProps }): JSX.Elemen
                 onMaximizeWindow={props.onMaximizeWindow}
                 onUnmaximizeWindow={props.onUnmaximizeWindow}
                 onCloseWindow={props.onCloseWindow}
+                AppMenuComponent={props.AppMenuComponent}
               />
             </PanelCatalogProvider>
           </Suspense>

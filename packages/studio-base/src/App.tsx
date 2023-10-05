@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import { AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
 import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 
 import { CustomWindowControlsProps } from "./components/AppBar/CustomWindowControls";
@@ -25,6 +26,7 @@ export type AppProps = CustomWindowControlsProps & {
   appBarLeftInset?: number;
   extraProviders?: JSX.Element[];
   onAppBarDoubleClick?: () => void;
+  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
 };
 
 export type OutletNode = ({ context }: { context: AppProps }) => JSX.Element;
@@ -43,6 +45,7 @@ export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
     extraProviders,
     onAppBarDoubleClick,
     Outlet,
+    AppMenuComponent,
   } = props;
 
   return (
@@ -63,6 +66,7 @@ export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
                 appBarLeftInset,
                 extraProviders,
                 onAppBarDoubleClick,
+                AppMenuComponent,
               }}
             />
           </ErrorBoundary>
