@@ -80,12 +80,7 @@ export function processBlocks(
         }
 
         const oldFirst = status[topic];
-        const newFirst = topicMessages[0]?.message;
-        if (R.equals(oldFirst, newFirst)) {
-          return false;
-        }
-
-        return oldFirst != undefined;
+        return !R.equals(oldFirst, topicMessages[0]?.message) && oldFirst != undefined;
       }, blocksWithStatuses);
 
       const endCursor = lastChanged !== -1 ? lastChanged + 1 : currentCursor + newBlocks.length;
@@ -152,7 +147,6 @@ export function processBlocks(
 
   return {
     state: {
-      ...state,
       messages: newMessages,
       cursors: newCursors,
     },
