@@ -64,6 +64,7 @@ export function processBlocks(
   const { cursors } = state;
   const messages: FirstMessages[] = blocks.map((_, i) => state.messages[i] ?? {});
   const blocksWithStatuses = R.zip(blocks, messages);
+
   const work: Work[] = R.pipe(
     R.map((v: SubscribePayload): [send: Range, shouldReset: boolean] => {
       const { topic } = v;
@@ -118,6 +119,7 @@ export function processBlocks(
     messages,
     work,
   );
+
   const newCursors = R.reduce(
     (a: Cursors, [{ topic }, [[, end]]]: Work): Cursors => ({
       ...a,
@@ -126,6 +128,7 @@ export function processBlocks(
     cursors,
     work,
   );
+
   const newData: Messages[] = R.pipe(
     R.reduce(
       (a: string[][], v: [SubscribePayload, [Range, boolean]]): string[][] => {
@@ -146,6 +149,7 @@ export function processBlocks(
     R.filter(([block, topics]) => !R.isEmpty(block) && topics.length > 0),
     R.map(([block, topics]) => R.pick(topics, block) as Messages),
   )(work);
+
   return {
     state: {
       ...state,

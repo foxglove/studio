@@ -25,17 +25,12 @@ import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedCha
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
 
-import { PlotParams, Messages } from "./internalTypes";
+import { PlotParams } from "./internalTypes";
 import { getPaths } from "./params";
+import { initBlockState, refreshBlockTopics, processBlocks } from "./blocks";
 import { PlotData } from "./plotData";
 
 type Service = Comlink.Remote<(typeof import("./useDatasets.worker"))["service"]>;
-
-// We need to keep track of the block data we've already sent to the worker and
-// detect when it has changed, which can happen when the user changes a user
-// script or they trigger a subscription to different fields.
-// mapping from topic -> the first message on that topic in the block
-type BlockStatus = Record<string, unknown>;
 type Client = {
   params: PlotParams | undefined;
   setter: (topics: SubscribePayload[]) => void;
@@ -44,8 +39,7 @@ type Client = {
 let worker: Worker | undefined;
 let service: Service | undefined;
 let numClients: number = 0;
-let blockStatus: BlockStatus[] = [];
-let lastBlockSent: Record<string, number> = {};
+let blockState = initBlockState();
 let clients: Record<string, Client> = {};
 
 const pending: ((service: Service) => void)[] = [];
@@ -153,15 +147,7 @@ function chooseClient() {
     (v) => mergeSubscriptions(v) as SubscribePayload[],
   )(clientList);
   clientList[0]?.setter(subscriptions);
-
-  const blockTopics = R.pipe(
-    R.filter((v: SubscribePayload) => v.preloadType === "full"),
-    R.map((v) => v.topic),
-  )(subscriptions);
-
-  // Also clear the status of any topics we're no longer using
-  blockStatus = blockStatus.map((block) => R.pick(blockTopics, block));
-  lastBlockSent = R.pick(blockTopics, lastBlockSent);
+  blockState = refreshBlockTopics(subscriptions, blockState);
 }
 
 // Subscribe to "current" messages (those near the seek head) and forward new
@@ -231,120 +217,24 @@ function useData(id: string, params: PlotParams) {
 
   const blocks = useBlocks(blockSubscriptions);
   useEffect(() => {
-    const statuses: BlockStatus[] = blocks.map((_, i) => blockStatus[i] ?? {});
-    const blocksWithStatuses = R.zip(blocks, statuses);
-    const cursors: Record<string, number> = R.pipe(
-      R.map((v: SubscribePayload): [string, number] => [v.topic, lastBlockSent[v.topic] ?? 0]),
-      R.fromPairs,
-    )(blockSubscriptions);
+    const {
+      state: newState,
+      resetTopics,
+      newData,
+    } = processBlocks(blocks, blockSubscriptions, blockState);
 
-    type Range = [start: number, end: number];
-    type Work = [SubscribePayload, [Range, boolean]];
-    const work: Work[] = R.pipe(
-      R.map((v: SubscribePayload): [send: Range, shouldReset: boolean] => {
-        const { topic } = v;
-        const currentCursor = cursors[topic] ?? 0;
-        const newBlocks = R.takeWhile(
-          (block) => block[topic] != undefined,
-          blocks.slice(currentCursor),
-        );
-        const lastChanged = R.findLastIndex(([block, status]) => {
-          const topicMessages = block[topic];
-          if (topicMessages == undefined) {
-            return false;
-          }
+    blockState = newState;
 
-          const oldFirst = status[topic];
-          const newFirst = topicMessages[0]?.message;
-          if (R.equals(oldFirst, newFirst)) {
-            return false;
-          }
-
-          return oldFirst != undefined;
-        }, blocksWithStatuses);
-
-        const endCursor = lastChanged !== -1 ? lastChanged + 1 : currentCursor + newBlocks.length;
-
-        if (lastChanged !== -1 && lastChanged < currentCursor) {
-          return [[0, endCursor], true];
-        }
-
-        return [[currentCursor, endCursor], false];
-      }),
-      R.zip(blockSubscriptions),
-      // filter out any topics that neither changed nor had new data
-      R.filter(([, [[start, end], shouldReset]]) => shouldReset || start != end),
-    )(blockSubscriptions);
-
-    const resetWork: Work[] = R.filter(([, [, shouldReset]]) => shouldReset, work);
-
-    if (resetWork.length > 0) {
-      const resetTopics: string[] = resetWork.map(([{ topic }]) => topic);
-      void service?.addBlock(
-        R.pipe(
-          R.map((topic: string): [string, MessageEvent[]] => [topic, []]),
-          R.fromPairs,
-        )(resetTopics),
-        resetTopics,
-      );
-
-      for (const [{ topic }, [[, end]]] of resetWork) {
-        for (let i = 0; i < end; i++) {
-          const status = blockStatus[i];
-          if (status == undefined) {
-            continue;
-          }
-          status[topic] = undefined;
-        }
-      }
-    }
-
-    const bundles = R.reduce(
-      (a: string[][], v: [SubscribePayload, [Range, boolean]]): string[][] => {
-        const [{ topic }, [[start, end]]] = v;
-        for (let i = start; i < end; i++) {
-          const bucket = a[i];
-          if (bucket == undefined) {
-            continue;
-          }
-          bucket.push(topic);
-        }
-        return a;
-      },
-      blocks.map((): string[] => []),
-      work,
+    void service?.addBlock(
+      R.pipe(
+        R.map((topic: string): [string, MessageEvent[]] => [topic, []]),
+        R.fromPairs,
+      )(resetTopics),
+      resetTopics,
     );
 
-    for (let i = 0; i < bundles.length; i++) {
-      const topics = bundles[i];
-      const block = blocks[i];
-      const status = blockStatus[i] ?? {};
-      if (topics == undefined || block == undefined) {
-        continue;
-      }
-
-      const messages: Messages = {};
-      for (const topic of topics) {
-        const topicMessages = block[topic];
-        if (topicMessages == undefined) {
-          continue;
-        }
-        messages[topic] = topicMessages as MessageEvent[];
-
-        lastBlockSent[topic] = i + 1;
-        const first = topicMessages[0];
-        if (first == undefined) {
-          continue;
-        }
-        status[topic] = first.message;
-      }
-
-      blockStatus[i] = status;
-      if (R.isEmpty(messages)) {
-        continue;
-      }
-
-      void service?.addBlock(messages, []);
+    for (const bundle of newData) {
+      void service?.addBlock(bundle, []);
     }
   }, [blockSubscriptions, blocks]);
 }
@@ -393,7 +283,7 @@ export default function useDatasets(params: PlotParams): {
       if (numClients === 0) {
         worker?.terminate();
         worker = service = undefined;
-        blockStatus = [];
+        blockState = initBlockState();
       }
     };
   }, []);
