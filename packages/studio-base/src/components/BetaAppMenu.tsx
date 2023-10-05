@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { makeStyles } from "tss-react/mui";
 
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
@@ -71,7 +70,6 @@ export function BetaAppMenu(props: BetaAppMenuProps): JSX.Element {
   const { dialogActions } = useWorkspaceActions();
   const analytics = useAnalytics();
   const user = useCurrentUserType();
-  const navigate = useNavigate();
 
   const handleAnalytics = useCallback(
     (cta: string) => void analytics.logEvent(AppEvent.APP_MENU_CLICK, { user, cta }),
@@ -98,7 +96,8 @@ export function BetaAppMenu(props: BetaAppMenuProps): JSX.Element {
       <MenuItem
         className={classes.menuItem}
         onClick={() => {
-          navigate("/dashboard");
+          // useNavigate is only available in a router context
+          window.location.href = "/team/dashboard";
           handleClose();
         }}
       >

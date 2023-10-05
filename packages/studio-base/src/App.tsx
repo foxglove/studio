@@ -52,19 +52,18 @@ export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
         <CssBaseline>
           <ErrorBoundary>
             <Outlet
-              context={
-                {
-                  deepLinks,
-                  dataSources,
-                  extensionLoaders,
-                  nativeAppMenu,
-                  nativeWindow,
-                  enableLaunchPreferenceScreen,
-                  appBarLeftInset,
-                  extraProviders,
-                  onAppBarDoubleClick,
-                } as AppProps
-              }
+              context={{
+                appConfiguration,
+                deepLinks,
+                dataSources,
+                extensionLoaders,
+                nativeAppMenu,
+                nativeWindow,
+                enableLaunchPreferenceScreen,
+                appBarLeftInset,
+                extraProviders,
+                onAppBarDoubleClick,
+              }}
             />
           </ErrorBoundary>
         </CssBaseline>

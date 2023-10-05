@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { AppSetting } from "@foxglove/studio-base";
 import { Storage } from "@foxglove/studio-desktop/src/common/types";
-import { getDefaultRouter } from "@foxglove/studio-desktop/src/renderer/getDefaultRouter";
 import { main as rendererMain } from "@foxglove/studio-desktop/src/renderer/index";
 import NativeStorageAppConfiguration from "@foxglove/studio-desktop/src/renderer/services/NativeStorageAppConfiguration";
 
@@ -19,7 +18,7 @@ async function main() {
     },
   );
 
-  await rendererMain(async () => await getDefaultRouter({ appConfiguration }));
+  await rendererMain({ appConfiguration });
 }
 
 void main();

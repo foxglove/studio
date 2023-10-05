@@ -2836,7 +2836,6 @@ __metadata:
     react-refresh-typescript: 2.0.9
     react-resizable-panels: 0.0.55
     react-resize-detector: 9.1.0
-    react-router-dom: 6.16.0
     react-transition-group: 4.4.5
     react-use: 17.4.0
     react-virtualized: 9.22.5
@@ -4666,13 +4665,6 @@ __metadata:
   version: 4.0.2
   resolution: "@react-dnd/shallowequal@npm:4.0.2"
   checksum: 7f21d691bddbfd4d2830948cbeefecca1600b2b46bcb1934926795f07ae8a1fa60a3dfd3a2112be5ef682c3820c80a99711e9fa15843f7e300acb25a4ecb70ab
-  languageName: node
-  linkType: hard
-
-"@remix-run/router@npm:1.9.0":
-  version: 1.9.0
-  resolution: "@remix-run/router@npm:1.9.0"
-  checksum: 0537b0ff29879ac85077cb4c42eaca4a295b9efd71477848984c2f2dfa5741c9b83d3106a7bb72994a51a9adfeeab3b0f5a40f2dee8be3f0750feeeca2a6d513
   languageName: node
   linkType: hard
 
@@ -18649,30 +18641,6 @@ __metadata:
     react: ^16.0.0 || ^17.0.0 || ^18.0.0
     react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
   checksum: 05b263e141fd428eea433e399f88c3e1a379b4a2293958f59b5a5c75dd86c621ce60583724257cc3dc1f5c120a664666ff3fa53d41e6c283687676dc55afa02b
-  languageName: node
-  linkType: hard
-
-"react-router-dom@npm:6.16.0":
-  version: 6.16.0
-  resolution: "react-router-dom@npm:6.16.0"
-  dependencies:
-    "@remix-run/router": 1.9.0
-    react-router: 6.16.0
-  peerDependencies:
-    react: ">=16.8"
-    react-dom: ">=16.8"
-  checksum: 18b398924bb0f0d97cf2f71dab71d860b960a7a267b2f77388990c662bb6d8738bdc3042d92f713fd63d269ae9ad90df39c8e97661b6ba758bbb7386b9f20ae0
-  languageName: node
-  linkType: hard
-
-"react-router@npm:6.16.0":
-  version: 6.16.0
-  resolution: "react-router@npm:6.16.0"
-  dependencies:
-    "@remix-run/router": 1.9.0
-  peerDependencies:
-    react: ">=16.8"
-  checksum: b31c187e3fdcdf7294ffdad6ff834e14d012840c94d8ee8c7fbe451062a8fcb6e31e8bc7827fb1ff45445dd40fad2b8c96a7e98f0ac1c3eb1d716c257a0821c9
   languageName: node
   linkType: hard
 

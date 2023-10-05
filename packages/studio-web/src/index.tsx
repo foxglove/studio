@@ -4,15 +4,13 @@
 
 import { StrictMode, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 import Logger from "@foxglove/log";
+import { IDataSourceFactory, StudioApp } from "@foxglove/studio-base";
 import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 
 import { CompatibilityBanner } from "./CompatibilityBanner";
 import { canRenderApp } from "./canRenderApp";
-
-type Router = ReturnType<typeof createBrowserRouter>;
 
 const log = Logger.getLogger(__filename);
 
@@ -25,7 +23,13 @@ function LogAfterRender(props: React.PropsWithChildren): JSX.Element {
   return <>{props.children}</>;
 }
 
-export async function main(getRouter: () => Promise<Router>): Promise<void> {
+export type MainParams = {
+  dataSources?: IDataSourceFactory[];
+  extraProviders?: JSX.Element[];
+  rootElement?: JSX.Element;
+};
+
+export async function main(getParams: () => Promise<MainParams> = async () => ({})): Promise<void> {
   log.debug("initializing");
 
   window.onerror = (...args) => {
@@ -72,14 +76,22 @@ export async function main(getRouter: () => Promise<Router>): Promise<void> {
   await waitForFonts();
   await initI18n();
 
-  const router = await getRouter();
+  const { Root } = await import("./Root");
+  const params = await getParams();
+  const rootElement = params.rootElement ?? (
+    <Root
+      extraProviders={params.extraProviders}
+      dataSources={params.dataSources}
+      Outlet={StudioApp}
+    />
+  );
 
   // eslint-disable-next-line react/no-deprecated
   ReactDOM.render(
     <StrictMode>
       <LogAfterRender>
         {banner}
-        <RouterProvider router={router} />
+        {rootElement}
       </LogAfterRender>
     </StrictMode>,
     rootEl,
