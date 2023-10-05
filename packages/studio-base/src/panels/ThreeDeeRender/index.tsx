@@ -18,7 +18,7 @@ import {
   BuiltinPanelExtensionContext,
   PanelExtensionAdapter,
 } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import { useAppContext } from "@foxglove/studio-base/context/AppContext";
+import { INJECTED_FEATURE_KEYS, useAppContext } from "@foxglove/studio-base/context/AppContext";
 import { TestOptions } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
@@ -75,7 +75,7 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
       return undefined;
     }
     const injectedSceneExtensions =
-      injectedFeatures.availableFeatures["ThreeDeeRender.customSceneExtensions"]
+      injectedFeatures.availableFeatures[INJECTED_FEATURE_KEYS.customSceneExtensions]
         ?.customSceneExtensions;
     return injectedSceneExtensions;
   }, [injectedFeatures]);

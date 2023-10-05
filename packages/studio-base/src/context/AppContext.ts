@@ -30,8 +30,12 @@ interface IAppContext {
   ) => StoreApi<WorkspaceContextStore>;
 }
 
+export const INJECTED_FEATURE_KEYS = {
+  customSceneExtensions: "ThreeDeeRender.customSceneExtensions",
+} as const;
+
 export type InjectedFeatureMap = {
-  "ThreeDeeRender.customSceneExtensions"?: {
+  [INJECTED_FEATURE_KEYS.customSceneExtensions]?: {
     customSceneExtensions: DeepPartial<SceneExtensionConfig>;
   };
 };
