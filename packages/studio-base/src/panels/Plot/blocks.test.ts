@@ -12,10 +12,10 @@ const createSubscription = (topic: string): SubscribePayload => ({
   topic,
 });
 
-const createBlock = (topic: string, value: unknown): MessageBlock => ({
-  [topic]: [
+const createBlock = (value: unknown): MessageBlock => ({
+  [FAKE_TOPIC]: [
     {
-      topic,
+      topic: FAKE_TOPIC,
       schemaName: "",
       sizeInBytes: 0,
       message: value,
@@ -44,9 +44,9 @@ describe("refreshBlockTopics", () => {
 describe("processBlocks", () => {
   const subscriptions: SubscribePayload[] = [createSubscription(FAKE_TOPIC)];
   const initial = refreshBlockTopics(subscriptions, initBlockState());
+  const block = createBlock(1);
 
   it("should send data as it arrives", () => {
-    const block = createBlock(FAKE_TOPIC, 1);
     const first = processBlocks([block, {}], subscriptions, initial);
     {
       const {
@@ -57,11 +57,7 @@ describe("processBlocks", () => {
       expect(messages[0]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(1);
       expect(resetTopics).toEqual([]);
-      expect(newData).toEqual([
-        {
-          [FAKE_TOPIC]: block[FAKE_TOPIC],
-        },
-      ]);
+      expect(newData).toEqual([block]);
     }
 
     const second = processBlocks([block, block], subscriptions, first.state);
@@ -74,11 +70,60 @@ describe("processBlocks", () => {
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
       expect(resetTopics).toEqual([]);
-      expect(newData).toEqual([
-        {
-          [FAKE_TOPIC]: block[FAKE_TOPIC],
-        },
-      ]);
+      expect(newData).toEqual([block]);
+    }
+  });
+
+  it("should not send data beyond changed data if change is from beginning", () => {
+    const newBlock = createBlock(2);
+
+    // we have loaded a full range of data
+    const before = processBlocks([block, block, block], subscriptions, initial);
+
+    // suddenly we get new data starting from the beginning, which we take to
+    // mean that all of the subsequent data will change, too
+    const first = processBlocks([newBlock, newBlock, block], subscriptions, before.state);
+    {
+      const {
+        state: { messages, cursors },
+        resetTopics,
+        newData,
+      } = first;
+      expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
+      expect(cursors[FAKE_TOPIC]).toEqual(2);
+      expect(resetTopics).toEqual([FAKE_TOPIC]);
+      expect(newData).toEqual([newBlock, newBlock]);
+    }
+
+    const second = processBlocks([newBlock, newBlock, newBlock], subscriptions, first.state);
+    {
+      const {
+        state: { messages, cursors },
+        resetTopics,
+        newData,
+      } = second;
+      expect(messages[2]?.[FAKE_TOPIC]).toEqual(2);
+      expect(cursors[FAKE_TOPIC]).toEqual(3);
+      expect(resetTopics).toEqual([]);
+      expect(newData).toEqual([newBlock]);
+    }
+  });
+
+  it("should resend all data if there is a change in the middle", () => {
+    const newBlock = createBlock(2);
+
+    const before = processBlocks([block, block, block], subscriptions, initial);
+    const after = processBlocks([block, newBlock, block], subscriptions, before.state);
+    {
+      const {
+        state: { messages, cursors },
+        resetTopics,
+        newData,
+      } = after;
+      expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
+      expect(cursors[FAKE_TOPIC]).toEqual(3);
+      expect(resetTopics).toEqual([FAKE_TOPIC]);
+      expect(newData).toEqual([block, newBlock, block]);
     }
   });
 });

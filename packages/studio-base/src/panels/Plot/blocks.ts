@@ -69,27 +69,31 @@ export function processBlocks(
     R.map((v: SubscribePayload): [send: Range, shouldReset: boolean] => {
       const { topic } = v;
       const currentCursor = cursors[topic] ?? 0;
-      const newBlocks = R.takeWhile(
+
+      // find the last new block from the cursor to the end
+      const lastNew = R.findLastIndex(
         (block) => block[topic] != undefined,
         blocks.slice(currentCursor),
       );
-      const lastChanged = R.findLastIndex(([block, status]) => {
-        const topicMessages = block[topic];
-        if (topicMessages == undefined) {
-          return false;
-        }
+      const newCursor = lastNew === -1 ? currentCursor : lastNew + currentCursor + 1;
 
+      const changes = blocksWithStatuses.map(([block, status]) => {
         const oldFirst = status[topic];
-        return !R.equals(oldFirst, topicMessages[0]?.message) && oldFirst != undefined;
-      }, blocksWithStatuses);
+        return !R.equals(oldFirst, block[topic]?.[0]?.message) && oldFirst != undefined;
+      });
+      const lastChanged = R.findLastIndex(R.identity, changes);
+      const haveChanged = lastChanged !== -1;
 
-      const endCursor = lastChanged !== -1 ? lastChanged + 1 : currentCursor + newBlocks.length;
-
-      if (lastChanged !== -1 && lastChanged < currentCursor) {
-        return [[0, endCursor], true];
+      if (!haveChanged || lastChanged >= currentCursor) {
+        return [[currentCursor, newCursor], false];
       }
 
-      return [[currentCursor, endCursor], false];
+      const didAllChange = R.all(R.identity, changes.slice(0, Math.max(0, lastChanged)));
+      if (didAllChange) {
+        return [[0, lastChanged + 1], true];
+      }
+
+      return [[0, currentCursor], true];
     }),
     R.zip(subscriptions),
     // filter out any topics that neither changed nor had new data
