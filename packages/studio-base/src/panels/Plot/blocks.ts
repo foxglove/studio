@@ -27,6 +27,9 @@ export const initBlockState = (): BlockState => ({
   cursors: {},
 });
 
+/**
+ * Prune any topics not used by `subscriptions` from BlockState.
+ */
 export function refreshBlockTopics(
   subscriptions: SubscribePayload[],
   state: BlockState,
@@ -55,6 +58,10 @@ type Update = {
   shouldReset: boolean;
 };
 
+/**
+ * Inspect the state of `blocks` to determine what data needs to be sent to the
+ * plot worker.
+ */
 export function processBlocks(
   blocks: readonly MessageBlock[],
   subscriptions: SubscribePayload[],
@@ -122,6 +129,7 @@ export function processBlocks(
           }),
         ),
         R.concat(a.slice(0, start)),
+        // eslint-disable-next-line no-underscore-dangle
         R.concat(R.__, a.slice(end)),
       )(a.slice(start, end));
     },
