@@ -31,7 +31,7 @@ export type ConfigParams = {
   /** Set the app version information */
   version: string;
   /** Needs to be overridden for react-router */
-  historyApiFallback: ConnectHistoryApiFallbackOptions;
+  historyApiFallback?: ConnectHistoryApiFallbackOptions;
 };
 
 export const devServerConfig = (params: ConfigParams): WebpackConfiguration => ({
