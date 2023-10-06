@@ -42,12 +42,56 @@ describe("refreshBlockTopics", () => {
   });
 });
 
+// This functionality is far more complex than it appears at first glance and
+// it is worth documenting why this is the case here rather than in some
+// external document that will probably not be updated.
+//
+// I came up with a concise way of describing this problem to make the state
+// machine's behavior easier to understand. Message blocks can be represented
+// as a 1D array of cells, each of which can be in one of four states:
+// s = same
+// c = changed
+// n = new
+// e = empty
+//
+// Blocks are accumulated and sent using a cursor system, here represented by
+// the pipe character ("|"). This indicates that all of the data prior to the
+// cursor has been sent.
+//
+// For example:
+// ssss|nnneee
+// |    |  |
+// |    |  empty data that has not been loaded
+// |    new data
+// unchanged
+//
+// processBlocks does the following:
+// * moves the cursor forward according to a set of rules and returns the new
+//   data as a set of bundles that can be forwarded to the plot worker
+// * indicates whether the existing data already sent should be cleared
+// * stores the first message of each block that was sent so we can detect
+//   changed blocks
+//
+// In this case, processBlocks would return a new state that looks like this:
+// sssssss|eee
+//
+// In instances where the data should be cleared, we append an asterisk ("*")
+// to the end of the state string.
+//
+// Some examples:
+// ssss|nnneee -> sssssss|eee (data accumulating normally)
+// s|nene -> sses|e (skipping empty data)
+// cs|nnneee -> s|snnneee* (a block was changed before the cursor)
+// sss|ccsss -> sssss|sss (a block was changed after the cursor)
+//
+// We use this system for describing each test case.
 describe("processBlocks", () => {
   const subscriptions: SubscribePayload[] = [createSubscription(FAKE_TOPIC)];
   const initial = refreshBlockTopics(subscriptions, initBlockState());
   const block = createBlock(1);
 
   it("should send data as it arrives", () => {
+    // |ne -> s|e
     const first = processBlocks([block, {}], subscriptions, initial);
     {
       const {
@@ -61,6 +105,7 @@ describe("processBlocks", () => {
       expect(newData).toEqual([block]);
     }
 
+    // s|n -> ss|
     const second = processBlocks([block, block], subscriptions, first.state);
     {
       const {
@@ -76,6 +121,7 @@ describe("processBlocks", () => {
   });
 
   it("should skip empty blocks", () => {
+    // |nene -> ses|e
     const {
       state: { messages, cursors },
       resetTopics,
@@ -91,9 +137,11 @@ describe("processBlocks", () => {
     const newBlock = createBlock(2);
 
     // we have loaded a full range of data
+    // |nnn -> sss|
     const before = processBlocks([block, block, block], subscriptions, initial);
 
     // change some of it
+    // ccs| -> ss|s
     const first = processBlocks([newBlock, newBlock, block], subscriptions, before.state);
     {
       const {
@@ -107,6 +155,7 @@ describe("processBlocks", () => {
       expect(newData).toEqual([newBlock, newBlock]);
     }
 
+    // ss|c -> sss|
     const second = processBlocks([newBlock, newBlock, newBlock], subscriptions, first.state);
     {
       const {
@@ -124,8 +173,10 @@ describe("processBlocks", () => {
   it("should resend all data up to and including change if there is a change in the middle", () => {
     const newBlock = createBlock(2);
 
+    // |nnn -> sss|
     const before = processBlocks([block, block, block], subscriptions, initial);
 
+    // scs| -> ss|s*
     const first = processBlocks([block, newBlock, block], subscriptions, before.state);
     {
       const {
@@ -140,6 +191,7 @@ describe("processBlocks", () => {
     }
 
     // if we get new blocks but there were no more changes, just send the rest
+    // ss|s -> sss|
     const second = processBlocks([block, newBlock, block], subscriptions, first.state);
     {
       const {
