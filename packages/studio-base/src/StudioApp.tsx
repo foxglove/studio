@@ -20,7 +20,7 @@ import SendNotificationToastAdapter from "./components/SendNotificationToastAdap
 import StudioToastProvider from "./components/StudioToastProvider";
 import NativeAppMenuContext from "./context/NativeAppMenuContext";
 import NativeWindowContext from "./context/NativeWindowContext";
-import { UserNodeStateProvider } from "./context/UserNodeStateContext";
+import { UserScriptStateProvider } from "./context/UserScriptStateContext";
 import CurrentLayoutProvider from "./providers/CurrentLayoutProvider";
 import ExtensionCatalogProvider from "./providers/ExtensionCatalogProvider";
 import ExtensionMarketplaceProvider from "./providers/ExtensionMarketplaceProvider";
@@ -51,7 +51,7 @@ export function StudioApp({ context: props }: { context: AppProps }): JSX.Elemen
   const providers = [
     /* eslint-disable react/jsx-key */
     <TimelineInteractionStateProvider />,
-    <UserNodeStateProvider />,
+    <UserScriptStateProvider />,
     <CurrentLayoutProvider />,
     <ExtensionMarketplaceProvider />,
     <ExtensionCatalogProvider loaders={extensionLoaders} />,
