@@ -43,9 +43,7 @@ describe("addBlock", () => {
   it("resets the requested topics", () => {
     const [after] = addBlock({}, [FAKE_TOPIC], {
       ...init(),
-      blocks: {
-        [FAKE_TOPIC]: [],
-      },
+      blocks: createMessages(FAKE_TOPIC, FAKE_SCHEMA, 1),
     });
     expect(Object.entries(after.blocks).length).toEqual(0);
   });
