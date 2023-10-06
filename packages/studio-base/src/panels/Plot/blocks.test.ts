@@ -125,17 +125,32 @@ describe("processBlocks", () => {
     const newBlock = createBlock(2);
 
     const before = processBlocks([block, block, block], subscriptions, initial);
-    const after = processBlocks([block, newBlock, block], subscriptions, before.state);
+
+    const first = processBlocks([block, newBlock, block], subscriptions, before.state);
     {
       const {
         state: { messages, cursors },
         resetTopics,
         newData,
-      } = after;
+      } = first;
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
       expect(resetTopics).toEqual([FAKE_TOPIC]);
       expect(newData).toEqual([block, newBlock]);
+    }
+
+    // if we get new blocks but there were no more changes, just send the rest
+    const second = processBlocks([block, newBlock, block], subscriptions, first.state);
+    {
+      const {
+        state: { messages, cursors },
+        resetTopics,
+        newData,
+      } = second;
+      expect(messages[2]?.[FAKE_TOPIC]).toEqual(1);
+      expect(cursors[FAKE_TOPIC]).toEqual(3);
+      expect(resetTopics).toEqual([]);
+      expect(newData).toEqual([block]);
     }
   });
 });
