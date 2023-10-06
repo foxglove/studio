@@ -87,14 +87,13 @@ describe("processBlocks", () => {
     expect(newData).toEqual([block, block]);
   });
 
-  it("should not send data beyond changed data if change is from beginning", () => {
+  it("should not send data beyond changed data", () => {
     const newBlock = createBlock(2);
 
     // we have loaded a full range of data
     const before = processBlocks([block, block, block], subscriptions, initial);
 
-    // suddenly we get new data starting from the beginning, which we take to
-    // mean that all of the subsequent data will change, too
+    // change some of it
     const first = processBlocks([newBlock, newBlock, block], subscriptions, before.state);
     {
       const {
@@ -122,7 +121,7 @@ describe("processBlocks", () => {
     }
   });
 
-  it("should resend all data if there is a change in the middle", () => {
+  it("should resend all data up to and including change if there is a change in the middle", () => {
     const newBlock = createBlock(2);
 
     const before = processBlocks([block, block, block], subscriptions, initial);
@@ -134,9 +133,9 @@ describe("processBlocks", () => {
         newData,
       } = after;
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
-      expect(cursors[FAKE_TOPIC]).toEqual(3);
+      expect(cursors[FAKE_TOPIC]).toEqual(2);
       expect(resetTopics).toEqual([FAKE_TOPIC]);
-      expect(newData).toEqual([block, newBlock, block]);
+      expect(newData).toEqual([block, newBlock]);
     }
   });
 });

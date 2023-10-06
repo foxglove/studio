@@ -93,24 +93,18 @@ export function processBlocks(
         return !R.equals(oldFirst, block[topic]?.[0]?.message) && oldFirst != undefined;
       });
       const lastChanged = R.findLastIndex(R.identity, changes);
-      const haveChanged = lastChanged !== -1 && lastChanged < currentCursor;
+      const haveChanged = lastChanged !== -1;
 
-      if (!haveChanged) {
+      if (!haveChanged || lastChanged >= currentCursor) {
         return {
           topic,
-          range: [currentCursor, newCursor],
+          range: [currentCursor, haveChanged ? Math.min(newCursor, lastChanged + 1) : newCursor],
           shouldReset: false,
         };
       }
-
-      // if only a single block changed (not all of them from 0), which can
-      // happen with a non-deterministic user script, resend the loaded range.
-      // otherwise, the blocks on this topic are changing completely. this
-      // happens due to changes in message slicing and user scripts.
-      const didAllChange = R.all(R.identity, changes.slice(0, Math.max(0, lastChanged)));
       return {
         topic,
-        range: [0, didAllChange ? lastChanged + 1 : currentCursor],
+        range: [0, lastChanged + 1],
         shouldReset: true,
       };
     }),
