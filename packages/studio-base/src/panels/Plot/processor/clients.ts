@@ -12,18 +12,15 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { initAccumulated, accumulate } from "./accumulate";
 import { evictCache } from "./messages";
 import {
-  StateAndEffects,
-  SideEffects,
-  State,
   findClient,
   noEffects,
   mutateClient,
   mapClients,
   rebuildClient,
   keepEffects,
-  Client,
   initClient,
 } from "./state";
+import { StateAndEffects, SideEffects, State, Client } from "./types";
 import { PlotParams } from "../internalTypes";
 import { getParamTopics, getParamPaths } from "../params";
 import {
@@ -53,7 +50,7 @@ export function refreshClient(client: Client, state: State): [Client, SideEffect
   ];
 }
 
-export function receiveVariables(variables: GlobalVariables, state: State): StateAndEffects {
+export function updateVariables(variables: GlobalVariables, state: State): StateAndEffects {
   const newState = {
     ...state,
     globalVariables: variables,

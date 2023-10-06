@@ -22,16 +22,16 @@ import { isSingleMessage } from "./params";
 import { PlotData, StateHandler, mapDatasets, getProvidedData } from "./plotData";
 import {
   SideEffectType,
-  State as ProcessorState,
+  State,
   StateAndEffects,
   addBlock,
   addCurrent,
   clearCurrent,
   findClient,
   getClientData,
-  init as initProcessor,
+  initProcessor,
   receiveMetadata,
-  receiveVariables,
+  updateVariables,
   register,
   setLive,
   unregister,
@@ -49,7 +49,7 @@ type Callbacks = {
   queueRebuild: () => void;
 };
 
-let state: ProcessorState = initProcessor();
+let state: State = initProcessor();
 let callbacks: Record<string, Callbacks> = {};
 
 // Throttle rebuilds to only occur at most every 100ms. This is slightly
@@ -144,7 +144,7 @@ function handleEffects([newState, effects]: StateAndEffects): void {
         clientCallbacks.queueRebuild();
         break;
       }
-      case SideEffectType.Data: {
+      case SideEffectType.Send: {
         sendPlotData(clientCallbacks, effect.data);
         break;
       }
@@ -178,7 +178,7 @@ export const service = {
     state = receiveMetadata(topics, strPack(datatypes), state);
   },
   receiveVariables(variables: GlobalVariables): void {
-    handleEffects(receiveVariables(variables, state));
+    handleEffects(updateVariables(variables, state));
   },
   register(
     id: string,

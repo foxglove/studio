@@ -4,21 +4,18 @@
 
 import * as R from "ramda";
 
-import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-
-import { Accumulated, initAccumulated } from "./accumulate";
-import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
+import { initAccumulated } from "./accumulate";
+import {
+  Client,
+  RebuildEffect,
+  State,
+  SideEffectType,
+  DataEffect,
+  SideEffects,
+  StateAndEffects,
+} from "./types";
+import { PlotParams } from "../internalTypes";
 import { PlotData } from "../plotData";
-
-export type Client = {
-  id: string;
-  params: PlotParams | undefined;
-  topics: readonly string[];
-  view: PlotViewport | undefined;
-  blocks: Accumulated;
-  current: Accumulated;
-};
 
 export function initClient(id: string, params: PlotParams | undefined): Client {
   return {
@@ -31,50 +28,18 @@ export function initClient(id: string, params: PlotParams | undefined): Client {
   };
 }
 
-export type State = {
-  isLive: boolean;
-  clients: Client[];
-  globalVariables: GlobalVariables;
-  blocks: Messages;
-  current: Messages;
-  metadata: MetadataEnums;
-};
-
-export enum SideEffectType {
-  Rebuild = "rebuild",
-  Data = "data",
-  Partial = "partial",
-}
-
-type RebuildEffect = {
-  type: SideEffectType.Rebuild;
-  clientId: string;
-};
-
 export const rebuildClient = (id: string): RebuildEffect => ({
   type: SideEffectType.Rebuild,
   clientId: id,
 });
 
-type DataEffect = {
-  type: SideEffectType.Data;
-  clientId: string;
-  data: PlotData;
-};
-
 export const sendData = (id: string, data: PlotData): DataEffect => ({
-  type: SideEffectType.Data,
+  type: SideEffectType.Send,
   clientId: id,
   data,
 });
 
-type SideEffect = RebuildEffect | DataEffect;
-
-export type SideEffects = SideEffect[];
-
-export type StateAndEffects = [State, SideEffects];
-
-export function init(): State {
+export function initProcessor(): State {
   return {
     isLive: false,
     clients: [],

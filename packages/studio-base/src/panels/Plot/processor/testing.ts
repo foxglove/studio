@@ -10,7 +10,8 @@ import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes, OptionalMessageDefinition } from "@foxglove/studio-base/types/RosDatatypes";
 
 import { initAccumulated } from "./accumulate";
-import { init, initClient, Client, State } from "./state";
+import { initProcessor, initClient } from "./state";
+import { Client, State } from "./types";
 import { datumToTyped } from "../datasets";
 import { PlotParams, PlotPath, Messages, TypedDataSet } from "../internalTypes";
 import { getParamTopics } from "../params";
@@ -126,6 +127,6 @@ export const createClient = (...paths: string[]): Client => {
  * paths.
  */
 export const createState = (...paths: string[]): State => ({
-  ...init(),
+  ...initProcessor(),
   clients: [createClient(...paths)],
 });

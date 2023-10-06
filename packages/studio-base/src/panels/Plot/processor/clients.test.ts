@@ -10,12 +10,12 @@ import {
   MESSAGE_CULL_THRESHOLD,
   register,
   refreshClient,
-  receiveVariables,
+  updateVariables,
   updateParams,
   updateView,
   getClientData,
 } from "./clients";
-import { init, initClient, State, rebuildClient } from "./state";
+import { initProcessor, initClient, rebuildClient } from "./state";
 import {
   FAKE_PATH,
   CLIENT_ID,
@@ -26,12 +26,13 @@ import {
   createMessages,
   createParams,
 } from "./testing";
+import { State } from "./types";
 import { DatasetsByPath, PlotPath, TypedDataSet } from "../internalTypes";
 
 describe("refreshClient", () => {
   it("ignores client without params", () => {
     const client = initClient(CLIENT_ID, undefined);
-    const initial: State = { ...init(), clients: [client] };
+    const initial: State = { ...initProcessor(), clients: [client] };
     const [newClient, effects] = refreshClient(client, initial);
     expect(newClient).toEqual(client);
     expect(effects).toEqual([]);
@@ -53,29 +54,29 @@ describe("refreshClient", () => {
   });
 });
 
-describe("receiveVariables", () => {
+describe("updateVariables", () => {
   const vars = {
     foo: "bar",
   };
   it("does nothing when client does not use variables", () => {
     const before = createState(FAKE_PATH);
-    const [after] = receiveVariables(vars, before);
+    const [after] = updateVariables(vars, before);
     expect(after.clients[0]).toEqual(before.clients[0]);
   });
   it("does nothing when client has no params", () => {
     const client = initClient(CLIENT_ID, undefined);
-    const before: State = { ...init(), clients: [client] };
-    const [after] = receiveVariables(vars, before);
+    const before: State = { ...initProcessor(), clients: [client] };
+    const [after] = updateVariables(vars, before);
     expect(after.clients[0]).toEqual(before.clients[0]);
   });
   it("does nothing when client has invalid path", () => {
     const before = createState("你好");
-    const [after] = receiveVariables(vars, before);
+    const [after] = updateVariables(vars, before);
     expect(after.clients[0]).toEqual(before.clients[0]);
   });
   it("refreshes the client when it does use variables", () => {
     const before = createState(`/topic.field[:]{id==$foo}`);
-    const [after, effects] = receiveVariables(vars, before);
+    const [after, effects] = updateVariables(vars, before);
     expect(after.clients[0]).not.toBe(before.clients[0]);
     expect(effects).toEqual([rebuildClient(CLIENT_ID)]);
   });
@@ -121,12 +122,12 @@ describe("updateView", () => {
 
 describe("register", () => {
   it("ignores missing params", () => {
-    const [after, effects] = register(CLIENT_ID, undefined, init());
+    const [after, effects] = register(CLIENT_ID, undefined, initProcessor());
     expect(after.clients.length).toEqual(1);
     expect(effects).toEqual([]);
   });
   it("updates the client's params after registration", () => {
-    const [after, effects] = register(CLIENT_ID, createParams(FAKE_PATH), init());
+    const [after, effects] = register(CLIENT_ID, createParams(FAKE_PATH), initProcessor());
     expect(after.clients.length).toEqual(1);
     expect(effects).toEqual([rebuildClient(CLIENT_ID)]);
   });

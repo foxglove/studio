@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { addBlock, addCurrent, receiveMetadata, evictCache, clearCurrent } from "./messages";
-import { init, rebuildClient, SideEffectType, State } from "./state";
+import { initProcessor, rebuildClient } from "./state";
 import {
   createParams,
   createClient,
@@ -17,11 +17,12 @@ import {
   FAKE_DATATYPES,
   FAKE_SCHEMA,
 } from "./testing";
+import { SideEffectType, State } from "./types";
 import { EmptyPlotData } from "../plotData";
 
 describe("receiveMetadata", () => {
   it("updates metadata", () => {
-    const before = init();
+    const before = initProcessor();
     const after = receiveMetadata(FAKE_TOPICS, FAKE_DATATYPES, before);
     expect(after.metadata).not.toEqual(before);
   });
@@ -42,21 +43,21 @@ describe("evictCache", () => {
 describe("addBlock", () => {
   it("resets the requested topics", () => {
     const [after] = addBlock({}, [FAKE_TOPIC], {
-      ...init(),
+      ...initProcessor(),
       blocks: createMessages(FAKE_TOPIC, FAKE_SCHEMA, 1),
     });
     expect(Object.entries(after.blocks).length).toEqual(0);
   });
   it("concatenates messages", () => {
     const [after] = addBlock(createMessages(FAKE_TOPIC, FAKE_SCHEMA, 1), [], {
-      ...init(),
+      ...initProcessor(),
       blocks: createMessages(FAKE_TOPIC, FAKE_SCHEMA, 1),
     });
     expect(after.blocks[FAKE_TOPIC]?.length).toEqual(2);
   });
   it("ignores client without params", () => {
     const before = {
-      ...init(),
+      ...initProcessor(),
       clients: [createClient()],
     };
     const [after, effects] = addBlock({}, [], before);
@@ -65,7 +66,7 @@ describe("addBlock", () => {
   });
   it("ignores client with single message params", () => {
     const before: State = {
-      ...init(),
+      ...initProcessor(),
       clients: [
         {
           ...createClient(),
@@ -115,7 +116,7 @@ describe("addCurrent", () => {
   });
   it("ignores client without params", () => {
     const before = {
-      ...init(),
+      ...initProcessor(),
       clients: [createClient()],
     };
     const [after, effects] = addCurrent([], before);
@@ -124,7 +125,7 @@ describe("addCurrent", () => {
   });
   it("updates a client with single message plot", () => {
     const before: State = {
-      ...init(),
+      ...initProcessor(),
       clients: [
         {
           ...createClient(),
@@ -138,7 +139,7 @@ describe("addCurrent", () => {
     const [after, effects] = addCurrent(createMessageEvents(FAKE_TOPIC, FAKE_SCHEMA, 1), before);
     expect(after.clients[0]).toEqual(before.clients[0]);
     expect(effects.length).toEqual(1);
-    expect(effects[0]?.type).toEqual(SideEffectType.Data);
+    expect(effects[0]?.type).toEqual(SideEffectType.Send);
   });
   it("builds plot data for client", () => {
     const before: State = receiveMetadata(FAKE_TOPICS, FAKE_DATATYPES, createState(FAKE_PATH));

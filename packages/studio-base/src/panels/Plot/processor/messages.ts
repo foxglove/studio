@@ -11,17 +11,8 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
 
 import { initAccumulated, accumulate, buildPlot } from "./accumulate";
-import {
-  State,
-  StateAndEffects,
-  Client,
-  SideEffects,
-  rebuildClient,
-  sendData,
-  mapClients,
-  noEffects,
-  keepEffects,
-} from "./state";
+import { rebuildClient, sendData, mapClients, noEffects, keepEffects } from "./state";
+import { State, StateAndEffects, Client, SideEffects } from "./types";
 import { Messages } from "../internalTypes";
 import { isSingleMessage } from "../params";
 
