@@ -6,7 +6,7 @@ import { Fragment, Suspense, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { AppProps } from "@foxglove/studio-base/App";
+import { useSharedRootContext } from "@foxglove/studio-base/context/SharedRootContext";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import ProblemsContextProvider from "@foxglove/studio-base/providers/ProblemsContextProvider";
 import { StudioLogsSettingsProvider } from "@foxglove/studio-base/providers/StudioLogsSettingsProvider";
@@ -37,7 +37,7 @@ function contextMenuHandler(event: MouseEvent) {
   return false;
 }
 
-export function StudioApp({ context: props }: { context: AppProps }): JSX.Element {
+export function StudioApp(): JSX.Element {
   const {
     dataSources,
     extensionLoaders,
@@ -46,7 +46,11 @@ export function StudioApp({ context: props }: { context: AppProps }): JSX.Elemen
     deepLinks,
     enableLaunchPreferenceScreen,
     extraProviders,
-  } = props;
+    appBarLeftInset,
+    customWindowControlProps,
+    onAppBarDoubleClick,
+    AppMenuComponent,
+  } = useSharedRootContext();
 
   const providers = [
     /* eslint-disable react/jsx-key */
@@ -98,15 +102,15 @@ export function StudioApp({ context: props }: { context: AppProps }): JSX.Elemen
             <PanelCatalogProvider>
               <Workspace
                 deepLinks={deepLinks}
-                appBarLeftInset={props.appBarLeftInset}
-                onAppBarDoubleClick={props.onAppBarDoubleClick}
-                showCustomWindowControls={props.showCustomWindowControls}
-                isMaximized={props.isMaximized}
-                onMinimizeWindow={props.onMinimizeWindow}
-                onMaximizeWindow={props.onMaximizeWindow}
-                onUnmaximizeWindow={props.onUnmaximizeWindow}
-                onCloseWindow={props.onCloseWindow}
-                AppMenuComponent={props.AppMenuComponent}
+                appBarLeftInset={appBarLeftInset}
+                onAppBarDoubleClick={onAppBarDoubleClick}
+                showCustomWindowControls={customWindowControlProps?.showCustomWindowControls}
+                isMaximized={customWindowControlProps?.isMaximized}
+                onMinimizeWindow={customWindowControlProps?.onMinimizeWindow}
+                onMaximizeWindow={customWindowControlProps?.onMaximizeWindow}
+                onUnmaximizeWindow={customWindowControlProps?.onUnmaximizeWindow}
+                onCloseWindow={customWindowControlProps?.onCloseWindow}
+                AppMenuComponent={AppMenuComponent}
               />
             </PanelCatalogProvider>
           </Suspense>

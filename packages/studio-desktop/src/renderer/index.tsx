@@ -20,7 +20,7 @@ import {
   StudioApp,
 } from "@foxglove/studio-base";
 
-import Root from "./Root";
+import DesktopRoot from "./DesktopRoot";
 
 const log = Logger.getLogger(__filename);
 
@@ -61,12 +61,13 @@ export async function main(params: MainParams): Promise<void> {
   await initI18n();
 
   const rootElement = params.rootElement ?? (
-    <Root
+    <DesktopRoot
       appConfiguration={params.appConfiguration}
       extraProviders={params.extraProviders}
       dataSources={params.dataSources}
-      Outlet={StudioApp}
-    />
+    >
+      <StudioApp />
+    </DesktopRoot>
   );
 
   // eslint-disable-next-line react/no-deprecated

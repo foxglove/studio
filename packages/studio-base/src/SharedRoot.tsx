@@ -1,37 +1,19 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
-import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 
-import { CustomWindowControlsProps } from "./components/AppBar/CustomWindowControls";
+import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
+import {
+  ISharedRootContext,
+  SharedRootContext,
+} from "@foxglove/studio-base/context/SharedRootContext";
+
 import { ColorSchemeThemeProvider } from "./components/ColorSchemeThemeProvider";
 import CssBaseline from "./components/CssBaseline";
 import ErrorBoundary from "./components/ErrorBoundary";
-import AppConfigurationContext, { IAppConfiguration } from "./context/AppConfigurationContext";
-import { INativeAppMenu } from "./context/NativeAppMenuContext";
-import { INativeWindow } from "./context/NativeWindowContext";
-import { IDataSourceFactory } from "./context/PlayerSelectionContext";
-import { ExtensionLoader } from "./services/ExtensionLoader";
+import AppConfigurationContext from "./context/AppConfigurationContext";
 
-export type AppProps = CustomWindowControlsProps & {
-  deepLinks: string[];
-  appConfiguration: IAppConfiguration;
-  dataSources: IDataSourceFactory[];
-  extensionLoaders: readonly ExtensionLoader[];
-  nativeAppMenu?: INativeAppMenu;
-  nativeWindow?: INativeWindow;
-  enableLaunchPreferenceScreen?: boolean;
-  enableGlobalCss?: boolean;
-  appBarLeftInset?: number;
-  extraProviders?: JSX.Element[];
-  onAppBarDoubleClick?: () => void;
-  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
-};
-
-export type OutletNode = ({ context }: { context: AppProps }) => JSX.Element;
-
-export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
+export function SharedRoot(props: ISharedRootContext & { children: JSX.Element }): JSX.Element {
   const {
     appConfiguration,
     dataSources,
@@ -44,8 +26,8 @@ export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
     appBarLeftInset,
     extraProviders,
     onAppBarDoubleClick,
-    Outlet,
     AppMenuComponent,
+    children,
   } = props;
 
   return (
@@ -54,8 +36,8 @@ export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
         {enableGlobalCss && <GlobalCss />}
         <CssBaseline>
           <ErrorBoundary>
-            <Outlet
-              context={{
+            <SharedRootContext.Provider
+              value={{
                 appConfiguration,
                 deepLinks,
                 dataSources,
@@ -68,7 +50,9 @@ export function App(props: AppProps & { Outlet: OutletNode }): JSX.Element {
                 onAppBarDoubleClick,
                 AppMenuComponent,
               }}
-            />
+            >
+              {children}
+            </SharedRootContext.Provider>
           </ErrorBoundary>
         </CssBaseline>
       </ColorSchemeThemeProvider>

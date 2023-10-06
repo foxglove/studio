@@ -5,6 +5,8 @@
 import { useMemo, useState } from "react";
 
 import {
+  AppMenuProps,
+  AppSetting,
   IDataSourceFactory,
   Ros1LocalBagDataSourceFactory,
   Ros2LocalBagDataSourceFactory,
@@ -14,22 +16,19 @@ import {
   UlogLocalDataSourceFactory,
   McapLocalDataSourceFactory,
   SampleNuscenesDataSourceFactory,
+  SharedRoot,
   IdbExtensionLoader,
-  App,
-  AppSetting,
 } from "@foxglove/studio-base";
-import { OutletNode } from "@foxglove/studio-base/App";
-import { AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
 
 import LocalStorageAppConfiguration from "./services/LocalStorageAppConfiguration";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-export function Root(props: {
+export function WebRoot(props: {
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
-  Outlet: OutletNode;
   AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
+  children: JSX.Element;
 }): JSX.Element {
   const appConfiguration = useMemo(
     () =>
@@ -61,18 +60,17 @@ export function Root(props: {
   }, [props.dataSources]);
 
   return (
-    <>
-      <App
-        enableLaunchPreferenceScreen
-        deepLinks={[window.location.href]}
-        dataSources={dataSources}
-        appConfiguration={appConfiguration}
-        extensionLoaders={extensionLoaders}
-        enableGlobalCss
-        extraProviders={props.extraProviders}
-        Outlet={props.Outlet}
-        AppMenuComponent={props.AppMenuComponent}
-      />
-    </>
+    <SharedRoot
+      enableLaunchPreferenceScreen
+      deepLinks={[window.location.href]}
+      dataSources={dataSources}
+      appConfiguration={appConfiguration}
+      extensionLoaders={extensionLoaders}
+      enableGlobalCss
+      extraProviders={props.extraProviders}
+      AppMenuComponent={props.AppMenuComponent}
+    >
+      {props.children}
+    </SharedRoot>
   );
 }

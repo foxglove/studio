@@ -5,7 +5,7 @@
 import { useMemo, useEffect, useState, useCallback } from "react";
 
 import {
-  App,
+  AppMenuProps,
   AppSetting,
   FoxgloveWebSocketDataSourceFactory,
   IAppConfiguration,
@@ -16,14 +16,13 @@ import {
   Ros2LocalBagDataSourceFactory,
   RosbridgeDataSourceFactory,
   RemoteDataSourceFactory,
+  SharedRoot,
   Ros1SocketDataSourceFactory,
   SampleNuscenesDataSourceFactory,
   UlogLocalDataSourceFactory,
   VelodyneDataSourceFactory,
   OsContext,
 } from "@foxglove/studio-base";
-import { OutletNode } from "@foxglove/studio-base/App";
-import { AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
 
 import { DesktopExtensionLoader } from "./services/DesktopExtensionLoader";
 import { NativeAppMenu } from "./services/NativeAppMenu";
@@ -35,17 +34,17 @@ const storageBridge = (global as unknown as { storageBridge?: Storage }).storage
 const menuBridge = (global as { menuBridge?: NativeMenuBridge }).menuBridge;
 const ctxbridge = (global as { ctxbridge?: OsContext }).ctxbridge;
 
-export default function Root(props: {
+export default function DesktopRoot(props: {
   appConfiguration: IAppConfiguration;
   extraProviders: JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
-  Outlet: OutletNode;
+  children: JSX.Element;
   AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
 }): JSX.Element {
   if (!storageBridge) {
     throw new Error("storageBridge is missing");
   }
-  const { appConfiguration } = props;
+  const { appConfiguration, children } = props;
 
   useEffect(() => {
     const handler = () => {
@@ -146,7 +145,7 @@ export default function Root(props: {
 
   return (
     <>
-      <App
+      <SharedRoot
         deepLinks={deepLinks}
         dataSources={dataSources}
         appConfiguration={appConfiguration}
@@ -158,16 +157,19 @@ export default function Root(props: {
         onAppBarDoubleClick={() => {
           nativeWindow.handleTitleBarDoubleClick();
         }}
-        showCustomWindowControls={ctxbridge?.platform === "linux"}
-        isMaximized={isMaximized}
-        onMinimizeWindow={onMinimizeWindow}
-        onMaximizeWindow={onMaximizeWindow}
-        onUnmaximizeWindow={onUnmaximizeWindow}
-        onCloseWindow={onCloseWindow}
+        customWindowControlProps={{
+          showCustomWindowControls: ctxbridge?.platform === "linux",
+          isMaximized,
+          onMinimizeWindow,
+          onMaximizeWindow,
+          onUnmaximizeWindow,
+          onCloseWindow,
+        }}
         extraProviders={props.extraProviders}
-        Outlet={props.Outlet}
         AppMenuComponent={props.AppMenuComponent}
-      />
+      >
+        {children}
+      </SharedRoot>
     </>
   );
 }

@@ -76,14 +76,12 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
   await waitForFonts();
   await initI18n();
 
-  const { Root } = await import("./Root");
+  const { WebRoot } = await import("./WebRoot");
   const params = await getParams();
   const rootElement = params.rootElement ?? (
-    <Root
-      extraProviders={params.extraProviders}
-      dataSources={params.dataSources}
-      Outlet={StudioApp}
-    />
+    <WebRoot extraProviders={params.extraProviders} dataSources={params.dataSources}>
+      <StudioApp />
+    </WebRoot>
   );
 
   // eslint-disable-next-line react/no-deprecated
