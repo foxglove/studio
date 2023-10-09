@@ -12,14 +12,6 @@ import {
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
-/**
-"play 5 sec or more" – Have this number updating correctly in the metrics collector, but having trouble accessing in the message pipeline code
-"is not sample data" - :white_check_mark:
-"has at least one subscription" (and by extension, a panel subscribing to that topic) - :white_check_mark:
-"has no player errors" - :white_check_mark:
-"has no panel errors" - wrote some placeholder code to verify this, but needs to be moved into the panel context / reported to analytics somehow
- */
-
 const selectHasNoPlayerErrors = (ctx: MessagePipelineContext) =>
   ctx.playerState.problems?.find((prob) => prob.severity === "error") == undefined;
 
@@ -35,7 +27,7 @@ const selectSeekTime = (ctx: MessagePipelineContext) => ctx.playerState.activeDa
 
 type State = {
   currentTime: undefined | number;
-  hasReported: boolean;
+  hasReportedObservationOrActivation: boolean;
   seekTime: undefined | number;
 };
 
@@ -45,7 +37,7 @@ type State = {
 export function ObservationMetricGatherer(): ReactNull {
   const [state, setState] = useImmer<State>({
     currentTime: undefined,
-    hasReported: false,
+    hasReportedObservationOrActivation: false,
     seekTime: undefined,
   });
 
@@ -60,7 +52,7 @@ export function ObservationMetricGatherer(): ReactNull {
     return ReactNull;
   }
 
-  if (state.hasReported) {
+  if (state.hasReportedObservationOrActivation) {
     return ReactNull;
   }
 
@@ -77,11 +69,10 @@ export function ObservationMetricGatherer(): ReactNull {
     state.currentTime != undefined && toSec(currentTime) - state.currentTime > 5;
 
   if (played5SecOrMore && hasAtLeastOneSubscription && hasNoPlayerErrors) {
-    console.log("LOGGING OBSERVATIONS");
     void analytics.logEvent(AppEvent.USER_OBSERVATION, { isSampleData });
     void analytics.logEvent(AppEvent.USER_ACTIVATION, { isSampleData });
     setState((draft) => {
-      draft.hasReported = true;
+      draft.hasReportedObservationOrActivation = true;
     });
   }
 

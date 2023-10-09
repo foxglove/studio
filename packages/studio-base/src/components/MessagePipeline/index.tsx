@@ -9,17 +9,14 @@ import { StoreApi, useStore } from "zustand";
 import { useGuaranteedContext } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import {
   Player,
   PlayerProblem,
   PlayerState,
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
-import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import MessageOrderTracker from "./MessageOrderTracker";
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
@@ -71,7 +68,6 @@ type ProviderProps = {
 
 const selectRenderDone = (state: MessagePipelineInternalState) => state.renderDone;
 const selectSubscriptions = (state: MessagePipelineInternalState) => state.public.subscriptions;
-const selectPlayerState = (state: MessagePipelineInternalState) => state.public.playerState;
 
 export function MessagePipelineProvider({
   children,
@@ -160,54 +156,6 @@ export function MessagePipelineProvider({
   useEffect(() => {
     player?.setGlobalVariables(globalVariables);
   }, [player, globalVariables]);
-
-  const playerState = useStore(store, selectPlayerState);
-  const analytics = useAnalytics();
-  const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
-
-  useEffect(() => {
-    const { urlState, problems = [] } = playerState;
-
-    const played5SecOrMore = Number(metricsCollector.getProperty("playbackDuration")) >= 5; // TODO: Fix (not working)
-    const isSampleData = urlState?.sourceId === "sample-nuscenes";
-    const hasAtLeastOneSubscription = subscriptions.length > 0;
-    const hasNoPlayerErrors = problems.filter(({ severity }) => severity === "error").length === 0;
-    const hasNoPanelErrors = true; // TODO: Get from analytics store (below)
-
-    // TODO: Move logic to appropriate place
-    // let hasNoPanelErrors = true;
-    // const { settingsTrees } = store;
-    // const listofTreeNodes: SettingsTreeNode[] = Object.values(settingsTrees).map(
-    //   (tree) => tree.nodes,
-    // );
-
-    // function containsErrors(children: SettingsTreeChildren): boolean {
-    //   if (children.length === 0) {
-    //     return false;
-    //   }
-
-    //   for (const value of children) {
-    //     if (value.error) {
-    //       return false;
-    //     }
-    //     return containsErrors(Object.values(value.children));
-    //   }
-    //   return true;
-    // }
-
-    // listofTreeNodes.forEach((treeNodes) => {
-    //   const treeValues = Object.values(treeNodes);
-    //   if (containsErrors(treeValues)) {
-    //     hasNoPanelErrors = false;
-    //     break;
-    //   }
-    // });
-
-    if (played5SecOrMore && hasAtLeastOneSubscription && hasNoPlayerErrors && hasNoPanelErrors) {
-      void analytics.logEvent(AppEvent.USER_OBSERVATION, { isSampleData });
-      void analytics.logEvent(AppEvent.USER_ACTIVATION, { isSampleData });
-    }
-  }, [playerState, subscriptions.length, analytics, metricsCollector]);
 
   return <ContextInternal.Provider value={store}>{children}</ContextInternal.Provider>;
 }
