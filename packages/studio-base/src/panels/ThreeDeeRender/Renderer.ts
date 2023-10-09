@@ -31,11 +31,9 @@ import {
   BuiltinPanelExtensionContext,
 } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
-import { SceneExtensionConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
 import IAnalytics from "@foxglove/studio-base/services/IAnalytics";
-import { dark, light } from "@foxglove/studio-base/theme/palette";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { palette, fontMonospace } from "@foxglove/theme";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 
 import {
@@ -51,6 +49,7 @@ import { DEFAULT_MESH_UP_AXIS, ModelCache } from "./ModelCache";
 import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
 import { SceneExtension } from "./SceneExtension";
+import { SceneExtensionConfig } from "./SceneExtensionConfig";
 import { ScreenOverlay } from "./ScreenOverlay";
 import { SettingsManager, SettingsTreeEntry } from "./SettingsManager";
 import { SharedGeometry } from "./SharedGeometry";
@@ -96,8 +95,8 @@ const MAX_SELECTIONS = 10;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
-const LIGHT_BACKDROP = new THREE.Color(light.background?.default);
-const DARK_BACKDROP = new THREE.Color(dark.background?.default);
+const LIGHT_BACKDROP = new THREE.Color(palette.light.background?.default);
+const DARK_BACKDROP = new THREE.Color(palette.dark.background?.default);
 
 // Define rendering layers for multipass rendering used for the selection effect
 const LAYER_DEFAULT = 0;
@@ -195,7 +194,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public fixedFrameId: string | undefined;
   public followFrameId: string | undefined;
 
-  public labelPool = new LabelPool({ fontFamily: fonts.MONOSPACE });
+  public labelPool = new LabelPool({ fontFamily: fontMonospace });
   public markerPool = new MarkerPool(this);
   public sharedGeometry = new SharedGeometry();
 
@@ -216,10 +215,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     canvas: HTMLCanvasElement;
     config: Immutable<RendererConfig>;
     interfaceMode: InterfaceMode;
+    sceneExtensionConfig: SceneExtensionConfig;
     fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
     displayTemporaryError?: (message: string) => void;
     testOptions: TestOptions;
-    sceneExtensionConfig: SceneExtensionConfig;
   }) {
     super();
     this.displayTemporaryError = args.displayTemporaryError;
@@ -249,7 +248,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     if (!this.gl.capabilities.isWebGL2) {
       throw new Error("WebGL2 is not supported");
     }
-    this.gl.outputEncoding = THREE.sRGBEncoding;
     this.gl.toneMapping = THREE.NoToneMapping;
     this.gl.autoClear = false;
     this.gl.info.autoReset = false;
@@ -275,7 +273,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
 
     this.#scene = new THREE.Scene();
 
-    this.#dirLight = new THREE.DirectionalLight();
+    this.#dirLight = new THREE.DirectionalLight(0xffffff, Math.PI);
     this.#dirLight.position.set(1, 1, 1);
     this.#dirLight.castShadow = true;
     this.#dirLight.layers.enableAll();
@@ -286,7 +284,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#dirLight.shadow.camera.far = 500;
     this.#dirLight.shadow.bias = -0.00001;
 
-    this.#hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5);
+    this.#hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5 * Math.PI);
     this.#hemiLight.layers.enableAll();
 
     this.#scene.add(this.#dirLight);
@@ -776,7 +774,9 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
 
-    const bgColor = backgroundColor ? stringToRgb(tempColor, backgroundColor) : undefined;
+    const bgColor = backgroundColor
+      ? stringToRgb(tempColor, backgroundColor).convertSRGBToLinear()
+      : undefined;
 
     for (const extension of this.sceneExtensions.values()) {
       extension.setColorScheme(colorScheme, bgColor);

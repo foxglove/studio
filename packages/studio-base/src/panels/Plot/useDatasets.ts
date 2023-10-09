@@ -26,7 +26,7 @@ import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
 
 import { PlotParams, Messages } from "./internalTypes";
-import { getPaths, isSingleMessage, isBounded } from "./params";
+import { getPaths } from "./params";
 import { PlotData } from "./plotData";
 
 type Service = Comlink.Remote<(typeof import("./useDatasets.worker"))["service"]>;
@@ -138,7 +138,6 @@ function chooseClient() {
 
       const { xAxisPath, paths: yAxisPaths } = params;
 
-      const isOnlyCurrent = isBounded(params) || isSingleMessage(params);
       return R.pipe(
         getPayloadsFromPaths,
         R.chain((v): SubscribePayload[] => {
@@ -146,10 +145,6 @@ function chooseClient() {
             ...v,
             preloadType: "partial",
           };
-
-          if (isOnlyCurrent) {
-            return [partial];
-          }
 
           // Subscribe to both "partial" and "full" when using "full" In
           // theory, "full" should imply "partial" but not doing this breaks
@@ -230,27 +225,7 @@ function useData(id: string, params: PlotParams) {
     }, []),
     addMessages: React.useCallback(
       (_: number | undefined, messages: readonly MessageEvent[]): number => {
-        void service?.addCurrent(
-          messages.map((event) => {
-            const { message } = event;
-
-            // Handle LazyMessageReader messages, which cannot be
-            // `postMessage`d otherwise
-            // https://github.com/foxglove/rosmsg-serialization/blob/2c15caf4f344012737f5aab01103e3c525889f2e/src/__snapshots__/LazyMessageReader.test.ts.snap#L304
-            if (
-              typeof message === "object" &&
-              message != undefined &&
-              "toObject" in message &&
-              typeof message.toObject === "function"
-            ) {
-              return {
-                ...event,
-                message: (message as { toObject: () => unknown }).toObject(),
-              };
-            }
-            return event;
-          }),
-        );
+        void service?.addCurrent(messages);
         return 1;
       },
       [],
@@ -292,6 +267,11 @@ function useData(id: string, params: PlotParams) {
         // changed; we have to rebuild the plots
         if (existing != undefined && lastSent != undefined && index < lastSent) {
           resetData.add(payload.topic);
+
+          // clear out the status of all subsequent blocks for this ref
+          for (let i = index + 1; i < blockStatus.length; i++) {
+            blockStatus[i] = R.omit([ref], blockStatus[i]);
+          }
         }
 
         status[ref] = first;

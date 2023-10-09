@@ -13,7 +13,7 @@ import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import StudioToastProvider from "@foxglove/studio-base/components/StudioToastProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
-import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
+import { UserScriptStateProvider } from "@foxglove/studio-base/context/UserScriptStateContext";
 import { initI18n, Language } from "@foxglove/studio-base/i18n";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 import ReadySignalContext from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -81,7 +81,7 @@ function StudioContextProviders({
     <ReadySignalContext.Provider value={readySignal} />,
     <StudioToastProvider />,
     <TimelineInteractionStateProvider />,
-    <UserNodeStateProvider />,
+    <UserScriptStateProvider />,
     /* eslint-enable react/jsx-key */
   ];
   return (
@@ -166,7 +166,10 @@ function StudioContextProviders({
 }
 
 function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
-  if ((ctx.parameters.fileName as string).includes("/packages/studio-base/")) {
+  if (
+    (ctx.parameters.fileName as string).includes("/packages/studio-base/") ||
+    (ctx.parameters.fileName as string).includes("/packages/theme/")
+  ) {
     return (
       <StudioContextProviders ctx={ctx}>
         <Child />

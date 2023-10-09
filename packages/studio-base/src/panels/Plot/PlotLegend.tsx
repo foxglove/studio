@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  ChevronDown20Regular,
-  ChevronUp20Regular,
-  ChevronLeft20Regular,
-  ChevronRight20Regular,
+  ChevronDown16Regular,
+  ChevronUp16Regular,
+  ChevronLeft16Regular,
+  ChevronRight16Regular,
   TextBulletListLtr20Filled,
-  ArrowMinimize24Filled,
+  ArrowMinimize20Filled,
 } from "@fluentui/react-icons";
 import { IconButton } from "@mui/material";
 import * as _ from "lodash-es";
@@ -25,6 +25,7 @@ import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { TypedDataSet } from "./internalTypes";
+import { DEFAULT_PATH } from "./settings";
 
 const minLegendWidth = 25;
 const maxLegendWidth = 800;
@@ -170,11 +171,11 @@ function PlotLegendComponent(props: Props): JSX.Element {
   const legendIcon = useMemo(() => {
     switch (legendDisplay) {
       case "floating":
-        return showLegend ? <ArrowMinimize24Filled /> : <TextBulletListLtr20Filled />;
+        return showLegend ? <ArrowMinimize20Filled /> : <TextBulletListLtr20Filled />;
       case "left":
-        return showLegend ? <ChevronLeft20Regular /> : <ChevronRight20Regular />;
+        return showLegend ? <ChevronLeft16Regular /> : <ChevronRight16Regular />;
       case "top":
-        return showLegend ? <ChevronUp20Regular /> : <ChevronDown20Regular />;
+        return showLegend ? <ChevronUp16Regular /> : <ChevronDown16Regular />;
     }
   }, [showLegend, legendDisplay]);
 
@@ -225,6 +226,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
       })}
     >
       <IconButton
+        size="small"
         onClick={toggleLegend}
         className={cx(classes.toggleButton, {
           [classes.toggleButtonFloating]: legendDisplay === "floating",
@@ -250,7 +252,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
             overflow={legendDisplay === "floating" ? "auto" : undefined}
           >
             <div className={classes.container}>
-              {paths.map((path, index) => (
+              {(paths.length === 0 ? [DEFAULT_PATH] : paths).map((path, index) => (
                 <PlotLegendRow
                   currentTime={currentTime}
                   datasets={datasets}

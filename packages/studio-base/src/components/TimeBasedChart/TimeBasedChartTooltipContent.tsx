@@ -11,14 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Square24Filled } from "@fluentui/react-icons";
+import { Square12Filled } from "@fluentui/react-icons";
 import * as _ from "lodash-es";
 import { Fragment, PropsWithChildren, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { Immutable } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 export type TimeBasedChartTooltipData = {
   datasetIndex: number;
@@ -36,7 +35,7 @@ type Props = Immutable<{
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    fontFamily: fonts.MONOSPACE,
+    fontFamily: theme.typography.fontMonospace,
     fontSize: theme.typography.caption.fontSize,
     lineHeight: theme.typography.caption.lineHeight,
     overflowWrap: "break-word",
@@ -46,7 +45,7 @@ const useStyles = makeStyles()((theme) => ({
     display: "grid",
     gridTemplateColumns: "auto minmax(0px, max-content) minmax(auto, max-content)",
     alignItems: "center",
-    fontFamily: fonts.MONOSPACE,
+    fontFamily: theme.typography.fontMonospace,
     fontSize: theme.typography.caption.fontSize,
     lineHeight: theme.typography.caption.lineHeight,
     overflowWrap: "break-word",
@@ -55,6 +54,9 @@ const useStyles = makeStyles()((theme) => ({
     gridColumn: "1",
     height: 12,
     width: 12,
+  },
+  colorIconReplacement: {
+    gridColumn: "1",
   },
   path: {
     opacity: 0.9,
@@ -152,7 +154,7 @@ export default function TimeBasedChartTooltipContent(
   return (
     <div className={cx(classes.root, classes.grid)} data-testid="TimeBasedChartTooltipContent">
       {sortedItems.map(([datasetIndex, item], idx) => {
-        const color = colorsByDatasetIndex?.[datasetIndex] ?? "auto";
+        const color = colorsByDatasetIndex?.[datasetIndex];
         const label = labelsByDatasetIndex?.[datasetIndex];
         const tooltip = item.tooltip;
         const value =
@@ -164,7 +166,11 @@ export default function TimeBasedChartTooltipContent(
 
         return (
           <Fragment key={idx}>
-            <Square24Filled className={classes.icon} primaryFill={color} />
+            {color ? (
+              <Square12Filled className={classes.icon} primaryFill={color} />
+            ) : (
+              <span className={classes.colorIconReplacement} />
+            )}
             <div className={classes.path}>{label ?? ""}</div>
             <div className={classes.value}>
               {value}

@@ -396,6 +396,13 @@ export default {
   excludeStories: ["paths", "fixture"],
 };
 
+export const Empty: StoryObj = {
+  render: function Story() {
+    return <PlotWrapper includeSettings pauseFrame={() => () => {}} config={Plot.defaultConfig} />;
+  },
+  parameters: { colorScheme: "light" },
+};
+
 export const LineGraph: StoryObj = {
   render: function Story() {
     const readySignal = useReadySignal({ count: 3 });
@@ -507,7 +514,7 @@ export const LineGraphWithNoTitle: StoryObj = {
 
 export const LineGraphWithSettings: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useReadySignal({ count: 2 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
       <PlotWrapper
@@ -1317,7 +1324,7 @@ export const CustomXAxisTopicWithXLimits: StoryObj = {
 
 export const CurrentCustomXAxisTopic: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useReadySignal({ count: 1 });
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     // As above, but just shows a single point instead of the whole line.

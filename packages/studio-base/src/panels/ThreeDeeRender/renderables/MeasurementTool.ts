@@ -56,9 +56,13 @@ class FixedSizeMeshMaterial extends THREE.ShaderMaterial {
   }
 }
 
-type MeasurementEvent = { type: "foxglove.measure-start" } | { type: "foxglove.measure-end" };
+interface MeasurementToolEventMap extends THREE.Object3DEventMap {
+  "foxglove.measure-start": object;
+  "foxglove.measure-end": object;
+}
 
-export class MeasurementTool extends SceneExtension<Renderable, MeasurementEvent> {
+export class MeasurementTool extends SceneExtension<Renderable, MeasurementToolEventMap> {
+  public static extensionId = "foxglove.MeasurementTool";
   #circleGeometry = new THREE.CircleGeometry(5, 16);
   #circleMaterial = new FixedSizeMeshMaterial({
     color: 0xff0000,
@@ -98,8 +102,8 @@ export class MeasurementTool extends SceneExtension<Renderable, MeasurementEvent
 
   public state: MeasurementState = "idle";
 
-  public constructor(renderer: IRenderer) {
-    super("foxglove.MeasurementTool", renderer);
+  public constructor(renderer: IRenderer, name: string = MeasurementTool.extensionId) {
+    super(name, renderer);
 
     this.#line.userData.picking = false;
     this.#lineOccluded.userData.picking = false;

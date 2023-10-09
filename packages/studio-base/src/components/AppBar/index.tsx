@@ -18,12 +18,11 @@ import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
-import { AppMenu } from "@foxglove/studio-base/components/AppBar/AppMenu";
+import { AppMenu, AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
 import {
   CustomWindowControls,
   CustomWindowControlsProps,
 } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
-import { BetaAppMenu } from "@foxglove/studio-base/components/BetaAppMenu";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -41,7 +40,6 @@ import {
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { AddPanelMenu } from "./AddPanelMenu";
 import { AppBarContainer } from "./AppBarContainer";
@@ -119,7 +117,7 @@ const useStyles = makeStyles<{ debugDragRegion?: boolean }, "avatar">()((
       ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
     },
     keyEquivalent: {
-      fontFamily: fonts.MONOSPACE,
+      fontFamily: theme.typography.fontMonospace,
       background: tc(theme.palette.common.white).darken(45).toString(),
       padding: theme.spacing(0, 0.5),
       aspectRatio: 1,
@@ -172,6 +170,7 @@ type AppBarProps = CustomWindowControlsProps & {
   onDoubleClick?: () => void;
   debugDragRegion?: boolean;
   disableSignIn?: boolean;
+  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
 };
 
 const selectHasCurrentLayout = (state: LayoutState) => state.selectedLayout != undefined;
@@ -189,6 +188,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onMinimizeWindow,
     onUnmaximizeWindow,
     showCustomWindowControls = false,
+    AppMenuComponent,
   } = props;
   const { classes, cx, theme } = useStyles({ debugDragRegion });
   const { currentUser, signIn } = useCurrentUser();
@@ -200,8 +200,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
   );
-  const [enableNewAppMenu = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_NEW_APP_MENU,
+  const [enableUnifiedNavigation = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_UNIFIED_NAVIGATION,
   );
 
   const hasCurrentLayout = useCurrentLayoutSelector(selectHasCurrentLayout);
@@ -247,8 +247,8 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   primaryFill={theme.palette.common.white}
                 />
               </IconButton>
-              {enableNewAppMenu ? (
-                <BetaAppMenu
+              {enableUnifiedNavigation && AppMenuComponent ? (
+                <AppMenuComponent
                   open={appMenuOpen}
                   anchorEl={appMenuEl}
                   handleClose={() => {

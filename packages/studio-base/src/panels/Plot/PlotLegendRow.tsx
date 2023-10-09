@@ -4,12 +4,14 @@
 
 import {
   Dismiss12Regular,
+  Add12Regular,
   ErrorCircle16Filled,
-  Square24Filled,
-  Square24Regular,
+  Square12Filled,
+  Square12Regular,
 } from "@fluentui/react-icons";
 import { ButtonBase, Checkbox, Tooltip, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
@@ -21,7 +23,6 @@ import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteraction
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { plotPathDisplayName } from "@foxglove/studio-base/panels/Plot/types";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { PlotPath, TypedDataSet, TypedData } from "./internalTypes";
 
@@ -94,7 +95,7 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
     height: ROW_HEIGHT,
     paddingInline: theme.spacing(0.75, 2.5),
     gridColumn: "span 2",
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+    fontFeatureSettings: `${theme.typography.fontFeatureSettings}, "zero"`,
 
     ".MuiTypography-root": {
       whiteSpace: "nowrap",
@@ -137,6 +138,7 @@ export function PlotLegendRow({
   const { id: panelId } = usePanelContext();
   const { setSelectedPanelIds } = useSelectedPanels();
   const { classes, cx } = useStyles();
+  const { t } = useTranslation("plot");
 
   const correspondingData = useMemo(() => {
     if (!showPlotValuesInLegend) {
@@ -163,10 +165,13 @@ export function PlotLegendRow({
       if (timeToCompare == undefined || pt.x > timeToCompare) {
         break;
       }
-      value = pt.y;
+      value = pt.value;
     }
-    return value;
+    return value?.toString();
   }, [showPlotValuesInLegend, hoverValue?.value, currentTime, correspondingData]);
+
+  // When there are no series configured we render an extra row to show an "add series" button.
+  const isAddSeriesRow = paths.length === 0;
 
   return (
     <div
@@ -186,8 +191,8 @@ export function PlotLegendRow({
           size="small"
           title="Toggle visibility"
           style={{ color: getLineColor(path.color, index) }}
-          icon={<Square24Regular />}
-          checkedIcon={<Square24Filled />}
+          icon={<Square12Regular />}
+          checkedIcon={<Square12Filled />}
           onClick={(event) => {
             event.stopPropagation();
           }} // prevent toggling from opening settings
@@ -212,7 +217,7 @@ export function PlotLegendRow({
           variant="body2"
           className={cx({ [classes.disabledPathLabel]: !path.enabled })}
         >
-          {plotPathDisplayName(path, index)}
+          {isAddSeriesRow ? t("clickToAddASeries") : plotPathDisplayName(path, index)}
         </Typography>
         {hasMismatchedDataLength && (
           <Tooltip
@@ -235,20 +240,31 @@ export function PlotLegendRow({
         </div>
       )}
       <div>
-        <ButtonBase
-          title="Delete series"
-          aria-label="Delete series"
-          className={classes.removeButton}
-          onClick={() => {
-            const newPaths = paths.slice();
-            if (newPaths.length > 0) {
-              newPaths.splice(index, 1);
-            }
-            savePaths(newPaths);
-          }}
-        >
-          <Dismiss12Regular />
-        </ButtonBase>
+        {index === paths.length ? (
+          <ButtonBase
+            title="Add series"
+            aria-label="Add series"
+            className={classes.removeButton}
+            onClick={onClickPath}
+          >
+            <Add12Regular />
+          </ButtonBase>
+        ) : (
+          <ButtonBase
+            title="Delete series"
+            aria-label="Delete series"
+            className={classes.removeButton}
+            onClick={() => {
+              const newPaths = paths.slice();
+              if (newPaths.length > 0) {
+                newPaths.splice(index, 1);
+              }
+              savePaths(newPaths);
+            }}
+          >
+            <Dismiss12Regular />
+          </ButtonBase>
+        )}
       </div>
     </div>
   );
