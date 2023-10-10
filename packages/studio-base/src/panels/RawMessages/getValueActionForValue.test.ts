@@ -53,7 +53,7 @@ describe("getValueActionForValue", () => {
     expect(getValueActionForValue([{ some_id: 123 }], undefined, [0, "some_id"])).toEqual({
       filterPath: "",
       multiSlicePath: "[:].some_id",
-      primitiveType: "float64",
+      primitiveType: "int32",
       singleSlicePath: "[0].some_id",
     });
   });
