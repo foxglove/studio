@@ -22,10 +22,6 @@ import { DECODE_IMAGE_ERR_KEY, IMAGE_TOPIC_PATH } from "../ImageMode/constants";
 import { ColorModeSettings } from "../colorMode";
 
 const log = Logger.getLogger(__filename);
-const IMAGE_FORMATS = ["jpeg", "png", "webp", "jpg"];
-const isImageFormat = (checkFormat: string): boolean => {
-  return IMAGE_FORMATS.some((format) => checkFormat.includes(format));
-};
 export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
   visible: boolean;
   frameLocked?: boolean;
@@ -217,9 +213,6 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     resizeWidth?: number,
   ): Promise<ImageBitmap | ImageData> {
     if ("format" in image) {
-      if (!isImageFormat(image.format)) {
-        throw new Error(`Unsupported format: "${image.format}"`);
-      }
       return await decodeCompressedImageToBitmap(image, resizeWidth);
     }
     return await (this.decoder ??= new WorkerImageDecoder()).decode(image, this.userData.settings);
