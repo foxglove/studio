@@ -240,46 +240,35 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
         this.#geometry?.dispose();
         this.#numPoints = pointsLength;
         this.#style = style;
-        switch (style) {
-          case "polygon":
-            this.#positionBuffer = new Float32Array((pointsLength + 1) * 3);
-            // color buffer is unused (we don't use vertex colors)
-            this.#geometry = new LineGeometry();
-            break;
-          case "line_strip":
-            this.#positionBuffer = new Float32Array(pointsLength * 3);
-            // color buffer is unused (we don't use vertex colors)
-            this.#geometry = new LineGeometry();
-            break;
-          case "line_list": {
-            this.#positionBuffer = new Float32Array(pointsLength * 3);
-            this.#colorBuffer = new Uint8Array(pointsLength * 8);
-            this.#geometry = new LineSegmentsGeometry();
+        const positionBufferSize = isPolygon ? (pointsLength + 1) * 3 : pointsLength * 3;
+        this.#positionBuffer = new Float32Array(positionBufferSize);
+        this.#colorBuffer = new Uint8Array(pointsLength * 8);
+        this.#geometry = isLineList ? new LineSegmentsGeometry() : new LineGeometry();
 
-            // [rgba, rgba]
-            const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(
-              this.#colorBuffer,
-              8,
-              1,
-            );
-            this.#geometry.setAttribute(
-              "instanceColorStart",
-              new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 0, true),
-            );
-            this.#geometry.setAttribute(
-              "instanceColorEnd",
-              new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 4, true),
-            );
-            break;
-          }
-        }
+        // [rgba, rgba]
+        const instanceColorBuffer = new THREE.InstancedInterleavedBuffer(
+          this.#colorBuffer,
+          isLineList ? 8 : 4 /* stride */,
+          1,
+        );
+        this.#geometry.setAttribute(
+          "instanceColorStart",
+          new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 0, true),
+        );
+        this.#geometry.setAttribute(
+          "instanceColorEnd",
+          new THREE.InterleavedBufferAttribute(
+            instanceColorBuffer,
+            4,
+            isLineList ? 4 : 0 /* offset */,
+            true,
+          ),
+        );
         this.#linePrepass.geometry = this.#geometry;
         this.#line.geometry = this.#geometry;
       }
 
-      const useVertexColors = isLineList;
-      const hasExactColors = outlineColors.length === pointsLength / 2;
-
+      const hasExactColors = isLineList && outlineColors.length === pointsLength / 2;
       const shapeFillColor =
         (isPolygon || isLineStrip) && fillColor != undefined && fillColor.a > 0
           ? fillColor
@@ -289,24 +278,23 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
       const positions = this.#positionBuffer;
       const colors = this.#colorBuffer;
       for (let i = 0; i < pointsLength; i++) {
-        // Support the case where outline_colors is half the length of points, one color per line,
-        // and where outline_colors matches the length of points. Fall back to marker.outline_color
-        // as needed
         const point = points[i]!;
         this.#cameraModel.projectPixelTo3dPlane(tempVec3, point);
 
         positions[i * 3 + 0] = tempVec3.x;
         positions[i * 3 + 1] = tempVec3.y;
         positions[i * 3 + 2] = tempVec3.z;
-        if (useVertexColors) {
-          const color = hasExactColors
-            ? outlineColors[i >>> 1]!
-            : outlineColors[i] ?? outlineColor ?? FALLBACK_COLOR;
-          colors[i * 4 + 0] = SRGBToLinear(color.r) * 255;
-          colors[i * 4 + 1] = SRGBToLinear(color.g) * 255;
-          colors[i * 4 + 2] = SRGBToLinear(color.b) * 255;
-          colors[i * 4 + 3] = color.a * 255;
-        }
+
+        // Support the case where outline_colors is half the length of points, one color per line (hasExactColors),
+        // and where outline_colors matches the length of points. Fall back to marker.outline_color
+        // as needed
+        const color = hasExactColors
+          ? outlineColors[i >>> 1]!
+          : outlineColors[i] ?? outlineColor ?? FALLBACK_COLOR;
+        colors[i * 4 + 0] = SRGBToLinear(color.r) * 255;
+        colors[i * 4 + 1] = SRGBToLinear(color.g) * 255;
+        colors[i * 4 + 2] = SRGBToLinear(color.b) * 255;
+        colors[i * 4 + 3] = color.a * 255;
         if (i === 0) {
           shape?.moveTo(tempVec3.x, tempVec3.y);
         } else {
@@ -319,12 +307,10 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
         positions[pointsLength * 3 + 0] = positions[0]!;
         positions[pointsLength * 3 + 1] = positions[1]!;
         positions[pointsLength * 3 + 2] = positions[2]!;
-        if (useVertexColors) {
-          colors[pointsLength * 4 + 0] = colors[0]!;
-          colors[pointsLength * 4 + 1] = colors[1]!;
-          colors[pointsLength * 4 + 2] = colors[2]!;
-          colors[pointsLength * 4 + 3] = colors[3]!;
-        }
+        colors[pointsLength * 4 + 0] = colors[0]!;
+        colors[pointsLength * 4 + 1] = colors[1]!;
+        colors[pointsLength * 4 + 2] = colors[2]!;
+        colors[pointsLength * 4 + 3] = colors[3]!;
         shape?.closePath();
       }
 
@@ -360,20 +346,12 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
         this.#fill = undefined;
       }
 
-      if (useVertexColors) {
-        this.#linePrepassMaterial.vertexColors = true;
-        this.#lineMaterial.vertexColors = true;
-        this.#lineMaterial.color.setRGB(1, 1, 1); // any non-white color will tint the vertex colors
-        this.#lineMaterial.setOpacity(1);
-        this.#geometry.getAttribute("instanceColorStart").needsUpdate = true;
-        this.#geometry.getAttribute("instanceColorEnd").needsUpdate = true;
-      } else {
-        const color = outlineColor ?? FALLBACK_COLOR;
-        this.#linePrepassMaterial.vertexColors = false;
-        this.#lineMaterial.vertexColors = false;
-        this.#lineMaterial.color.setRGB(color.r, color.g, color.b).convertSRGBToLinear();
-        this.#lineMaterial.setOpacity(color.a);
-      }
+      this.#linePrepassMaterial.vertexColors = true;
+      this.#lineMaterial.vertexColors = true;
+      this.#lineMaterial.color.setRGB(1, 1, 1); // any non-white color will tint the vertex colors
+      this.#lineMaterial.setOpacity(1);
+      this.#geometry.getAttribute("instanceColorStart").needsUpdate = true;
+      this.#geometry.getAttribute("instanceColorEnd").needsUpdate = true;
       this.#lineMaterial.needsUpdate = true;
 
       this.#geometry.setPositions(positions);
