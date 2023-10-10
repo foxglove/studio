@@ -4,6 +4,7 @@
 
 import { ReOrderDotsVertical16Filled } from "@fluentui/react-icons";
 import { Fade, ListItem, ListItemButton, ListItemText, Tooltip, Typography } from "@mui/material";
+import * as _ from "lodash-es";
 import { useCallback, useEffect, useRef } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
@@ -76,6 +77,12 @@ export function PanelListItem(props: Props): JSX.Element {
     options: { dropEffect: "copy" },
     end: (_item, monitor) => {
       const dropResult = monitor.getDropResult() ?? {};
+
+      // do nothing when the user wants to cancel a dragged panel
+      if (_.isEmpty(dropResult)) {
+        return;
+      }
+
       const { position, path, tabId } = dropResult;
       // dropping outside mosaic does nothing. If we have a tabId, but no
       // position or path, we're dragging into an empty tab.
