@@ -22,7 +22,7 @@ import { DECODE_IMAGE_ERR_KEY, IMAGE_TOPIC_PATH } from "../ImageMode/constants";
 import { ColorModeSettings } from "../colorMode";
 
 const log = Logger.getLogger(__filename);
-const IMAGE_FORMATS = ["jpeg", "png", "webp"];
+const IMAGE_FORMATS = ["jpeg", "png", "webp", "jpg"];
 const isImageFormat = (checkFormat: string): boolean => {
   return IMAGE_FORMATS.some((format) => checkFormat.includes(format));
 };
