@@ -6,6 +6,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
+  IconButton,
   MenuItem,
   MenuList,
   MenuListProps,
@@ -23,6 +24,7 @@ import { Immutable, SettingsTreeAction, SettingsTreeField } from "@foxglove/stud
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
 
+import { icons } from "./icons";
 import { ColorGradientInput, ColorPickerInput, NumberInput, Vec2Input, Vec3Input } from "./inputs";
 
 /** Used to allow both undefined and empty string in select inputs. */
@@ -31,6 +33,9 @@ const UNDEFINED_SENTINEL_VALUE = uuid();
 const INVALID_SENTINEL_VALUE = uuid();
 
 const useStyles = makeStyles<void, "error">()((theme, _params, classes) => ({
+  actionButton: {
+    padding: theme.spacing(0.5),
+  },
   autocomplete: {
     ".MuiInputBase-root.MuiInputBase-sizeSmall": {
       paddingInline: 0,
@@ -497,6 +502,8 @@ function FieldEditorComponent({
   const paddingLeft = 0.75 + 2 * (indent - 1);
   const { classes, cx } = useStyles();
 
+  const IconComponent = field.iconButton?.icon ? icons[field.iconButton.icon] : undefined;
+
   return (
     <>
       <Stack
@@ -507,6 +514,22 @@ function FieldEditorComponent({
         paddingLeft={paddingLeft}
         fullHeight
       >
+        {field.iconButton && (
+          <Tooltip
+            arrow
+            placement="top"
+            title={<Typography variant="subtitle2">{field.iconButton.tooltip}</Typography>}
+          >
+            <IconButton
+              className={classes.actionButton}
+              data-node-function="edit-label"
+              color="primary"
+              onClick={field.iconButton.onClick}
+            >
+              {IconComponent ? <IconComponent fontSize="small" /> : <CancelIcon />}
+            </IconButton>
+          </Tooltip>
+        )}
         {field.error && (
           <Tooltip
             arrow

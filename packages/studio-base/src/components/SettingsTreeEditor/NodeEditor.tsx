@@ -328,6 +328,9 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
       ),
     [settings.actions],
   );
+  const IconButtonComponent = settings.iconButton?.icon
+    ? icons[settings.iconButton.icon]
+    : undefined;
 
   return (
     <>
@@ -416,7 +419,23 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               <EditIcon fontSize="small" />
             </IconButton>
           )}
-          {settings.visible != undefined && (
+
+          {settings.iconButton && (
+            <Tooltip
+              arrow
+              placement="top"
+              title={<Typography variant="subtitle2">{settings.iconButton.tooltip}</Typography>}
+            >
+              <IconButton
+                className={classes.actionButton}
+                color="primary"
+                onClick={settings.iconButton.onClick}
+              >
+                {IconButtonComponent ? <IconButtonComponent fontSize="small" /> : undefined}
+              </IconButton>
+            </Tooltip>
+          )}
+          {settings.iconButton?.overrideVisible !== true && settings.visible != undefined && (
             <VisibilityToggle
               size="small"
               checked={visible}

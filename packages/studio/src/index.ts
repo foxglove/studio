@@ -497,6 +497,7 @@ export interface ExtensionModule {
 export type SettingsIcon =
   | "Add"
   | "Addchart"
+  | "AutoAwesome"
   | "Background"
   | "Camera"
   | "Cells"
@@ -674,6 +675,8 @@ export type SettingsTreeField = SettingsTreeFieldValue & {
    * Optional message indicating any error state for the field.
    */
   error?: string;
+
+  iconButton?: SettingsTreeIconButton;
 };
 
 export type SettingsTreeFields = Record<string, undefined | SettingsTreeField>;
@@ -776,6 +779,15 @@ export type SettingsTreeNode = {
    * Filter Children by visibility status
    */
   enableVisibilityFilter?: boolean;
+
+  iconButton?: SettingsTreeIconButton;
+};
+
+type SettingsTreeIconButton = {
+  icon: SettingsIcon;
+  onClick: () => Promise<void> | void;
+  tooltip: string;
+  overrideVisible?: boolean;
 };
 
 /**
