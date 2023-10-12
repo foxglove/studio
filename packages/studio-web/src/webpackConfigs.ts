@@ -32,6 +32,8 @@ export type ConfigParams = {
   version: string;
   /** Needs to be overridden for react-router */
   historyApiFallback?: ConnectHistoryApiFallbackOptions;
+  /** Customizations to index.html */
+  indexHtmlOptions?: Partial<HtmlWebpackPlugin.Options>;
 };
 
 export const devServerConfig = (params: ConfigParams): WebpackConfiguration => ({
@@ -106,23 +108,13 @@ export const mainConfig =
           patterns: [{ from: path.resolve(__dirname, "..", "public") }],
         }),
         new HtmlWebpackPlugin({
-          templateContent: `
+          templateContent: ({ htmlWebpackPlugin }) => `
   <!doctype html>
   <html>
     <head>
       <meta charset="utf-8">
       <meta name="apple-mobile-web-app-capable" content="yes">
-      <meta property="og:title" content="Foxglove Studio"/>
-      <meta property="og:description" content="Open source visualization and debugging tool for robotics"/>
-      <meta property="og:type" content="website"/>
-      <meta property="og:image" content="https://foxglove.dev/images/og-image.jpeg"/>
-      <meta property="og:url" content="https://studio.foxglove.dev/"/>
-      <meta name="twitter:card" content="summary_large_image"/>
-      <meta name="twitter:site" content="@foxglovedev"/>
-      <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-      <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-      <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-      <title>Foxglove Studio</title>
+      ${htmlWebpackPlugin.options.foxgloveExtraHeadTags}
       <style type="text/css" id="loading-styles">
         body {
           margin: 0;
@@ -149,6 +141,13 @@ export const mainConfig =
     </body>
   </html>
   `,
+          foxgloveExtraHeadTags: `
+            <title>Foxglove Studio</title>
+            <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+            <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+            <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+          `,
+          ...params.indexHtmlOptions,
         }),
       ],
     };
