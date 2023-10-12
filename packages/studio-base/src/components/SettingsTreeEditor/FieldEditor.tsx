@@ -498,9 +498,9 @@ function FieldEditorComponent({
   const paddingLeft = 0.75 + 2 * (indent - 1);
   const { classes, cx } = useStyles();
 
-  const { settingsStatusButton } = useAppContext();
+  const { renderSettingsStatusButton } = useAppContext();
 
-  const statusButton = settingsStatusButton ? settingsStatusButton(field) : undefined;
+  const statusButton = renderSettingsStatusButton ? renderSettingsStatusButton(field) : undefined;
 
   return (
     <>

@@ -202,7 +202,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     open: defaultOpen,
     visibilityFilter: "all",
   });
-  const { settingsStatusButton } = useAppContext();
+  const { renderSettingsStatusButton } = useAppContext();
   const { t } = useTranslation("settingsEditor");
   const { classes, cx, theme } = useStyles();
 
@@ -331,7 +331,9 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     [settings.actions],
   );
 
-  const statusButton = settingsStatusButton ? settingsStatusButton(settings) : undefined;
+  const statusButton = renderSettingsStatusButton
+    ? renderSettingsStatusButton(settings)
+    : undefined;
 
   return (
     <>

@@ -26,7 +26,7 @@ interface IAppContext {
   layoutEmptyState?: JSX.Element;
   syncAdapters?: readonly JSX.Element[];
   workspaceExtensions?: readonly JSX.Element[];
-  settingsStatusButton?: (
+  renderSettingsStatusButton?: (
     nodeOrField: Immutable<SettingsTreeNode | SettingsTreeField>,
   ) => JSX.Element | undefined;
   workspaceStoreCreator?: (
