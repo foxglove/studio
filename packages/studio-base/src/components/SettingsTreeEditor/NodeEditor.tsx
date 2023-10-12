@@ -27,6 +27,7 @@ import {
 } from "@foxglove/studio";
 import { HighlightedText } from "@foxglove/studio-base/components/HighlightedText";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 
 import { FieldEditor } from "./FieldEditor";
 import { NodeActionsMenu } from "./NodeActionsMenu";
@@ -201,6 +202,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     open: defaultOpen,
     visibilityFilter: "all",
   });
+  const { settingsStatusButton } = useAppContext();
   const { t } = useTranslation("settingsEditor");
   const { classes, cx, theme } = useStyles();
 
@@ -328,9 +330,8 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
       ),
     [settings.actions],
   );
-  const IconButtonComponent = settings.iconButton?.icon
-    ? icons[settings.iconButton.icon]
-    : undefined;
+
+  const statusButton = settingsStatusButton ? settingsStatusButton(settings) : undefined;
 
   return (
     <>
@@ -419,31 +420,17 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               <EditIcon fontSize="small" />
             </IconButton>
           )}
-
-          {settings.iconButton && (
-            <Tooltip
-              arrow
-              placement="top"
-              title={<Typography variant="subtitle2">{settings.iconButton.tooltip}</Typography>}
-            >
-              <IconButton
-                className={classes.actionButton}
-                color="primary"
-                onClick={settings.iconButton.onClick}
-              >
-                {IconButtonComponent ? <IconButtonComponent fontSize="small" /> : undefined}
-              </IconButton>
-            </Tooltip>
-          )}
-          {settings.iconButton?.overrideVisible !== true && settings.visible != undefined && (
-            <VisibilityToggle
-              size="small"
-              checked={visible}
-              onChange={toggleVisibility}
-              style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
-              disabled={!allowVisibilityToggle}
-            />
-          )}
+          {statusButton
+            ? statusButton
+            : settings.visible != undefined && (
+                <VisibilityToggle
+                  size="small"
+                  checked={visible}
+                  onChange={toggleVisibility}
+                  style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
+                  disabled={!allowVisibilityToggle}
+                />
+              )}
           {inlineActions.map((action) => {
             const Icon = action.icon ? icons[action.icon] : undefined;
             const handler = () => {
