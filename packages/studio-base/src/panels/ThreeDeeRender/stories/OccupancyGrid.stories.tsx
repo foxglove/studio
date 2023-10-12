@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj } from "@storybook/react";
-import { screen, userEvent } from "@storybook/testing-library";
+import { screen, userEvent, waitFor } from "@storybook/testing-library";
 
 import { MessageEvent } from "@foxglove/studio";
 import { LayerSettingsOccupancyGrid } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/OccupancyGrids";
@@ -119,7 +119,7 @@ function BaseStory({ includeSettings = false }: { includeSettings?: boolean }): 
   });
 
   return (
-    <div style={{ width: 1000, height: 800, flexShrink: 0 }}>
+    <div style={{ width: 1000, height: 800 }}>
       <PanelSetup fixture={fixture} includeSettings={includeSettings}>
         <ThreeDeePanel
           overrideConfig={{
@@ -167,20 +167,23 @@ export const Occupancy_Grid_Costmap_With_Pick_Settings: StoryObj = {
   },
 
   play: async () => {
-    await userEvent.click(await screen.findByTestId("ExpandingToolbar-Inspect objects"));
+    const { click, hover, pointer } = userEvent.setup();
+    await hover(await screen.findByTestId(/panel-mouseenter-container/));
+    await click(screen.getByRole("button", { name: /inspect objects/i }));
     const canvas = document.querySelector("canvas")!;
 
     // only worked after two clicks, but I'm not sure why
-    await userEvent.pointer({
-      target: canvas,
-      keys: "[MouseLeft]",
-      coords: { clientX: 700, clientY: 380 },
-    });
-    await userEvent.pointer({
-      target: canvas,
-      keys: "[MouseLeft]",
-      coords: { clientX: 700, clientY: 380 },
-    });
+    await waitFor(
+      async () => {
+        await pointer({
+          target: canvas,
+          keys: "[MouseLeft]",
+          coords: { clientX: 800, clientY: 400 },
+        });
+        await screen.findByRole("button", { name: /show settings/i });
+      },
+      { timeout: 1000 },
+    );
 
     await userEvent.click(await screen.findByRole("button", { name: /show settings/i }));
   },
