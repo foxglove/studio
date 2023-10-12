@@ -26,6 +26,7 @@ export type ConfigParams = {
   contextPath: string;
   entrypoint: string;
   outputPath: string;
+  publicPath?: string;
   /** Source map (`devtool`) setting to use for production builds */
   prodSourceMap: string | false;
   /** Set the app version information */
@@ -42,7 +43,7 @@ export const devServerConfig = (params: ConfigParams): WebpackConfiguration => (
 
   // Output path must be specified here for HtmlWebpackPlugin within render config to work
   output: {
-    publicPath: "",
+    publicPath: params.publicPath ?? "",
     path: params.outputPath,
   },
 
@@ -93,7 +94,7 @@ export const mainConfig =
       devtool: isDev ? "eval-cheap-module-source-map" : params.prodSourceMap,
 
       output: {
-        publicPath: "auto",
+        publicPath: params.publicPath ?? "auto",
 
         // Output filenames should include content hashes in order to cache bust when new versions are available
         filename: isDev ? "[name].js" : "[name].[contenthash].js",
