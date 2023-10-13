@@ -95,8 +95,33 @@ export function Sidebars<LeftKey extends string, RightKey extends string>(
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<LayoutNode>>("children");
   const { classes } = useStyles();
 
-  const leftSidebarOpen = selectedLeftKey != undefined && leftItems.has(selectedLeftKey);
-  const rightSidebarOpen = selectedRightKey != undefined && rightItems.has(selectedRightKey);
+  const leftSidebarOpen = selectedLeftKey != undefined;
+  const rightSidebarOpen = selectedRightKey != undefined;
+
+  // Select an available item if the selected one is not actually available
+  useEffect(() => {
+    if (leftSidebarOpen && !leftItems.has(selectedLeftKey)) {
+      const anyLeftKey = [...leftItems.keys()][0];
+      if (anyLeftKey != undefined && anyLeftKey !== selectedLeftKey) {
+        onSelectLeftKey(anyLeftKey);
+      }
+    }
+    if (rightSidebarOpen && !rightItems.has(selectedRightKey)) {
+      const anyRightKey = [...rightItems.keys()][0];
+      if (anyRightKey != undefined && anyRightKey !== selectedRightKey) {
+        onSelectRightKey(anyRightKey);
+      }
+    }
+  }, [
+    leftItems,
+    leftSidebarOpen,
+    onSelectLeftKey,
+    onSelectRightKey,
+    rightItems,
+    rightSidebarOpen,
+    selectedLeftKey,
+    selectedRightKey,
+  ]);
 
   useEffect(() => {
     const leftTargetWidth = 320;
