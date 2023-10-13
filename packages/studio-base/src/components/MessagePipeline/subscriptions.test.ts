@@ -64,4 +64,19 @@ describe("mergeSubscriptions", () => {
       { topic: "a", preloadType: "partial" },
     ]);
   });
+
+  it("switches to subscribing to all fields across preloadType", () => {
+    const subs: SubscribePayload[] = [
+      { topic: "a", preloadType: "partial", fields: ["one", "two"] },
+      { topic: "a", preloadType: "full" },
+      { topic: "a", preloadType: "partial" },
+    ];
+
+    const result = mergeSubscriptions(subs);
+
+    expect(result).toEqual([
+      { topic: "a", preloadType: "full" },
+      { topic: "a", preloadType: "partial" },
+    ]);
+  });
 });
