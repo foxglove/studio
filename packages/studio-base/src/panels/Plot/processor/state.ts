@@ -5,6 +5,7 @@
 import * as R from "ramda";
 
 import { initAccumulated } from "./accumulate";
+import { initDownsampled } from "./downsample";
 import {
   Client,
   RebuildEffect,
@@ -25,6 +26,7 @@ export function initClient(id: string, params: PlotParams | undefined): Client {
     view: undefined,
     blocks: initAccumulated([]),
     current: initAccumulated([]),
+    downsampled: initDownsampled(),
   };
 }
 
