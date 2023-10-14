@@ -101,16 +101,10 @@ export function Sidebars<LeftKey extends string, RightKey extends string>(
   // Select an available item if the selected one is not actually available
   useEffect(() => {
     if (leftSidebarOpen && !leftItems.has(selectedLeftKey)) {
-      const anyLeftKey = [...leftItems.keys()][0];
-      if (anyLeftKey != undefined && anyLeftKey !== selectedLeftKey) {
-        onSelectLeftKey(anyLeftKey);
-      }
+      onSelectLeftKey([...leftItems.keys()][0]);
     }
     if (rightSidebarOpen && !rightItems.has(selectedRightKey)) {
-      const anyRightKey = [...rightItems.keys()][0];
-      if (anyRightKey != undefined && anyRightKey !== selectedRightKey) {
-        onSelectRightKey(anyRightKey);
-      }
+      onSelectRightKey([...rightItems.keys()][0]);
     }
   }, [
     leftItems,
