@@ -69,7 +69,6 @@ describe("mergeSubscriptions", () => {
     const subs: SubscribePayload[] = [
       { topic: "a", preloadType: "partial", fields: ["one", "two"] },
       { topic: "a", preloadType: "full" },
-      { topic: "a", preloadType: "partial" },
     ];
 
     const result = mergeSubscriptions(subs);
