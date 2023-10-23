@@ -16,7 +16,7 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
-import { AppBar } from ".";
+import { PublicAppBar } from ".";
 
 function Wrapper({ children }: React.PropsWithChildren): JSX.Element {
   const appConfiguration = makeMockAppConfiguration();
@@ -35,7 +35,7 @@ function Wrapper({ children }: React.PropsWithChildren): JSX.Element {
   return <MultiProvider providers={providers}>{children}</MultiProvider>;
 }
 
-describe("<AppBar />", () => {
+describe("<PublicAppBar />", () => {
   it("calls functions for custom window controls", async () => {
     const mockMinimize = jest.fn();
     const mockMaximize = jest.fn();
@@ -44,7 +44,7 @@ describe("<AppBar />", () => {
 
     const root = render(
       <Wrapper>
-        <AppBar
+        <PublicAppBar
           showCustomWindowControls
           onMinimizeWindow={mockMinimize}
           onMaximizeWindow={mockMaximize}
@@ -65,7 +65,7 @@ describe("<AppBar />", () => {
 
     root.rerender(
       <Wrapper>
-        <AppBar
+        <PublicAppBar
           showCustomWindowControls
           onMinimizeWindow={mockMinimize}
           onMaximizeWindow={mockMaximize}
