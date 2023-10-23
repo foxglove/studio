@@ -17,12 +17,6 @@ import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { AppBarIconButton } from "@foxglove/studio-base/components/AppBar/AppBarIconButton";
-import { AppMenu, AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
-import {
-  CustomWindowControls,
-  CustomWindowControlsProps,
-} from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import { FoxgloveLogo } from "@foxglove/studio-base/components/FoxgloveLogo";
 import { MemoryUseIndicator } from "@foxglove/studio-base/components/MemoryUseIndicator";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -43,6 +37,9 @@ import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 import { AddPanelMenu } from "./AddPanelMenu";
 import { AppBarContainer } from "./AppBarContainer";
+import { AppBarIconButton } from "./AppBarIconButton";
+import { AppMenu } from "./AppMenu";
+import { CustomWindowControls, CustomWindowControlsProps } from "./CustomWindowControls";
 import { DataSource } from "./DataSource";
 import { UserMenu } from "./UserMenu";
 
@@ -165,18 +162,17 @@ const useStyles = makeStyles<{ debugDragRegion?: boolean }, "avatar">()((
   };
 });
 
-type AppBarProps = CustomWindowControlsProps & {
+export type AppBarProps = CustomWindowControlsProps & {
   leftInset?: number;
   onDoubleClick?: () => void;
   debugDragRegion?: boolean;
   disableSignIn?: boolean;
-  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
 };
 
 const selectHasCurrentLayout = (state: LayoutState) => state.selectedLayout != undefined;
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
-export function AppBar(props: AppBarProps): JSX.Element {
+export function PublicAppBar(props: AppBarProps): JSX.Element {
   const {
     debugDragRegion,
     disableSignIn = false,
@@ -188,7 +184,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
     onMinimizeWindow,
     onUnmaximizeWindow,
     showCustomWindowControls = false,
-    AppMenuComponent,
   } = props;
   const { classes, cx, theme } = useStyles({ debugDragRegion });
   const { currentUser, signIn } = useCurrentUser();
@@ -199,9 +194,6 @@ export function AppBar(props: AppBarProps): JSX.Element {
   const analytics = useAnalytics();
   const [enableMemoryUseIndicator = false] = useAppConfigurationValue<boolean>(
     AppSetting.ENABLE_MEMORY_USE_INDICATOR,
-  );
-  const [enableUnifiedNavigation = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_UNIFIED_NAVIGATION,
   );
 
   const hasCurrentLayout = useCurrentLayoutSelector(selectHasCurrentLayout);
@@ -247,23 +239,13 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   primaryFill={theme.palette.common.white}
                 />
               </IconButton>
-              {enableUnifiedNavigation && AppMenuComponent ? (
-                <AppMenuComponent
-                  open={appMenuOpen}
-                  anchorEl={appMenuEl}
-                  handleClose={() => {
-                    setAppMenuEl(undefined);
-                  }}
-                />
-              ) : (
-                <AppMenu
-                  open={appMenuOpen}
-                  anchorEl={appMenuEl}
-                  handleClose={() => {
-                    setAppMenuEl(undefined);
-                  }}
-                />
-              )}
+              <AppMenu
+                open={appMenuOpen}
+                anchorEl={appMenuEl}
+                handleClose={() => {
+                  setAppMenuEl(undefined);
+                }}
+              />
               <AppBarIconButton
                 className={cx({ "Mui-selected": panelMenuOpen })}
                 color="inherit"

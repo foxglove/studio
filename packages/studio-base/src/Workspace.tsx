@@ -18,9 +18,6 @@ import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { AppBar } from "@foxglove/studio-base/components/AppBar";
-import { AppMenuProps } from "@foxglove/studio-base/components/AppBar/AppMenu";
-import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import {
   DataSourceDialog,
   DataSourceDialogItem,
@@ -38,6 +35,8 @@ import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import { ProblemsList } from "@foxglove/studio-base/components/ProblemsList";
+import { AppBarProps, PublicAppBar } from "@foxglove/studio-base/components/PublicAppBar";
+import { CustomWindowControlsProps } from "@foxglove/studio-base/components/PublicAppBar/CustomWindowControls";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import { Sidebars, SidebarItem } from "@foxglove/studio-base/components/Sidebars";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -89,7 +88,7 @@ type WorkspaceProps = CustomWindowControlsProps & {
   onAppBarDoubleClick?: () => void;
   // eslint-disable-next-line react/no-unused-prop-types
   disablePersistenceForStorybook?: boolean;
-  AppMenuComponent?: (props: AppMenuProps) => JSX.Element;
+  AppBarComponent?: (props: AppBarProps) => JSX.Element;
 };
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
@@ -129,6 +128,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const rightSidebarOpen = useWorkspaceStore(selectWorkspaceRightSidebarOpen);
   const rightSidebarSize = useWorkspaceStore(selectWorkspaceRightSidebarSize);
   const { t } = useTranslation("workspace");
+  const { AppBarComponent = PublicAppBar } = props;
 
   const { dialogActions, sidebarActions } = useWorkspaceActions();
 
@@ -456,7 +456,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        <AppBar
+        <AppBarComponent
           leftInset={props.appBarLeftInset}
           onDoubleClick={props.onAppBarDoubleClick}
           showCustomWindowControls={props.showCustomWindowControls}
@@ -465,7 +465,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
           onMaximizeWindow={props.onMaximizeWindow}
           onUnmaximizeWindow={props.onUnmaximizeWindow}
           onCloseWindow={props.onCloseWindow}
-          AppMenuComponent={props.AppMenuComponent}
         />
         <Sidebars
           leftItems={leftSidebarItems}

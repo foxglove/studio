@@ -20,7 +20,7 @@ import {
 import { PropsWithChildren, forwardRef } from "react";
 import { makeStyles } from "tss-react/mui";
 
-import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
+import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/PublicAppBar/constants";
 
 const anchorWithOffset = (origin: "top" | "bottom") => ({
   "&.notistack-SnackbarContainer": {

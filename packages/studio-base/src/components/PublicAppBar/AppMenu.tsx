@@ -16,8 +16,6 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import { NestedMenuItem } from "@foxglove/studio-base/components/AppBar/NestedMenuItem";
-import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
 import TextMiddleTruncate from "@foxglove/studio-base/components/TextMiddleTruncate";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
@@ -29,6 +27,9 @@ import {
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+
+import { NestedMenuItem } from "./NestedMenuItem";
+import { AppBarMenuItem } from "./types";
 
 export type AppMenuProps = {
   handleClose: () => void;

@@ -7,7 +7,7 @@ import { DeepPartial } from "ts-essentials";
 import { StoreApi } from "zustand";
 
 import { Immutable, SettingsTreeField, SettingsTreeNode } from "@foxglove/studio";
-import { AppBarMenuItem } from "@foxglove/studio-base/components/AppBar/types";
+import { AppBarMenuItem } from "@foxglove/studio-base/components/PublicAppBar/types";
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { WorkspaceContextStore } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { SceneExtensionConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtensionConfig";

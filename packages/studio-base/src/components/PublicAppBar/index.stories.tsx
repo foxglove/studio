@@ -5,8 +5,6 @@
 import { action } from "@storybook/addon-actions";
 import { Meta, StoryFn, StoryObj } from "@storybook/react";
 
-import { AppBar } from "@foxglove/studio-base/components/AppBar";
-import { StorybookDecorator } from "@foxglove/studio-base/components/AppBar/StorybookDecorator.stories";
 import MockMessagePipelineProvider, {
   MockMessagePipelineProps,
 } from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
@@ -14,9 +12,12 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
+import { PublicAppBar } from ".";
+import { StorybookDecorator } from "./StorybookDecorator.stories";
+
 export default {
-  title: "components/AppBar",
-  component: AppBar,
+  title: "components/PublicAppBar",
+  component: PublicAppBar,
   decorators: [StorybookDecorator],
   args: {
     onMinimizeWindow: action("onMinimizeWindow"),
@@ -25,9 +26,9 @@ export default {
     onCloseWindow: action("onCloseWindow"),
   },
   parameters: { colorScheme: "both-column" },
-} satisfies Meta<typeof AppBar>;
+} satisfies Meta<typeof PublicAppBar>;
 
-type Story = StoryObj<typeof AppBar>;
+type Story = StoryObj<typeof PublicAppBar>;
 
 export const Default: Story = {};
 export const DefaultChinese: Story = { parameters: { forceLanguage: "zh" } };
