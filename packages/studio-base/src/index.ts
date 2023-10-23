@@ -24,7 +24,6 @@ export { default as NativeWindowContext } from "./context/NativeWindowContext";
 export type { INativeWindow, NativeWindowEvent } from "./context/NativeWindowContext";
 export type { IDataSourceFactory } from "./context/PlayerSelectionContext";
 export { default as installDevtoolsFormatters } from "./util/installDevtoolsFormatters";
-export { default as overwriteFetch } from "./util/overwriteFetch";
 export { default as waitForFonts } from "./util/waitForFonts";
 export { initI18n } from "./i18n";
 export { IdbExtensionLoader } from "./services/IdbExtensionLoader";

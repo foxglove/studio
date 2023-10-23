@@ -8,6 +8,7 @@ import { useShallowMemo } from "@foxglove/hooks";
 import ExtensionMarketplaceContext, {
   ExtensionMarketplaceDetail,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
+import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
 
 const MARKETPLACE_URL =
   "https://raw.githubusercontent.com/foxglove/studio-extension-marketplace/main/extensions.json";
@@ -16,11 +17,11 @@ export default function ExtensionMarketplaceProvider({
   children,
 }: React.PropsWithChildren): JSX.Element {
   const getAvailableExtensions = useCallback(async (): Promise<ExtensionMarketplaceDetail[]> => {
-    const res = await fetch(MARKETPLACE_URL);
+    const res = await wrappedFetch(MARKETPLACE_URL);
     return (await res.json()) as ExtensionMarketplaceDetail[];
   }, []);
   const getMarkdown = useCallback(async (url: string): Promise<string> => {
-    const res = await fetch(url);
+    const res = await wrappedFetch(url);
     return await res.text();
   }, []);
   const marketplace = useShallowMemo({

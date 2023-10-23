@@ -63,6 +63,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SavedProps, UserScripts } from "@foxglove/studio-base/types/panels";
 
 import "react-mosaic-component/react-mosaic-component.css";
+import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
 
 function noop() {}
 
@@ -186,7 +187,7 @@ const defaultFetchAsset: ComponentProps<typeof MockMessagePipelineProvider>["fet
   uri,
   options,
 ) => {
-  const response = await fetch(uri, options);
+  const response = await wrappedFetch(uri, options);
   return {
     uri,
     data: new Uint8Array(await response.arrayBuffer()),

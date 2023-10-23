@@ -19,7 +19,6 @@ import {
 } from "@foxglove/studio-base/util/sendNotification";
 
 import Rpc from "./Rpc";
-import overwriteFetch from "./overwriteFetch";
 
 export function setupSendReportNotificationHandler(rpc: Rpc): void {
   setNotificationHandler(
@@ -45,6 +44,5 @@ export function setupSendReportNotificationHandler(rpc: Rpc): void {
 export function setupWorker(rpc: Rpc): void {
   if (process.env.NODE_ENV !== "test") {
     setupSendReportNotificationHandler(rpc);
-    overwriteFetch();
   }
 }

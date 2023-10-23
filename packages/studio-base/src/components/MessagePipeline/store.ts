@@ -23,6 +23,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
 
 import { FramePromise } from "./pauseFrameForPromise";
 import { MessagePipelineContext } from "./types";
@@ -171,7 +172,7 @@ export function createMessagePipelineStore({
           }
         }
 
-        const response = await fetch(uri, options);
+        const response = await wrappedFetch(uri, options);
         if (!response.ok) {
           const errMsg = response.statusText;
           throw new Error(`Error ${response.status}${errMsg ? ` (${errMsg})` : ``}`);

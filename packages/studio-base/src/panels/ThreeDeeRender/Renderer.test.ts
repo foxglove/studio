@@ -14,6 +14,7 @@ import { DEFAULT_CAMERA_STATE } from "@foxglove/studio-base/panels/ThreeDeeRende
 import { CameraStateSettings } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/CameraStateSettings";
 import { DEFAULT_PUBLISH_SETTINGS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PublishSettings";
 import { TFMessage } from "@foxglove/studio-base/panels/ThreeDeeRender/ros";
+import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
 
 import { RendererConfig } from "./IRenderer";
 
@@ -112,7 +113,7 @@ function createTFMessageEvent(
 }
 
 const fetchAsset = async (uri: string, options?: { signal: AbortSignal }): Promise<Asset> => {
-  const response = await fetch(uri, options);
+  const response = await wrappedFetch(uri, options);
   return {
     uri,
     data: new Uint8Array(await response.arrayBuffer()),

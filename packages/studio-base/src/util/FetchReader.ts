@@ -12,6 +12,8 @@
 //   You may not use this file except in compliance with the License.
 import { EventEmitter } from "eventemitter3";
 
+import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
+
 type EventTypes = {
   data: (chunk: Uint8Array) => void;
   end: () => void;
@@ -31,7 +33,7 @@ export default class FetchReader extends EventEmitter<EventTypes> {
     super();
     this.#url = url;
     this.#controller = new AbortController();
-    this.#response = fetch(url, { ...options, signal: this.#controller.signal });
+    this.#response = wrappedFetch(url, { ...options, signal: this.#controller.signal });
   }
 
   // you can only call getReader once on a response body

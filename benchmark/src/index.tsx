@@ -20,8 +20,7 @@ if (!rootEl) {
 }
 
 async function main() {
-  const { overwriteFetch, waitForFonts } = await import("@foxglove/studio-base");
-  overwriteFetch();
+  const { waitForFonts } = await import("@foxglove/studio-base");
   // consider moving waitForFonts into App to display an app loading screen
   await waitForFonts();
 

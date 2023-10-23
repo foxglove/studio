@@ -11,26 +11,18 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import overwriteFetch from "./overwriteFetch";
+import wrappedFetch from "./wrappedFetch";
 
-describe("overwriteFetch", () => {
-  afterEach(() => {
-    // reset the test
-    global.fetch = async () => {
-      throw new Error("not available");
-    };
-  });
-
-  it("overwrites the default fetch", async () => {
+describe("wrapFetch", () => {
+  it("wraps the default fetch", async () => {
     const originalError = new TypeError("Failed to fetch");
     global.fetch = async () => {
       throw originalError;
     };
 
-    overwriteFetch();
     let error;
     try {
-      await fetch("url");
+      await wrappedFetch("url");
     } catch (err) {
       error = err;
     }
@@ -45,10 +37,9 @@ describe("overwriteFetch", () => {
       throw originalError;
     };
 
-    overwriteFetch();
     let error;
     try {
-      await fetch("url");
+      await wrappedFetch("url");
     } catch (err) {
       error = err;
     }

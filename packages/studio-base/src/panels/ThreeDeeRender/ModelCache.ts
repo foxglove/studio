@@ -14,6 +14,7 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 
 import Logger from "@foxglove/log";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
 
 const log = Logger.getLogger(__filename);
 
@@ -261,7 +262,7 @@ export class ModelCache {
         if (url === "draco_wasm_wrapper.js" && responseType === "text") {
           return dracoWasmWrapperJs;
         } else if (url === "draco_decoder.wasm" && responseType === "arraybuffer") {
-          return await (await fetch(dracoDecoderWasmUrl)).arrayBuffer();
+          return await (await wrappedFetch(dracoDecoderWasmUrl)).arrayBuffer();
         } else {
           throw new Error(
             `DRACOLoader attempt to load non-bundled asset: ${url} as ${responseType}`,

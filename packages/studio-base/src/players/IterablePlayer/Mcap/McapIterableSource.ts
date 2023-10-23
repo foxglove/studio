@@ -7,6 +7,7 @@ import { McapIndexedReader, McapTypes } from "@mcap/core";
 import Log from "@foxglove/log";
 import { loadDecompressHandlers } from "@foxglove/mcap-support";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
+import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
 
 import { BlobReadable } from "./BlobReadable";
 import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
@@ -80,7 +81,7 @@ export class McapIterableSource implements IIterableSource {
         if (reader) {
           this.#sourceImpl = new McapIndexedIterableSource(reader);
         } else {
-          const response = await fetch(source.url);
+          const response = await wrappedFetch(source.url);
           if (!response.body) {
             throw new Error(`Unable to stream remote file. <${source.url}>`);
           }
