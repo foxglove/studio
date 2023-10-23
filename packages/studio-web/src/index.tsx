@@ -69,8 +69,9 @@ export async function main(getParams: () => Promise<MainParams> = async () => ({
 
   // Use an async import to delay loading the majority of studio-base code until the CompatibilityBanner
   // can be displayed.
-  const { installDevtoolsFormatters, waitForFonts, initI18n, StudioApp } =
-    await import("@foxglove/studio-base");
+  const { installDevtoolsFormatters, waitForFonts, initI18n, StudioApp } = await import(
+    "@foxglove/studio-base"
+  );
   installDevtoolsFormatters();
   // consider moving waitForFonts into App to display an app loading screen
   await waitForFonts();

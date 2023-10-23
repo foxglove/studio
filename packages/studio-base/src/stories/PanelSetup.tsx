@@ -61,7 +61,6 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SavedProps, UserScripts } from "@foxglove/studio-base/types/panels";
-
 import "react-mosaic-component/react-mosaic-component.css";
 import wrappedFetch from "@foxglove/studio-base/util/wrappedFetch";
 
