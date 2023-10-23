@@ -35,8 +35,8 @@ import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import { ProblemsList } from "@foxglove/studio-base/components/ProblemsList";
-import { AppBarProps, PublicAppBar } from "@foxglove/studio-base/components/PublicAppBar";
-import { CustomWindowControlsProps } from "@foxglove/studio-base/components/PublicAppBar/CustomWindowControls";
+import { AppBarProps, AppBar } from "@foxglove/studio-base/components/AppBar";
+import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import { Sidebars, SidebarItem } from "@foxglove/studio-base/components/Sidebars";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -128,7 +128,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const rightSidebarOpen = useWorkspaceStore(selectWorkspaceRightSidebarOpen);
   const rightSidebarSize = useWorkspaceStore(selectWorkspaceRightSidebarSize);
   const { t } = useTranslation("workspace");
-  const { AppBarComponent = PublicAppBar } = props;
+  const { AppBarComponent = AppBar } = props;
 
   const { dialogActions, sidebarActions } = useWorkspaceActions();
 

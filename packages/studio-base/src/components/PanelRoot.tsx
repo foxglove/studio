@@ -7,7 +7,7 @@ import { forwardRef, HTMLAttributes, PropsWithChildren } from "react";
 import { TransitionStatus } from "react-transition-group";
 import { makeStyles } from "tss-react/mui";
 
-import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/PublicAppBar/constants";
+import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
 
 export const PANEL_ROOT_CLASS_NAME = "FoxglovePanelRoot-root";
 

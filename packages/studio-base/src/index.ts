@@ -42,4 +42,4 @@ export { default as SampleNuscenesDataSourceFactory } from "./dataSources/Sample
 export { LaunchPreferenceValue } from "@foxglove/studio-base/types/LaunchPreferenceValue";
 export { reportError, setReportErrorHandler } from "./reportError";
 export { makeWorkspaceContextInitialState } from "./providers/WorkspaceContextProvider";
-export type { AppBarProps } from "./components/PublicAppBar";
+export type { AppBarProps } from "./components/AppBar";

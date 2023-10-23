@@ -4,8 +4,8 @@
 
 import { createContext, useContext } from "react";
 
-import { AppBarProps } from "@foxglove/studio-base/components/PublicAppBar";
-import { CustomWindowControlsProps } from "@foxglove/studio-base/components/PublicAppBar/CustomWindowControls";
+import { AppBarProps } from "@foxglove/studio-base/components/AppBar";
+import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import { IAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { INativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import { INativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";

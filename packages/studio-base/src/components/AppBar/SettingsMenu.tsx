@@ -25,7 +25,7 @@ const useStyles = makeStyles()({
   },
 });
 
-type UserMenuProps = {
+type SettingsMenuProps = {
   handleClose: () => void;
   anchorEl?: HTMLElement;
   anchorReference?: PopoverReference;
@@ -34,14 +34,14 @@ type UserMenuProps = {
   open: boolean;
 };
 
-export function UserMenu({
+export function SettingsMenu({
   anchorEl,
   anchorReference,
   anchorPosition,
   disablePortal,
   handleClose,
   open,
-}: UserMenuProps): JSX.Element {
+}: SettingsMenuProps): JSX.Element {
   const { classes } = useStyles();
   const analytics = useAnalytics();
   const { t } = useTranslation("appBar");

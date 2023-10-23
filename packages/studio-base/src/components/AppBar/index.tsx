@@ -38,7 +38,7 @@ import { AppBarIconButton } from "./AppBarIconButton";
 import { AppMenu } from "./AppMenu";
 import { CustomWindowControls, CustomWindowControlsProps } from "./CustomWindowControls";
 import { DataSource } from "./DataSource";
-import { UserMenu } from "./UserMenu";
+import { SettingsMenu } from "./SettingsMenu";
 
 const useStyles = makeStyles<{ debugDragRegion?: boolean }, "avatar">()((
   theme,
@@ -158,7 +158,7 @@ export type AppBarProps = CustomWindowControlsProps & {
 const selectHasCurrentLayout = (state: LayoutState) => state.selectedLayout != undefined;
 const selectWorkspace = (store: WorkspaceContextStore) => store;
 
-export function PublicAppBar(props: AppBarProps): JSX.Element {
+export function AppBar(props: AppBarProps): JSX.Element {
   const {
     debugDragRegion,
     isMaximized,
@@ -327,7 +327,7 @@ export function PublicAppBar(props: AppBarProps): JSX.Element {
           setPanelAnchorEl(undefined);
         }}
       />
-      <UserMenu
+      <SettingsMenu
         anchorEl={userAnchorEl}
         open={userMenuOpen}
         handleClose={() => {

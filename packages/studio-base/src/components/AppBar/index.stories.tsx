@@ -11,12 +11,12 @@ import MockMessagePipelineProvider, {
 import Stack from "@foxglove/studio-base/components/Stack";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
-import { PublicAppBar } from ".";
+import { AppBar } from ".";
 import { StorybookDecorator } from "./StorybookDecorator.stories";
 
 export default {
-  title: "components/PublicAppBar",
-  component: PublicAppBar,
+  title: "components/AppBar",
+  component: AppBar,
   decorators: [StorybookDecorator],
   args: {
     onMinimizeWindow: action("onMinimizeWindow"),
@@ -25,9 +25,9 @@ export default {
     onCloseWindow: action("onCloseWindow"),
   },
   parameters: { colorScheme: "both-column" },
-} satisfies Meta<typeof PublicAppBar>;
+} satisfies Meta<typeof AppBar>;
 
-type Story = StoryObj<typeof PublicAppBar>;
+type Story = StoryObj<typeof AppBar>;
 
 export const Default: Story = {};
 export const DefaultChinese: Story = { parameters: { forceLanguage: "zh" } };
