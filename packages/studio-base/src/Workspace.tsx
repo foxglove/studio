@@ -18,6 +18,8 @@ import { makeStyles } from "tss-react/mui";
 
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { AppBarProps, AppBar } from "@foxglove/studio-base/components/AppBar";
+import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import {
   DataSourceDialog,
   DataSourceDialogItem,
@@ -35,8 +37,6 @@ import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import { ProblemsList } from "@foxglove/studio-base/components/ProblemsList";
-import { AppBarProps, AppBar } from "@foxglove/studio-base/components/AppBar";
-import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import { Sidebars, SidebarItem } from "@foxglove/studio-base/components/Sidebars";
 import Stack from "@foxglove/studio-base/components/Stack";
