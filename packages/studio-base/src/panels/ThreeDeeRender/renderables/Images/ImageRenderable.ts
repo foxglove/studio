@@ -76,6 +76,9 @@ export class ImageRenderable extends Renderable<ImageUserData> {
 
   #disposed = false;
 
+  // used by subclass
+  protected clearDecodeErrors = true;
+
   public constructor(topicName: string, renderer: IRenderer, userData: ImageUserData) {
     super(topicName, renderer, userData);
   }
@@ -200,7 +203,11 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         this.update();
 
         onDecoded?.(result);
-        this.removeError(DECODE_IMAGE_ERR_KEY);
+        if (this.clearDecodeErrors) {
+          this.removeError(DECODE_IMAGE_ERR_KEY);
+        }
+        // reset if changed
+        this.clearDecodeErrors = true;
         this.renderer.queueAnimationFrame();
       })
       .catch((err) => {
