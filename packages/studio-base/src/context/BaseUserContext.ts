@@ -10,20 +10,15 @@ export type UserType =
   | "authenticated-team"
   | "authenticated-enterprise";
 
-export type BaseProfile = {
-  email: string;
-  avatarImageUrl?: string | null; // eslint-disable-line no-restricted-syntax
-};
-
 export interface CurrentUser {
-  currentUser: BaseProfile | undefined;
+  hasCurrentUser: boolean;
   currentUserType: UserType;
   signIn?: () => void;
   signOut?: () => Promise<void>;
 }
 
 const BaseUserContext = createContext<CurrentUser>({
-  currentUser: undefined,
+  hasCurrentUser: false,
   currentUserType: "unauthenticated",
 });
 BaseUserContext.displayName = "BaseUserContext";

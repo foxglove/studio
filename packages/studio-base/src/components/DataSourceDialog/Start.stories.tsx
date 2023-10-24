@@ -7,7 +7,6 @@ import { ReactNode } from "react";
 
 import BaseUserContext, {
   CurrentUser,
-  BaseProfile,
   UserType,
 } from "@foxglove/studio-base/context/BaseUserContext";
 import PlayerSelectionContext, {
@@ -47,12 +46,6 @@ export default {
   component: DataSourceDialog,
   parameters: { colorScheme: "dark" },
   decorators: [Wrapper],
-};
-
-const baseUser = {
-  email: "user@example.com",
-  // eslint-disable-next-line no-restricted-syntax
-  avatarImageUrl: null,
 };
 
 // Connection
@@ -112,11 +105,11 @@ const playerSelection: PlayerSelection = {
 
 function CurrentUserWrapper(props: {
   children: ReactNode;
-  user?: BaseProfile | undefined;
+  hasCurrentUser?: boolean;
   userType?: UserType | undefined;
 }): JSX.Element {
   const value: CurrentUser = {
-    currentUser: props.user,
+    hasCurrentUser: props.hasCurrentUser === true,
     currentUserType: props.userType ?? "unauthenticated",
     signIn: () => undefined,
     signOut: async () => undefined,
@@ -189,7 +182,7 @@ export const UserPrivateJapanese: StoryObj = {
 export const UserAuthedFree: StoryObj = {
   render: () => {
     return (
-      <CurrentUserWrapper user={baseUser} userType="authenticated-free">
+      <CurrentUserWrapper hasCurrentUser userType="authenticated-free">
         <PlayerSelectionContext.Provider value={playerSelection}>
           <DataSourceDialog backdropAnimation={false} />
         </PlayerSelectionContext.Provider>
@@ -214,7 +207,7 @@ export const UserAuthedFreeJapanese: StoryObj = {
 export const UserAuthedPaid: StoryObj = {
   render: () => {
     return (
-      <CurrentUserWrapper user={baseUser} userType="authenticated-team">
+      <CurrentUserWrapper hasCurrentUser userType="authenticated-team">
         <PlayerSelectionContext.Provider value={playerSelection}>
           <DataSourceDialog backdropAnimation={false} />
         </PlayerSelectionContext.Provider>

@@ -147,7 +147,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   // see comment below above the RemountOnValueChange component
   const playerId = useMessagePipeline(selectPlayerId);
 
-  const { currentUser } = useCurrentUser();
+  const { hasCurrentUser } = useCurrentUser();
 
   useDefaultWebLaunchPreference();
 
@@ -329,7 +329,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   );
 
   const eventsSupported = useEvents(selectEventsSupported);
-  const showEventsTab = currentUser != undefined && eventsSupported;
+  const showEventsTab = hasCurrentUser && eventsSupported;
 
   const leftSidebarItems = useMemo(() => {
     const items = new Map<LeftSidebarItemKey, SidebarItem>([
