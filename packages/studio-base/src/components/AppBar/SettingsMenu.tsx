@@ -15,9 +15,7 @@ import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
-import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
-import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const useStyles = makeStyles()({
   menuList: {
@@ -43,37 +41,24 @@ export function SettingsMenu({
   open,
 }: SettingsMenuProps): JSX.Element {
   const { classes } = useStyles();
-  const analytics = useAnalytics();
   const { t } = useTranslation("appBar");
 
   const { dialogActions } = useWorkspaceActions();
 
   const onSettingsClick = useCallback(
     (tab?: AppSettingsTab) => {
-      void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-        user: "unauthenticated",
-        cta: "app-settings-dialog",
-      });
       dialogActions.preferences.open(tab);
     },
-    [analytics, dialogActions.preferences],
+    [dialogActions.preferences],
   );
 
   const onDocsClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-      user: "unauthenticated",
-      cta: "docs",
-    });
     window.open("https://foxglove.dev/docs", "_blank");
-  }, [analytics]);
+  }, []);
 
   const onSlackClick = useCallback(() => {
-    void analytics.logEvent(AppEvent.APP_BAR_CLICK_CTA, {
-      user: "unauthenticated",
-      cta: "join-slack",
-    });
     window.open("https://foxglove.dev/slack", "_blank");
-  }, [analytics]);
+  }, []);
 
   return (
     <>
