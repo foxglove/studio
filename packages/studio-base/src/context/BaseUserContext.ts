@@ -12,7 +12,7 @@ export type UserType =
 
 export type BaseProfile = {
   email: string;
-  avatarImageUrl: string | null; // eslint-disable-line no-restricted-syntax
+  avatarImageUrl?: string | null; // eslint-disable-line no-restricted-syntax
 };
 
 export interface CurrentUser {
