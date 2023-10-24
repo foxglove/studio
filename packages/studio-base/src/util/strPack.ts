@@ -26,7 +26,7 @@ const packValue = (value: unknown, map: Mapping): unknown => {
   }
 
   if (value instanceof Set || ArrayBuffer.isView(value)) {
-    // we do not dedupe in sets or Float32Array for now
+    // we do not dedupe in sets or TypedArrays for now
     return value;
   }
 
