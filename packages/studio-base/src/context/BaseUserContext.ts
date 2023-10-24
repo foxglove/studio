@@ -11,14 +11,12 @@ export type UserType =
   | "authenticated-enterprise";
 
 export interface CurrentUser {
-  hasCurrentUser: boolean;
   currentUserType: UserType;
   signIn?: () => void;
   signOut?: () => Promise<void>;
 }
 
 const BaseUserContext = createContext<CurrentUser>({
-  hasCurrentUser: false,
   currentUserType: "unauthenticated",
 });
 BaseUserContext.displayName = "BaseUserContext";

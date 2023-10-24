@@ -105,11 +105,9 @@ const playerSelection: PlayerSelection = {
 
 function CurrentUserWrapper(props: {
   children: ReactNode;
-  hasCurrentUser?: boolean;
   userType?: UserType | undefined;
 }): JSX.Element {
   const value: CurrentUser = {
-    hasCurrentUser: props.hasCurrentUser === true,
     currentUserType: props.userType ?? "unauthenticated",
     signIn: () => undefined,
     signOut: async () => undefined,
@@ -182,7 +180,7 @@ export const UserPrivateJapanese: StoryObj = {
 export const UserAuthedFree: StoryObj = {
   render: () => {
     return (
-      <CurrentUserWrapper hasCurrentUser userType="authenticated-free">
+      <CurrentUserWrapper userType="authenticated-free">
         <PlayerSelectionContext.Provider value={playerSelection}>
           <DataSourceDialog backdropAnimation={false} />
         </PlayerSelectionContext.Provider>
@@ -207,7 +205,7 @@ export const UserAuthedFreeJapanese: StoryObj = {
 export const UserAuthedPaid: StoryObj = {
   render: () => {
     return (
-      <CurrentUserWrapper hasCurrentUser userType="authenticated-team">
+      <CurrentUserWrapper userType="authenticated-team">
         <PlayerSelectionContext.Provider value={playerSelection}>
           <DataSourceDialog backdropAnimation={false} />
         </PlayerSelectionContext.Provider>

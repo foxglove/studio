@@ -96,7 +96,7 @@ export default function PlaybackControls(props: {
   const { classes, cx } = useStyles();
   const repeat = useWorkspaceStore(selectPlaybackRepeat);
   const [createEventDialogOpen, setCreateEventDialogOpen] = useState(false);
-  const { hasCurrentUser } = useCurrentUser();
+  const { currentUserType } = useCurrentUser();
   const eventsSupported = useEvents(selectEventsSupported);
 
   const {
@@ -186,7 +186,7 @@ export default function PlaybackControls(props: {
         <Scrubber onSeek={seek} />
         <Stack direction="row" alignItems="center" flex={1} gap={1} overflowX="auto">
           <Stack direction="row" alignItems="center" flex={1} gap={0.5}>
-            {hasCurrentUser && eventsSupported && (
+            {currentUserType !== "unauthenticated" && eventsSupported && (
               <HoverableIconButton
                 size="small"
                 title="Create event"
