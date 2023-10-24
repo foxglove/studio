@@ -41,7 +41,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentUser } from "@foxglove/studio-base/context/BaseUserContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import {
   WorkspaceContextStore,
