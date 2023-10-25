@@ -120,14 +120,7 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
         borderColor: palette.action.selected,
       },
     },
-    toggleButton: {
-      fontSize: "1rem",
-      padding: spacing(0.75),
-
-      "svg:not(.MuiSvgIcon-root)": {
-        fontSize: "1em",
-      },
-    },
+    toggleButton: {},
     toggleButtonFloating: {
       backdropFilter: "blur(3px)",
       pointerEvents: "auto",
