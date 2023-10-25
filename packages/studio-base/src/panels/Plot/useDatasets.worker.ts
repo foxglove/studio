@@ -158,9 +158,6 @@ setInterval(() => {
 
 export const service = {
   addBlock(block: Messages, resetTopics: string[]): void {
-    if (resetTopics.length > 0) {
-    } else {
-    }
     handleEffects(addBlock(strPack(block), resetTopics, state));
   },
   addCurrent(events: readonly MessageEvent[]): void {
