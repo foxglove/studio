@@ -52,7 +52,6 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
     rootFloating: {
       padding: spacing(0.75), // pad the container to prevent shadow from being clipped
       pointerEvents: "none",
-      // gap: spacing(0.75),
       position: "absolute",
       top: spacing(4.5),
       left: spacing(4),
