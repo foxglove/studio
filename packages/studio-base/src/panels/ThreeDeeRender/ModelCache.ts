@@ -233,6 +233,10 @@ export class ModelCache {
     const dae = daeLoader.parse(xmlText, baseUrl(url));
     manager.itemEnd(url);
 
+    for (const objectUrl of textureUrls.values()) {
+      URL.revokeObjectURL(objectUrl);
+    }
+
     // If the <up_axis> is Y_UP, rotate to the Studio convention of Z-up following
     // ROS [REP-0103](https://www.ros.org/reps/rep-0103.html)
     if (upAxis === "Y_UP") {
