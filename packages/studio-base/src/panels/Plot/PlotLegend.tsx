@@ -52,14 +52,14 @@ const useStyles = makeStyles<void, "container" | "toggleButton" | "toggleButtonF
     rootFloating: {
       padding: spacing(0.75), // pad the container to prevent shadow from being clipped
       pointerEvents: "none",
-      gap: spacing(0.75),
+      // gap: spacing(0.75),
       position: "absolute",
       top: spacing(4.5),
       left: spacing(4),
       zIndex: 1000,
       backgroundColor: "transparent",
       alignItems: "flex-start",
-      height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px - ${spacing(5.25)})`,
+      height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px - ${spacing(3.5)})`,
       overflow: "hidden",
       minWidth: 200,
 
@@ -153,7 +153,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
     showPlotValuesInLegend,
     sidebarDimension,
   } = props;
-  const { classes, cx } = useStyles();
+  const { classes, cx, theme } = useStyles();
 
   const dragStart = useRef({ x: 0, y: 0, sidebarDimension: 0 });
 
@@ -236,6 +236,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
           style={{
             height: legendDisplay === "top" ? Math.round(sidebarDimension) : undefined,
             width: legendDisplay === "left" ? Math.round(sidebarDimension) : undefined,
+            marginTop: legendDisplay === "floating" ? theme.spacing(-0.75) : undefined,
           }}
         >
           <Stack
@@ -243,6 +244,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
             fullWidth
             fullHeight={legendDisplay !== "top"}
             overflow={legendDisplay === "floating" ? "auto" : undefined}
+            padding={legendDisplay === "floating" ? 0.75 : undefined}
           >
             <div className={classes.container}>
               {(paths.length === 0 ? [DEFAULT_PATH] : paths).map((path, index) => (
