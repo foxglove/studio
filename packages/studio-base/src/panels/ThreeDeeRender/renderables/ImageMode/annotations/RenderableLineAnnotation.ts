@@ -238,6 +238,7 @@ export class RenderableLineAnnotation extends Renderable<BaseUserData, /*TRender
         this.#useVertexColors == undefined ||
         !this.#geometry ||
         pointsLength > this.#numPoints ||
+        useVertexColors !== this.#useVertexColors ||
         this.#style !== style
       ) {
         // Need to recreate the geometry when length changes: https://github.com/mrdoob/three.js/issues/21488
