@@ -239,7 +239,12 @@ function updateSubscriberAction(
       const topic = subscription.topic;
 
       const ids = subscriberIdsByTopic.get(topic) ?? [];
-      ids.push(id);
+      // If the id is already present in the array for the topic then we should not add it again.
+      // If we add it again it will be given frame messages again when bucketing incoming messages
+      // by subscriber id.
+      if (!ids.includes(id)) {
+        ids.push(id);
+      }
       subscriberIdsByTopic.set(topic, ids);
     }
   }
