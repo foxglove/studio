@@ -453,7 +453,7 @@ export type ExtensionPanelRegistration = {
 export type RegisterMessageConverterArgs<Src> = {
   fromSchemaName: string;
   toSchemaName: string;
-  converter: (msg: Src, event: Immutable<MessageEvent<Src>>) => unknown;
+  converter: (msg: Src, event: Immutable<MessageEvent<Src>>) => unknown | undefined;
 };
 
 type BaseTopic = { name: string; schemaName?: string };
@@ -476,6 +476,13 @@ export interface ExtensionContext {
 
   registerPanel(params: ExtensionPanelRegistration): void;
 
+  /**
+   * Register a function to convert messages from one schema to another.
+   *
+   * A converter function is invoked when a panel subscribes to a topic with the `convertTo` option.
+   * The return value of the converter function is the converted message and is provided to the
+   * panel. If the converter function returns _undefined_, no message is provided to the panel.
+   */
   registerMessageConverter<Src>(args: RegisterMessageConverterArgs<Src>): void;
 
   /**
