@@ -130,7 +130,7 @@ const useStyles = makeStyles()((theme) => ({
   nodeHeaderToggle: {
     display: "grid",
     alignItems: "center",
-    gridTemplateColumns: "auto 1fr auto",
+    gridTemplateColumns: "auto auto 1fr auto",
     opacity: 0.6,
     position: "relative",
     userSelect: "none",
@@ -356,6 +356,20 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           data-testid={`settings__nodeHeaderToggle__${props.path.join("-")}`}
         >
           {hasProperties && <ExpansionArrow expanded={state.open} />}
+          {props.settings?.error && (
+            <Tooltip
+              arrow
+              title={
+                <Typography variant="subtitle2" className={classes.errorTooltip}>
+                  {props.settings.error}
+                </Typography>
+              }
+            >
+              <IconButton size="small" color="error">
+                <ErrorIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           {IconComponent && (
             <IconComponent
               fontSize="small"
@@ -462,20 +476,6 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               </Button>
             );
           })}
-          {props.settings?.error && (
-            <Tooltip
-              arrow
-              title={
-                <Typography variant="subtitle2" className={classes.errorTooltip}>
-                  {props.settings.error}
-                </Typography>
-              }
-            >
-              <IconButton size="small" color="error">
-                <ErrorIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
 
           {menuActions.length > 0 && (
             <NodeActionsMenu actions={menuActions} onSelectAction={handleNodeAction} />
