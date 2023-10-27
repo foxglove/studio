@@ -4,6 +4,7 @@
 
 import { simplify } from "intervals-fn";
 import * as _ from "lodash-es";
+import * as R from "ramda";
 
 import { Condvar } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
@@ -96,16 +97,7 @@ export class BlockLoader {
     // Update all the blocks with any missing topics
     for (const block of this.#blocks) {
       if (block) {
-        const blockTopics = Object.keys(block.messagesByTopic);
-        const needTopics = new Map(topics);
-        for (const topic of blockTopics) {
-          // We need the topic unless the subscription is identical to the subscription for this
-          // topic at the time the block was loaded.
-          if (this.#topics.get(topic) === topics.get(topic)) {
-            needTopics.delete(topic);
-          }
-        }
-        block.needTopics = needTopics;
+        block.needTopics = new Map(topics);
       }
     }
 
@@ -179,7 +171,7 @@ export class BlockLoader {
   }
 
   async #load(args: { progress: LoadArgs["progress"] }): Promise<void> {
-    const topics = this.#topics;
+    const topics = new Map(this.#topics);
 
     // Ignore changing the blocks if the topic list is empty
     if (topics.size === 0) {
@@ -257,6 +249,9 @@ export class BlockLoader {
         const untilTime = clampTime(this.#blockIdToEndTime(currentBlockId), this.#start, this.#end);
 
         const results = await cursor.readUntil(untilTime);
+        if (!R.equals(topics, this.#topics)) {
+          return;
+        }
         // No results means cursor aborted or eof
         if (!results) {
           await cursor.end();
