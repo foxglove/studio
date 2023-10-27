@@ -152,6 +152,10 @@ export class McapIndexedIterableSource implements IIterableSource {
         const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
         const spec = args.topics.get(channelInfo.channel.topic);
         const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
+        const sizeInBytes = Math.max(
+          message.data.byteLength,
+          channelInfo.parsedChannel.approxDeserializedMsgSize,
+        );
         yield {
           type: "message-event",
           msgEvent: {
@@ -162,7 +166,7 @@ export class McapIndexedIterableSource implements IIterableSource {
             // Treat sliced messages as zero bytes. This is a rough approximation of course but the
             // alternative is taking the performance hit of sizing the sliced fields for each
             // message.
-            sizeInBytes: spec?.fields == undefined ? message.data.byteLength : 0,
+            sizeInBytes: spec?.fields == undefined ? sizeInBytes : 0,
             schemaName: channelInfo.schemaName ?? "",
           },
         };
@@ -205,7 +209,10 @@ export class McapIndexedIterableSource implements IIterableSource {
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
             message: channelInfo.parsedChannel.deserialize(message.data),
-            sizeInBytes: message.data.byteLength,
+            sizeInBytes: Math.max(
+              message.data.byteLength,
+              channelInfo.parsedChannel.approxDeserializedMsgSize,
+            ),
             schemaName: channelInfo.schemaName ?? "",
           });
         } catch (err) {
