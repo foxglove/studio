@@ -76,7 +76,7 @@ function parsedDefinitionsToDatatypes(
  */
 function getFieldCount(datatypes: MessageDefinitionMap, typeName: string): FieldCount {
   const fieldCount: FieldCount = new Map();
-  getFieldCountRecursive(datatypes, typeName, fieldCount);
+  getFieldCountRecursive(datatypes, typeName, fieldCount, []);
   return fieldCount;
 }
 
@@ -84,6 +84,7 @@ function getFieldCountRecursive(
   datatypes: MessageDefinitionMap,
   typeName: string,
   fieldCount: FieldCount,
+  checkedTypes: string[],
 ): void {
   if (datatypes.size === 0) {
     return; // Empty schema.
@@ -97,8 +98,11 @@ function getFieldCountRecursive(
   for (const field of definition.definitions) {
     const expectedArrayLength = field.arrayLength ?? field.arrayUpperBound ?? 1;
     if (field.isComplex ?? false) {
+      if (checkedTypes.includes(field.type)) {
+        continue; // Bail out to avoid infinite loop
+      }
       for (let i = 0; i < expectedArrayLength; i++) {
-        getFieldCountRecursive(datatypes, field.type, fieldCount);
+        getFieldCountRecursive(datatypes, field.type, fieldCount, checkedTypes.concat(field.type));
       }
     } else if (field.isArray ?? false) {
       fieldCount.set(field.type, (fieldCount.get(field.type) ?? 0) + expectedArrayLength);
