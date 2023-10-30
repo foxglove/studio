@@ -125,12 +125,12 @@ export function updateParams(id: string, params: PlotParams, state: State): Stat
         },
       };
 
-      return mapClients((client, newState) => {
+      return mapClients((client, nextState) => {
         const { topics } = client;
         if (R.intersection(newTopics, topics).length === 0) {
           return noEffects(client);
         }
-        return refreshClient(client, newState);
+        return refreshClient(client, nextState);
       })(migrated);
     }),
   )(state);
