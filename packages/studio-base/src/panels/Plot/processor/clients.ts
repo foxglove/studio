@@ -114,6 +114,8 @@ export function updateParams(id: string, params: PlotParams, state: State): Stat
       }
 
       const newTopics = R.keys(newData);
+
+      // Move new data now used by at least one client into the real block data
       const migrated = {
         ...newState,
         pending: R.omit(allNewTopics, pending),
@@ -123,12 +125,12 @@ export function updateParams(id: string, params: PlotParams, state: State): Stat
         },
       };
 
-      return mapClients((client) => {
+      return mapClients((client, newState) => {
         const { topics } = client;
         if (R.intersection(newTopics, topics).length === 0) {
           return noEffects(client);
         }
-        return refreshClient(client, migrated);
+        return refreshClient(client, newState);
       })(migrated);
     }),
   )(state);

@@ -97,7 +97,16 @@ export class BlockLoader {
     // Update all the blocks with any missing topics
     for (const block of this.#blocks) {
       if (block) {
-        block.needTopics = new Map(topics);
+        const blockTopics = Object.keys(block.messagesByTopic);
+        const needTopics = new Map(topics);
+        for (const topic of blockTopics) {
+          // We need the topic unless the subscription is identical to the subscription for this
+          // topic at the time the block was loaded.
+          if (this.#topics.get(topic) === topics.get(topic)) {
+            needTopics.delete(topic);
+          }
+        }
+        block.needTopics = needTopics;
       }
     }
 
@@ -249,12 +258,15 @@ export class BlockLoader {
         const untilTime = clampTime(this.#blockIdToEndTime(currentBlockId), this.#start, this.#end);
 
         const results = await cursor.readUntil(untilTime);
-        if (!R.equals(topics, this.#topics)) {
-          return;
-        }
         // No results means cursor aborted or eof
         if (!results) {
           await cursor.end();
+          return;
+        }
+
+        // When topics change while loading, we need to wait for the next
+        // iteration
+        if (!R.equals(topics, this.#topics)) {
           return;
         }
 
