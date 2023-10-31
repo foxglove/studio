@@ -32,10 +32,10 @@ import {
   useMessagePipeline,
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
-import { ObservationMetricGatherer } from "@foxglove/studio-base/components/ObservationMetricGatherer";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
+import { PlaybackPerformance } from "@foxglove/studio-base/components/PlaybackPerformance";
 import { ProblemsList } from "@foxglove/studio-base/components/ProblemsList";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import { Sidebars, SidebarItem } from "@foxglove/studio-base/components/Sidebars";
@@ -151,9 +151,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   useDefaultWebLaunchPreference();
 
-  const [enableStudioLogsSidebar = false] = useAppConfigurationValue<boolean>(
-    AppSetting.SHOW_DEBUG_PANELS,
-  );
+  const [enableDebugMode = false] = useAppConfigurationValue<boolean>(AppSetting.SHOW_DEBUG_PANELS);
 
   const { workspaceExtensions } = useAppContext();
 
@@ -357,14 +355,15 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
     const items = new Map<RightSidebarItemKey, SidebarItem>([
       ["variables", { title: t("variables"), component: VariablesList }],
     ]);
-    if (enableStudioLogsSidebar) {
+    if (enableDebugMode) {
       items.set("studio-logs-settings", { title: t("studioLogs"), component: StudioLogsSettings });
+      items.set("performance", { title: t("performance"), component: PlaybackPerformance });
     }
     if (showEventsTab) {
       items.set("events", { title: t("events"), component: EventsList });
     }
     return items;
-  }, [enableStudioLogsSidebar, showEventsTab, t]);
+  }, [enableDebugMode, showEventsTab, t]);
 
   const keyboardEventHasModifier = (event: KeyboardEvent) =>
     navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey;
@@ -499,7 +498,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
         )}
       </div>
       {workspaceExtensions}
-      <ObservationMetricGatherer />
       <WorkspaceDialogs />
     </PanelStateContextProvider>
   );
