@@ -13,11 +13,20 @@
 
 import { StoryObj } from "@storybook/react";
 
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+
 import { PlaybackPerformance } from "./index";
 
 export default {
   title: "panels/PlaybackPerformance",
-  component: PlaybackPerformance,
 };
 
-export const SimpleExample: StoryObj = {};
+export const SimpleExample: StoryObj = {
+  render: () => {
+    return (
+      <PanelSetup>
+        <PlaybackPerformance />
+      </PanelSetup>
+    );
+  },
+};
