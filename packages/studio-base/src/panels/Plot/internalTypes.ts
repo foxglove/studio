@@ -35,7 +35,7 @@ export type PlotPath = BasePlotPath & {
   label?: string;
   timestampMethod: TimestampMethod;
   showLine?: boolean;
-  size?: number;
+  lineSize?: number;
 };
 export type PlotDataByPath = Map<PlotPath, PlotDataItem[]>;
 

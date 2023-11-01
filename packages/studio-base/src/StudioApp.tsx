@@ -49,16 +49,16 @@ export function StudioApp(): JSX.Element {
     appBarLeftInset,
     customWindowControlProps,
     onAppBarDoubleClick,
-    AppMenuComponent,
+    AppBarComponent,
   } = useSharedRootContext();
 
   const providers = [
     /* eslint-disable react/jsx-key */
     <TimelineInteractionStateProvider />,
-    <UserScriptStateProvider />,
     <CurrentLayoutProvider />,
     <ExtensionMarketplaceProvider />,
     <ExtensionCatalogProvider loaders={extensionLoaders} />,
+    <UserScriptStateProvider />,
     <PlayerManager playerSources={dataSources} />,
     <EventsProvider />,
     /* eslint-enable react/jsx-key */
@@ -110,7 +110,7 @@ export function StudioApp(): JSX.Element {
                 onMaximizeWindow={customWindowControlProps?.onMaximizeWindow}
                 onUnmaximizeWindow={customWindowControlProps?.onUnmaximizeWindow}
                 onCloseWindow={customWindowControlProps?.onCloseWindow}
-                AppMenuComponent={AppMenuComponent}
+                AppBarComponent={AppBarComponent}
               />
             </PanelCatalogProvider>
           </Suspense>

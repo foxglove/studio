@@ -25,8 +25,8 @@ const packValue = (value: unknown, map: Mapping): unknown => {
     return transformed;
   }
 
-  if (value instanceof Set) {
-    // we do not dedupe in sets for now
+  if (value instanceof Set || ArrayBuffer.isView(value)) {
+    // we do not dedupe in sets or TypedArrays for now
     return value;
   }
 
@@ -57,6 +57,8 @@ const packValue = (value: unknown, map: Mapping): unknown => {
  * Deduplicate all string references in the given data structure. This is
  * useful to do after `postMessage()`, since `structuredClone()` duplicates
  * strings.
+ *
+ * See: https://bugs.chromium.org/p/chromium/issues/detail?id=1487682&q=&can=4
  */
 export default function strPack<T>(data: T): T {
   const map: Mapping = {};
