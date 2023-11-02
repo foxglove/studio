@@ -7,6 +7,7 @@ import { BlobReader } from "@foxglove/rosbag/web";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { MessageReader } from "@foxglove/rosmsg-serialization";
 import { compare } from "@foxglove/rostime";
+import { guesstimateDeserializedMsgSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import {
   PlayerProblem,
   MessageEvent,
@@ -35,7 +36,10 @@ export class BagIterableSource implements IIterableSource {
 
   #bag: Bag | undefined;
   #readersByConnectionId = new Map<number, MessageReader>();
-  #datatypesByConnectionId = new Map<number, string>();
+  #datatypesByConnectionId = new Map<
+    number,
+    { schemaName: string; approxDeserializedMsgSize: number }
+  >();
 
   public constructor(source: BagSource) {
     this.#source = source;
@@ -142,7 +146,6 @@ export class BagIterableSource implements IIterableSource {
       const parsedDefinition = parseMessageDefinition(connection.messageDefinition);
       const reader = new MessageReader(parsedDefinition);
       this.#readersByConnectionId.set(id, reader);
-      this.#datatypesByConnectionId.set(id, schemaName);
 
       for (const definition of parsedDefinition) {
         // In parsed definitions, the first definition (root) does not have a name as is meant to
@@ -153,6 +156,9 @@ export class BagIterableSource implements IIterableSource {
           datatypes.set(definition.name, definition);
         }
       }
+
+      const approxDeserializedMsgSize = guesstimateDeserializedMsgSize(datatypes, schemaName);
+      this.#datatypesByConnectionId.set(id, { schemaName, approxDeserializedMsgSize });
     }
 
     return {
@@ -197,8 +203,8 @@ export class BagIterableSource implements IIterableSource {
         return;
       }
 
-      const schemaName = this.#datatypesByConnectionId.get(connectionId);
-      if (!schemaName) {
+      const schemaNameAndApproxMsgSize = this.#datatypesByConnectionId.get(connectionId);
+      if (!schemaNameAndApproxMsgSize) {
         yield {
           type: "problem",
           connectionId,
@@ -224,9 +230,12 @@ export class BagIterableSource implements IIterableSource {
           msgEvent: {
             topic: bagMsgEvent.topic,
             receiveTime: bagMsgEvent.timestamp,
-            sizeInBytes: bagMsgEvent.data.byteLength,
+            sizeInBytes: Math.max(
+              bagMsgEvent.data.byteLength,
+              schemaNameAndApproxMsgSize.approxDeserializedMsgSize,
+            ),
             message: parsedMessage,
-            schemaName,
+            schemaName: schemaNameAndApproxMsgSize.schemaName,
           },
         };
       } else {
