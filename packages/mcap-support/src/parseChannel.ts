@@ -19,13 +19,10 @@ type Channel = {
   messageEncoding: string;
   schema: { name: string; encoding: string; data: Uint8Array } | undefined;
 };
-type FieldCount = Map<string, number>;
 
 export type ParsedChannel = {
   deserialize: (data: ArrayBufferView) => unknown;
   datatypes: MessageDefinitionMap;
-  // Guesstimate of the memory size in bytes of a deserialized message object
-  approxDeserializedMsgSize: number;
 };
 
 function parseIDLDefinitionsToDatatypes(
@@ -72,87 +69,6 @@ function parsedDefinitionsToDatatypes(
 }
 
 /**
- * Calculate the expected occurence of primitive field for a given schema.
- */
-function getFieldCount(datatypes: MessageDefinitionMap, typeName: string): FieldCount {
-  const fieldCount: FieldCount = new Map();
-  getFieldCountRecursive(datatypes, typeName, fieldCount, []);
-  return fieldCount;
-}
-
-function getFieldCountRecursive(
-  datatypes: MessageDefinitionMap,
-  typeName: string,
-  fieldCount: FieldCount,
-  checkedTypes: string[],
-): void {
-  if (datatypes.size === 0) {
-    return; // Empty schema.
-  }
-
-  const definition = datatypes.get(typeName);
-  if (!definition) {
-    throw new Error(`Type '${typeName}' not found in definitions`);
-  }
-
-  for (const field of definition.definitions) {
-    const expectedArrayLength = field.arrayLength ?? field.arrayUpperBound ?? 1;
-    if (field.isComplex ?? false) {
-      if (checkedTypes.includes(field.type)) {
-        continue; // Bail out to avoid infinite loop
-      }
-      for (let i = 0; i < expectedArrayLength; i++) {
-        getFieldCountRecursive(datatypes, field.type, fieldCount, checkedTypes.concat(field.type));
-      }
-    } else if (field.isArray ?? false) {
-      fieldCount.set(field.type, (fieldCount.get(field.type) ?? 0) + expectedArrayLength);
-    } else if (!(field.isConstant ?? false)) {
-      fieldCount.set(field.type, (fieldCount.get(field.type) ?? 0) + 1);
-    }
-  }
-}
-
-/**
- * Guesstimate the size in bytes of a deserialized message object with the estimated amount of
- * primitive fields.
- */
-function guesstimateDeserializedMsgSize(fieldCount: FieldCount): number {
-  const totalFieldCount = [...fieldCount.values()].reduce((a, b) => a + b, 0);
-  let sizeInBytes = totalFieldCount * 16; // Object properties take up space as well
-  for (const [fieldName, count] of fieldCount.entries()) {
-    switch (fieldName) {
-      case "bool":
-      case "int8":
-      case "uint8":
-      case "int16":
-      case "uint16":
-        sizeInBytes += 8 * count; // small integer
-        break;
-      case "int32":
-      case "uint32":
-      case "float32":
-      case "float64":
-        sizeInBytes += 12 * count; // heapnumber
-        break;
-      case "int64":
-      case "uint64":
-        sizeInBytes += 16 * count; // bigint
-        break;
-      case "string":
-        sizeInBytes += 64 * count; // can't predict the string size, assume a certain length
-        break;
-      case "time":
-      case "duration":
-        sizeInBytes += 2 * 12 * count; // 2 x heapnumber
-        break;
-      default:
-        throw new Error(`Unknown primitive type ${fieldName}`);
-    }
-  }
-  return sizeInBytes;
-}
-
-/**
  * Process a channel/schema and extract information that can be used to deserialize messages on the
  * channel, and schemas in the format expected by Studio's RosDatatypes.
  *
@@ -188,9 +104,7 @@ export function parseChannel(channel: Channel): ParsedChannel {
           postprocessValue(JSON.parse(textDecoder.decode(data)) as Record<string, unknown>);
       }
     }
-    const fieldCount = getFieldCount(datatypes, channel.schema?.name ?? "");
-    const approxDeserializedMsgSize = guesstimateDeserializedMsgSize(fieldCount);
-    return { deserialize, datatypes, approxDeserializedMsgSize };
+    return { deserialize, datatypes };
   }
 
   if (channel.messageEncoding === "flatbuffer") {
@@ -203,16 +117,7 @@ export function parseChannel(channel: Channel): ParsedChannel {
         } is not supported (expected flatbuffer)`,
       );
     }
-    const { datatypes, deserialize } = parseFlatbufferSchema(
-      channel.schema.name,
-      channel.schema.data,
-    );
-    const fieldCount = getFieldCount(datatypes, channel.schema.name);
-    return {
-      datatypes,
-      deserialize,
-      approxDeserializedMsgSize: guesstimateDeserializedMsgSize(fieldCount),
-    };
+    return parseFlatbufferSchema(channel.schema.name, channel.schema.data);
   }
 
   if (channel.messageEncoding === "protobuf") {
@@ -225,16 +130,7 @@ export function parseChannel(channel: Channel): ParsedChannel {
         } is not supported (expected protobuf)`,
       );
     }
-    const { datatypes, deserialize } = parseProtobufSchema(
-      channel.schema.name,
-      channel.schema.data,
-    );
-    const fieldCount = getFieldCount(datatypes, channel.schema.name);
-    return {
-      datatypes,
-      deserialize,
-      approxDeserializedMsgSize: guesstimateDeserializedMsgSize(fieldCount),
-    };
+    return parseProtobufSchema(channel.schema.name, channel.schema.data);
   }
 
   if (channel.messageEncoding === "ros1") {
@@ -250,12 +146,9 @@ export function parseChannel(channel: Channel): ParsedChannel {
     const schema = new TextDecoder().decode(channel.schema.data);
     const parsedDefinitions = parseMessageDefinition(schema);
     const reader = new MessageReader(parsedDefinitions);
-    const datatypes = parsedDefinitionsToDatatypes(parsedDefinitions, channel.schema.name);
-    const fieldCount = getFieldCount(datatypes, channel.schema.name);
     return {
       datatypes: parsedDefinitionsToDatatypes(parsedDefinitions, channel.schema.name),
       deserialize: (data) => reader.readMessage(data),
-      approxDeserializedMsgSize: guesstimateDeserializedMsgSize(fieldCount),
     };
   }
 
@@ -278,11 +171,9 @@ export function parseChannel(channel: Channel): ParsedChannel {
       const parsedDefinitions = parseIDL(schema);
       const reader = new OmgidlMessageReader(channel.schema.name, parsedDefinitions);
       const datatypes = parseIDLDefinitionsToDatatypes(parsedDefinitions);
-      const fieldCount = getFieldCount(datatypes, channel.schema.name);
       return {
         datatypes,
         deserialize: (data) => reader.readMessage(data),
-        approxDeserializedMsgSize: guesstimateDeserializedMsgSize(fieldCount),
       };
     } else {
       const isIdl = channel.schema.encoding === "ros2idl";
@@ -292,12 +183,10 @@ export function parseChannel(channel: Channel): ParsedChannel {
         : parseMessageDefinition(schema, { ros2: true });
 
       const reader = new ROS2MessageReader(parsedDefinitions);
-      const datatypes = parsedDefinitionsToDatatypes(parsedDefinitions, channel.schema.name);
-      const fieldCount = getFieldCount(datatypes, channel.schema.name);
+
       return {
-        datatypes,
+        datatypes: parsedDefinitionsToDatatypes(parsedDefinitions, channel.schema.name),
         deserialize: (data) => reader.readMessage(data),
-        approxDeserializedMsgSize: guesstimateDeserializedMsgSize(fieldCount),
       };
     }
   }

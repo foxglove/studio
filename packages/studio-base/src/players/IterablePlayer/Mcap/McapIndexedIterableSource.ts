@@ -16,6 +16,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
+import { guesstimateDeserializedMsgSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -25,7 +26,13 @@ export class McapIndexedIterableSource implements IIterableSource {
   #reader: McapIndexedReader;
   #channelInfoById = new Map<
     number,
-    { channel: McapTypes.Channel; parsedChannel: ParsedChannel; schemaName: string | undefined }
+    {
+      channel: McapTypes.Channel;
+      parsedChannel: ParsedChannel;
+      schemaName: string | undefined;
+      // Guesstimate of the memory size in bytes of a deserialized message object
+      approxDeserializedMsgSize: number;
+    }
   >();
   #start?: Time;
   #end?: Time;
@@ -63,8 +70,13 @@ export class McapIndexedIterableSource implements IIterableSource {
       }
 
       let parsedChannel;
+      let approxDeserializedMsgSize;
       try {
         parsedChannel = parseChannel({ messageEncoding: channel.messageEncoding, schema });
+        approxDeserializedMsgSize =
+          schema?.name != undefined
+            ? guesstimateDeserializedMsgSize(parsedChannel.datatypes, schema.name)
+            : 0;
       } catch (error) {
         problems.push({
           severity: "error",
@@ -73,7 +85,12 @@ export class McapIndexedIterableSource implements IIterableSource {
         });
         continue;
       }
-      this.#channelInfoById.set(channel.id, { channel, parsedChannel, schemaName: schema?.name });
+      this.#channelInfoById.set(channel.id, {
+        channel,
+        parsedChannel,
+        schemaName: schema?.name,
+        approxDeserializedMsgSize,
+      });
 
       let topic = topicsByName.get(channel.topic);
       if (!topic) {
@@ -154,7 +171,7 @@ export class McapIndexedIterableSource implements IIterableSource {
         const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
         const sizeInBytes = Math.max(
           message.data.byteLength,
-          channelInfo.parsedChannel.approxDeserializedMsgSize,
+          channelInfo.approxDeserializedMsgSize,
         );
         yield {
           type: "message-event",
@@ -209,10 +226,7 @@ export class McapIndexedIterableSource implements IIterableSource {
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
             message: channelInfo.parsedChannel.deserialize(message.data),
-            sizeInBytes: Math.max(
-              message.data.byteLength,
-              channelInfo.parsedChannel.approxDeserializedMsgSize,
-            ),
+            sizeInBytes: Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize),
             schemaName: channelInfo.schemaName ?? "",
           });
         } catch (err) {
