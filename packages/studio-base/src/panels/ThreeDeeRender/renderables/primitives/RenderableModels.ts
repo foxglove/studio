@@ -55,7 +55,7 @@ export class RenderableModels extends RenderablePrimitive {
   }
 
   /**
-   * Reuse a renderable from `prevRenderables` if a matching one is found using `primitivesMatch()`, otherwise load a new one.
+   * Creates a new renderable for the given primitive
    * @param primitive Primitive to instantiate renderable with
    * @param getURL Called to retrieve the URL that should be used to load the primitive
    * @param revokeURL Called with the URL returned by getURL after loading is complete
@@ -206,7 +206,8 @@ export class RenderableModels extends RenderablePrimitive {
       })
       .catch(console.error)
       .finally(() => {
-        // remove remaining models that are no longer used
+        // Only unused models should be left in the `prevRenderables` lists after
+        // using this.#removeMatchFromList() above
         for (const renderables of prevRenderablesByUrl.values()) {
           for (const renderable of renderables) {
             renderable.model.removeFromParent();
