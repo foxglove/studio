@@ -31,13 +31,11 @@ export const fontFeatureSettings = "'tnum'";
 const headingFontStyles: TypographyStyle = {
   fontFeatureSettings,
   letterSpacing: "-0.025em",
-  lineHeight: 1.2,
   fontWeight: 800,
 };
 
 const subtitleFontStyles: TypographyStyle = {
   fontFeatureSettings,
-  lineHeight: 1.1,
   fontWeight: 500,
 };
 
