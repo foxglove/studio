@@ -56,29 +56,17 @@ export class RenderableModels extends RenderablePrimitive {
 
   /**
    * Reuse a renderable from `prevRenderables` if a matching one is found using `primitivesMatch()`, otherwise load a new one.
+   * @param primitive Primitive to instantiate renderable with
    * @param getURL Called to retrieve the URL that should be used to load the primitive
    * @param revokeURL Called with the URL returned by getURL after loading is complete
    */
-  async #createOrUpdateRenderable(
+  async #createRenderable(
     primitive: ModelPrimitive,
-    prevRenderables: RenderableModel[] | undefined,
-    primitivesMatch: (a: ModelPrimitive, b: ModelPrimitive) => boolean,
     getURL: (_: ModelPrimitive) => string,
     revokeURL: (_: string) => void,
   ): Promise<RenderableModel | undefined> {
-    let renderable: RenderableModel | undefined;
-    if (prevRenderables) {
-      const idx = prevRenderables.findIndex((prev) => primitivesMatch(prev.primitive, primitive));
-      if (idx >= 0) {
-        renderable = prevRenderables.splice(idx, 1)[0]!;
-      }
-    }
-    if (renderable) {
-      this.#updateModel(renderable, primitive);
-      return renderable;
-    }
-
     const url = getURL(primitive);
+    let renderable: RenderableModel | undefined;
     try {
       // Load the model if necessary
       const cachedModel = await this.#loadCachedModel(url, {
@@ -86,7 +74,6 @@ export class RenderableModels extends RenderablePrimitive {
       });
       if (cachedModel) {
         renderable = { model: cloneAndPrepareModel(cachedModel), cachedModel, primitive };
-        this.#updateModel(renderable, primitive);
       }
     } finally {
       revokeURL(url);
@@ -94,9 +81,34 @@ export class RenderableModels extends RenderablePrimitive {
     return renderable;
   }
 
-  #updateModels(models: ModelPrimitive[]) {
-    this.clear();
+  /**
+   * Uses matching function to find, remove and return the first renderable from the list that matches
+   * @param renderables - (MUTABLE) list of RenderableModel objects
+   * @param primitivesMatch - Comparison function that returns true if the two primitives are a match
+   * @param primitive - Primitive to match against
+   * @returns - matching renderable if found, otherwise undefined
+   */
+  #removeMatchFromList(
+    renderables: RenderableModel[] | undefined,
+    primitivesMatch: (a: ModelPrimitive, b: ModelPrimitive) => boolean,
+    primitive: ModelPrimitive,
+  ) {
+    let renderable: RenderableModel | undefined;
+    if (renderables) {
+      const idx = renderables.findIndex((prev) => primitivesMatch(prev.primitive, primitive));
+      if (idx >= 0) {
+        // remove from previous renderables so that it doesn't get disposed
+        renderable = renderables.splice(idx, 1)[0]!;
+      }
+    }
+    return renderable;
+  }
 
+  /**
+   * Updates renderables to reflect a new list of primitives
+   * @param models - list of ModelPrimitive objects to show in the next update
+   */
+  #updateModels(models: ModelPrimitive[]) {
     const originalUpdateCount = ++this.#updateCount;
 
     const prevRenderablesByUrl = this.#renderablesByUrl;
@@ -118,25 +130,29 @@ export class RenderableModels extends RenderablePrimitive {
             newRenderables = [];
             this.#renderablesByDataCrc.set(dataCrc, newRenderables);
           }
-
-          try {
-            renderable = await this.#createOrUpdateRenderable(
-              primitive,
-              prevRenderables,
-              (model1, model2) =>
-                model1.media_type === model2.media_type &&
-                byteArraysEqual(model1.data, model2.data),
-              (model) => URL.createObjectURL(new Blob([model.data], { type: model.media_type })),
-              (url) => {
-                URL.revokeObjectURL(url);
-              },
-            );
-          } catch (err) {
-            this.renderer.settings.errors.add(
-              this.userData.settingsPath,
-              MODEL_FETCH_FAILED,
-              `Unhandled error loading model from ${primitive.data.byteLength}-byte data: ${err.message}`,
-            );
+          renderable = this.#removeMatchFromList(
+            prevRenderables,
+            (model1, model2) =>
+              model1.media_type === model2.media_type && byteArraysEqual(model1.data, model2.data),
+            primitive,
+          );
+          // renderable not found in prevRenderables
+          if (!renderable) {
+            try {
+              renderable = await this.#createRenderable(
+                primitive,
+                (model) => URL.createObjectURL(new Blob([model.data], { type: model.media_type })),
+                (url) => {
+                  URL.revokeObjectURL(url);
+                },
+              );
+            } catch (err) {
+              this.renderer.settings.errors.add(
+                this.userData.settingsPath,
+                MODEL_FETCH_FAILED,
+                `Unhandled error loading model from ${primitive.data.byteLength}-byte data: ${err.message}`,
+              );
+            }
           }
         } else {
           prevRenderables = prevRenderablesByUrl.get(primitive.url);
@@ -145,22 +161,28 @@ export class RenderableModels extends RenderablePrimitive {
             newRenderables = [];
             this.#renderablesByUrl.set(primitive.url, newRenderables);
           }
+          renderable = this.#removeMatchFromList(
+            prevRenderables,
+            (model1, model2) =>
+              model1.url === model2.url && model1.media_type === model2.media_type,
+            primitive,
+          );
 
-          try {
-            renderable = await this.#createOrUpdateRenderable(
-              primitive,
-              prevRenderables,
-              (model1, model2) =>
-                model1.url === model2.url && model1.media_type === model2.media_type,
-              (model) => model.url,
-              (_url) => {},
-            );
-          } catch (err) {
-            this.renderer.settings.errors.add(
-              this.userData.settingsPath,
-              MODEL_FETCH_FAILED,
-              `Unhandled error loading model from "${primitive.url}": ${err.message}`,
-            );
+          // renderable not found in prevRenderables
+          if (!renderable) {
+            try {
+              renderable = await this.#createRenderable(
+                primitive,
+                (model) => model.url,
+                (_url) => {},
+              );
+            } catch (err) {
+              this.renderer.settings.errors.add(
+                this.userData.settingsPath,
+                MODEL_FETCH_FAILED,
+                `Unhandled error loading model from "${primitive.url}": ${err.message}`,
+              );
+            }
           }
         }
 
@@ -169,6 +191,7 @@ export class RenderableModels extends RenderablePrimitive {
           return;
         }
         if (renderable) {
+          this.#updateModel(renderable, primitive);
           newRenderables.push(renderable);
           this.add(renderable.model);
 
