@@ -130,7 +130,7 @@ const useStyles = makeStyles()((theme) => ({
   nodeHeaderToggle: {
     display: "grid",
     alignItems: "center",
-    gridTemplateColumns: "auto auto 1fr auto",
+    gridTemplateColumns: "auto 1fr auto",
     opacity: 0.6,
     position: "relative",
     userSelect: "none",
@@ -335,6 +335,42 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     ? renderSettingsStatusButton(settings)
     : undefined;
 
+  // Determine the item to render in the icon slot
+  // If there's an error we render the error dot, otherwise we render the provided IconComponent
+  const iconItem = useMemo(() => {
+    if (props.settings?.error) {
+      return (
+        <Tooltip
+          arrow
+          title={
+            <Typography variant="subtitle2" className={classes.errorTooltip}>
+              {props.settings.error}
+            </Typography>
+          }
+        >
+          <IconButton size="small" color="error">
+            <ErrorIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      );
+    }
+
+    if (IconComponent) {
+      return (
+        <IconComponent
+          fontSize="small"
+          color="inherit"
+          style={{
+            marginRight: theme.spacing(0.5),
+            opacity: 0.8,
+          }}
+        />
+      );
+    }
+
+    return <></>;
+  }, [IconComponent, classes.errorTooltip, props.settings?.error, theme]);
+
   return (
     <>
       <div
@@ -356,30 +392,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           data-testid={`settings__nodeHeaderToggle__${props.path.join("-")}`}
         >
           {hasProperties && <ExpansionArrow expanded={state.open} />}
-          {props.settings?.error && (
-            <Tooltip
-              arrow
-              title={
-                <Typography variant="subtitle2" className={classes.errorTooltip}>
-                  {props.settings.error}
-                </Typography>
-              }
-            >
-              <IconButton size="small" color="error">
-                <ErrorIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-          {IconComponent && (
-            <IconComponent
-              fontSize="small"
-              color="inherit"
-              style={{
-                marginRight: theme.spacing(0.5),
-                opacity: 0.8,
-              }}
-            />
-          )}
+          {iconItem}
           {state.editing ? (
             <TextField
               className={classes.editNameField}
