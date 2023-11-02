@@ -21,8 +21,6 @@ export const appSettings: Partial<TypeOptions["resources"]["appSettings"]> = {
   layoutDebuggingDescription:
     "レイアウトストレージの開発およびデバッグ用の追加コントロールを表示する。",
   light: "ライト",
-  memoryUseIndicator: "メモリ使用インジケータ",
-  memoryUseIndicatorDescription: "サイドバーにアプリのメモリ使用量を表示する。",
   messageRate: "メッセージレート",
   noExperimentalFeatures: "現在、実験的機能はありません。",
   openLinksIn: "リンクを開く",
@@ -32,8 +30,8 @@ export const appSettings: Partial<TypeOptions["resources"]["appSettings"]> = {
   sendAnonymizedCrashReports: "匿名化されたクラッシュレポートを送信",
   sendAnonymizedUsageData: "匿名化された使用データを送信して、Foxglove Studioの改善に役立てる",
   settings: "設定",
-  studioDebugPanels: "Studioデバッグパネル",
-  studioDebugPanelsDescription: "「パネルを追加」リストにFoxglove Studioデバッグパネルを表示する。",
+  studioDebugPanels: undefined,
+  studioDebugPanelsDescription: undefined,
   timestampFormat: "タイムスタンプ形式",
   webApp: "ウェブアプリ",
 };
