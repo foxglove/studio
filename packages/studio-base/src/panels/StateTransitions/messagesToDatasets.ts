@@ -16,28 +16,13 @@ import { StateTransitionPath } from "./types";
 
 const baseColors = [grey, ...expandedLineColors];
 
-/**
- * Returns a function that can be used to assign unique indexes to distinct values. Returns the
- * previous index if the value has been seen before otherwise a new index.
- */
-function makeValueIndexer() {
-  const seenValues = new Map<unknown, number>();
-  return (val: unknown) => {
-    const seen = seenValues.get(val);
-    if (seen != undefined) {
-      return seen;
-    }
-    seenValues.set(val, seenValues.size);
-    return seenValues.size - 1;
-  };
-}
-
 type Args = {
   path: StateTransitionPath;
   startTime: Time;
   y: number;
   pathIndex: number;
   blocks: readonly (readonly MessageAndData[] | undefined)[];
+  showIntermediate: boolean;
 };
 
 /**
@@ -45,7 +30,7 @@ type Args = {
  * dataset with different labels and colors applied per-point.
  */
 export default function messagesToDatasets(args: Args): ChartDatasets {
-  const { path, startTime, y, blocks } = args;
+  const { path, startTime, y, blocks, showIntermediate } = args;
 
   const dataset: ChartDataset = {
     borderWidth: 10,
@@ -59,10 +44,7 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
     showLine: true,
   };
 
-  let previousTimestamp: Time | undefined;
-
-  const indexer = makeValueIndexer();
-  let lastDatasetIndex: undefined | number = undefined;
+  let lastValue: unknown = undefined;
 
   for (const messages of blocks) {
     if (!messages) {
@@ -81,18 +63,6 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
       }
 
       const { constantName, value } = queriedData;
-
-      const datasetIndex = indexer(value);
-
-      // Skip duplicates.
-      if (
-        previousTimestamp &&
-        toSec(subtractTimes(previousTimestamp, timestamp)) === 0 &&
-        datasetIndex === lastDatasetIndex
-      ) {
-        continue;
-      }
-      previousTimestamp = timestamp;
 
       // Skip anything that cannot be cast to a number or is a string.
       if (Number.isNaN(value) && typeof value !== "string") {
@@ -118,20 +88,22 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
       const label =
         constantName != undefined ? `${constantName} (${String(value)})` : String(value);
 
-      const isNewSegment = datasetIndex !== lastDatasetIndex;
+      const isNewSegment = lastValue !== value;
 
       const elementWithLabel = {
         x,
         y,
-        label: isNewSegment ? label : "",
+        label: isNewSegment ? label : undefined,
         labelColor: color,
         value,
         constantName,
       };
 
-      dataset.data.push(elementWithLabel);
+      if (isNewSegment || showIntermediate) {
+        dataset.data.push(elementWithLabel);
+      }
 
-      lastDatasetIndex = datasetIndex;
+      lastValue = value;
     }
   }
 

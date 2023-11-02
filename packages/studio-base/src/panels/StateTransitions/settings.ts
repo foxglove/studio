@@ -100,6 +100,12 @@ function buildSettingsTree(
       label: "General",
       fields: {
         isSynced: { label: "Sync with other plots", input: "boolean", value: config.isSynced },
+        hideIntermediate: {
+          label: "Hide intermediate",
+          input: "boolean",
+          value: config.hideIntermediate,
+          help: "Disable display of intermediate state that has not changed from the last state transition",
+        },
       },
     },
     xAxis: {
@@ -144,6 +150,8 @@ export function useStateTransitionsPanelSettings(
         const { input, path, value } = action.payload;
         if (input === "boolean" && _.isEqual(path, ["general", "isSynced"])) {
           saveConfig({ isSynced: value });
+        } else if (input === "boolean" && _.isEqual(path, ["general", "hideIntermediate"])) {
+          saveConfig({ hideIntermediate: value });
         } else if (path[0] === "xAxis") {
           saveConfig(
             produce((draft) => {

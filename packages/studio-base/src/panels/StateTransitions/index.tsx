@@ -21,9 +21,8 @@ import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
-import { useShallowMemo } from "@foxglove/hooks";
 import { add as addTimes, fromSec, subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
+import { useBlocksSubscriptions } from "@foxglove/studio-base/PanelAPI";
 import {
   MessageDataItemsByPath,
   useDecodeMessagePathsForMessagesByTopic,
@@ -39,7 +38,7 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
-import { ChartData, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
@@ -135,6 +134,10 @@ function selectCurrentTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.currentTime;
 }
 
+function selectStartTime(ctx: MessagePipelineContext) {
+  return ctx.playerState.activeData?.startTime;
+}
+
 function selectEndTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.endTime;
 }
@@ -144,7 +147,7 @@ type Props = {
   saveConfig: SaveConfig<StateTransitionConfig>;
 };
 
-const StateTransitions = React.memo(function StateTransitions(props: Props) {
+function StateTransitions(props: Props) {
   const { config, saveConfig } = props;
   const { paths } = config;
   const { classes } = useStyles();
@@ -180,7 +183,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     });
   }, [saveConfig, setMessagePathDropConfig]);
 
-  const { startTime } = PanelAPI.useDataSourceInfo();
+  const startTime = useMessagePipeline(selectStartTime);
   const currentTime = useMessagePipeline(selectCurrentTime);
   const currentTimeSinceStart = useMemo(
     () => (currentTime && startTime ? toSec(subtractTimes(currentTime, startTime)) : undefined),
@@ -208,7 +211,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     [paths],
   );
 
-  const blocks = PanelAPI.useBlocksSubscriptions(subscriptions);
+  const blocks = useBlocksSubscriptions(subscriptions);
   const decodedBlocks = useMemo(
     () => blocks.map(decodeMessagePathsForMessagesByTopic),
     [blocks, decodeMessagePathsForMessagesByTopic],
@@ -234,7 +237,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return _.isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
   }, [decodedBlocks, itemsByPath]);
 
-  const { datasets, minY } = useMemo(() => {
+  const showIntermediate = config.hideIntermediate !== true;
+  const { data, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
       return {
@@ -260,6 +264,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         pathIndex,
         startTime,
         y,
+        showIntermediate,
       });
 
       outDatasets = outDatasets.concat(newBlockDataSets);
@@ -274,16 +279,17 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           pathIndex,
           startTime,
           y,
+          showIntermediate,
         });
         outDatasets = outDatasets.concat(newPathDataSets);
       }
     });
 
     return {
-      datasets: outDatasets,
+      data: { datasets: outDatasets },
       minY: outMinY,
     };
-  }, [decodedBlocks, newItemsByPath, paths, startTime]);
+  }, [decodedBlocks, newItemsByPath, paths, startTime, showIntermediate]);
 
   const yScale = useMemo<ScaleOptions<"linear">>(() => {
     return {
@@ -383,8 +389,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     [messagePipeline],
   );
 
-  const data: ChartData = useShallowMemo({ datasets });
-
   useStateTransitionsPanelSettings(config, saveConfig, focusedPath);
 
   return (
@@ -437,7 +441,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       </Stack>
     </Stack>
   );
-});
+}
 
 const defaultConfig: StateTransitionConfig = {
   paths: [],
