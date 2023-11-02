@@ -36,6 +36,7 @@ const useStyles = makeStyles()((theme) => ({
   dialogTitle: {
     textAlign: "center",
     fontSize: theme.typography.h2.fontSize,
+    paddingBlock: theme.spacing(3),
   },
 }));
 
