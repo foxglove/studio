@@ -78,8 +78,8 @@ type ResolvedService = {
 };
 type MessageDefinitionMap = Map<string, MessageDefinition>;
 
-// 500MB
-const CURRENT_FRAME_MAXIMUM_SIZE_BYTES = 5.0e8;
+// 1500MB
+const CURRENT_FRAME_MAXIMUM_SIZE_BYTES = 15e8;
 
 export default class FoxgloveWebSocketPlayer implements Player {
   readonly #sourceId: string;
