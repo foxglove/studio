@@ -18,5 +18,5 @@ export type StateTransitionConfig = {
   xAxisMaxValue?: number;
   xAxisMinValue?: number;
   xAxisRange?: number;
-  hideIntermediate?: boolean;
+  showIntermediate?: boolean;
 };

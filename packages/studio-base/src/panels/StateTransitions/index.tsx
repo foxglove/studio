@@ -237,7 +237,7 @@ function StateTransitions(props: Props) {
     return _.isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
   }, [decodedBlocks, itemsByPath]);
 
-  const showIntermediate = config.hideIntermediate !== true;
+  const showIntermediate = config.showIntermediate === true;
 
   const { data, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
