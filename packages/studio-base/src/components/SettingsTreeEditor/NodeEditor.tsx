@@ -348,9 +348,13 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
             </Typography>
           }
         >
-          <IconButton size="small" color="error">
-            <ErrorIcon fontSize="small" />
-          </IconButton>
+          <ErrorIcon
+            fontSize="small"
+            color="error"
+            style={{
+              marginRight: theme.spacing(0.5),
+            }}
+          />
         </Tooltip>
       );
     }
