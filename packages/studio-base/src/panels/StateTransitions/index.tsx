@@ -238,6 +238,7 @@ function StateTransitions(props: Props) {
   }, [decodedBlocks, itemsByPath]);
 
   const showIntermediate = config.hideIntermediate !== true;
+
   const { data, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
@@ -332,9 +333,14 @@ function StateTransitions(props: Props) {
         x: { min: currentTimeSinceStart - config.xAxisRange, max: currentTimeSinceStart },
         y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
       };
-    } else {
-      return undefined;
+    } else if (endTimeSinceStart != undefined) {
+      return {
+        x: { min: 0, max: endTimeSinceStart },
+        y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
+      };
     }
+
+    return undefined;
   }, [
     config.xAxisMaxValue,
     config.xAxisMinValue,

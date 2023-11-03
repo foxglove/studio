@@ -15,6 +15,7 @@ import positiveModulo from "./positiveModulo";
 import { StateTransitionPath } from "./types";
 
 const baseColors = [grey, ...expandedLineColors];
+const baseColorsLength = Object.values(baseColors).length;
 
 type Args = {
   path: StateTransitionPath;
@@ -44,7 +45,8 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
     showLine: true,
   };
 
-  let lastValue: unknown = undefined;
+  let lastValue: string | number | bigint | boolean | undefined = undefined;
+  let lastDatum: ChartDataset["data"][0] | undefined = undefined;
 
   for (const messages of blocks) {
     if (!messages) {
@@ -80,8 +82,7 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
 
       const valueForColor =
         typeof value === "string" ? stringHash(value) : Math.round(Number(value));
-      const color =
-        baseColors[positiveModulo(valueForColor, Object.values(baseColors).length)] ?? "grey";
+      const color = baseColors[positiveModulo(valueForColor, baseColorsLength)] ?? "grey";
 
       const x = toSec(subtractTimes(timestamp, startTime));
 
@@ -90,7 +91,8 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
 
       const isNewSegment = lastValue !== value;
 
-      const elementWithLabel = {
+      lastValue = value;
+      lastDatum = {
         x,
         y,
         label: isNewSegment ? label : undefined,
@@ -100,11 +102,18 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
       };
 
       if (isNewSegment || showIntermediate) {
-        dataset.data.push(elementWithLabel);
-      }
+        dataset.data.push(lastDatum);
 
-      lastValue = value;
+        // after we add a datum we clear the last datum so we don't try to add it again at the end
+        lastDatum = undefined;
+      }
     }
+  }
+
+  // If we never added the last datum (maybe because it was the same state as before), we add
+  // it to the data so the user sees the state going until this point.
+  if (lastDatum != undefined) {
+    dataset.data.push(lastDatum);
   }
 
   return [dataset];
