@@ -45,6 +45,253 @@ const icospherePointsAndIndices = {
     11, 6, 11, 9, 6, 9, 8, 6, 8, 10, 6, 10, 7, 6, 2, 11, 7, 4, 9, 11, 1, 8, 9, 5, 10, 8, 3, 7, 10,
   ],
 };
+const teapotMesh = new THREE.Mesh(new TeapotGeometry(1));
+const teapotSTL = new STLExporter().parse(teapotMesh);
+
+/** Reorder points for testing `indices` */
+function rearrange<T>(arr: T[]): T[] {
+  for (let i = 0; i + 1 < arr.length; i += 2) {
+    [arr[i], arr[i + 1]] = [arr[i + 1]!, arr[i]!];
+  }
+  return arr;
+}
+const primitives = {
+  arrows: [
+    {
+      pose: xyzrpyToPose([0, 4, 0], [0, 0, 0]),
+      shaft_diameter: 0.5,
+      shaft_length: 0.5,
+      head_diameter: 1,
+      head_length: 0.3,
+      color: makeColor("#f4b136", 0.5),
+    },
+    {
+      pose: xyzrpyToPose([1, 4, 0], [0, 0, 30]),
+      shaft_diameter: 0.5,
+      shaft_length: 0.5,
+      head_diameter: 1,
+      head_length: 0.3,
+      color: makeColor("#afe663", 0.9),
+    },
+  ],
+
+  cubes: [
+    {
+      pose: xyzrpyToPose([0, 0, 0], [0, 0, 0]),
+      size: { x: 0.8, y: 0.5, z: 1 },
+      color: makeColor("#f4b136", 0.5),
+    },
+    {
+      pose: xyzrpyToPose([1, 0, 0], [0, 0, 30]),
+      size: { x: 0.4, y: 0.2, z: 1 },
+      color: makeColor("#afe663", 0.9),
+    },
+  ],
+
+  spheres: [
+    {
+      pose: xyzrpyToPose([0, 6, 0], [0, 0, 0]),
+      size: { x: 0.8, y: 0.5, z: 1 },
+      color: makeColor("#ff6136", 0.5),
+    },
+    {
+      pose: xyzrpyToPose([1, 6, 0], [0, 0, 30]),
+      size: { x: 0.4, y: 0.2, z: 1 },
+      color: makeColor("#afe6c3", 0.9),
+    },
+  ],
+
+  cylinders: [
+    {
+      pose: xyzrpyToPose([0, 5, 0], [0, 0, 0]),
+      size: { x: 0.8, y: 0.5, z: 1 },
+      color: makeColor("#f4b136", 0.5),
+      top_scale: 1,
+      bottom_scale: 0,
+    },
+    {
+      pose: xyzrpyToPose([1, 5, 0], [0, 0, 30]),
+      size: { x: 0.4, y: 0.2, z: 1 },
+      color: makeColor("#afe663", 0.9),
+      top_scale: 0.25,
+      bottom_scale: 0.75,
+    },
+  ],
+
+  lines: [LineType.LINE_STRIP, LineType.LINE_LOOP, LineType.LINE_LIST].flatMap(
+    (type, typeIndex) => [
+      {
+        // non-indexed, single color
+        type,
+        pose: xyzrpyToPose([-0.2 + typeIndex * 0.2, 0.8 + typeIndex * 0.2, 0], [0, 0, 0]),
+        thickness: 0.05,
+        scale_invariant: false,
+        points: new Array(10).fill(0).map((_, i, { length }) => ({
+          x: 0.25 * Math.cos((2 * Math.PI * i) / length),
+          y: 0.25 * Math.sin((2 * Math.PI * i) / length),
+          z: 0,
+        })),
+        color: makeColor("#7995fb", 0.8),
+        colors: [],
+        indices: [],
+      },
+      {
+        // indexed, single color
+        type,
+        pose: xyzrpyToPose([-0.2 + typeIndex * 0.2, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
+        thickness: 0.05,
+        scale_invariant: false,
+        points: rearrange(
+          new Array(10).fill(0).map((_, i, { length }) => ({
+            x: 0.25 * Math.cos((2 * Math.PI * i) / length),
+            y: 0.25 * Math.sin((2 * Math.PI * i) / length),
+            z: 0,
+          })),
+        ),
+        color: makeColor("#7995fb", 0.8),
+        colors: [],
+        // Should make a flat-pointed star, LINE_LOOP should have a line across it
+        indices: rearrange(new Array(14).fill(0).map((_, i) => (i * 3) % 10)),
+      },
+      {
+        // non-indexed, vertex colors
+        type,
+        pose: xyzrpyToPose([0.8 + typeIndex * 0.2, 0.8 + typeIndex * 0.2, 0], [0, 0, 0]),
+        thickness: 5,
+        scale_invariant: true,
+        points: new Array(10).fill(0).map((_, i, { length }) => ({
+          x: 0.25 * Math.cos((2 * Math.PI * i) / length),
+          y: 0.25 * Math.sin((2 * Math.PI * i) / length),
+          z: 0,
+        })),
+        color: makeColor("#7995fb", 0.8),
+        colors: new Array(10).fill(0).map((_, i, { length }) => {
+          const { r, g, b, a } = tinycolor.fromRatio({ h: i / (length - 1), s: 1, v: 1 }).toRgb();
+          return { r: r / 255, g: g / 255, b: b / 255, a };
+        }),
+        indices: [],
+      },
+      {
+        // indexed, vertex colors
+        type,
+        pose: xyzrpyToPose([0.8 + typeIndex * 0.2, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
+        thickness: 4,
+        scale_invariant: true,
+        points: rearrange(
+          new Array(10).fill(0).map((_, i, { length }) => ({
+            x: 0.25 * Math.cos((2 * Math.PI * i) / length),
+            y: 0.25 * Math.sin((2 * Math.PI * i) / length),
+            z: 0,
+          })),
+        ),
+        color: makeColor("#7995fb", 0.8),
+        colors: rearrange(
+          new Array(10).fill(0).map((_, i, { length }) => {
+            const { r, g, b, a } = tinycolor.fromRatio({ h: i / (length - 1), s: 1, v: 1 }).toRgb();
+            return { r: r / 255, g: g / 255, b: b / 255, a };
+          }),
+        ),
+        // Should make a flat-pointed star, LINE_LOOP should have a line across it
+        indices: rearrange(new Array(14).fill(0).map((_, i) => (i * 3) % 10)),
+      },
+      {
+        // empty points
+        type,
+        pose: xyzrpyToPose([1, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
+        thickness: 5,
+        scale_invariant: true,
+        points: [],
+        color: makeColor("#7995fb", 0.8),
+        colors: [],
+        indices: [],
+      },
+    ],
+  ),
+
+  triangles: [
+    {
+      ...icospherePointsAndIndices,
+      pose: xyzrpyToPose([0, 9, 0], [0.5685618507342682, 0, 0]),
+      color: makeColor("#ff0048", 1.0),
+      colors: [],
+    },
+    {
+      ...icospherePointsAndIndices,
+      pose: xyzrpyToPose([1, 9, 0], [0.5685618507342682, 0, 0]),
+      color: makeColor("#ff0048", 0.5),
+      colors: [
+        { r: 1, g: 0, b: 0, a: 0 },
+        { r: 1, g: 0.6000000000000001, b: 0, a: 0.1 },
+        { r: 0.7999999999999998, g: 1, b: 0, a: 0.2 },
+        { r: 0.20000000000000018, g: 1, b: 0, a: 0.3 },
+        { r: 0, g: 1, b: 0.40000000000000036, a: 0.4 },
+        { r: 0, g: 1, b: 1, a: 0.5 },
+        { r: 0, g: 0.40000000000000036, b: 1, a: 0.6 },
+        { r: 0.1999999999999993, g: 0, b: 1, a: 0.7 },
+        { r: 0.8000000000000007, g: 0, b: 1, a: 0.8 },
+        { r: 1, g: 0, b: 0.5999999999999996, a: 0.9 },
+        { r: 1, g: 0, b: 0, a: 1 },
+        { r: 1, g: 0.6000000000000005, b: 0, a: 1.1 },
+      ] as ColorRGBA[],
+    },
+  ],
+
+  texts: [
+    {
+      pose: xyzrpyToPose([0, 7, 0], [0, 0, 0]),
+      color: makeColor("#f6f136", 0.5),
+      font_size: 0.2,
+      text: "3d size",
+      scale_invariant: false,
+      billboard: true,
+    },
+    {
+      pose: xyzrpyToPose([1, 7, 0], [0, 0, 30]),
+      color: makeColor("#ae6fc3", 0.9),
+      font_size: 10,
+      text: "pixel size",
+      scale_invariant: true,
+      billboard: true,
+    },
+    {
+      pose: xyzrpyToPose([0, 8, 0], [0, 0, 0]),
+      color: makeColor("#f6f136", 0.5),
+      font_size: 0.2,
+      text: "scale invariant false",
+      scale_invariant: false,
+      billboard: false,
+    },
+    {
+      pose: xyzrpyToPose([1, 8, 0], [0, 0, 30]),
+      color: makeColor("#ae6fc3", 0.9),
+      font_size: 0.2,
+      text: "scale invariant true",
+      scale_invariant: true,
+      billboard: false,
+    },
+  ],
+
+  models: [
+    {
+      pose: xyzrpyToPose([0, 3, 0], [0, 0, 0]),
+      scale: { x: 0.3, y: 0.2, z: 0.2 },
+      color: makeColor("#59e860", 0.8),
+      override_color: false,
+      url: "",
+      media_type: "model/stl",
+      data: new TextEncoder().encode(teapotSTL),
+    },
+    {
+      pose: xyzrpyToPose([1, 3, 0], [0, 0, 30]),
+      scale: { x: 0.3, y: 0.2, z: 0.2 },
+      color: makeColor("#59e860", 0.8),
+      override_color: true,
+      url: encodeURI(`data:model/stl;utf8,${teapotSTL}`),
+      media_type: "",
+      data: new Uint8Array(),
+    },
+  ],
+};
 
 function makeStoryScene({
   topic,
@@ -53,16 +300,6 @@ function makeStoryScene({
   topic: string;
   frameId: string;
 }): MessageEvent<SceneUpdate> {
-  const teapotMesh = new THREE.Mesh(new TeapotGeometry(1));
-  const teapotSTL = new STLExporter().parse(teapotMesh);
-
-  /** Reorder points for testing `indices` */
-  function rearrange<T>(arr: T[]): T[] {
-    for (let i = 0; i + 1 < arr.length; i += 2) {
-      [arr[i], arr[i + 1]] = [arr[i + 1]!, arr[i]!];
-    }
-    return arr;
-  }
   return {
     topic,
     receiveTime: { sec: 10, nsec: 0 },
@@ -76,246 +313,7 @@ function makeStoryScene({
           lifetime: { sec: 0, nsec: 0 },
           frame_locked: true,
           metadata: [],
-
-          arrows: [
-            {
-              pose: xyzrpyToPose([0, 4, 0], [0, 0, 0]),
-              shaft_diameter: 0.5,
-              shaft_length: 0.5,
-              head_diameter: 1,
-              head_length: 0.3,
-              color: makeColor("#f4b136", 0.5),
-            },
-            {
-              pose: xyzrpyToPose([1, 4, 0], [0, 0, 30]),
-              shaft_diameter: 0.5,
-              shaft_length: 0.5,
-              head_diameter: 1,
-              head_length: 0.3,
-              color: makeColor("#afe663", 0.9),
-            },
-          ],
-
-          cubes: [
-            {
-              pose: xyzrpyToPose([0, 0, 0], [0, 0, 0]),
-              size: { x: 0.8, y: 0.5, z: 1 },
-              color: makeColor("#f4b136", 0.5),
-            },
-            {
-              pose: xyzrpyToPose([1, 0, 0], [0, 0, 30]),
-              size: { x: 0.4, y: 0.2, z: 1 },
-              color: makeColor("#afe663", 0.9),
-            },
-          ],
-
-          spheres: [
-            {
-              pose: xyzrpyToPose([0, 6, 0], [0, 0, 0]),
-              size: { x: 0.8, y: 0.5, z: 1 },
-              color: makeColor("#ff6136", 0.5),
-            },
-            {
-              pose: xyzrpyToPose([1, 6, 0], [0, 0, 30]),
-              size: { x: 0.4, y: 0.2, z: 1 },
-              color: makeColor("#afe6c3", 0.9),
-            },
-          ],
-
-          cylinders: [
-            {
-              pose: xyzrpyToPose([0, 5, 0], [0, 0, 0]),
-              size: { x: 0.8, y: 0.5, z: 1 },
-              color: makeColor("#f4b136", 0.5),
-              top_scale: 1,
-              bottom_scale: 0,
-            },
-            {
-              pose: xyzrpyToPose([1, 5, 0], [0, 0, 30]),
-              size: { x: 0.4, y: 0.2, z: 1 },
-              color: makeColor("#afe663", 0.9),
-              top_scale: 0.25,
-              bottom_scale: 0.75,
-            },
-          ],
-
-          lines: [LineType.LINE_STRIP, LineType.LINE_LOOP, LineType.LINE_LIST].flatMap(
-            (type, typeIndex) => [
-              {
-                // non-indexed, single color
-                type,
-                pose: xyzrpyToPose([-0.2 + typeIndex * 0.2, 0.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-                thickness: 0.05,
-                scale_invariant: false,
-                points: new Array(10).fill(0).map((_, i, { length }) => ({
-                  x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-                  y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-                  z: 0,
-                })),
-                color: makeColor("#7995fb", 0.8),
-                colors: [],
-                indices: [],
-              },
-              {
-                // indexed, single color
-                type,
-                pose: xyzrpyToPose([-0.2 + typeIndex * 0.2, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-                thickness: 0.05,
-                scale_invariant: false,
-                points: rearrange(
-                  new Array(10).fill(0).map((_, i, { length }) => ({
-                    x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-                    y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-                    z: 0,
-                  })),
-                ),
-                color: makeColor("#7995fb", 0.8),
-                colors: [],
-                // Should make a flat-pointed star, LINE_LOOP should have a line across it
-                indices: rearrange(new Array(14).fill(0).map((_, i) => (i * 3) % 10)),
-              },
-              {
-                // non-indexed, vertex colors
-                type,
-                pose: xyzrpyToPose([0.8 + typeIndex * 0.2, 0.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-                thickness: 5,
-                scale_invariant: true,
-                points: new Array(10).fill(0).map((_, i, { length }) => ({
-                  x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-                  y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-                  z: 0,
-                })),
-                color: makeColor("#7995fb", 0.8),
-                colors: new Array(10).fill(0).map((_, i, { length }) => {
-                  const { r, g, b, a } = tinycolor
-                    .fromRatio({ h: i / (length - 1), s: 1, v: 1 })
-                    .toRgb();
-                  return { r: r / 255, g: g / 255, b: b / 255, a };
-                }),
-                indices: [],
-              },
-              {
-                // indexed, vertex colors
-                type,
-                pose: xyzrpyToPose([0.8 + typeIndex * 0.2, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-                thickness: 4,
-                scale_invariant: true,
-                points: rearrange(
-                  new Array(10).fill(0).map((_, i, { length }) => ({
-                    x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-                    y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-                    z: 0,
-                  })),
-                ),
-                color: makeColor("#7995fb", 0.8),
-                colors: rearrange(
-                  new Array(10).fill(0).map((_, i, { length }) => {
-                    const { r, g, b, a } = tinycolor
-                      .fromRatio({ h: i / (length - 1), s: 1, v: 1 })
-                      .toRgb();
-                    return { r: r / 255, g: g / 255, b: b / 255, a };
-                  }),
-                ),
-                // Should make a flat-pointed star, LINE_LOOP should have a line across it
-                indices: rearrange(new Array(14).fill(0).map((_, i) => (i * 3) % 10)),
-              },
-              {
-                // empty points
-                type,
-                pose: xyzrpyToPose([1, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-                thickness: 5,
-                scale_invariant: true,
-                points: [],
-                color: makeColor("#7995fb", 0.8),
-                colors: [],
-                indices: [],
-              },
-            ],
-          ),
-
-          triangles: [
-            {
-              ...icospherePointsAndIndices,
-              pose: xyzrpyToPose([0, 9, 0], [0.5685618507342682, 0, 0]),
-              color: makeColor("#ff0048", 1.0),
-              colors: [],
-            },
-            {
-              ...icospherePointsAndIndices,
-              pose: xyzrpyToPose([1, 9, 0], [0.5685618507342682, 0, 0]),
-              color: makeColor("#ff0048", 0.5),
-              colors: [
-                { r: 1, g: 0, b: 0, a: 0 },
-                { r: 1, g: 0.6000000000000001, b: 0, a: 0.1 },
-                { r: 0.7999999999999998, g: 1, b: 0, a: 0.2 },
-                { r: 0.20000000000000018, g: 1, b: 0, a: 0.3 },
-                { r: 0, g: 1, b: 0.40000000000000036, a: 0.4 },
-                { r: 0, g: 1, b: 1, a: 0.5 },
-                { r: 0, g: 0.40000000000000036, b: 1, a: 0.6 },
-                { r: 0.1999999999999993, g: 0, b: 1, a: 0.7 },
-                { r: 0.8000000000000007, g: 0, b: 1, a: 0.8 },
-                { r: 1, g: 0, b: 0.5999999999999996, a: 0.9 },
-                { r: 1, g: 0, b: 0, a: 1 },
-                { r: 1, g: 0.6000000000000005, b: 0, a: 1.1 },
-              ] as ColorRGBA[],
-            },
-          ],
-
-          texts: [
-            {
-              pose: xyzrpyToPose([0, 7, 0], [0, 0, 0]),
-              color: makeColor("#f6f136", 0.5),
-              font_size: 0.2,
-              text: "3d size",
-              scale_invariant: false,
-              billboard: true,
-            },
-            {
-              pose: xyzrpyToPose([1, 7, 0], [0, 0, 30]),
-              color: makeColor("#ae6fc3", 0.9),
-              font_size: 10,
-              text: "pixel size",
-              scale_invariant: true,
-              billboard: true,
-            },
-            {
-              pose: xyzrpyToPose([0, 8, 0], [0, 0, 0]),
-              color: makeColor("#f6f136", 0.5),
-              font_size: 0.2,
-              text: "scale invariant false",
-              scale_invariant: false,
-              billboard: false,
-            },
-            {
-              pose: xyzrpyToPose([1, 8, 0], [0, 0, 30]),
-              color: makeColor("#ae6fc3", 0.9),
-              font_size: 0.2,
-              text: "scale invariant true",
-              scale_invariant: true,
-              billboard: false,
-            },
-          ],
-
-          models: [
-            {
-              pose: xyzrpyToPose([0, 3, 0], [0, 0, 0]),
-              scale: { x: 0.3, y: 0.2, z: 0.2 },
-              color: makeColor("#59e860", 0.8),
-              override_color: false,
-              url: "",
-              media_type: "model/stl",
-              data: new TextEncoder().encode(teapotSTL),
-            },
-            {
-              pose: xyzrpyToPose([1, 3, 0], [0, 0, 30]),
-              scale: { x: 0.3, y: 0.2, z: 0.2 },
-              color: makeColor("#59e860", 0.8),
-              override_color: true,
-              url: encodeURI(`data:model/stl;utf8,${teapotSTL}`),
-              media_type: "",
-              data: new Uint8Array(),
-            },
-          ],
+          ...primitives,
         },
       ],
     },
@@ -879,16 +877,6 @@ function makeMultiEntityScene({
   topic: string;
   frameId: string;
 }): MessageEvent<SceneUpdate> {
-  const teapotMesh = new THREE.Mesh(new TeapotGeometry(1));
-  const teapotSTL = new STLExporter().parse(teapotMesh);
-
-  /** Reorder points for testing `indices` */
-  function rearrange<T>(arr: T[]): T[] {
-    for (let i = 0; i + 1 < arr.length; i += 2) {
-      [arr[i], arr[i + 1]] = [arr[i + 1]!, arr[i]!];
-    }
-    return arr;
-  }
   const entityData = {
     timestamp: { sec: 0, nsec: 0 },
     frame_id: frameId,
@@ -896,245 +884,7 @@ function makeMultiEntityScene({
     frame_locked: true,
     metadata: [],
   };
-  const primitives = {
-    arrows: [
-      {
-        pose: xyzrpyToPose([0, 4, 0], [0, 0, 0]),
-        shaft_diameter: 0.5,
-        shaft_length: 0.5,
-        head_diameter: 1,
-        head_length: 0.3,
-        color: makeColor("#f4b136", 0.5),
-      },
-      {
-        pose: xyzrpyToPose([1, 4, 0], [0, 0, 30]),
-        shaft_diameter: 0.5,
-        shaft_length: 0.5,
-        head_diameter: 1,
-        head_length: 0.3,
-        color: makeColor("#afe663", 0.9),
-      },
-    ],
 
-    cubes: [
-      {
-        pose: xyzrpyToPose([0, 0, 0], [0, 0, 0]),
-        size: { x: 0.8, y: 0.5, z: 1 },
-        color: makeColor("#f4b136", 0.5),
-      },
-      {
-        pose: xyzrpyToPose([1, 0, 0], [0, 0, 30]),
-        size: { x: 0.4, y: 0.2, z: 1 },
-        color: makeColor("#afe663", 0.9),
-      },
-    ],
-
-    spheres: [
-      {
-        pose: xyzrpyToPose([0, 6, 0], [0, 0, 0]),
-        size: { x: 0.8, y: 0.5, z: 1 },
-        color: makeColor("#ff6136", 0.5),
-      },
-      {
-        pose: xyzrpyToPose([1, 6, 0], [0, 0, 30]),
-        size: { x: 0.4, y: 0.2, z: 1 },
-        color: makeColor("#afe6c3", 0.9),
-      },
-    ],
-
-    cylinders: [
-      {
-        pose: xyzrpyToPose([0, 5, 0], [0, 0, 0]),
-        size: { x: 0.8, y: 0.5, z: 1 },
-        color: makeColor("#f4b136", 0.5),
-        top_scale: 1,
-        bottom_scale: 0,
-      },
-      {
-        pose: xyzrpyToPose([1, 5, 0], [0, 0, 30]),
-        size: { x: 0.4, y: 0.2, z: 1 },
-        color: makeColor("#afe663", 0.9),
-        top_scale: 0.25,
-        bottom_scale: 0.75,
-      },
-    ],
-
-    lines: [LineType.LINE_STRIP, LineType.LINE_LOOP, LineType.LINE_LIST].flatMap(
-      (type, typeIndex) => [
-        {
-          // non-indexed, single color
-          type,
-          pose: xyzrpyToPose([-0.2 + typeIndex * 0.2, 0.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-          thickness: 0.05,
-          scale_invariant: false,
-          points: new Array(10).fill(0).map((_, i, { length }) => ({
-            x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-            y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-            z: 0,
-          })),
-          color: makeColor("#7995fb", 0.8),
-          colors: [],
-          indices: [],
-        },
-        {
-          // indexed, single color
-          type,
-          pose: xyzrpyToPose([-0.2 + typeIndex * 0.2, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-          thickness: 0.05,
-          scale_invariant: false,
-          points: rearrange(
-            new Array(10).fill(0).map((_, i, { length }) => ({
-              x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-              y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-              z: 0,
-            })),
-          ),
-          color: makeColor("#7995fb", 0.8),
-          colors: [],
-          // Should make a flat-pointed star, LINE_LOOP should have a line across it
-          indices: rearrange(new Array(14).fill(0).map((_, i) => (i * 3) % 10)),
-        },
-        {
-          // non-indexed, vertex colors
-          type,
-          pose: xyzrpyToPose([0.8 + typeIndex * 0.2, 0.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-          thickness: 5,
-          scale_invariant: true,
-          points: new Array(10).fill(0).map((_, i, { length }) => ({
-            x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-            y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-            z: 0,
-          })),
-          color: makeColor("#7995fb", 0.8),
-          colors: new Array(10).fill(0).map((_, i, { length }) => {
-            const { r, g, b, a } = tinycolor.fromRatio({ h: i / (length - 1), s: 1, v: 1 }).toRgb();
-            return { r: r / 255, g: g / 255, b: b / 255, a };
-          }),
-          indices: [],
-        },
-        {
-          // indexed, vertex colors
-          type,
-          pose: xyzrpyToPose([0.8 + typeIndex * 0.2, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-          thickness: 4,
-          scale_invariant: true,
-          points: rearrange(
-            new Array(10).fill(0).map((_, i, { length }) => ({
-              x: 0.25 * Math.cos((2 * Math.PI * i) / length),
-              y: 0.25 * Math.sin((2 * Math.PI * i) / length),
-              z: 0,
-            })),
-          ),
-          color: makeColor("#7995fb", 0.8),
-          colors: rearrange(
-            new Array(10).fill(0).map((_, i, { length }) => {
-              const { r, g, b, a } = tinycolor
-                .fromRatio({ h: i / (length - 1), s: 1, v: 1 })
-                .toRgb();
-              return { r: r / 255, g: g / 255, b: b / 255, a };
-            }),
-          ),
-          // Should make a flat-pointed star, LINE_LOOP should have a line across it
-          indices: rearrange(new Array(14).fill(0).map((_, i) => (i * 3) % 10)),
-        },
-        {
-          // empty points
-          type,
-          pose: xyzrpyToPose([1, 1.8 + typeIndex * 0.2, 0], [0, 0, 0]),
-          thickness: 5,
-          scale_invariant: true,
-          points: [],
-          color: makeColor("#7995fb", 0.8),
-          colors: [],
-          indices: [],
-        },
-      ],
-    ),
-
-    triangles: [
-      {
-        ...icospherePointsAndIndices,
-        pose: xyzrpyToPose([0, 9, 0], [0.5685618507342682, 0, 0]),
-        color: makeColor("#ff0048", 1.0),
-        colors: [],
-      },
-      {
-        ...icospherePointsAndIndices,
-        pose: xyzrpyToPose([1, 9, 0], [0.5685618507342682, 0, 0]),
-        color: makeColor("#ff0048", 0.5),
-        colors: [
-          { r: 1, g: 0, b: 0, a: 0 },
-          { r: 1, g: 0.6000000000000001, b: 0, a: 0.1 },
-          { r: 0.7999999999999998, g: 1, b: 0, a: 0.2 },
-          { r: 0.20000000000000018, g: 1, b: 0, a: 0.3 },
-          { r: 0, g: 1, b: 0.40000000000000036, a: 0.4 },
-          { r: 0, g: 1, b: 1, a: 0.5 },
-          { r: 0, g: 0.40000000000000036, b: 1, a: 0.6 },
-          { r: 0.1999999999999993, g: 0, b: 1, a: 0.7 },
-          { r: 0.8000000000000007, g: 0, b: 1, a: 0.8 },
-          { r: 1, g: 0, b: 0.5999999999999996, a: 0.9 },
-          { r: 1, g: 0, b: 0, a: 1 },
-          { r: 1, g: 0.6000000000000005, b: 0, a: 1.1 },
-        ] as ColorRGBA[],
-      },
-    ],
-
-    texts: [
-      {
-        pose: xyzrpyToPose([0, 7, 0], [0, 0, 0]),
-        color: makeColor("#f6f136", 0.5),
-        font_size: 0.2,
-        text: "3d size",
-        scale_invariant: false,
-        billboard: true,
-      },
-      {
-        pose: xyzrpyToPose([1, 7, 0], [0, 0, 30]),
-        color: makeColor("#ae6fc3", 0.9),
-        font_size: 10,
-        text: "pixel size",
-        scale_invariant: true,
-        billboard: true,
-      },
-      {
-        pose: xyzrpyToPose([0, 8, 0], [0, 0, 0]),
-        color: makeColor("#f6f136", 0.5),
-        font_size: 0.2,
-        text: "scale invariant false",
-        scale_invariant: false,
-        billboard: false,
-      },
-      {
-        pose: xyzrpyToPose([1, 8, 0], [0, 0, 30]),
-        color: makeColor("#ae6fc3", 0.9),
-        font_size: 0.2,
-        text: "scale invariant true",
-        scale_invariant: true,
-        billboard: false,
-      },
-    ],
-
-    models: [
-      {
-        pose: xyzrpyToPose([0, 3, 0], [0, 0, 0]),
-        scale: { x: 0.3, y: 0.2, z: 0.2 },
-        color: makeColor("#59e860", 0.8),
-        override_color: false,
-        url: "",
-        media_type: "model/stl",
-        data: new TextEncoder().encode(teapotSTL),
-      },
-      {
-        pose: xyzrpyToPose([1, 3, 0], [0, 0, 30]),
-        scale: { x: 0.3, y: 0.2, z: 0.2 },
-        color: makeColor("#59e860", 0.8),
-        override_color: true,
-        url: encodeURI(`data:model/stl;utf8,${teapotSTL}`),
-        media_type: "",
-        data: new Uint8Array(),
-      },
-    ],
-  };
   const entities: SceneEntity[] = [];
   const allPrimitivesAsEmpty = Object.keys(primitives).reduce(
     (acc, primitiveType) => ({ ...acc, [primitiveType]: [] }),
@@ -1144,6 +894,10 @@ function makeMultiEntityScene({
     const primitiveArray = primitives[primitiveType as keyof typeof primitives]!;
     let i = 0;
     for (const primitive of primitiveArray) {
+      // Each primitive has it's own entity
+      // This is important because entities will use other entities' primitives from the
+      // PrimitivePool after seeking because primitives are `push`ed when `released`
+      // and `pop`ed when `acquired`
       entities.push({
         ...entityData,
         id: `${primitiveType}-entity-${i}`,
@@ -1169,14 +923,9 @@ function makeMultiEntityScene({
 function CheckVisibleAfterSeek(): JSX.Element {
   const readySignal = useReadySignal();
 
-  // We're testing a Line loop using a position buffer bigger than it needs from a previous frame
-  // So we need to test across multiple frames
   const frames = useMemo(() => {
-    const frame1 = makeMultiEntityScene({ topic: "/markers/annotations", frameId: "map" });
-    const frame2 = makeMultiEntityScene({ topic: "/markers/annotations", frameId: "map" });
-    // const frame1 = msgs[0];
-    // const frame2 = msgs[0];
-
+    const frame1 = makeMultiEntityScene({ topic: "/markers/annotations", frameId: "root" });
+    const frame2 = makeMultiEntityScene({ topic: "/markers/annotations", frameId: "root" });
     return [frame1, frame2];
   }, []);
 
@@ -1206,6 +955,7 @@ function CheckVisibleAfterSeek(): JSX.Element {
         newFixture.activeData = {
           currentTime: { sec: 11, nsec: 0 },
           isPlaying: true,
+          // Make Renderer handle seek to clear renderables
           lastSeekTime: 11,
         };
         return newFixture;
@@ -1222,7 +972,7 @@ function CheckVisibleAfterSeek(): JSX.Element {
   }, [readySignal, frames]);
 
   return (
-    <PanelSetup fixture={fixture} includeSettings={true}>
+    <PanelSetup fixture={fixture}>
       <ThreeDeePanel
         overrideConfig={{
           ...ThreeDeePanel.defaultConfig,
