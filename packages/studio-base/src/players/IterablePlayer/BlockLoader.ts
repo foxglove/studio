@@ -4,6 +4,7 @@
 
 import { simplify } from "intervals-fn";
 import * as _ from "lodash-es";
+import * as R from "ramda";
 
 import { Condvar } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
@@ -179,7 +180,7 @@ export class BlockLoader {
   }
 
   async #load(args: { progress: LoadArgs["progress"] }): Promise<void> {
-    const topics = this.#topics;
+    const topics = new Map(this.#topics);
 
     // Ignore changing the blocks if the topic list is empty
     if (topics.size === 0) {
@@ -263,6 +264,12 @@ export class BlockLoader {
           return;
         }
 
+        // When topics change while loading, we need to wait for the next
+        // iteration
+        if (!R.equals(topics, this.#topics)) {
+          return;
+        }
+
         const messagesByTopic: Record<string, MessageEvent[]> = {};
 
         // Set all topics to empty arrays. Since our cursor requested all the topicsToFetch we either will
@@ -318,9 +325,9 @@ export class BlockLoader {
           if (totalBlockSizeBytes > this.#maxCacheSize) {
             this.#problemManager.addProblem("cache-full", {
               severity: "error",
-              message: `Cache is full. Preloading for topics [${Array.from(topicsToFetch).join(
-                ", ",
-              )}] has stopped on block ${currentBlockId + 1}/${this.#blocks.length}.`,
+              message: `Cache is full. Preloading for topics [${Array.from(
+                topicsToFetch.keys(),
+              ).join(", ")}] has stopped on block ${currentBlockId + 1}/${this.#blocks.length}.`,
               tip: "Try reducing the number of topics that require preloading at a given time (e.g. in plots), or try to reduce the time range of the file.",
             });
             // We need to emit progress here so the player will emit a new state
