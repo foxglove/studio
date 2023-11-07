@@ -7,18 +7,19 @@ import { MessageDefinitionMap } from "@foxglove/mcap-support/src/types";
 /**
  * Calculate the expected occurence of primitive field for a given schema.
  */
-function getFieldCount(datatypes: MessageDefinitionMap, typeName: string): Map<string, number> {
-  const fieldCount = new Map<string, number>();
-  getFieldCountRecursive(datatypes, typeName, fieldCount, []);
-  return fieldCount;
+function getFieldTypeCount(datatypes: MessageDefinitionMap, typeName: string): Map<string, number> {
+  const fieldTypeCount = new Map<string, number>();
+  getFieldTypeCountRecursive({ datatypes, typeName, fieldTypeCount, checkedTypes: [] });
+  return fieldTypeCount;
 }
 
-function getFieldCountRecursive(
-  datatypes: MessageDefinitionMap,
-  typeName: string,
-  fieldCount: Map<string, number>,
-  checkedTypes: string[],
-): void {
+function getFieldTypeCountRecursive(args: {
+  datatypes: MessageDefinitionMap;
+  typeName: string;
+  fieldTypeCount: Map<string, number>;
+  checkedTypes: string[];
+}): void {
+  const { datatypes, typeName, fieldTypeCount, checkedTypes } = args;
   if (datatypes.size === 0) {
     return; // Empty schema.
   }
@@ -35,12 +36,17 @@ function getFieldCountRecursive(
         continue; // Bail out to avoid infinite loop
       }
       for (let i = 0; i < expectedArrayLength; i++) {
-        getFieldCountRecursive(datatypes, field.type, fieldCount, checkedTypes.concat(field.type));
+        getFieldTypeCountRecursive({
+          datatypes,
+          typeName: field.type,
+          fieldTypeCount,
+          checkedTypes: checkedTypes.concat(field.type),
+        });
       }
     } else if (field.isArray ?? false) {
-      fieldCount.set(field.type, (fieldCount.get(field.type) ?? 0) + expectedArrayLength);
+      fieldTypeCount.set(field.type, (fieldTypeCount.get(field.type) ?? 0) + expectedArrayLength);
     } else if (!(field.isConstant ?? false)) {
-      fieldCount.set(field.type, (fieldCount.get(field.type) ?? 0) + 1);
+      fieldTypeCount.set(field.type, (fieldTypeCount.get(field.type) ?? 0) + 1);
     }
   }
 }
@@ -53,11 +59,11 @@ export function guesstimateDeserializedMsgSize(
   datatypes: MessageDefinitionMap,
   typeName: string,
 ): number {
-  const fieldCount = getFieldCount(datatypes, typeName);
-  const totalFieldCount = [...fieldCount.values()].reduce((a, b) => a + b, 0);
-  let sizeInBytes = totalFieldCount * 16; // Object properties take up space as well
-  for (const [fieldName, count] of fieldCount.entries()) {
-    switch (fieldName) {
+  const fieldTypeCount = getFieldTypeCount(datatypes, typeName);
+  const numFields = [...fieldTypeCount.values()].reduce((a, b) => a + b, 0);
+  let sizeInBytes = numFields * 16; // Object properties take up space as well
+  for (const [fieldType, count] of fieldTypeCount.entries()) {
+    switch (fieldType) {
       case "bool":
       case "int8":
       case "uint8":
@@ -83,7 +89,7 @@ export function guesstimateDeserializedMsgSize(
         sizeInBytes += 2 * 12 * count; // 2 x heapnumber
         break;
       default:
-        throw new Error(`Unknown primitive type ${fieldName}`);
+        throw new Error(`Unknown primitive type ${fieldType}`);
     }
   }
   return sizeInBytes;
