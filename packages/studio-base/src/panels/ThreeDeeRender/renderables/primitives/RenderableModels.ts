@@ -148,9 +148,6 @@ export class RenderableModels extends RenderablePrimitive {
         this.#updateModel(renderable, primitive);
         newRenderables.push(renderable);
         this.add(renderable.model);
-
-        // Render a new frame now that the model is loaded
-        this.renderer.queueAnimationFrame();
       } else {
         modelsToLoad.push(primitive);
       }
@@ -219,7 +216,6 @@ export class RenderableModels extends RenderablePrimitive {
       .finally(() => {
         this.#updateOutlineVisibility();
       });
-
     // Only unused models should be left in the `prevRenderables` lists after
     // using this.#removeMatchFromList() above
     for (const renderables of prevRenderablesByUrl.values()) {
@@ -234,6 +230,7 @@ export class RenderableModels extends RenderablePrimitive {
         this.#disposeModel(renderable);
       }
     }
+
     this.#updateOutlineVisibility();
   }
 
