@@ -9,6 +9,7 @@ import { useCallback, useMemo } from "react";
 
 import { DraggedMessagePath } from "@foxglove/studio";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
+import { quoteTopicNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
@@ -35,7 +36,7 @@ export function TopicRow({
 
   const item: DraggedMessagePath = useMemo(
     () => ({
-      path: topic.name,
+      path: quoteTopicNameIfNeeded(topic.name),
       rootSchemaName: topic.schemaName,
       isTopic: true,
       isLeaf: false,
