@@ -179,7 +179,7 @@ export class BlockLoader {
   }
 
   async #load(args: { progress: LoadArgs["progress"] }): Promise<void> {
-    const topics = this.#topics;
+    const topics = new Map(this.#topics);
 
     // Ignore changing the blocks if the topic list is empty
     if (topics.size === 0) {
@@ -260,6 +260,13 @@ export class BlockLoader {
         // No results means cursor aborted or eof
         if (!results) {
           await cursor.end();
+          return;
+        }
+
+        // While we were waiting for cursor data the topics we need to be loading may have changed.
+        // Check whether the topics are changed and abort this loading instance because the results
+        // may no longer be valid for the data we should be loading.
+        if (!_.isEqual(topics, this.#topics)) {
           return;
         }
 
