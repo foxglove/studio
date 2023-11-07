@@ -117,72 +117,83 @@ export class RenderableModels extends RenderablePrimitive {
     const prevRenderablesByDataCrc = this.#renderablesByDataCrc;
     this.#renderablesByDataCrc = new Map();
 
+    const modelsToLoad: ModelPrimitive[] = [];
+
+    // iterate over new primitives and update existing renderables
+    // add primitives that don't have models yet to modelsToLoad
+    for (const primitive of models) {
+      let prevRenderables: RenderableModel[] | undefined;
+      let newRenderables: RenderableModel[] | undefined;
+      let renderable: RenderableModel | undefined;
+      if (primitive.url.length === 0) {
+        const dataCrc = crc32(primitive.data);
+        prevRenderables = prevRenderablesByDataCrc.get(dataCrc);
+        newRenderables = this.#renderablesByDataCrc.get(dataCrc);
+        if (!newRenderables) {
+          newRenderables = [];
+          this.#renderablesByDataCrc.set(dataCrc, newRenderables);
+        }
+        renderable = this.#removeMatchFromList(prevRenderables, crcPrimitivesMatch, primitive);
+      } else {
+        prevRenderables = prevRenderablesByUrl.get(primitive.url);
+        newRenderables = this.#renderablesByUrl.get(primitive.url);
+        if (!newRenderables) {
+          newRenderables = [];
+          this.#renderablesByUrl.set(primitive.url, newRenderables);
+        }
+        renderable = this.#removeMatchFromList(prevRenderables, urlPrimitivesMatch, primitive);
+      }
+      // renderable not found in prevRenderables
+      if (renderable) {
+        this.#updateModel(renderable, primitive);
+        newRenderables.push(renderable);
+        this.add(renderable.model);
+
+        // Render a new frame now that the model is loaded
+        this.renderer.queueAnimationFrame();
+      } else {
+        modelsToLoad.push(primitive);
+      }
+    }
+
     Promise.all(
-      models.map(async (primitive) => {
-        let prevRenderables: RenderableModel[] | undefined;
+      modelsToLoad.map(async (primitive) => {
         let newRenderables: RenderableModel[] | undefined;
         let renderable: RenderableModel | undefined;
         if (primitive.url.length === 0) {
           const dataCrc = crc32(primitive.data);
-          prevRenderables = prevRenderablesByDataCrc.get(dataCrc);
-          newRenderables = this.#renderablesByDataCrc.get(dataCrc);
-          if (!newRenderables) {
-            newRenderables = [];
-            this.#renderablesByDataCrc.set(dataCrc, newRenderables);
-          }
-          renderable = this.#removeMatchFromList(
-            prevRenderables,
-            (model1, model2) =>
-              model1.media_type === model2.media_type && byteArraysEqual(model1.data, model2.data),
-            primitive,
-          );
-          // renderable not found in prevRenderables
-          if (!renderable) {
-            try {
-              renderable = await this.#createRenderable(
-                primitive,
-                (model) => URL.createObjectURL(new Blob([model.data], { type: model.media_type })),
-                (url) => {
-                  URL.revokeObjectURL(url);
-                },
-              );
-            } catch (err) {
-              this.renderer.settings.errors.add(
-                this.userData.settingsPath,
-                MODEL_FETCH_FAILED,
-                `Unhandled error loading model from ${primitive.data.byteLength}-byte data: ${err.message}`,
-              );
-            }
+          // this should always resolve because it was created in the loop above
+          newRenderables = this.#renderablesByDataCrc.get(dataCrc)!;
+          try {
+            renderable = await this.#createRenderable(
+              primitive,
+              (model) => URL.createObjectURL(new Blob([model.data], { type: model.media_type })),
+              (url) => {
+                URL.revokeObjectURL(url);
+              },
+            );
+          } catch (err) {
+            this.renderer.settings.errors.add(
+              this.userData.settingsPath,
+              MODEL_FETCH_FAILED,
+              `Unhandled error loading model from ${primitive.data.byteLength}-byte data: ${err.message}`,
+            );
           }
         } else {
-          prevRenderables = prevRenderablesByUrl.get(primitive.url);
-          newRenderables = this.#renderablesByUrl.get(primitive.url);
-          if (!newRenderables) {
-            newRenderables = [];
-            this.#renderablesByUrl.set(primitive.url, newRenderables);
-          }
-          renderable = this.#removeMatchFromList(
-            prevRenderables,
-            (model1, model2) =>
-              model1.url === model2.url && model1.media_type === model2.media_type,
-            primitive,
-          );
-
-          // renderable not found in prevRenderables
-          if (!renderable) {
-            try {
-              renderable = await this.#createRenderable(
-                primitive,
-                (model) => model.url,
-                (_url) => {},
-              );
-            } catch (err) {
-              this.renderer.settings.errors.add(
-                this.userData.settingsPath,
-                MODEL_FETCH_FAILED,
-                `Unhandled error loading model from "${primitive.url}": ${err.message}`,
-              );
-            }
+          // this should always resolve because it was created in the loop above
+          newRenderables = this.#renderablesByUrl.get(primitive.url)!;
+          try {
+            renderable = await this.#createRenderable(
+              primitive,
+              (model) => model.url,
+              (_url) => {},
+            );
+          } catch (err) {
+            this.renderer.settings.errors.add(
+              this.userData.settingsPath,
+              MODEL_FETCH_FAILED,
+              `Unhandled error loading model from "${primitive.url}": ${err.message}`,
+            );
           }
         }
 
@@ -206,23 +217,24 @@ export class RenderableModels extends RenderablePrimitive {
       })
       .catch(console.error)
       .finally(() => {
-        // Only unused models should be left in the `prevRenderables` lists after
-        // using this.#removeMatchFromList() above
-        for (const renderables of prevRenderablesByUrl.values()) {
-          for (const renderable of renderables) {
-            renderable.model.removeFromParent();
-            this.#disposeModel(renderable);
-          }
-        }
-        for (const renderables of prevRenderablesByDataCrc.values()) {
-          for (const renderable of renderables) {
-            renderable.model.removeFromParent();
-            this.#disposeModel(renderable);
-          }
-        }
         this.#updateOutlineVisibility();
-        this.renderer.queueAnimationFrame();
       });
+
+    // Only unused models should be left in the `prevRenderables` lists after
+    // using this.#removeMatchFromList() above
+    for (const renderables of prevRenderablesByUrl.values()) {
+      for (const renderable of renderables) {
+        renderable.model.removeFromParent();
+        this.#disposeModel(renderable);
+      }
+    }
+    for (const renderables of prevRenderablesByDataCrc.values()) {
+      for (const renderable of renderables) {
+        renderable.model.removeFromParent();
+        this.#disposeModel(renderable);
+      }
+    }
+    this.#updateOutlineVisibility();
   }
 
   public override dispose(): void {
@@ -356,3 +368,9 @@ function cloneAndPrepareModel(cachedModel: LoadedModel) {
   removeLights(model);
   return new THREE.Group().add(model);
 }
+
+const crcPrimitivesMatch = (model1: ModelPrimitive, model2: ModelPrimitive) =>
+  model1.media_type === model2.media_type && byteArraysEqual(model1.data, model2.data);
+
+const urlPrimitivesMatch = (model1: ModelPrimitive, model2: ModelPrimitive) =>
+  model1.url === model2.url && model1.media_type === model2.media_type;
