@@ -204,4 +204,97 @@ describe("TopicAliasingPlayer", () => {
       }),
     );
   });
+
+  it("provides global variables on startup", async () => {
+    const fakePlayer = new FakePlayer();
+    const mappers: TopicAliasFunctions = [
+      {
+        extensionId: "any",
+        aliasFunction: (args) => [
+          { sourceTopicName: "/original_topic_1", name: args.globalVariables["foo"] as string },
+        ],
+      },
+    ];
+    const player = new TopicAliasingPlayer(fakePlayer, mappers, {
+      foo: "/bar",
+    });
+    const listener = jest.fn();
+    player.setListener(listener);
+    await fakePlayer.emit(
+      mockPlayerState(undefined, {
+        topics: [{ name: "/original_topic_1", schemaName: "any.schema" }],
+      }),
+    );
+
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        activeData: expect.objectContaining({
+          topics: [
+            { name: "/original_topic_1", schemaName: "any.schema" },
+            {
+              name: "/bar",
+              aliasedFromName: "/original_topic_1",
+              schemaName: "any.schema",
+            },
+          ],
+        }),
+      }),
+    );
+  });
+
+  it("updates when global variables change", async () => {
+    const fakePlayer = new FakePlayer();
+    const mappers: TopicAliasFunctions = [
+      {
+        extensionId: "any",
+        aliasFunction: (args) => {
+          if (!("foo" in args.globalVariables)) {
+            return [];
+          }
+
+          return [
+            { sourceTopicName: "/original_topic_1", name: args.globalVariables["foo"] as string },
+          ];
+        },
+      },
+    ];
+    const player = new TopicAliasingPlayer(fakePlayer, mappers, {});
+    const listener = jest.fn();
+    player.setListener(listener);
+    await fakePlayer.emit(
+      mockPlayerState(undefined, {
+        topics: [{ name: "/original_topic_1", schemaName: "any.schema" }],
+      }),
+    );
+
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        activeData: expect.objectContaining({
+          topics: [{ name: "/original_topic_1", schemaName: "any.schema" }],
+        }),
+      }),
+    );
+
+    listener.mockClear();
+
+    // Setting should re-process the alias functions
+    player.setGlobalVariables({
+      foo: "/bar",
+    });
+
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        activeData: expect.objectContaining({
+          topics: [
+            { name: "/original_topic_1", schemaName: "any.schema" },
+            {
+              name: "/bar",
+              aliasedFromName: "/original_topic_1",
+              schemaName: "any.schema",
+            },
+          ],
+        }),
+      }),
+    );
+  });
 });
