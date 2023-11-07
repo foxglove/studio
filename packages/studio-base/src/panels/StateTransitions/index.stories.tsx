@@ -85,8 +85,8 @@ const fixture: Fixture = {
     { name: "/blocks", schemaName: "msgs/SystemState" },
   ],
   activeData: {
-    startTime: { sec: 1526191527, nsec: 202050 },
-    endTime: { sec: 1526191551, nsec: 999997069 },
+    startTime: { sec: 1526191539, nsec: 202050 },
+    endTime: { sec: 1526191542, nsec: 999997069 },
     isPlaying: false,
     speed: 0.2,
   },
