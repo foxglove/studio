@@ -230,8 +230,8 @@ export const WithXAxisMinMax: StoryObj = {
       <PanelSetup fixture={fixture} pauseFrame={pauseFrame} includeSettings>
         <StateTransitions
           overrideConfig={{
-            xAxisMinValue: 11,
-            xAxisMaxValue: 15,
+            xAxisMinValue: 1,
+            xAxisMaxValue: 3,
             paths: [{ value: "/some/topic/with/state.state", timestampMethod: "receiveTime" }],
             isSynced: true,
           }}
