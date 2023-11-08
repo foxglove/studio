@@ -55,7 +55,6 @@ import {
   Topic,
 } from "@foxglove/studio-base/players/types";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
-import ExtensionCatalogProvider from "@foxglove/studio-base/providers/ExtensionCatalogProvider";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import TimelineInteractionStateProvider from "@foxglove/studio-base/providers/TimelineInteractionStateProvider";
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
@@ -353,14 +352,9 @@ export default function PanelSetup(props: Props): JSX.Element {
         <TimelineInteractionStateProvider>
           <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
             <PanelStateContextProvider initialState={props.fixture?.panelState}>
-              <ExtensionCatalogProvider
-                loaders={[]}
-                mockMessageConverters={props.fixture?.messageConverters}
-              >
-                <ThemeProvider isDark={theme.palette.mode === "dark"}>
-                  <UnconnectedPanelSetup {...props} />
-                </ThemeProvider>
-              </ExtensionCatalogProvider>
+              <ThemeProvider isDark={theme.palette.mode === "dark"}>
+                <UnconnectedPanelSetup {...props} />
+              </ThemeProvider>
             </PanelStateContextProvider>
           </MockCurrentLayoutProvider>
         </TimelineInteractionStateProvider>
