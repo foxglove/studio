@@ -743,11 +743,7 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     this.renderer.settings.errors.remove(renderable.userData.settingsPath, VALID_SRC_ERR);
 
     // Check if this URL has already been fetched
-    if (
-      (renderable.userData.sourceType === "url" && renderable.userData.url === url) ||
-      (renderable.userData.sourceType === "filePath" &&
-        `file://${renderable.userData.filePath}` === url)
-    ) {
+    if (renderable.userData.url === url) {
       return;
     }
 
@@ -852,7 +848,6 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
 
     renderable.userData.urdf = urdf;
-    renderable.userData.url = urdf != undefined && sourceType === "url" ? url : undefined;
     renderable.userData.filePath =
       urdf != undefined && sourceType === "filePath" ? filePath : undefined;
     renderable.userData.sourceType = sourceType;
@@ -860,6 +855,14 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     renderable.userData.parameter = parameter;
     renderable.userData.settings = settings;
     renderable.userData.fetching = undefined;
+
+    if (urdf != undefined && sourceType === "url") {
+      renderable.userData.url = url;
+    } else if (urdf != undefined && sourceType === "filePath") {
+      renderable.userData.url = `file://${filePath}`;
+    } else {
+      renderable.userData.url = undefined;
+    }
 
     if (!urdf || forceReload) {
       renderable.removeChildren();
