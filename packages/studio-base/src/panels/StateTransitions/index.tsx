@@ -447,6 +447,7 @@ function StateTransitions(props: Props) {
             xAxisIsPlaybackTime
             yAxes={yScale}
             plugins={plugins}
+            interactionMode="lastX"
             onClick={onClick}
             currentTime={currentTimeSinceStart}
           />
