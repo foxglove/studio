@@ -17,7 +17,6 @@ import { ChartOptions, ScaleOptions } from "chart.js";
 import * as _ from "lodash-es";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { useLatest } from "react-use";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
@@ -240,7 +239,6 @@ function StateTransitions(props: Props) {
 
   const showIntermediate = config.showIntermediate === true;
 
-  const endSinceStartLatest = useLatest(endTimeSinceStart);
   const { data, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
@@ -270,8 +268,6 @@ function StateTransitions(props: Props) {
         showIntermediate,
       });
 
-      let last = newBlockDataSets[newBlockDataSets.length - 1];
-
       outDatasets = outDatasets.concat(newBlockDataSets);
 
       // We have already filtered out paths we can find in blocks so anything left here
@@ -287,30 +283,7 @@ function StateTransitions(props: Props) {
           showIntermediate,
         });
 
-        last = newPathDataSets[newPathDataSets.length - 1] ?? last;
         outDatasets = outDatasets.concat(newPathDataSets);
-      }
-
-      const lastDatum = last?.data[last.data.length - 1];
-      if (endSinceStartLatest.current != undefined && lastDatum != undefined) {
-        outDatasets.push({
-          borderWidth: 10,
-          data: [
-            lastDatum,
-            {
-              x: endSinceStartLatest.current,
-              y,
-            },
-          ],
-          label: path.label ? path.label : path.value,
-          // Hide points. The start point is already present in the previous dataset and the end
-          // is not a real point.
-          pointRadius: 0,
-          // Disable hovering the points since the start point is already present in the previous
-          // dataset and the end point is not a real message
-          pointHitRadius: 0,
-          showLine: true,
-        });
       }
     });
 
@@ -318,7 +291,7 @@ function StateTransitions(props: Props) {
       data: { datasets: outDatasets },
       minY: outMinY,
     };
-  }, [decodedBlocks, newItemsByPath, paths, startTime, showIntermediate, endSinceStartLatest]);
+  }, [decodedBlocks, newItemsByPath, paths, startTime, showIntermediate]);
 
   const yScale = useMemo<ScaleOptions<"linear">>(() => {
     return {
