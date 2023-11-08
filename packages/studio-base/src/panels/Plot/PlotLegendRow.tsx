@@ -38,9 +38,9 @@ type PlotLegendRowProps = Immutable<{
   showPlotValuesInLegend: boolean;
 }>;
 
-const ROW_HEIGHT = 30;
+export const ROW_HEIGHT = 30;
 
-const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _params, classes) => ({
+const useStyles = makeStyles<void, "plotName" | "actionButton">()((theme, _params, classes) => ({
   root: {
     display: "contents",
     cursor: "pointer",
@@ -56,7 +56,7 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
       },
     },
     ":not(:hover)": {
-      [`& .${classes.removeButton}`]: {
+      [`& .${classes.actionButton}`]: {
         opacity: 0,
       },
     },
@@ -107,12 +107,14 @@ const useStyles = makeStyles<void, "plotName" | "removeButton">()((theme, _param
   errorIcon: {
     color: theme.palette.error.main,
   },
-  removeButton: {
+  actionButton: {
     height: ROW_HEIGHT,
     width: ROW_HEIGHT,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    position: "sticky",
+    right: 0,
 
     ":hover": {
       backgroundColor: theme.palette.action.hover,
@@ -236,21 +238,15 @@ export function PlotLegendRow({
           </Typography>
         </div>
       )}
-      <div>
+      <div className={classes.actionButton}>
         {index === paths.length ? (
-          <ButtonBase
-            title="Add series"
-            aria-label="Add series"
-            className={classes.removeButton}
-            onClick={onClickPath}
-          >
+          <ButtonBase title="Add series" aria-label="Add series" onClick={onClickPath}>
             <Add12Regular />
           </ButtonBase>
         ) : (
           <ButtonBase
             title="Delete series"
             aria-label="Delete series"
-            className={classes.removeButton}
             onClick={() => {
               const newPaths = paths.slice();
               if (newPaths.length > 0) {
