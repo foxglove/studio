@@ -96,7 +96,7 @@ export default function ExtensionsSettings(): React.ReactElement {
   const marketplace = useExtensionMarketplace();
 
   const [marketplaceEntries, refreshMarketplaceEntries] = useAsyncFn(
-    async () => await marketplace.getAvailableExtensions(),
+    async () => await marketplace?.getAvailableExtensions(),
     [marketplace],
   );
 
@@ -163,6 +163,10 @@ export default function ExtensionsSettings(): React.ReactElement {
         }}
       />
     );
+  }
+
+  if (!marketplace) {
+    return <></>;
   }
 
   return (

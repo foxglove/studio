@@ -53,11 +53,11 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const canUninstall = extension.namespace !== "org";
 
   const { value: readmeContent } = useAsync(
-    async () => (readmeUrl != undefined ? await marketplace.getMarkdown(readmeUrl) : ""),
+    async () => (readmeUrl != undefined ? await marketplace?.getMarkdown(readmeUrl) : ""),
     [marketplace, readmeUrl],
   );
   const { value: changelogContent } = useAsync(
-    async () => (changelogUrl != undefined ? await marketplace.getMarkdown(changelogUrl) : ""),
+    async () => (changelogUrl != undefined ? await marketplace?.getMarkdown(changelogUrl) : ""),
     [marketplace, changelogUrl],
   );
 

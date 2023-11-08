@@ -2,10 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext } from "react";
-import { StoreApi, useStore } from "zustand";
+import { createContext, useContext } from "react";
+import { StoreApi, createStore, useStore } from "zustand";
 
-import { useGuaranteedContext } from "@foxglove/hooks";
 import {
   ExtensionPanelRegistration,
   Immutable,
@@ -39,7 +38,25 @@ export const ExtensionCatalogContext = createContext<undefined | StoreApi<Extens
   undefined,
 );
 
+// Empty catalog if there is no actual catalog available
+const EmptyExtensionCatalog: StoreApi<ExtensionCatalog> = createStore(() => ({
+  downloadExtension: async () => await Promise.reject(new Error("unsupported")),
+  installExtension: async () => await Promise.reject(new Error("unsupported")),
+  refreshExtensions: async () => {
+    await Promise.reject(new Error("unsupported"));
+  },
+  uninstallExtension: async () => {
+    await Promise.reject(new Error("unsupported"));
+  },
+
+  installedExtensions: [],
+  installedPanels: {},
+  installedMessageConverters: [],
+  installedTopicAliasFunctions: [],
+}));
+
 export function useExtensionCatalog<T>(selector: (registry: ExtensionCatalog) => T): T {
-  const context = useGuaranteedContext(ExtensionCatalogContext);
-  return useStore(context, selector);
+  const context = useContext(ExtensionCatalogContext);
+  // Fallback to the empty extension catalog if there is no actual catalog
+  return useStore(context ?? EmptyExtensionCatalog, selector);
 }

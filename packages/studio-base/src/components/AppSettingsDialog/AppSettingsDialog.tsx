@@ -32,6 +32,7 @@ import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/Ex
 import ExtensionsSettings from "@foxglove/studio-base/components/ExtensionsSettings";
 import FoxgloveLogoText from "@foxglove/studio-base/components/FoxgloveLogoText";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useExtensionMarketplace } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
 import {
   useWorkspaceStore,
   WorkspaceContextStore,
@@ -208,6 +209,7 @@ export function AppSettingsDialog(
   );
   const { classes, cx, theme } = useStyles();
   const smUp = useMediaQuery(theme.breakpoints.up("sm"));
+  const marketplace = useExtensionMarketplace();
 
   // automatic updates are a desktop-only setting
   //
@@ -243,7 +245,9 @@ export function AppSettingsDialog(
         >
           <Tab className={classes.tab} label={t("general")} value="general" />
           <Tab className={classes.tab} label={t("privacy")} value="privacy" />
-          <Tab className={classes.tab} label={t("extensions")} value="extensions" />
+          {marketplace && (
+            <Tab className={classes.tab} label={t("extensions")} value="extensions" />
+          )}
           <Tab
             className={classes.tab}
             label={t("experimentalFeatures")}

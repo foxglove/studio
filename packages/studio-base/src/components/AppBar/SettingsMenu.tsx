@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
+import { useExtensionMarketplace } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 
 const useStyles = makeStyles()({
@@ -44,6 +45,7 @@ export function SettingsMenu({
   const { t } = useTranslation("appBar");
 
   const { dialogActions } = useWorkspaceActions();
+  const marketplace = useExtensionMarketplace();
 
   const onSettingsClick = useCallback(
     (tab?: AppSettingsTab) => {
@@ -85,13 +87,15 @@ export function SettingsMenu({
         >
           {t("settings")}
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            onSettingsClick("extensions");
-          }}
-        >
-          {t("extensions")}
-        </MenuItem>
+        {marketplace && (
+          <MenuItem
+            onClick={() => {
+              onSettingsClick("extensions");
+            }}
+          >
+            {t("extensions")}
+          </MenuItem>
+        )}
         <Divider variant="middle" />
         <MenuItem onClick={onDocsClick}>{t("documentation")}</MenuItem>
         <MenuItem onClick={onSlackClick}>{t("joinSlackCommunity")}</MenuItem>

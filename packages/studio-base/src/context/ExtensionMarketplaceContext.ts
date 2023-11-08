@@ -32,14 +32,8 @@ export interface ExtensionMarketplace {
 const ExtensionMarketplaceContext = createContext<ExtensionMarketplace | undefined>(undefined);
 ExtensionMarketplaceContext.displayName = "ExtensionMarketplaceContext";
 
-export function useExtensionMarketplace(): ExtensionMarketplace {
-  const extensionMarketplace = useContext(ExtensionMarketplaceContext);
-  if (extensionMarketplace == undefined) {
-    throw new Error(
-      "An ExtensionMarketplaceContext provider is required to useExtensionMarketplace",
-    );
-  }
-  return extensionMarketplace;
+export function useExtensionMarketplace(): ExtensionMarketplace | undefined {
+  return useContext(ExtensionMarketplaceContext);
 }
 
 export default ExtensionMarketplaceContext;
