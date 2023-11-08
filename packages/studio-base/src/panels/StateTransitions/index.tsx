@@ -249,7 +249,7 @@ function StateTransitions(props: Props) {
     }
 
     let outMinY: number | undefined;
-    let outDatasets: ChartDatasets = [];
+    const outDatasets: ChartDatasets = [];
 
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
@@ -268,7 +268,7 @@ function StateTransitions(props: Props) {
         showIntermediate,
       });
 
-      outDatasets = outDatasets.concat(newBlockDataSets);
+      outDatasets.push(newBlockDataSets);
 
       // We have already filtered out paths we can find in blocks so anything left here
       // should be included in the dataset.
@@ -283,7 +283,7 @@ function StateTransitions(props: Props) {
           showIntermediate,
         });
 
-        outDatasets = outDatasets.concat(newPathDataSets);
+        outDatasets.push(newPathDataSets);
       }
     });
 

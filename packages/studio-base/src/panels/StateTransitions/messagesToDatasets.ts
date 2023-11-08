@@ -6,7 +6,7 @@ import stringHash from "string-hash";
 
 import { Time, subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import { MessageAndData } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import { ChartDataset, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { ChartDataset } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { expandedLineColors } from "@foxglove/studio-base/util/plotColors";
 import { getTimestampForMessageEvent } from "@foxglove/studio-base/util/time";
 import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
@@ -30,7 +30,7 @@ type Args = {
  * Processes messages into datasets. For performance reasons all values are condensed into a single
  * dataset with different labels and colors applied per-point.
  */
-export default function messagesToDatasets(args: Args): ChartDatasets {
+export default function messagesToDatasets(args: Args): ChartDataset {
   const { path, startTime, y, blocks, showIntermediate } = args;
 
   const dataset: ChartDataset = {
@@ -116,5 +116,5 @@ export default function messagesToDatasets(args: Args): ChartDatasets {
     dataset.data.push(lastDatum);
   }
 
-  return [dataset];
+  return dataset;
 }
