@@ -104,7 +104,7 @@ type ProtectedState = {
 
 export default class UserScriptPlayer implements Player {
   #player: Player;
-  #perfRegistry: IPerformanceRegistry;
+  #perfRegistry?: IPerformanceRegistry;
   #totalTimeMetric?: PerformanceMetricID;
 
   // Datatypes and topics are derived from scriptRegistrations, but memoized so they only change when needed
@@ -172,7 +172,7 @@ export default class UserScriptPlayer implements Player {
   public constructor(
     player: Player,
     userScriptActions: UserScriptActions,
-    perfRegistry: IPerformanceRegistry,
+    perfRegistry?: IPerformanceRegistry,
   ) {
     this.#player = player;
     this.#userScriptActions = userScriptActions;
@@ -854,12 +854,14 @@ export default class UserScriptPlayer implements Player {
       }
 
       if (this.#totalTimeMetric == undefined) {
-        this.#totalTimeMetric = this.#perfRegistry.registerMetric({
+        this.#totalTimeMetric = this.#perfRegistry?.registerMetric({
           name: "User scripts (total)",
           unit: "ms per frame",
         });
       }
-      using $timer = this.#perfRegistry.scopeTimer(this.#totalTimeMetric);
+      using $timer = this.#totalTimeMetric
+        ? this.#perfRegistry?.scopeTimer(this.#totalTimeMetric)
+        : undefined;
       void $timer;
 
       const { messages, topics, datatypes } = activeData;
@@ -1066,7 +1068,7 @@ export default class UserScriptPlayer implements Player {
     });
     this.#player.close();
     if (this.#totalTimeMetric != undefined) {
-      this.#perfRegistry.unregisterMetric(this.#totalTimeMetric);
+      this.#perfRegistry?.unregisterMetric(this.#totalTimeMetric);
     }
     if (this.#transformRpc) {
       void this.#transformRpc.send("close");
