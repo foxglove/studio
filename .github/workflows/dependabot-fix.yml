@@ -59,7 +59,9 @@ jobs:
           git push
 
       - uses: octokit/request-action@v2.1.9
-        if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
+        if: >
+          contains(fromJSON('["opened", "reopened"]'), github.event.action) &&
+          !contains(github.event.pull_request.title, 'electron')
         env:
           GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
         with:
@@ -69,7 +71,9 @@ jobs:
           event: "APPROVE"
 
       - uses: octokit/request-action@v2.1.9
-        if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
+        if: >
+          contains(fromJSON('["opened", "reopened"]'), github.event.action) &&
+          !contains(github.event.pull_request.title, 'electron')
         env:
           GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
         with:
