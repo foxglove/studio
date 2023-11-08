@@ -90,18 +90,16 @@ export class RenderableModels extends RenderablePrimitive {
    */
   #removeMatchFromList(
     renderables: RenderableModel[] | undefined,
-    primitivesMatch: (a: ModelPrimitive, b: ModelPrimitive) => boolean,
-    primitive: ModelPrimitive,
+    isMatch: (model: ModelPrimitive) => boolean,
   ) {
-    let renderable: RenderableModel | undefined;
     if (renderables) {
-      const idx = renderables.findIndex((prev) => primitivesMatch(prev.primitive, primitive));
+      const idx = renderables.findIndex((prev) => isMatch(prev.primitive));
       if (idx >= 0) {
         // remove from previous renderables so that it doesn't get disposed
-        renderable = renderables.splice(idx, 1)[0]!;
+        return renderables.splice(idx, 1)[0]!;
       }
     }
-    return renderable;
+    return undefined;
   }
 
   /**
@@ -133,7 +131,9 @@ export class RenderableModels extends RenderablePrimitive {
           newRenderables = [];
           this.#renderablesByDataCrc.set(dataCrc, newRenderables);
         }
-        renderable = this.#removeMatchFromList(prevRenderables, crcPrimitivesMatch, primitive);
+        renderable = this.#removeMatchFromList(prevRenderables, (model) =>
+          crcPrimitivesMatch(model, primitive),
+        );
       } else {
         prevRenderables = prevRenderablesByUrl.get(primitive.url);
         newRenderables = this.#renderablesByUrl.get(primitive.url);
@@ -141,7 +141,9 @@ export class RenderableModels extends RenderablePrimitive {
           newRenderables = [];
           this.#renderablesByUrl.set(primitive.url, newRenderables);
         }
-        renderable = this.#removeMatchFromList(prevRenderables, urlPrimitivesMatch, primitive);
+        renderable = this.#removeMatchFromList(prevRenderables, (model) =>
+          urlPrimitivesMatch(model, primitive),
+        );
       }
       // renderable not found in prevRenderables
       if (renderable) {
@@ -366,8 +368,10 @@ function cloneAndPrepareModel(cachedModel: LoadedModel) {
   return new THREE.Group().add(model);
 }
 
+/** Used to check that crc-data primitives are using the same model data */
 const crcPrimitivesMatch = (model1: ModelPrimitive, model2: ModelPrimitive) =>
   model1.media_type === model2.media_type && byteArraysEqual(model1.data, model2.data);
 
+/** Used to check that url-data primitives are using the same model data */
 const urlPrimitivesMatch = (model1: ModelPrimitive, model2: ModelPrimitive) =>
   model1.url === model2.url && model1.media_type === model2.media_type;
