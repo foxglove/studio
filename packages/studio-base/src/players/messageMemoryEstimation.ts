@@ -5,7 +5,7 @@
 import { MessageDefinitionMap } from "@foxglove/mcap-support/src/types";
 
 const OBJECT_BASE_SIZE = 12;
-const TYPED_ARRAY_BASE_SIZE = 64; // byteLenght, byteOffset, ...
+const TYPED_ARRAY_BASE_SIZE = 64; // byteLength, byteOffset, ...
 const MAX_NUM_FAST_PROPERTIES = 1020;
 const FIELD_SIZE_BY_PRIMITIVE: Record<string, number> = {
   bool: 4,
@@ -78,7 +78,8 @@ export function estimateMessageObjectSize(
     if (field.isComplex ?? false) {
       const count =
         field.isArray === true
-          ? 0 // We are conservative and assume an empty array
+          ? // We are conservative and assume an empty array to avoid memory overestimation.
+            field.arrayLength ?? 0
           : 1;
 
       const knownFieldSize = knownTypeSizes.get(field.type);
@@ -101,7 +102,10 @@ export function estimateMessageObjectSize(
       );
       sizeInBytes += count > 0 ? count * complexTypeObjectSize : OBJECT_BASE_SIZE;
     } else if (field.isArray === true) {
-      const arrayLength = field.arrayLength ?? 0; // We are conservative and assume an empty array;
+      // We are conservative and assume an empty array to avoid memory overestimation.
+      // For dynamic messages it is better to use another estimator such as the serialized
+      // message size.
+      const arrayLength = field.arrayLength ?? 0;
       switch (field.type) {
         // Assume that fields get deserialized as typed arrays
         case "int8":

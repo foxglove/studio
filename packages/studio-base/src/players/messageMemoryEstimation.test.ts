@@ -38,14 +38,15 @@ describe("memoryEstimation", () => {
         {
           definitions: [
             { type: "int32", name: "field1" },
-            { type: "string", name: "field2" },
+            { type: "bool", name: "field2" },
           ],
         },
       ],
     ]);
 
     const sizeInBytes = estimateMessageObjectSize(datatypes, "ComplexType", new Map());
-    expect(sizeInBytes).toBeGreaterThan(0);
+    const expectedSize = 30;
+    expect(Math.abs(expectedSize - sizeInBytes)).toBeLessThan(10);
   });
 
   it("handles complex types with arrays", () => {
@@ -54,15 +55,17 @@ describe("memoryEstimation", () => {
         "ComplexType",
         {
           definitions: [
-            { type: "int32", name: "field1", isArray: true, arrayLength: 3 },
-            { type: "string", name: "field2" },
+            { type: "int32", name: "field1" },
+            { type: "float64", name: "field2" },
+            { type: "bool", name: "field3", isArray: true, arrayLength: 10 },
           ],
         },
       ],
     ]);
 
     const sizeInBytes = estimateMessageObjectSize(datatypes, "ComplexType", new Map());
-    expect(sizeInBytes).toBeGreaterThan(0);
+    const expectedSize = 90;
+    expect(Math.abs(expectedSize - sizeInBytes)).toBeLessThan(10);
   });
 
   it.each([
@@ -91,8 +94,9 @@ describe("memoryEstimation", () => {
         ],
       ]);
       const sizeInBytes = estimateMessageObjectSize(datatypes, "SomeType", new Map());
-      expect(sizeInBytes).toBeGreaterThanOrEqual(measuredSize * ((100 - tolerancePercent) / 100));
-      expect(sizeInBytes).toBeLessThanOrEqual(measuredSize * ((100 + tolerancePercent) / 100));
+      expect(Math.abs(sizeInBytes - measuredSize)).toBeLessThanOrEqual(
+        measuredSize * (tolerancePercent / 100),
+      );
     },
   );
 });
