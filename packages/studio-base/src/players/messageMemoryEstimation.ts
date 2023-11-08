@@ -4,24 +4,52 @@
 
 import { MessageDefinitionMap } from "@foxglove/mcap-support/src/types";
 
-/**
- * Calculate the expected occurence of primitive field for a given schema.
- */
-function getFieldTypeCount(datatypes: MessageDefinitionMap, typeName: string): Map<string, number> {
-  const fieldTypeCount = new Map<string, number>();
-  getFieldTypeCountRecursive({ datatypes, typeName, fieldTypeCount, checkedTypes: [] });
-  return fieldTypeCount;
-}
+const OBJECT_BASE_SIZE = 12;
+const TYPED_ARRAY_BASE_SIZE = 64; // byteLenght, byteOffset, ...
+const MAX_NUM_FAST_PROPERTIES = 1020;
+const FIELD_SIZE_BY_PRIMITIVE: Record<string, number> = {
+  bool: 4,
+  int8: 4,
+  uint8: 4,
+  int16: 4,
+  uint16: 4,
+  int32: 8,
+  uint32: 8,
+  float32: 16,
+  float64: 16,
+  int64: 16,
+  uint64: 16,
+  string: 20, // we don't know the length upfront, assume a fixed length
+  time: 32,
+  duration: 32,
+};
 
-function getFieldTypeCountRecursive(args: {
-  datatypes: MessageDefinitionMap;
-  typeName: string;
-  fieldTypeCount: Map<string, number>;
-  checkedTypes: string[];
-}): void {
-  const { datatypes, typeName, fieldTypeCount, checkedTypes } = args;
+/**
+ * Estimates the memory size of a deserialized message object based on the schema definition.
+ *
+ * The estimation is by no means accurate but may in certain situations (especially when there are
+ * no dynamic fields such as arrays or strings) give a better estimation than the number of bytes
+ * of the serialized message. For estimating memory size, we assume a V8 JS engine (probably
+ * similar for other engines).
+ *
+ * @param datatypes Map of data types
+ * @param typeName Name of the data type
+ * @param knownTypeSizes Map of known type sizes (for caching purposes)
+ * @returns Estimated object size in bytes
+ */
+export function estimateMessageObjectSize(
+  datatypes: MessageDefinitionMap,
+  typeName: string,
+  knownTypeSizes: Map<string, number>,
+  checkedTypes?: string[],
+): number {
+  const knownSize = knownTypeSizes.get(typeName);
+  if (knownSize != undefined) {
+    return knownSize;
+  }
+
   if (datatypes.size === 0) {
-    return; // Empty schema.
+    return OBJECT_BASE_SIZE; // Empty schema -> Empty object.
   }
 
   const definition = datatypes.get(typeName);
@@ -29,68 +57,92 @@ function getFieldTypeCountRecursive(args: {
     throw new Error(`Type '${typeName}' not found in definitions`);
   }
 
-  for (const field of definition.definitions) {
-    const expectedArrayLength = field.arrayLength ?? field.arrayUpperBound ?? 1;
-    if (field.isComplex ?? false) {
-      if (checkedTypes.includes(field.type)) {
-        continue; // Bail out to avoid infinite loop
-      }
-      for (let i = 0; i < expectedArrayLength; i++) {
-        getFieldTypeCountRecursive({
-          datatypes,
-          typeName: field.type,
-          fieldTypeCount,
-          checkedTypes: checkedTypes.concat(field.type),
-        });
-      }
-    } else if (field.isArray ?? false) {
-      fieldTypeCount.set(field.type, (fieldTypeCount.get(field.type) ?? 0) + expectedArrayLength);
-    } else if (!(field.isConstant ?? false)) {
-      fieldTypeCount.set(field.type, (fieldTypeCount.get(field.type) ?? 0) + 1);
-    }
-  }
-}
+  let sizeInBytes = OBJECT_BASE_SIZE;
 
-/**
- * Guesstimate the size in bytes of a deserialized message object with the estimated amount of
- * primitive fields.
- */
-export function guesstimateDeserializedMsgSize(
-  datatypes: MessageDefinitionMap,
-  typeName: string,
-): number {
-  const fieldTypeCount = getFieldTypeCount(datatypes, typeName);
-  const numFields = [...fieldTypeCount.values()].reduce((a, b) => a + b, 0);
-  let sizeInBytes = numFields * 16; // Object properties take up space as well
-  for (const [fieldType, count] of fieldTypeCount.entries()) {
-    switch (fieldType) {
-      case "bool":
-      case "int8":
-      case "uint8":
-      case "int16":
-      case "uint16":
-        sizeInBytes += 8 * count; // small integer
-        break;
-      case "int32":
-      case "uint32":
-      case "float32":
-      case "float64":
-        sizeInBytes += 12 * count; // heapnumber
-        break;
-      case "int64":
-      case "uint64":
-        sizeInBytes += 16 * count; // bigint
-        break;
-      case "string":
-        sizeInBytes += 64 * count; // can't predict the string size, assume a certain length
-        break;
-      case "time":
-      case "duration":
-        sizeInBytes += 2 * 12 * count; // 2 x heapnumber
-        break;
-      default:
-        throw new Error(`Unknown primitive type ${fieldType}`);
+  const nonConstantFields = definition.definitions.filter((field) => !(field.isConstant ?? false));
+  if (nonConstantFields.length > MAX_NUM_FAST_PROPERTIES) {
+    // If there are too many properties, V8 stores Objects in dictionary mode (slow properties)
+    // with each object having a self-contained dictionary. This dictionary contains the key, value
+    // and details of properties. Below we estimate the size of this additional dictionary. Formula
+    // adapted from
+    // medium.com/@bpmxmqd/v8-engine-jsobject-structure-analysis-and-memory-optimization-ideas-be30cfcdcd16
+    const propertiesDictSize =
+      16 + 5 * 8 + 2 ** Math.ceil(Math.log2((nonConstantFields.length + 2) * 1.5)) * 3 * 4;
+    sizeInBytes += propertiesDictSize;
+
+    // In return, properties are no longer stored in the properties array
+    sizeInBytes -= 4 * nonConstantFields.length;
+  }
+
+  for (const field of nonConstantFields) {
+    if (field.isComplex ?? false) {
+      const count =
+        field.isArray === true
+          ? 0 // We are conservative and assume an empty array
+          : 1;
+
+      const knownFieldSize = knownTypeSizes.get(field.type);
+      if (knownFieldSize != undefined) {
+        sizeInBytes += count > 0 ? count * knownFieldSize : OBJECT_BASE_SIZE;
+        continue;
+      }
+
+      if (checkedTypes != undefined && checkedTypes.includes(field.type)) {
+        // E.g. protobuf allows types to reference itself.
+        // For that reason we bail out here to avoid an infinite loop.
+        continue;
+      }
+
+      const complexTypeObjectSize = estimateMessageObjectSize(
+        datatypes,
+        field.type,
+        knownTypeSizes,
+        (checkedTypes ?? []).concat(field.type),
+      );
+      sizeInBytes += count > 0 ? count * complexTypeObjectSize : OBJECT_BASE_SIZE;
+    } else if (field.isArray === true) {
+      const arrayLength = field.arrayLength ?? 0; // We are conservative and assume an empty array;
+      switch (field.type) {
+        // Assume that fields get deserialized as typed arrays
+        case "int8":
+        case "uint8":
+          sizeInBytes += TYPED_ARRAY_BASE_SIZE + arrayLength * 1;
+          break;
+        case "int16":
+        case "uint16":
+          sizeInBytes += TYPED_ARRAY_BASE_SIZE + arrayLength * 2;
+          break;
+        case "int32":
+        case "uint32":
+        case "float32":
+          sizeInBytes += TYPED_ARRAY_BASE_SIZE + arrayLength * 4;
+          break;
+        case "float64":
+        case "int64":
+        case "uint64":
+          sizeInBytes += TYPED_ARRAY_BASE_SIZE + arrayLength * 8;
+          break;
+        default:
+          {
+            const primitiveSize = FIELD_SIZE_BY_PRIMITIVE[field.type];
+            if (primitiveSize == undefined) {
+              throw new Error(`Unknown primitive type ${field.type}`);
+            }
+            // Assume Array<type> deserialization
+            sizeInBytes += arrayLength * primitiveSize + OBJECT_BASE_SIZE;
+          }
+          break;
+      }
+    } else {
+      const primitiveSize = FIELD_SIZE_BY_PRIMITIVE[field.type];
+      if (primitiveSize == undefined) {
+        throw new Error(`Unknown primitive type ${field.type}`);
+      }
+      sizeInBytes += primitiveSize;
     }
   }
+
+  knownTypeSizes.set(typeName, sizeInBytes);
+
   return sizeInBytes;
 }

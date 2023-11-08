@@ -16,7 +16,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { guesstimateDeserializedMsgSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -58,6 +58,7 @@ export class McapIndexedIterableSource implements IIterableSource {
     const datatypes: RosDatatypes = new Map();
     const problems: PlayerProblem[] = [];
     const publishersByTopic = new Map<string, Set<string>>();
+    const estimatedObjectSizeByType = new Map<string, number>();
 
     for (const channel of this.#reader.channelsById.values()) {
       const schema = this.#reader.schemasById.get(channel.schemaId);
@@ -75,7 +76,11 @@ export class McapIndexedIterableSource implements IIterableSource {
         parsedChannel = parseChannel({ messageEncoding: channel.messageEncoding, schema });
         approxDeserializedMsgSize =
           schema?.name != undefined
-            ? guesstimateDeserializedMsgSize(parsedChannel.datatypes, schema.name)
+            ? estimateMessageObjectSize(
+                parsedChannel.datatypes,
+                schema.name,
+                estimatedObjectSizeByType,
+              )
             : 0;
       } catch (error) {
         problems.push({
@@ -173,6 +178,11 @@ export class McapIndexedIterableSource implements IIterableSource {
           message.data.byteLength,
           channelInfo.approxDeserializedMsgSize,
         );
+
+        log.info(
+          `${channelInfo.schemaName}, ${message.data.byteLength}, ${channelInfo.approxDeserializedMsgSize}`,
+        );
+
         yield {
           type: "message-event",
           msgEvent: {

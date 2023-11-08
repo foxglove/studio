@@ -25,7 +25,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { guesstimateDeserializedMsgSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -70,6 +70,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
         approxDeserializedMsgSize: number;
       }
     >();
+    const estimatedObjectSizeByType = new Map<string, number>();
 
     let startTime: Time | undefined;
     let endTime: Time | undefined;
@@ -117,7 +118,11 @@ export class McapUnindexedIterableSource implements IIterableSource {
             const parsedChannel = parseChannel({ messageEncoding: record.messageEncoding, schema });
             const approxDeserializedMsgSize =
               schema?.name != undefined
-                ? guesstimateDeserializedMsgSize(parsedChannel.datatypes, schema.name)
+                ? estimateMessageObjectSize(
+                    parsedChannel.datatypes,
+                    schema.name,
+                    estimatedObjectSizeByType,
+                  )
                 : 0;
             channelInfoById.set(record.id, {
               channel: record,

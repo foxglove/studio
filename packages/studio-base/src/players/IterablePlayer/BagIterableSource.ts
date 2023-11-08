@@ -7,7 +7,7 @@ import { BlobReader } from "@foxglove/rosbag/web";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { MessageReader } from "@foxglove/rosmsg-serialization";
 import { compare } from "@foxglove/rostime";
-import { guesstimateDeserializedMsgSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import {
   PlayerProblem,
   MessageEvent,
@@ -111,6 +111,7 @@ export class BagIterableSource implements IIterableSource {
     const topics = new Map<string, Topic>();
     const topicStats = new Map<string, TopicStats>();
     const publishersByTopic: Initalization["publishersByTopic"] = new Map();
+    const estimatedObjectSizeByType = new Map<string, number>();
     for (const [id, connection] of this.#bag.connections) {
       const schemaName = connection.type;
       if (!schemaName) {
@@ -157,7 +158,11 @@ export class BagIterableSource implements IIterableSource {
         }
       }
 
-      const approxDeserializedMsgSize = guesstimateDeserializedMsgSize(datatypes, schemaName);
+      const approxDeserializedMsgSize = estimateMessageObjectSize(
+        datatypes,
+        schemaName,
+        estimatedObjectSizeByType,
+      );
       this.#datatypesByConnectionId.set(id, { schemaName, approxDeserializedMsgSize });
     }
 

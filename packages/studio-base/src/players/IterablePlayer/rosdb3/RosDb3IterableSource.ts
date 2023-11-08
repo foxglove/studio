@@ -6,7 +6,7 @@ import { ROS2_TO_DEFINITIONS, Rosbag2, SqliteSqljs } from "@foxglove/rosbag2-web
 import { stringify } from "@foxglove/rosmsg";
 import { Time, add as addTime } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
-import { guesstimateDeserializedMsgSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import {
   MessageDefinitionsByTopic,
   ParsedMessageDefinitionsByTopic,
@@ -68,6 +68,7 @@ export class RosDb3IterableSource implements IIterableSource {
     const datatypes: RosDatatypes = new Map();
     const messageDefinitionsByTopic: MessageDefinitionsByTopic = {};
     const parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
+    const estimatedObjectSizeByType = new Map<string, number>();
 
     for (const topicDef of topicDefs) {
       const numMessages = messageCounts.get(topicDef.name);
@@ -94,7 +95,7 @@ export class RosDb3IterableSource implements IIterableSource {
       parsedMessageDefinitionsByTopic[topicDef.name] = fullParsedMessageDefinitions;
       this.#approxDeserializedMsgSizeByType.set(
         topicDef.type,
-        guesstimateDeserializedMsgSize(datatypes, topicDef.type),
+        estimateMessageObjectSize(datatypes, topicDef.type, estimatedObjectSizeByType),
       );
     }
 
