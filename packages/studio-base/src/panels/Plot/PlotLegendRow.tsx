@@ -107,6 +107,7 @@ const useStyles = makeStyles<void, "plotName" | "actionButton">()((theme, _param
     justifySelf: "stretch",
     height: ROW_HEIGHT,
     padding: theme.spacing(0.25, 1, 0.25, 0.25),
+    whiteSpace: "pre-wrap",
   },
   errorIcon: {
     color: theme.palette.error.main,
@@ -238,6 +239,7 @@ export function PlotLegendRow({
             align="right"
             color={hoverValue?.value != undefined ? "warning.main" : "text.secondary"}
           >
+            {currentValue && !(+currentValue < 0) && " "}
             {currentValue ?? ""}
           </Typography>
         </div>
