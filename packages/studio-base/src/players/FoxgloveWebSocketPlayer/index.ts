@@ -648,6 +648,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
 
       for (const service of services) {
         const serviceProblemId = `service:${service.id}`;
+        // If not explicitly given, derive request / response type name from the service type
+        // (according to ROS convention).
         const requestType = service.request?.schemaName ?? `${service.type}_Request`;
         const responseType = service.response?.schemaName ?? `${service.type}_Response`;
         const requestMsgEncoding = service.request?.encoding ?? this.#serviceCallEncoding;
@@ -665,10 +667,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
           ) {
             throw new Error("Cannot determine service request or response schema encoding");
           } else if (!SUPPORTED_SERVICE_ENCODINGS.includes(requestMsgEncoding)) {
+            const supportedEncodingsStr = SUPPORTED_SERVICE_ENCODINGS.join(", ");
             throw new Error(
-              `Unsupported service request message encoding. ${requestMsgEncoding} not in list of supported encodings [${SUPPORTED_SERVICE_ENCODINGS.join(
-                ", ",
-              )}]`,
+              `Unsupported service request message encoding. ${requestMsgEncoding} not in list of supported encodings [${supportedEncodingsStr}]`,
             );
           }
 
@@ -692,11 +693,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
             parsedRequest.datatypes,
             requestType,
           );
-          const requestMessageWriter = ROS_ENCODINGS.includes(requestMsgEncoding)
-            ? requestMsgEncoding === "ros1"
-              ? new Ros1MessageWriter(requestMsgDef)
-              : new Ros2MessageWriter(requestMsgDef)
-            : new JsonMessageWriter();
+          let requestMessageWriter: MessageWriter | undefined;
+          if (requestMsgEncoding === "ros1") {
+            requestMessageWriter = new Ros1MessageWriter(requestMsgDef);
+          } else if (requestMsgEncoding === "cdr") {
+            requestMessageWriter = new Ros2MessageWriter(requestMsgDef);
+          } else if (requestMsgEncoding === "json") {
+            requestMessageWriter = new JsonMessageWriter();
+          }
+          if (!requestMessageWriter) {
+            // Should never go here as we sanity-checked the encoding already above
+            throw new Error(`Unsupported service request message encoding ${requestMsgEncoding}`);
+          }
 
           // Add type definitions for service response and request
           this.#updateDataTypes(parsedRequest.datatypes);
