@@ -36,4 +36,4 @@ export function useExtensionMarketplace(): ExtensionMarketplace | undefined {
   return useContext(ExtensionMarketplaceContext);
 }
 
-export default ExtensionMarketplaceContext;
+export { ExtensionMarketplaceContext };
