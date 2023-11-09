@@ -35,5 +35,3 @@ ExtensionMarketplaceContext.displayName = "ExtensionMarketplaceContext";
 export function useExtensionMarketplace(): ExtensionMarketplace | undefined {
   return useContext(ExtensionMarketplaceContext);
 }
-
-export default ExtensionMarketplaceContext;
