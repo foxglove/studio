@@ -42,8 +42,9 @@ export const VariantsLight = {
   render: (): JSX.Element => (
     <div
       style={{
+        overflow: "auto",
         display: "grid",
-        gridTemplateColumns: "repeat(5, max-content)",
+        gridTemplateColumns: "repeat(6, max-content)",
         alignItems: "flex-end",
         padding: 16,
         columnGap: 16,
@@ -55,7 +56,7 @@ export const VariantsLight = {
           {["outlined", "filled", "standard"].map((variant) => {
             return (
               <Fragment key={variant}>
-                <Typography variant="overline" style={{ gridColumn: "span 5" }}>
+                <Typography variant="overline" style={{ gridColumn: "span 6" }}>
                   {variant}
                 </Typography>
                 {["small", "medium"].map((size) => (
@@ -83,6 +84,15 @@ export const VariantsLight = {
                       color={color !== "error" ? (color as TextFieldProps["color"]) : undefined}
                       label="TextField"
                       defaultValue={size}
+                      size={size as TextFieldProps["size"]}
+                    />
+
+                    <MuiTextField
+                      variant={variant as TextFieldProps["variant"]}
+                      error={color === "error"}
+                      color={color !== "error" ? (color as TextFieldProps["color"]) : undefined}
+                      label="TextField with placeholder"
+                      placeholder={size}
                       size={size as TextFieldProps["size"]}
                     />
 
