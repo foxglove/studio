@@ -155,7 +155,6 @@ export class McapIndexedIterableSource implements IIterableSource {
         const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
         yield {
           type: "message-event",
-          connectionId: message.channelId,
           msgEvent: {
             topic: channelInfo.channel.topic,
             receiveTime: fromNanoSec(message.logTime),
