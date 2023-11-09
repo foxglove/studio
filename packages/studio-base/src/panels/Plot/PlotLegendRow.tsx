@@ -89,6 +89,9 @@ const useStyles = makeStyles<void, "plotName" | "actionButton">()((theme, _param
   plotName: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
+    justifySelf: "stretch",
+    gap: theme.spacing(0.5),
     height: ROW_HEIGHT,
     paddingInline: theme.spacing(0.75, 2.5),
     gridColumn: "span 2",
@@ -101,6 +104,7 @@ const useStyles = makeStyles<void, "plotName" | "actionButton">()((theme, _param
   plotValue: {
     display: "flex",
     alignItems: "center",
+    justifySelf: "stretch",
     height: ROW_HEIGHT,
     padding: theme.spacing(0.25, 1, 0.25, 0.25),
   },
