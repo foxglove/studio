@@ -48,6 +48,7 @@ const useStyles = makeStyles<void, "grid" | "toggleButton" | "toggleButtonFloati
       overflow: "hidden",
     },
     rootFloating: {
+      pointerEvents: "none",
       alignItems: "flex-start",
       justifyContent: "flex-start",
       position: "absolute",
@@ -60,6 +61,7 @@ const useStyles = makeStyles<void, "grid" | "toggleButton" | "toggleButtonFloati
       padding: spacing(1.5, 3.75, 4, 4.5),
 
       [`.${classes.grid}`]: {
+        pointerEvents: "auto",
         flex: "0 1 auto",
         width: "max-content",
         maxHeight: "100%",
