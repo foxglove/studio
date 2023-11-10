@@ -62,6 +62,7 @@ const useStyles = makeStyles()((theme) => ({
   chartWrapper: {
     position: "relative",
     marginTop: theme.spacing(0.5),
+    height: "100%",
   },
   chartOverlay: {
     top: 0,
@@ -399,8 +400,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   return (
     <Stack flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar />
-      <Stack fullWidth flex="auto" overflowX="hidden" overflowY="auto">
-        <div className={classes.chartWrapper} style={{ height }} ref={sizeRef}>
+      <Stack fullWidth fullHeight flex="auto" overflowX="hidden" overflowY="auto">
+        <div className={classes.chartWrapper} ref={sizeRef}>
           <TimeBasedChart
             zoom
             isSynced={config.isSynced}

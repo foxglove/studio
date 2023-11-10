@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, Fade, Tooltip, useTheme } from "@mui/material";
+import { Button, Fade, Tooltip, buttonClasses, useTheme } from "@mui/material";
 import { ChartOptions, InteractionMode, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import * as _ from "lodash-es";
@@ -62,11 +62,19 @@ const useStyles = makeStyles()((theme) => ({
     position: "relative",
   },
   resetZoomButton: {
-    position: "absolute",
-    bottom: 0,
+    pointerEvents: "none",
+    position: "sticky",
+    display: "flex",
+    justifyContent: "flex-end",
+    padding: theme.spacing(0, 1, 4),
     right: 0,
-    marginBottom: theme.spacing(4),
-    marginRight: theme.spacing(1),
+    left: 0,
+    bottom: 0,
+    width: "100%",
+
+    [`.${buttonClasses.root}`]: {
+      pointerEvents: "auto",
+    },
   },
   tooltip: {
     maxWidth: "none",
@@ -761,7 +769,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   }
 
   return (
-    <Stack direction="row" fullWidth>
+    <Stack direction="row" fullWidth fullHeight>
       <Tooltip
         arrow={false}
         classes={{ tooltip: classes.tooltip }}
@@ -800,15 +808,16 @@ export default function TimeBasedChart(props: Props): JSX.Element {
             </div>
 
             {showReset && (
-              <Button
-                className={classes.resetZoomButton}
-                variant="contained"
-                color="inherit"
-                title="(shortcut: double-click)"
-                onClick={onResetZoom}
-              >
-                Reset view
-              </Button>
+              <div className={classes.resetZoomButton}>
+                <Button
+                  variant="contained"
+                  color="inherit"
+                  title="(shortcut: double-click)"
+                  onClick={onResetZoom}
+                >
+                  Reset view
+                </Button>
+              </div>
             )}
             <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
           </div>
