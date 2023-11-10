@@ -127,8 +127,6 @@ const tempEuler = new THREE.Euler();
 export type UrdfUserData = BaseUserData & {
   settings: LayerSettingsUrdf | LayerSettingsCustomUrdf;
   fetching?: { url: string; control: AbortController };
-  url: string | undefined;
-  filePath: string | undefined;
   urdf: string | undefined;
   sourceType: LayerSettingsCustomUrdf["sourceType"] | undefined;
   parameter: string | undefined;
@@ -742,11 +740,6 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
     this.renderer.settings.errors.remove(renderable.userData.settingsPath, VALID_SRC_ERR);
 
-    // Check if this URL has already been fetched
-    if (renderable.userData.url === url) {
-      return;
-    }
-
     if (renderable.userData.fetching) {
       // Check if this fetch is already in progress
       if (renderable.userData.fetching.url === url) {
@@ -829,8 +822,6 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     if (!renderable) {
       renderable = new UrdfRenderable(instanceId, this.renderer, {
         urdf,
-        url: urdf != undefined ? url : undefined,
-        filePath: urdf != undefined ? filePath : undefined,
         fetching: undefined,
         renderables: new Map(),
         receiveTime: 0n,
@@ -848,21 +839,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
 
     renderable.userData.urdf = urdf;
-    renderable.userData.filePath =
-      urdf != undefined && sourceType === "filePath" ? filePath : undefined;
     renderable.userData.sourceType = sourceType;
     renderable.userData.topic = topic;
     renderable.userData.parameter = parameter;
     renderable.userData.settings = settings;
     renderable.userData.fetching = undefined;
-
-    if (urdf != undefined && sourceType === "url") {
-      renderable.userData.url = url;
-    } else if (urdf != undefined && sourceType === "filePath") {
-      renderable.userData.url = `file://${filePath}`;
-    } else {
-      renderable.userData.url = undefined;
-    }
 
     if (!urdf || forceReload) {
       renderable.removeChildren();
@@ -895,11 +876,18 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
       this.renderer.settings.errors.remove(renderable.userData.settingsPath, VALID_SRC_ERR);
     }
 
+    let baseUrl: string | undefined;
+    if (sourceType === "url") {
+      baseUrl = url;
+    } else if (sourceType === "filePath") {
+      baseUrl = `file://${filePath}`;
+    }
+
     // Parse the URDF
     const loadedRenderable = renderable;
     parseUrdf(urdf, async (uri) => await this.#getFileFetch(uri), framePrefix)
       .then((parsed) => {
-        this.#loadRobot(loadedRenderable, parsed);
+        this.#loadRobot(loadedRenderable, parsed, baseUrl);
         this.renderer.settings.errors.remove(
           loadedRenderable.userData.settingsPath,
           PARSE_URDF_ERR,
@@ -921,7 +909,11 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
 
   #debouncedLoadUrdf = _.debounce(this.#loadUrdf.bind(this), 500);
 
-  #loadRobot(renderable: UrdfRenderable, { robot, frames, transforms }: ParsedUrdf): void {
+  #loadRobot(
+    renderable: UrdfRenderable,
+    { robot, frames, transforms }: ParsedUrdf,
+    baseUrl: string | undefined,
+  ): void {
     const renderer = this.renderer;
     const settings = renderable.userData.settings;
     const instanceId = settings.instanceId;
@@ -938,7 +930,6 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     renderable.removeChildren();
 
     const createChild = (frameId: string, i: number, visual: UrdfVisual): void => {
-      const baseUrl = renderable.userData.url;
       const childRenderable = createRenderable({
         visual,
         robot,
