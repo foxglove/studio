@@ -88,22 +88,6 @@ export const PrivacyJapanese: StoryObj = {
   parameters: { forceLanguage: "ja" },
 };
 
-export const Extensions: StoryObj = {
-  render: () => {
-    return <AppSettingsDialog open activeTab="extensions" />;
-  },
-};
-
-export const ExtensionsChinese: StoryObj = {
-  ...Extensions,
-  parameters: { forceLanguage: "zh" },
-};
-
-export const ExtensionsJapanese: StoryObj = {
-  ...Extensions,
-  parameters: { forceLanguage: "ja" },
-};
-
 export const Experimental: StoryObj = {
   render: () => {
     return <AppSettingsDialog open activeTab="experimental-features" />;
