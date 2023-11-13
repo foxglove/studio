@@ -97,7 +97,7 @@ describe("StateProcessorFactory", () => {
           extensionId: "id0",
           aliasFunction: (args) => {
             expect(args.globalVariables).toEqual({ someVariable: "name" });
-            return [];
+            return [{ sourceTopicName: "/foo", name: args.globalVariables.someVariable as string }];
           },
         },
       ],
