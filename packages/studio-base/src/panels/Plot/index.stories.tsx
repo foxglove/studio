@@ -391,7 +391,7 @@ function useDebouncedReadySignal(): ReadySignal {
   const readySignal = useReadySignal();
   return React.useMemo(() => {
     return _.debounce(() => {
-      readySignal()
+      readySignal();
     }, 3000);
   }, [readySignal]);
 }
@@ -1198,10 +1198,9 @@ export const IndexBasedXAxisForArray: StoryObj = {
 export const IndexBasedXAxisForArrayWithUpdate: StoryObj = {
   render: function Story() {
     const readySignal = useDebouncedReadySignal();
+    const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     const [ourFixture, setOurFixture] = useState(structuredClone(fixture));
-
-    const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     useEffect(() => {
       setOurFixture((oldValue) => {
@@ -1254,7 +1253,7 @@ export const IndexBasedXAxisForArrayWithUpdate: StoryObj = {
   },
 
   play: async (ctx) => {
-    await waitFor(() => ctx.parameters.storyReady);
+    await waitFor(() => ctx.parameters.storyReady, { timeout: 10000 });
   },
 };
 
