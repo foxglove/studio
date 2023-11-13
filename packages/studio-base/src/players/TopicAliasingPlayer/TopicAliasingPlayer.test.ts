@@ -3,10 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import FakePlayer from "@foxglove/studio-base/components/MessagePipeline/FakePlayer";
-import { TopicAliasingPlayer } from "@foxglove/studio-base/players/TopicAliasingPlayer/TopicAliasingPlayer";
-import { TopicAliasFunctions } from "@foxglove/studio-base/players/TopicAliasingPlayer/aliasing";
 import { PlayerProblem, PlayerState, Topic } from "@foxglove/studio-base/players/types";
 
+import { TopicAliasFunctions } from "./StateProcessorFactory";
+import { TopicAliasingPlayer } from "./TopicAliasingPlayer";
 import { mockMessage, mockPlayerState } from "./mocks";
 
 describe("TopicAliasingPlayer", () => {
@@ -263,6 +263,7 @@ describe("TopicAliasingPlayer", () => {
     player.setListener(listener);
     await fakePlayer.emit(
       mockPlayerState(undefined, {
+        isPlaying: true,
         topics: [{ name: "/original_topic_1", schemaName: "any.schema" }],
       }),
     );
@@ -281,6 +282,8 @@ describe("TopicAliasingPlayer", () => {
     player.setGlobalVariables({
       foo: "/bar",
     });
+
+    await Promise.resolve();
 
     expect(listener).toHaveBeenCalledWith(
       expect.objectContaining({
