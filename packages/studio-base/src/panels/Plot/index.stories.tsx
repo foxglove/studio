@@ -23,7 +23,7 @@ import { fromSec } from "@foxglove/rostime";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
 import { BlockCache, MessageEvent } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture, triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
-import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
+import { useReadySignal, ReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const locationMessages = [
@@ -387,6 +387,13 @@ function PlotWrapper(props: {
   );
 }
 
+function useDebouncedReadySignal(): ReadySignal {
+  const readySignal = useReadySignal();
+  return React.useMemo(() => {
+    return _.debounce(readySignal, 1000);
+  }, [readySignal]);
+}
+
 export default {
   title: "panels/Plot",
   component: Plot,
@@ -405,7 +412,7 @@ export const Empty: StoryObj = {
 
 export const LineGraph: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={exampleConfig} />;
   },
@@ -423,7 +430,7 @@ export const LineGraph: StoryObj = {
 
 export const LineGraphWithValuesAndDisabledSeries: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     const config = produce(exampleConfig, (draft) => {
@@ -447,7 +454,7 @@ export const LineGraphWithValuesAndDisabledSeries: StoryObj = {
 
 export const LineGraphWithXMinMax: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
       <PlotWrapper
@@ -471,7 +478,7 @@ export const LineGraphWithXMinMax: StoryObj = {
 
 export const LineGraphWithXRange: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
       <PlotWrapper
@@ -496,7 +503,7 @@ export const LineGraphWithXRange: StoryObj = {
 
 export const LineGraphWithNoTitle: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={{ ...exampleConfig, title: undefined }} />;
   },
@@ -514,7 +521,7 @@ export const LineGraphWithNoTitle: StoryObj = {
 
 export const LineGraphWithSettings: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 2 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
       <PlotWrapper
@@ -566,7 +573,7 @@ export const LineGraphWithSettingsJapanese: StoryObj = {
 
 export const LineGraphWithLegendsHidden: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={{ ...exampleConfig, showLegend: false }} />;
   },
@@ -594,7 +601,7 @@ const useStyles = makeStyles()(() => ({
 
 export const InALineGraphWithMultiplePlotsXAxesAreSynced: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 10 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     const { classes } = useStyles();
 
@@ -691,8 +698,14 @@ export const LineGraphAfterZoom: StoryObj = {
 
 export const TimestampMethodHeaderStamp: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
-    const pauseFrame = useCallback(() => readySignal, [readySignal]);
+    const readySignal = useDebouncedReadySignal();
+    const pauseFrame = useCallback(
+      () => () => {
+        console.log("pauseFrame");
+        readySignal();
+      },
+      [readySignal],
+    );
 
     return (
       <PlotWrapper
@@ -725,7 +738,7 @@ export const TimestampMethodHeaderStamp: StoryObj = {
 
 export const LongPath: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -759,7 +772,7 @@ export const LongPath: StoryObj = {
 
 export const DisabledPath: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -797,7 +810,7 @@ export const DisabledPath: StoryObj = {
 
 export const HiddenConnectingLines: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -837,7 +850,7 @@ export const HiddenConnectingLines: StoryObj = {
 
 export const ReferenceLine: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -871,7 +884,7 @@ export const ReferenceLine: StoryObj = {
 
 export const WithMinAndMaxYValues: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -910,7 +923,7 @@ export const WithMinAndMaxYValues: StoryObj = {
 
 export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -944,7 +957,7 @@ export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
 
 export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -978,7 +991,7 @@ export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
 
 export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1012,7 +1025,7 @@ export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
 
 export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1046,7 +1059,7 @@ export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
 
 export const WithJustMaxYValueMoreThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1080,7 +1093,7 @@ export const WithJustMaxYValueMoreThanMaximumValue: StoryObj = {
 
 export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1114,7 +1127,7 @@ export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
 
 export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1153,7 +1166,7 @@ export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
 
 export const IndexBasedXAxisForArray: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1188,7 +1201,7 @@ export const IndexBasedXAxisForArray: StoryObj = {
 
 export const IndexBasedXAxisForArrayWithUpdate: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
 
     const [ourFixture, setOurFixture] = useState(structuredClone(fixture));
 
@@ -1251,7 +1264,7 @@ export const IndexBasedXAxisForArrayWithUpdate: StoryObj = {
 
 export const CustomXAxisTopic: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1286,7 +1299,7 @@ export const CustomXAxisTopic: StoryObj = {
 
 export const CustomXAxisTopicWithXLimits: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1324,7 +1337,7 @@ export const CustomXAxisTopicWithXLimits: StoryObj = {
 
 export const CurrentCustomXAxisTopic: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     // As above, but just shows a single point instead of the whole line.
@@ -1360,7 +1373,7 @@ export const CurrentCustomXAxisTopic: StoryObj = {
 
 export const CustomXAxisTopicWithMismatchedDataLengths: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1406,7 +1419,7 @@ export const CustomXAxisTopicWithMismatchedDataLengths: StoryObj = {
 
 export const SuperCloseValues: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1467,7 +1480,7 @@ export const SuperCloseValues: StoryObj = {
 
 export const TimeValues: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1502,7 +1515,7 @@ export const TimeValues: StoryObj = {
 
 export const PreloadedDataInBinaryBlocks: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1533,7 +1546,7 @@ export const PreloadedDataInBinaryBlocks: StoryObj = {
 
 export const MixedStreamedAndPreloadedData: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1568,7 +1581,7 @@ export const MixedStreamedAndPreloadedData: StoryObj = {
 
 export const PreloadedDataAndItsDerivative: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1603,7 +1616,7 @@ export const PreloadedDataAndItsDerivative: StoryObj = {
 
 export const PreloadedDataAndItsNegative: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1638,7 +1651,7 @@ export const PreloadedDataAndItsNegative: StoryObj = {
 
 export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1673,7 +1686,7 @@ export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
 
 export const DifferentLineSizes: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
