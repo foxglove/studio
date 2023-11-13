@@ -23,6 +23,8 @@ import {
   TopicAliasFunctions,
 } from "./StateProcessorFactory";
 
+export type { TopicAliasFunctions };
+
 /**
  * This is a player that wraps an underlying player and applies aliases to all topic names
  * in data emitted from the player. It is inserted into the player chain before
@@ -169,7 +171,7 @@ export class TopicAliasingPlayer implements Player {
     // for panels to subscribe or get new re-mapped messages.
     //
     // Skip this if we are playing and allow the next player state update to handle this.
-    if (shouldReprocess && this.#lastPlayerstate.activeData?.isPlaying === true) {
+    if (shouldReprocess && this.#lastPlayerstate.activeData?.isPlaying === false) {
       void this.#onPlayerState(this.#lastPlayerstate);
     }
   }

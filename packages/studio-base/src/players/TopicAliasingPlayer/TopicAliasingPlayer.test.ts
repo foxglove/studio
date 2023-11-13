@@ -263,7 +263,7 @@ describe("TopicAliasingPlayer", () => {
     player.setListener(listener);
     await fakePlayer.emit(
       mockPlayerState(undefined, {
-        isPlaying: true,
+        isPlaying: false,
         topics: [{ name: "/original_topic_1", schemaName: "any.schema" }],
       }),
     );
