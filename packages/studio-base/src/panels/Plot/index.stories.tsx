@@ -699,13 +699,7 @@ export const LineGraphAfterZoom: StoryObj = {
 export const TimestampMethodHeaderStamp: StoryObj = {
   render: function Story() {
     const readySignal = useDebouncedReadySignal();
-    const pauseFrame = useCallback(
-      () => () => {
-        console.log("pauseFrame");
-        readySignal();
-      },
-      [readySignal],
-    );
+    const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
       <PlotWrapper
