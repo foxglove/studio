@@ -390,7 +390,9 @@ function PlotWrapper(props: {
 function useDebouncedReadySignal(): ReadySignal {
   const readySignal = useReadySignal();
   return React.useMemo(() => {
-    return _.debounce(readySignal, 1000);
+    return _.debounce(() => {
+      readySignal()
+    }, 3000);
   }, [readySignal]);
 }
 
