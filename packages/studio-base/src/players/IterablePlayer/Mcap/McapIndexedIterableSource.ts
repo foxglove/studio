@@ -179,10 +179,6 @@ export class McapIndexedIterableSource implements IIterableSource {
           channelInfo.approxDeserializedMsgSize,
         );
 
-        log.info(
-          `${channelInfo.schemaName}, ${message.data.byteLength}, ${channelInfo.approxDeserializedMsgSize}`,
-        );
-
         yield {
           type: "message-event",
           msgEvent: {

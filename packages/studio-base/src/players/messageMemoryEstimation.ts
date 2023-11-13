@@ -4,25 +4,31 @@
 
 import { MessageDefinitionMap } from "@foxglove/mcap-support/src/types";
 
-const OBJECT_BASE_SIZE = 12;
-const TYPED_ARRAY_BASE_SIZE = 64; // byteLength, byteOffset, ...
-const MAX_NUM_FAST_PROPERTIES = 1020;
+/**
+ * Values of the contants below are a (more or less) informed guesses and not guaranteed to be accurate.
+ */
+const COMPRESSED_POINTER_SIZE = 4; // Pointers use 4 bytes (also on 64-bit systems) due to pointer compression
+const OBJECT_BASE_SIZE = 3 * COMPRESSED_POINTER_SIZE; // 3 compressed pointers
+const TYPED_ARRAY_BASE_SIZE = 25 * COMPRESSED_POINTER_SIZE; // byteLength, byteOffset, ..., see https://stackoverflow.com/a/45808835
+const SMALL_INTEGER_SIZE = COMPRESSED_POINTER_SIZE; // Small integers (up to 31 bits), pointer tagging
+const HEAP_NUMBER_SIZE = 8 + 2 * COMPRESSED_POINTER_SIZE; // 4-byte map pointer + 8-byte payload + property pointer
 const FIELD_SIZE_BY_PRIMITIVE: Record<string, number> = {
-  bool: 4,
-  int8: 4,
-  uint8: 4,
-  int16: 4,
-  uint16: 4,
-  int32: 8,
-  uint32: 8,
-  float32: 16,
-  float64: 16,
-  int64: 16,
-  uint64: 16,
+  bool: SMALL_INTEGER_SIZE,
+  int8: SMALL_INTEGER_SIZE,
+  uint8: SMALL_INTEGER_SIZE,
+  int16: SMALL_INTEGER_SIZE,
+  uint16: SMALL_INTEGER_SIZE,
+  int32: SMALL_INTEGER_SIZE,
+  uint32: SMALL_INTEGER_SIZE,
+  float32: HEAP_NUMBER_SIZE,
+  float64: HEAP_NUMBER_SIZE,
+  int64: HEAP_NUMBER_SIZE,
+  uint64: HEAP_NUMBER_SIZE,
+  time: OBJECT_BASE_SIZE + 2 * HEAP_NUMBER_SIZE + COMPRESSED_POINTER_SIZE,
+  duration: OBJECT_BASE_SIZE + 2 * HEAP_NUMBER_SIZE + COMPRESSED_POINTER_SIZE,
   string: 20, // we don't know the length upfront, assume a fixed length
-  time: 32,
-  duration: 32,
 };
+const MAX_NUM_FAST_PROPERTIES = 1020;
 
 /**
  * Estimates the memory size of a deserialized message object based on the schema definition.
@@ -71,7 +77,7 @@ export function estimateMessageObjectSize(
     sizeInBytes += propertiesDictSize;
 
     // In return, properties are no longer stored in the properties array
-    sizeInBytes -= 4 * nonConstantFields.length;
+    sizeInBytes -= COMPRESSED_POINTER_SIZE * nonConstantFields.length;
   }
 
   for (const field of nonConstantFields) {
@@ -133,7 +139,7 @@ export function estimateMessageObjectSize(
               throw new Error(`Unknown primitive type ${field.type}`);
             }
             // Assume Array<type> deserialization
-            sizeInBytes += arrayLength * primitiveSize + OBJECT_BASE_SIZE;
+            sizeInBytes += arrayLength * primitiveSize + OBJECT_BASE_SIZE + COMPRESSED_POINTER_SIZE;
           }
           break;
       }

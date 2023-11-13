@@ -45,7 +45,7 @@ describe("memoryEstimation", () => {
     ]);
 
     const sizeInBytes = estimateMessageObjectSize(datatypes, "ComplexType", new Map());
-    const expectedSize = 30;
+    const expectedSize = 20; // 3 x pointers + 1 x 4 byte smi + 1 x pointer to boolean
     expect(Math.abs(expectedSize - sizeInBytes)).toBeLessThan(10);
   });
 
