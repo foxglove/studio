@@ -4,8 +4,7 @@
 
 import * as _ from "lodash-es";
 
-import { TopicAliasFunction } from "@foxglove/studio";
-import { Immutable as Im } from "@foxglove/studio";
+import { TopicAliasFunction, Immutable as Im } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerProblem, Topic } from "@foxglove/studio-base/players/types";
 
