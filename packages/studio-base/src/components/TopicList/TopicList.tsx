@@ -22,14 +22,15 @@ import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
 import { filterMap } from "@foxglove/den/collection";
-import { DraggedMessagePath } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import { quoteTopicNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import { DraggedMessagePath } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { ContextMenu } from "@foxglove/studio-base/components/TopicList/ContextMenu";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { MessagePathSelectionProvider } from "@foxglove/studio-base/services/messagePathDragging/MessagePathSelectionProvider";
@@ -70,7 +71,7 @@ function getDraggedMessagePath(treeItem: TopicListItem): DraggedMessagePath {
   switch (treeItem.type) {
     case "topic":
       return {
-        path: treeItem.item.item.name,
+        path: quoteTopicNameIfNeeded(treeItem.item.item.name),
         rootSchemaName: treeItem.item.item.schemaName,
         isTopic: true,
         isLeaf: false,

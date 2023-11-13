@@ -22,10 +22,9 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
     boxSizing: "border-box",
     position: "relative",
     height: "100%",
-    gap: theme.spacing(0.75),
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(0.75),
     backgroundColor: theme.palette.background.paper,
+    gap: theme.spacing(0.5),
+    paddingInline: theme.spacing(1, 0.75),
     borderTop: `1px solid ${theme.palette.action.selected}`,
     boxShadow: `0 1px 0 0 ${theme.palette.action.selected}`,
     userSelect: "none",
@@ -58,13 +57,18 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
   },
   dragHandle: {
     opacity: 0.6,
-    cursor: "grab",
+    display: "flex",
 
     [`.${classes.selected} &`]: {
       color: theme.palette.primary.main,
       opacity: 1,
     },
+    [`@container (max-width: 280px)`]: {
+      display: "none",
+    },
   },
+  // tss-unused-classes only looks within the same file to determine if classes are used. These ones
+  // are used in other files.
   /* eslint-disable tss-unused-classes/unused-classes */
   fieldRow: {
     borderTop: `1px solid ${theme.palette.background.paper}`,
@@ -86,4 +90,5 @@ export const useTopicListStyles = makeStyles<void, TreeClasses>()((theme, _, cla
     display: "block",
     textAlign: "start",
   },
+  /* eslint-enable tss-unused-classes/unused-classes */
 }));

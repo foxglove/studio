@@ -7,8 +7,9 @@ import { Badge, Typography } from "@mui/material";
 import { FzfResultItem } from "fzf";
 import { useCallback, useMemo } from "react";
 
-import { DraggedMessagePath } from "@foxglove/studio";
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
+import { quoteTopicNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { DraggedMessagePath } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { useMessagePathDrag } from "@foxglove/studio-base/services/messagePathDragging";
@@ -35,7 +36,7 @@ export function TopicRow({
 
   const item: DraggedMessagePath = useMemo(
     () => ({
-      path: topic.name,
+      path: quoteTopicNameIfNeeded(topic.name),
       rootSchemaName: topic.schemaName,
       isTopic: true,
       isLeaf: false,
@@ -56,11 +57,6 @@ export function TopicRow({
     [connectDragPreview, connectDragSource],
   );
 
-  const cancelDragEvent = useCallback((event: React.DragEvent<HTMLSpanElement>) => {
-    event.stopPropagation();
-    event.preventDefault();
-  }, []);
-
   return (
     <div
       ref={combinedRef}
@@ -77,13 +73,7 @@ export function TopicRow({
       )}
       {/* Extra Stack wrapper to enable growing without the  */}
       <Stack flex="auto" alignItems="flex-start" overflow="hidden">
-        <Typography
-          variant="body2"
-          noWrap
-          draggable
-          onDragStart={cancelDragEvent}
-          className={classes.textContent}
-        >
+        <Typography variant="body2" noWrap className={classes.textContent}>
           <HighlightChars str={topic.name} indices={topicResult.positions} />
           {topic.aliasedFromName != undefined && (
             <Typography variant="caption" className={classes.aliasedTopicName}>
@@ -96,8 +86,6 @@ export function TopicRow({
             variant="caption"
             color="text.secondary"
             noWrap
-            draggable
-            onDragStart={cancelDragEvent}
             className={classes.textContent}
           >
             <HighlightChars

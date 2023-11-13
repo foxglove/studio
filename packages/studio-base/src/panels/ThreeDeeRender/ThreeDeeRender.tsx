@@ -109,7 +109,12 @@ export function ThreeDeeRender(props: {
   customSceneExtensions?: DeepPartial<SceneExtensionConfig>;
 }): JSX.Element {
   const { context, interfaceMode, testOptions, customSceneExtensions } = props;
-  const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
+  const {
+    initialState,
+    saveState,
+    unstable_fetchAsset: fetchAsset,
+    unstable_setMessagePathDropConfig: setMessagePathDropConfig,
+  } = context;
   const analytics = useAnalytics();
 
   // Load and save the persisted panel configuration
@@ -199,7 +204,7 @@ export function ThreeDeeRender(props: {
   }, [renderer, analytics]);
 
   useEffect(() => {
-    context.EXPERIMENTAL_setMessagePathDropConfig(
+    setMessagePathDropConfig(
       renderer
         ? {
             getDropStatus: renderer.getDropStatus,
@@ -207,7 +212,7 @@ export function ThreeDeeRender(props: {
           }
         : undefined,
     );
-  }, [context, renderer]);
+  }, [setMessagePathDropConfig, renderer]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();
@@ -779,7 +784,7 @@ export function ThreeDeeRender(props: {
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
-      if (event.key === "3") {
+      if (event.key === "3" && !(event.metaKey || event.ctrlKey)) {
         onTogglePerspective();
         event.stopPropagation();
         event.preventDefault();
