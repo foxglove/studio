@@ -13,6 +13,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import {
   DraggedMessagePath,
   Immutable,
+  MessageEvent,
   SettingsTreeAction,
   SettingsTreeFields,
   Topic,
@@ -245,6 +246,7 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleRosRawImage,
           shouldSubscribe: this.imageShouldSubscribe,
+          processQueue: this.#processMessageQueue.bind(this),
         },
       },
       {
@@ -253,6 +255,7 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleRosCompressedImage,
           shouldSubscribe: this.imageShouldSubscribe,
+          processQueue: this.#processMessageQueue.bind(this),
         },
       },
       {
@@ -261,6 +264,7 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleRawImage,
           shouldSubscribe: this.imageShouldSubscribe,
+          processQueue: this.#processMessageQueue.bind(this),
         },
       },
       {
@@ -269,10 +273,19 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleCompressedImage,
           shouldSubscribe: this.imageShouldSubscribe,
+          processQueue: this.#processMessageQueue.bind(this),
         },
       },
     ];
     return subscriptions.concat(this.#annotations.getSubscriptions());
+  }
+
+  #processMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
+    // only take multiple images in if synchronization is enabled
+    if (!this.getImageModeSettings().synchronize) {
+      return msgs.slice(msgs.length - 1);
+    }
+    return msgs;
   }
 
   public override dispose(): void {
