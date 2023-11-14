@@ -2,10 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 import { createStore, StoreApi, useStore } from "zustand";
 
-import { useGuaranteedContext } from "@foxglove/hooks";
 import {
   ExtensionPanelRegistration,
   Immutable,
@@ -43,6 +42,6 @@ export const ExtensionCatalogContext = createContext<StoreApi<ExtensionCatalog>>
 );
 
 export function useExtensionCatalog<T>(selector: (registry: ExtensionCatalog) => T): T {
-  const context = useGuaranteedContext(ExtensionCatalogContext);
+  const context = useContext(ExtensionCatalogContext);
   return useStore(context, selector);
 }
