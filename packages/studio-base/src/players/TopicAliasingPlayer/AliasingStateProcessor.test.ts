@@ -46,6 +46,11 @@ describe("StateProcessor", () => {
       expect.objectContaining({ topic: "/renamed_topic_1" }),
       expect.objectContaining({ topic: "/topic_2" }),
     ]);
+
+    // Should keep same instance if input is unchanged
+    const mapped2 = processor.process(state, []);
+    expect(mapped2).not.toBe(mapped);
+    expect(mapped2.activeData?.messages).toBe(mapped.activeData?.messages);
   });
 
   it("should map blocks", () => {
@@ -113,6 +118,11 @@ describe("StateProcessor", () => {
         ],
       },
     });
+
+    // Should keep same instance if input is unchanged
+    const mapped2 = processor.process(state, []);
+    expect(mapped2).not.toBe(mapped);
+    expect(mapped2.progress).toBe(mapped.progress);
   });
 
   it("should map published topics", () => {
@@ -141,6 +151,11 @@ describe("StateProcessor", () => {
         ["2", new Set(["/topic_2"])],
       ]),
     );
+
+    // Should keep same instance if input is unchanged
+    const mapped2 = processor.process(state, []);
+    expect(mapped2).not.toBe(mapped);
+    expect(mapped2.activeData?.publishedTopics).toBe(mapped.activeData?.publishedTopics);
   });
 
   it("should map topics", () => {
@@ -163,6 +178,11 @@ describe("StateProcessor", () => {
       { name: "/renamed_topic_1", schemaName: "whatever", aliasedFromName: "/topic_1" },
       { name: "/topic_2", schemaName: "whatever" },
     ]);
+
+    // Should keep same instance if input is unchanged
+    const mapped2 = processor.process(state, []);
+    expect(mapped2).not.toBe(mapped);
+    expect(mapped2.activeData?.topics).toBe(mapped.activeData?.topics);
   });
 
   it("should map subscribed topics", () => {
@@ -196,5 +216,10 @@ describe("StateProcessor", () => {
         ["3", new Set(["/topic_1", "/topic_2", "/renamed_topic_1"])],
       ]),
     );
+
+    // Should keep same instance if input is unchanged
+    const mapped2 = processor.process(state, subscriptions);
+    expect(mapped2).not.toBe(mapped);
+    expect(mapped2.activeData?.subscribedTopics).toBe(mapped.activeData?.subscribedTopics);
   });
 });
