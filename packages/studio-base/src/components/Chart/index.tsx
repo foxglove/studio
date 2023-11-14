@@ -24,18 +24,9 @@ import Rpc, { createLinkedChannels } from "@foxglove/studio-base/util/Rpc";
 import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
-import { getTypedLength } from "@foxglove/studio-base/components/Chart/datasets";
-
 import { TypedChartData, ChartData, RpcElement, RpcScales } from "./types";
 
 const log = Logger.getLogger(__filename);
-
-const getSize = (data: TypedChartData | undefined) => {
-  if (data == undefined) {
-    return undefined;
-  }
-  return data.datasets.map((v) => getTypedLength(v.data));
-};
 
 function makeChartJSWorker() {
   // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -105,11 +96,8 @@ const supportsOffscreenCanvas =
 
 function Chart(props: Props): JSX.Element {
   const [id] = useState(() => uuidv4());
-  const trace = (event: string, ...args: any[]) =>
-    console.log(`${id.slice(0, 5)}: ${event}`, ...args);
 
   const initialized = useRef(false);
-  const calledAgain = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const isMounted = useMountedState();
@@ -134,7 +122,6 @@ function Chart(props: Props): JSX.Element {
     onStartRender,
     onFinishRender,
   } = props;
-  trace(`prop`, getSize(typedData));
 
   const sendWrapperRef = useRef<RpcSend | undefined>();
   const rpcSendRef = useRef<RpcSend | undefined>();
@@ -211,7 +198,6 @@ function Chart(props: Props): JSX.Element {
   // The purpose of this mechanism is to avoid sending data/options/size to the worker
   // if they are unchanged from a previous initialization or update.
   const getNewUpdateMessage = useCallback(() => {
-    trace(`getNewUpdateMessage`);
     const prev = previousUpdateMessage.current;
     const out: Partial<ChartUpdateMessage> = {};
 
@@ -229,10 +215,7 @@ function Chart(props: Props): JSX.Element {
       prev.data = out.data = data;
     }
     if (prev.typedData !== typedData) {
-      trace(`new data`, getSize(typedData));
       prev.typedData = out.typedData = typedData;
-    } else {
-      trace("data unchanged", getSize(prev.typedData), getSize(typedData));
     }
     if (prev.options !== options) {
       prev.options = out.options = options;
@@ -257,8 +240,6 @@ function Chart(props: Props): JSX.Element {
   // Update the chart with a new set of data
   const updateChart = useCallback(
     async (update: Partial<ChartUpdateMessage>) => {
-      const t = performance.now();
-      trace("updateChart", initialized.current, t, update, getSize(update.typedData));
       // first time initialization
       if (!initialized.current) {
         assert(canvasRef.current == undefined, "Canvas has already been initialized");
@@ -304,11 +285,12 @@ function Chart(props: Props): JSX.Element {
         queuedUpdates.current = [];
         for (const queuedUpdate of queued) {
           void (async () => {
-            trace(`update start`, t, getSize(queuedUpdate.typedData), queuedUpdate);
-            const scales = await sendWrapperRef.current<RpcScales>("update", queuedUpdate);
-            trace("scales", scales);
+            const { current } = sendWrapperRef
+            if (current == undefined) {
+              return
+            }
+            const scales = await current<RpcScales>("update", queuedUpdate);
             maybeUpdateScales(scales);
-            trace(`update end`, t, getSize(queuedUpdate.typedData), queuedUpdate);
           })();
         }
 
@@ -325,11 +307,8 @@ function Chart(props: Props): JSX.Element {
         return;
       }
 
-      calledAgain.current = true;
-
       onStartRender?.();
       const scales = await rpcSendRef.current<RpcScales>("update", update);
-      trace(`update b`, getSize(update.typedData), update);
       maybeUpdateScales(scales);
       onFinishRender?.();
     },
