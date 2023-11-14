@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import estreePlugin from "prettier/plugins/estree";
-import typescriptPlugin from "prettier/plugins/typescript";
-import prettier from "prettier/standalone";
+import * as estreePlugin from "prettier/plugins/estree";
+import * as typescriptPlugin from "prettier/plugins/typescript";
+import { format } from "prettier/standalone";
 
 import { ScriptData } from "@foxglove/studio-base/players/UserScriptPlayer/types";
 
@@ -13,7 +13,7 @@ import { compile } from "./transform";
 
 // Takes in a string of Typescript code and returns a formatted string of Typescript code
 async function getPrettifiedCode(code: string): Promise<string> {
-  return await prettier.format(code, {
+  return await format(code, {
     parser: "typescript",
     plugins: [estreePlugin, typescriptPlugin],
   });
