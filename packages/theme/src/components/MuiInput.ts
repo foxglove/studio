@@ -18,6 +18,8 @@ export const MuiInput: OverrideComponentReturn<"MuiInput"> = {
         backgroundColor: theme.palette.action.hover,
       },
       "&.Mui-focused": {
+        backgroundColor: theme.palette.action.focus,
+
         [`&.${inputClasses.error}`]: {
           backgroundColor: alpha(theme.palette.error.main, theme.palette.action.focusOpacity),
         },
