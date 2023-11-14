@@ -179,7 +179,7 @@ export class BlockLoader {
   }
 
   async #load(args: { progress: LoadArgs["progress"] }): Promise<void> {
-    const topics = this.#topics;
+    const topics = new Map(this.#topics);
 
     // Ignore changing the blocks if the topic list is empty
     if (topics.size === 0) {
@@ -263,6 +263,13 @@ export class BlockLoader {
           return;
         }
 
+        // While we were waiting for cursor data the topics we need to be loading may have changed.
+        // Check whether the topics are changed and abort this loading instance because the results
+        // may no longer be valid for the data we should be loading.
+        if (!_.isEqual(topics, this.#topics)) {
+          return;
+        }
+
         const messagesByTopic: Record<string, MessageEvent[]> = {};
 
         // Set all topics to empty arrays. Since our cursor requested all the topicsToFetch we either will
@@ -318,9 +325,9 @@ export class BlockLoader {
           if (totalBlockSizeBytes > this.#maxCacheSize) {
             this.#problemManager.addProblem("cache-full", {
               severity: "error",
-              message: `Cache is full. Preloading for topics [${Array.from(topicsToFetch).join(
-                ", ",
-              )}] has stopped on block ${currentBlockId + 1}/${this.#blocks.length}.`,
+              message: `Cache is full. Preloading for topics [${Array.from(
+                topicsToFetch.keys(),
+              ).join(", ")}] has stopped on block ${currentBlockId + 1}/${this.#blocks.length}.`,
               tip: "Try reducing the number of topics that require preloading at a given time (e.g. in plots), or try to reduce the time range of the file.",
             });
             // We need to emit progress here so the player will emit a new state
