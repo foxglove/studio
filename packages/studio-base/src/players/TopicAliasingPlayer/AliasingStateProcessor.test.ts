@@ -4,7 +4,7 @@
 
 import { Topic } from "@foxglove/studio-base/players/types";
 
-import { StateProcessor } from "./StateProcessor";
+import { AliasingStateProcessor } from "./AliasingStateProcessor";
 import { mockPlayerState } from "./mocks";
 
 describe("StateProcessor", () => {
@@ -39,7 +39,7 @@ describe("StateProcessor", () => {
         "/topic_1": ["/renamed_topic_1"],
       }),
     );
-    const processor = new StateProcessor(aliasMap);
+    const processor = new AliasingStateProcessor(aliasMap);
     const mapped = processor.process(state, []);
     expect(mapped.activeData?.messages).toEqual([
       expect.objectContaining({ topic: "/topic_1" }),
@@ -97,7 +97,7 @@ describe("StateProcessor", () => {
         "/topic_1": ["/renamed_topic_1"],
       }),
     );
-    const processor = new StateProcessor(aliasMap);
+    const processor = new AliasingStateProcessor(aliasMap);
     const mapped = processor.process(state, []);
     expect(mapped.progress).toMatchObject({
       messageCache: {
@@ -133,7 +133,7 @@ describe("StateProcessor", () => {
         "/topic_1": ["/renamed_topic_1"],
       }),
     );
-    const processor = new StateProcessor(aliasMap);
+    const processor = new AliasingStateProcessor(aliasMap);
     const mapped = processor.process(state, []);
     expect(mapped.activeData?.publishedTopics).toEqual(
       new Map([
@@ -156,7 +156,7 @@ describe("StateProcessor", () => {
         "/topic_1": ["/renamed_topic_1"],
       }),
     );
-    const processor = new StateProcessor(aliasMap);
+    const processor = new AliasingStateProcessor(aliasMap);
     const mapped = processor.process(state, []);
     expect(mapped.activeData?.topics).toEqual([
       { name: "/topic_1", schemaName: "whatever" },
@@ -186,7 +186,7 @@ describe("StateProcessor", () => {
         "/topic_3": ["/renamed_topic_3"],
       }),
     );
-    const processor = new StateProcessor(aliasMap);
+    const processor = new AliasingStateProcessor(aliasMap);
     const mapped = processor.process(state, subscriptions);
 
     expect(mapped.activeData?.subscribedTopics).toEqual(

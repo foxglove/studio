@@ -8,9 +8,9 @@ import { TopicAliasFunction, Immutable as Im } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerProblem, Topic } from "@foxglove/studio-base/players/types";
 
+import { AliasingStateProcessor, TopicAliasMap } from "./AliasingStateProcessor";
 import { IStateProcessor } from "./IStateProcessor";
 import { NoopStateProcessor } from "./NoopStateProcessor";
-import { StateProcessor, TopicAliasMap } from "./StateProcessor";
 
 export type TopicAliasFunctions = Array<{ extensionId: string; aliasFunction: TopicAliasFunction }>;
 
@@ -21,10 +21,10 @@ export type StateFactoryInput = {
 };
 
 /**
- * StateProcessorFactory builds instances of PlayerStateProcessor from sets of inputs.
+ * StateProcessorFactory builds instances of IStateProcessor from sets of inputs.
  *
- * It's purpose is to manage idempotency and memoization of the input and output to only build a new
- * processor when a set of alias functions outputs results in a semantically different output.
+ * Its purpose is to manage idempotency and memoization of the input and output to only build a new
+ * processor when a set of alias function outputs results in a semantically different output.
  */
 export class StateProcessorFactory {
   #aliases: TopicAliasMap = new Map();
@@ -50,6 +50,13 @@ export class StateProcessorFactory {
     const anyMappings = mappings.some((map) => [...map.aliases].length > 0);
     if (!anyMappings) {
       this.#aliases = new Map();
+
+      // We are already using a no-op state processor so we can keep the same reference Technically
+      // with a no-op processor its ok if the reference changes since its a no-op but this check
+      // keeps the semnatics more consistent.
+      if (this.#stateProcessor instanceof NoopStateProcessor) {
+        return this.#stateProcessor;
+      }
       return (this.#stateProcessor = new NoopStateProcessor());
     }
 
@@ -62,7 +69,7 @@ export class StateProcessorFactory {
     }
 
     this.#aliases = aliasMap;
-    return (this.#stateProcessor = new StateProcessor(aliasMap, problems));
+    return (this.#stateProcessor = new AliasingStateProcessor(aliasMap, problems));
   }
 }
 

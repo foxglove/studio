@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { AliasingStateProcessor } from "./AliasingStateProcessor";
 import { NoopStateProcessor } from "./NoopStateProcessor";
-import { StateProcessor } from "./StateProcessor";
 import { StateProcessorFactory } from "./StateProcessorFactory";
 
 describe("StateProcessorFactory", () => {
@@ -29,7 +29,7 @@ describe("StateProcessorFactory", () => {
       topics: [{ name: "/foo", schemaName: "schema" }],
       variables: {},
     });
-    expect(processor).toBeInstanceOf(StateProcessor);
+    expect(processor).toBeInstanceOf(AliasingStateProcessor);
   });
 
   it("builds keeps the same processor when aliases are the same", () => {
@@ -44,7 +44,7 @@ describe("StateProcessorFactory", () => {
       topics: [{ name: "/foo", schemaName: "schema" }],
       variables: {},
     });
-    expect(processor).toBeInstanceOf(StateProcessor);
+    expect(processor).toBeInstanceOf(AliasingStateProcessor);
 
     const processor2 = factory.buildStateProcessor({
       aliasFunctions: [
@@ -71,7 +71,7 @@ describe("StateProcessorFactory", () => {
       topics: [{ name: "/foo", schemaName: "schema" }],
       variables: {},
     });
-    expect(processor).toBeInstanceOf(StateProcessor);
+    expect(processor).toBeInstanceOf(AliasingStateProcessor);
 
     const processor2 = factory.buildStateProcessor({
       aliasFunctions: [
@@ -83,7 +83,7 @@ describe("StateProcessorFactory", () => {
       topics: [{ name: "/foo", schemaName: "schema" }],
       variables: {},
     });
-    expect(processor2).toBeInstanceOf(StateProcessor);
+    expect(processor2).toBeInstanceOf(AliasingStateProcessor);
     expect(processor2).not.toBe(processor);
   });
 
@@ -106,6 +106,6 @@ describe("StateProcessorFactory", () => {
         someVariable: "name",
       },
     });
-    expect(processor).toBeInstanceOf(StateProcessor);
+    expect(processor).toBeInstanceOf(AliasingStateProcessor);
   });
 });

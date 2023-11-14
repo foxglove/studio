@@ -48,7 +48,7 @@ export class TopicAliasingPlayer implements Player {
   #stateProcessorFactory: StateProcessorFactory = new StateProcessorFactory();
   #stateProcessor: IStateProcessor = new NoopStateProcessor();
 
-  #lastPlayerstate?: PlayerState;
+  #lastPlayerState?: PlayerState;
 
   // We only want to be emitting one state at a time however we also queue emits from global
   // variable updates which can happen at a different time to new state from the wrapped player. The
@@ -156,7 +156,7 @@ export class TopicAliasingPlayer implements Player {
     // We can skip re-processing if we don't have any alias functions setup or we have not
     // had any player state provided yet. The player state handler onPlayerState will handle alias
     // function processing when it is called.
-    if (this.#skipAliasing || this.#lastPlayerstate == undefined) {
+    if (this.#skipAliasing || this.#lastPlayerState == undefined) {
       return;
     }
 
@@ -170,9 +170,12 @@ export class TopicAliasingPlayer implements Player {
     // Re-process the last player state if the processor has changed since we might have new downstream topics
     // for panels to subscribe or get new re-mapped messages.
     //
-    // Skip this if we are playing and allow the next player state update to handle this.
-    if (shouldReprocess && this.#lastPlayerstate.activeData?.isPlaying === false) {
-      void this.#onPlayerState(this.#lastPlayerstate);
+    // Skip this if we are playing and allow the next player state update to handle this to avoid
+    // these emits interfering with player state updates. It does assume the player is emitting
+    // state relatively quickly when playing so the new aliases are injected. If this assumption
+    // changes this bail might need revisiting.
+    if (shouldReprocess && this.#lastPlayerState.activeData?.isPlaying === false) {
+      void this.#onPlayerState(this.#lastPlayerState);
     }
   }
 
@@ -204,7 +207,7 @@ export class TopicAliasingPlayer implements Player {
       }
 
       // remember the last player state so we can re-use it when global variables are set
-      this.#lastPlayerstate = playerState;
+      this.#lastPlayerState = playerState;
 
       // Process the player state using the latest aliases
       const newState = this.#stateProcessor.process(playerState, this.#subscriptions);

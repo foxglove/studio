@@ -21,7 +21,14 @@ import { IStateProcessor } from "./IStateProcessor";
 export type TopicAliasMap = Map<string, string[]>;
 type MessageBlocks = readonly (undefined | MessageBlock)[];
 
-export class StateProcessor implements IStateProcessor {
+/**
+ * StateProcessor implements IStateProcessor to apply topic aliases to player state and subscriptions.
+ *
+ * Note: it uses a set of memoized members to keep referential equality for the output player state
+ * when the input is unchanged. This is important for downstream consumers which rely on referential
+ * equality to detect changes and to avoid doing work when there are no changes.
+ */
+export class AliasingStateProcessor implements IStateProcessor {
   #problems: PlayerProblem[] = [];
   #mapping: Im<TopicAliasMap>;
   #inverseMapping: Im<TopicAliasMap>;
@@ -35,6 +42,8 @@ export class StateProcessor implements IStateProcessor {
   /**
    * Aliases topics in a player state to a new player state with all topic name aliases
    * applied.
+   *
+   * Subscriptions are aliased to include the mapped and unmapped topics.
    */
   public process(playerState: PlayerState, subscriptions: Im<SubscribePayload[]>): PlayerState {
     const newState = {
