@@ -25,7 +25,7 @@ import { MouseEvent, SyntheticEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { AppSetting } from "@foxglove/studio-base";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/ExperimentalFeatureSettings";
@@ -245,10 +245,8 @@ export function AppSettingsDialog(
         >
           <Tab className={classes.tab} label={t("general")} value="general" />
           <Tab className={classes.tab} label={t("privacy")} value="privacy" />
-          {extensionSettings ? (
+          {extensionSettings && (
             <Tab className={classes.tab} label={t("extensions")} value="extensions" />
-          ) : (
-            <></>
           )}
           <Tab
             className={classes.tab}
@@ -311,7 +309,7 @@ export function AppSettingsDialog(
             </Stack>
           </section>
 
-          {extensionSettings ? (
+          {extensionSettings && (
             <section
               className={cx(classes.tabPanel, {
                 [classes.tabPanelActive]: activeTab === "extensions",
@@ -319,8 +317,6 @@ export function AppSettingsDialog(
             >
               <Stack gap={2}>{extensionSettings}</Stack>
             </section>
-          ) : (
-            <></>
           )}
 
           <section
