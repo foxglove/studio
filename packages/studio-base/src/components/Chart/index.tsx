@@ -284,13 +284,15 @@ function Chart(props: Props): JSX.Element {
         const { current: queued } = queuedUpdates;
         queuedUpdates.current = [];
         for (const queuedUpdate of queued) {
+          // We do not want to block the rest of this function on these calls,
+          // which can take a while (particularly on weak devices)
           void (async () => {
-            const { current } = sendWrapperRef
+            const { current } = sendWrapperRef;
             if (current == undefined) {
-              return
+              return;
             }
-            const scales = await current<RpcScales>("update", queuedUpdate);
-            maybeUpdateScales(scales);
+            const newScales = await current<RpcScales>("update", queuedUpdate);
+            maybeUpdateScales(newScales);
           })();
         }
 
