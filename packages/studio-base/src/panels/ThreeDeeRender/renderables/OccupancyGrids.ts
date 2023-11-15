@@ -98,7 +98,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
       {
         type: "schema",
         schemaNames: OCCUPANCY_GRID_DATATYPES,
-        subscription: { handler: this.#handleOccupancyGrid, processQueue: onlyLastByTopicMessage },
+        subscription: { handler: this.#handleOccupancyGrid, filterQueue: onlyLastByTopicMessage },
       },
     ];
   }

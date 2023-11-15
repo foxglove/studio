@@ -141,7 +141,7 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
         schemaNames: VELODYNE_SCAN_DATATYPES,
         subscription: {
           handler: this.#handleVelodyneScan,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#processMessageQueue.bind(this),
         },
       },
     ];

@@ -402,7 +402,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
       {
         type: "schema",
         schemaNames: GRID_DATATYPES,
-        subscription: { handler: this.#handleFoxgloveGrid, processQueue: onlyLastByTopicMessage },
+        subscription: { handler: this.#handleFoxgloveGrid, filterQueue: onlyLastByTopicMessage },
       },
     ];
   }

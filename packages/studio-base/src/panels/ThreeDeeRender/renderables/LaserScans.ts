@@ -328,7 +328,7 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         schemaNames: ROS_LASERSCAN_DATATYPES,
         subscription: {
           handler: this.#handleLaserScan,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#processMessageQueue.bind(this),
         },
       },
       {
@@ -336,7 +336,7 @@ export class LaserScans extends SceneExtension<LaserScanHistoryRenderable> {
         schemaNames: FOXGLOVE_LASERSCAN_DATATYPES,
         subscription: {
           handler: this.#handleLaserScan,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#processMessageQueue.bind(this),
         },
       },
     ];

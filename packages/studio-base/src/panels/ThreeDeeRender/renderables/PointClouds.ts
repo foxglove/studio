@@ -710,7 +710,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         schemaNames: ROS_POINTCLOUD_DATATYPES,
         subscription: {
           handler: this.#handleRosPointCloud,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#processMessageQueue.bind(this),
         },
       },
       {
@@ -718,7 +718,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         schemaNames: FOXGLOVE_POINTCLOUD_DATATYPES,
         subscription: {
           handler: this.#handleFoxglovePointCloud,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#processMessageQueue.bind(this),
         },
       },
     ];

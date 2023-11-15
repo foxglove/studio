@@ -243,11 +243,21 @@ export class SceneExtension<
   }
 }
 
+/**
+ * Takes a list of MessageEvents, groups them by topic, then takes the last message for each topic and adds it to the return array.
+ * Used for filtering the subscription message queue between frames (`filterQueue` on `RendererSubscriptions`), such that we don't
+ * unnecessarily process messages that will be overwritten.
+ */
 export function onlyLastByTopicMessage<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
   if (msgs.length === 0) {
     return [];
   }
+  /**
+   * NOTE: We group by topic because renderables are keyed by topic. If a renderable does not represent the current state of a topic,
+   * what we group by will need to change.
+   */
   const msgsByTopic = _.groupBy(msgs, (msg) => msg.topic);
+
   const list = Object.values(msgsByTopic).map((topicMsgs) => topicMsgs[topicMsgs.length - 1]!);
 
   return list;

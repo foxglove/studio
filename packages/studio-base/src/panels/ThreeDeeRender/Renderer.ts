@@ -1106,8 +1106,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         if (!subscription.queue) {
           continue;
         }
-        const { queue, processQueue } = subscription;
-        const processedQueue = processQueue ? processQueue(queue) : queue;
+        const { queue, filterQueue } = subscription;
+        const processedQueue = filterQueue ? filterQueue(queue) : queue;
         subscription.queue = undefined;
         for (const messageEvent of processedQueue) {
           subscription.handler(messageEvent);
@@ -1119,7 +1119,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
         if (!subscription.queue) {
           continue;
         }
-        const { queue, processQueue } = subscription;
+        const { queue, filterQueue: processQueue } = subscription;
         const processedQueue = processQueue ? processQueue(queue) : queue;
         subscription.queue = undefined;
         for (const messageEvent of processedQueue) {

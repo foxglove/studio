@@ -246,7 +246,7 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleRosRawImage,
           shouldSubscribe: this.imageShouldSubscribe,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#filterMessageQueue.bind(this),
         },
       },
       {
@@ -255,7 +255,7 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleRosCompressedImage,
           shouldSubscribe: this.imageShouldSubscribe,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#filterMessageQueue.bind(this),
         },
       },
       {
@@ -264,7 +264,7 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleRawImage,
           shouldSubscribe: this.imageShouldSubscribe,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#filterMessageQueue.bind(this),
         },
       },
       {
@@ -273,14 +273,14 @@ export class ImageMode
         subscription: {
           handler: this.messageHandler.handleCompressedImage,
           shouldSubscribe: this.imageShouldSubscribe,
-          processQueue: this.#processMessageQueue.bind(this),
+          filterQueue: this.#filterMessageQueue.bind(this),
         },
       },
     ];
     return subscriptions.concat(this.#annotations.getSubscriptions());
   }
 
-  #processMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
+  #filterMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
     // only take multiple images in if synchronization is enabled
     if (!this.getImageModeSettings().synchronize) {
       return msgs.slice(msgs.length - 1);

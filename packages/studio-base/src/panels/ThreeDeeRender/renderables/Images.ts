@@ -106,14 +106,14 @@ export class Images extends SceneExtension<ImageRenderable> {
       {
         type: "schema",
         schemaNames: ROS_IMAGE_DATATYPES,
-        subscription: { handler: this.#handleRosRawImage, processQueue: onlyLastByTopicMessage },
+        subscription: { handler: this.#handleRosRawImage, filterQueue: onlyLastByTopicMessage },
       },
       {
         type: "schema",
         schemaNames: ROS_COMPRESSED_IMAGE_DATATYPES,
         subscription: {
           handler: this.#handleRosCompressedImage,
-          processQueue: onlyLastByTopicMessage,
+          filterQueue: onlyLastByTopicMessage,
         },
       },
       {
@@ -121,7 +121,7 @@ export class Images extends SceneExtension<ImageRenderable> {
         schemaNames: RAW_IMAGE_DATATYPES,
         subscription: {
           handler: this.#handleRawImage,
-          processQueue: onlyLastByTopicMessage,
+          filterQueue: onlyLastByTopicMessage,
         },
       },
       {
@@ -129,7 +129,7 @@ export class Images extends SceneExtension<ImageRenderable> {
         schemaNames: COMPRESSED_IMAGE_DATATYPES,
         subscription: {
           handler: this.#handleCompressedImage,
-          processQueue: onlyLastByTopicMessage,
+          filterQueue: onlyLastByTopicMessage,
         },
       },
     ];

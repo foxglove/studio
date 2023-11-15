@@ -178,8 +178,8 @@ export type RendererSubscription<T = unknown> = {
   handler: (messageEvent: MessageEvent<T>) => void;
   /** Queue of messages to be handled since last frame. Will be reassigned to new empty array each frame. */
   queue?: MessageEvent<T>[] | undefined;
-  /** Callback to be called on the message queue to filter. Returns new queue. */
-  processQueue?: (queue: MessageEvent<T>[]) => MessageEvent<T>[];
+  /** Optional callback to be called on `queue` to filter. Returns new queue. */
+  filterQueue?: (queue: MessageEvent<T>[]) => MessageEvent<T>[];
 };
 
 export type AnyRendererSubscription = Immutable<

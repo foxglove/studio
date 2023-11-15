@@ -91,9 +91,20 @@ export class ImageAnnotations extends THREE.Object3D {
       {
         type: "schema",
         schemaNames: ALL_SUPPORTED_ANNOTATION_SCHEMAS,
-        subscription: { handler: this.#context.messageHandler.handleAnnotations },
+        subscription: {
+          handler: this.#context.messageHandler.handleAnnotations,
+          filterQueue: this.#filterMessageQueue.bind(this),
+        },
       },
     ];
+  }
+
+  #filterMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
+    // only take multiple images in if synchronization is enabled
+    if (this.#context.config().synchronize !== true) {
+      return msgs.slice(msgs.length - 1);
+    }
+    return msgs;
   }
 
   public dispose(): void {
