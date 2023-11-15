@@ -15,6 +15,7 @@ import { Add16Filled, Edit16Filled } from "@fluentui/react-icons";
 import { Button, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import * as _ from "lodash-es";
+import * as R from "ramda";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import tinycolor from "tinycolor2";
@@ -251,6 +252,17 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       // negative makes each path render below the previous
       const y = (pathIndex + 1) * 6 * -1;
       outMinY = Math.min(outMinY ?? y, y - 3);
+
+      const isEmpty = R.all(
+        (block) => R.all(({ queriedData }) => queriedData.length === 0, block[path.value] ?? []),
+        decodedBlocks,
+      );
+      if (isEmpty) {
+        outDatasets = outDatasets.concat({
+          data: [],
+        });
+        return;
+      }
 
       const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
 

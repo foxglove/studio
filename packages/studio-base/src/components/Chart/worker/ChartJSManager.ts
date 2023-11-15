@@ -315,11 +315,13 @@ export default class ChartJSManager {
       }
     }
 
-    if (data != undefined) {
+    if (data == undefined && typedData == undefined) {
+      instance.data = {
+        datasets: [],
+      };
+    } else if (data != undefined) {
       instance.data = data;
-    }
-
-    if (typedData != undefined) {
+    } else if (typedData != undefined) {
       instance.data = proxyTyped(typedData);
     }
 
