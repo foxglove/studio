@@ -22,8 +22,6 @@ import NativeAppMenuContext from "./context/NativeAppMenuContext";
 import NativeWindowContext from "./context/NativeWindowContext";
 import { UserScriptStateProvider } from "./context/UserScriptStateContext";
 import CurrentLayoutProvider from "./providers/CurrentLayoutProvider";
-import ExtensionCatalogProvider from "./providers/ExtensionCatalogProvider";
-import ExtensionMarketplaceProvider from "./providers/ExtensionMarketplaceProvider";
 import PanelCatalogProvider from "./providers/PanelCatalogProvider";
 import { LaunchPreference } from "./screens/LaunchPreference";
 
@@ -40,7 +38,6 @@ function contextMenuHandler(event: MouseEvent) {
 export function StudioApp(): JSX.Element {
   const {
     dataSources,
-    extensionLoaders,
     nativeAppMenu,
     nativeWindow,
     deepLinks,
@@ -56,8 +53,6 @@ export function StudioApp(): JSX.Element {
     /* eslint-disable react/jsx-key */
     <TimelineInteractionStateProvider />,
     <CurrentLayoutProvider />,
-    <ExtensionMarketplaceProvider />,
-    <ExtensionCatalogProvider loaders={extensionLoaders} />,
     <UserScriptStateProvider />,
     <PlayerManager playerSources={dataSources} />,
     <EventsProvider />,

@@ -13,8 +13,9 @@ const useStyles = makeStyles<void, "selected">()((theme, _props, classes) => ({
     color: theme.palette.action.selected,
     borderColor: "currentColor",
     backgroundColor: theme.palette.background.paper,
+    cursor: "grab",
 
-    [`@container (max-width: 320px)`]: {
+    [`@container (max-width: 180px)`]: {
       display: "none",
     },
     ...(theme.palette.mode === "dark" && {
@@ -30,16 +31,28 @@ const useStyles = makeStyles<void, "selected">()((theme, _props, classes) => ({
     paddingBlock: theme.spacing(0.25),
     fontFeatureSettings: `${theme.typography.fontFeatureSettings}, 'tnum'`,
 
-    "&:nth-child(1)": {
+    "&:first-of-type": {
       paddingInlineStart: theme.spacing(0.75),
+
+      [`@container (max-width: 280px)`]: {
+        paddingInlineEnd: theme.spacing(0.75),
+      },
     },
-    "&:nth-last-child(1)": {
+    "&:last-of-type": {
       paddingInlineEnd: theme.spacing(0.75),
+
+      [`@container (max-width: 280px)`]: {
+        display: "none",
+      },
     },
   },
   divider: {
     borderColor: "currentColor",
     marginInline: theme.spacing(0.5),
+
+    [`@container (max-width: 280px)`]: {
+      display: "none",
+    },
   },
 }));
 
