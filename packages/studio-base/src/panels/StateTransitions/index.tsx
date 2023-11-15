@@ -27,6 +27,7 @@ import { add as addTimes, fromSec, subtract as subtractTimes, toSec } from "@fox
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import {
   MessageDataItemsByPath,
+  MessageAndData,
   useDecodeMessagePathsForMessagesByTopic,
 } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import useMessagesByPath from "@foxglove/studio-base/components/MessagePathSyntax/useMessagesByPath";
@@ -255,12 +256,31 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       const y = (pathIndex + 1) * 6 * -1;
       outMinY = Math.min(outMinY ?? y, y - 3);
 
+      const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
+
+      const newBlockDataSets = messagesToDatasets({
+        blocks: blocksForPath,
+        path,
+        pathIndex,
+        startTime,
+        y,
+      });
+
+      // We have already filtered out paths we can find in blocks so anything left here
+      // should be included in the dataset.
+      const items = newItemsByPath[path.value];
+
       const dataCounts = R.pipe(
-        R.chain((block: MessageDataItemsByPath) =>
-          (block[path.value] ?? []).map(({ queriedData }) => queriedData.length),
-        ),
+        R.chain((data: readonly MessageAndData[] | undefined): readonly MessageAndData[] => {
+          if (data == undefined) {
+            return [];
+          }
+
+          return data;
+        }),
+        R.map((data: MessageAndData) => data.queriedData.length),
         R.uniq,
-      )(decodedBlocks);
+      )([...blocksForPath, items]);
 
       outIsArrayData.push(R.all((numPoints) => numPoints > 1, dataCounts));
 
@@ -272,22 +292,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         return;
       }
 
-      const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
-
-      const newBlockDataSets = messagesToDatasets({
-        blocks: blocksForPath,
-        path,
-        pathIndex,
-        startTime,
-        y,
-      });
-
       outDatasets = outDatasets.concat(newBlockDataSets);
-
-      // We have already filtered out paths we can find in blocks so anything left here
-      // should be included in the dataset.
-      const items = newItemsByPath[path.value];
-      if (items) {
+      if (items != undefined) {
         const newPathDataSets = messagesToDatasets({
           blocks: [items],
           path,
