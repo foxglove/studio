@@ -235,17 +235,19 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return _.isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
   }, [decodedBlocks, itemsByPath]);
 
-  const { datasets, minY } = useMemo(() => {
+  const { isArrayData, datasets, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
       return {
         datasets: [],
         minY: undefined,
+        isArrayData: [],
       };
     }
 
     let outMinY: number | undefined;
     let outDatasets: ChartDatasets = [];
+    const outIsArrayData: boolean[] = [];
 
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
@@ -253,10 +255,16 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       const y = (pathIndex + 1) * 6 * -1;
       outMinY = Math.min(outMinY ?? y, y - 3);
 
-      const isEmpty = R.all(
-        (block) => R.all(({ queriedData }) => queriedData.length === 0, block[path.value] ?? []),
-        decodedBlocks,
-      );
+      const dataCounts = R.pipe(
+        R.chain((block: MessageDataItemsByPath) =>
+          (block[path.value] ?? []).map(({ queriedData }) => queriedData.length),
+        ),
+        R.uniq,
+      )(decodedBlocks);
+
+      outIsArrayData.push(R.all((numPoints) => numPoints > 1, dataCounts));
+
+      const isEmpty = dataCounts.length === 0;
       if (isEmpty) {
         outDatasets = outDatasets.concat({
           data: [],
@@ -294,6 +302,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return {
       datasets: outDatasets,
       minY: outMinY,
+      isArrayData: outIsArrayData,
     };
   }, [decodedBlocks, newItemsByPath, paths, startTime]);
 
@@ -406,7 +415,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   const data: ChartData = useShallowMemo({ datasets });
 
-  useStateTransitionsPanelSettings(config, saveConfig, focusedPath);
+  useStateTransitionsPanelSettings(config, saveConfig, isArrayData, focusedPath);
 
   return (
     <Stack flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>

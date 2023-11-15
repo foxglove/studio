@@ -22,8 +22,14 @@ import { StateTransitionConfig, StateTransitionPath } from "./types";
 // the NodeEditor component is wrapped in a React.memo.
 
 const makeSeriesNode = memoizeWeak(
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  (path: StateTransitionPath, index: number, canDelete: boolean): SettingsTreeNode => {
+  (
+    path: StateTransitionPath,
+    index: number,
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    isArray: boolean,
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    canDelete: boolean,
+  ): SettingsTreeNode => {
     return {
       actions: canDelete
         ? [
@@ -43,6 +49,7 @@ const makeSeriesNode = memoizeWeak(
           input: "messagepath",
           value: path.value,
           validTypes: plotableRosTypes,
+          ...(isArray ? { error: "This path resolves to more than one value" } : {}),
         },
         label: {
           input: "string",
@@ -63,29 +70,40 @@ const makeSeriesNode = memoizeWeak(
   },
 );
 
-const makeRootSeriesNode = memoizeWeak((paths: StateTransitionPath[]): SettingsTreeNode => {
-  const children = Object.fromEntries(
-    paths.length === 0
-      ? [["0", makeSeriesNode(DEFAULT_PATH, 0, /*canDelete=*/ false)]]
-      : paths.map((path, index) => [`${index}`, makeSeriesNode(path, index, /*canDelete=*/ true)]),
-  );
-  return {
-    label: "Series",
-    children,
-    actions: [
-      {
-        type: "action",
-        id: "add-series",
-        label: "Add series",
-        display: "inline",
-        icon: "Addchart",
-      },
-    ],
-  };
-});
+const makeRootSeriesNode = memoizeWeak(
+  (paths: StateTransitionPath[], isArrayData: boolean[]): SettingsTreeNode => {
+    const children = Object.fromEntries(
+      paths.length === 0
+        ? [["0", makeSeriesNode(DEFAULT_PATH, 0, /*isArray=*/ false, /*canDelete=*/ false)]]
+        : paths.map((path, index) => [
+            `${index}`,
+            makeSeriesNode(
+              path,
+              index,
+              /*isArray=*/ isArrayData[index] ?? false,
+              /*canDelete=*/ true,
+            ),
+          ]),
+    );
+    return {
+      label: "Series",
+      children,
+      actions: [
+        {
+          type: "action",
+          id: "add-series",
+          label: "Add series",
+          display: "inline",
+          icon: "Addchart",
+        },
+      ],
+    };
+  },
+);
 
 function buildSettingsTree(
   config: StateTransitionConfig,
+  isArrayData: boolean[],
   t: TFunction<"stateTransitions">,
 ): SettingsTreeNodes {
   const maxXError =
@@ -126,13 +144,14 @@ function buildSettingsTree(
         },
       },
     },
-    paths: makeRootSeriesNode(config.paths),
+    paths: makeRootSeriesNode(config.paths, isArrayData),
   };
 }
 
 export function useStateTransitionsPanelSettings(
   config: StateTransitionConfig,
   saveConfig: SaveConfig<StateTransitionConfig>,
+  isArrayData: boolean[],
   focusedPath?: readonly string[],
 ): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
@@ -197,7 +216,7 @@ export function useStateTransitionsPanelSettings(
     updatePanelSettingsTree({
       actionHandler,
       focusedPath,
-      nodes: buildSettingsTree(config, t),
+      nodes: buildSettingsTree(config, isArrayData, t),
     });
-  }, [actionHandler, config, focusedPath, t, updatePanelSettingsTree]);
+  }, [actionHandler, config, focusedPath, t, updatePanelSettingsTree, isArrayData]);
 }
