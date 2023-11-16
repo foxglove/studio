@@ -15,6 +15,7 @@ export * from "./MuiCardHeader";
 export * from "./MuiCheckbox";
 export * from "./MuiChip";
 export * from "./MuiCssBaseline";
+export * from "./MuiDataGrid";
 export * from "./MuiDialog";
 export * from "./MuiDialogActions";
 export * from "./MuiDialogContent";
