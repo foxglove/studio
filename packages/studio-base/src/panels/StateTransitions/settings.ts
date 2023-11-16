@@ -21,14 +21,15 @@ import { StateTransitionConfig, StateTransitionPath } from "./types";
 // at the level of individual nodes in our tree. This keeps our DOM updates small since
 // the NodeEditor component is wrapped in a React.memo.
 
+type SeriesOptions = {
+  isArray: boolean;
+  canDelete: boolean;
+};
 const makeSeriesNode = memoizeWeak(
   (
     path: StateTransitionPath,
     index: number,
-    // eslint-disable-next-line @foxglove/no-boolean-parameters
-    isArray: boolean,
-    // eslint-disable-next-line @foxglove/no-boolean-parameters
-    canDelete: boolean,
+    { canDelete, isArray }: SeriesOptions,
   ): SettingsTreeNode => {
     return {
       actions: canDelete
@@ -74,15 +75,13 @@ const makeRootSeriesNode = memoizeWeak(
   (paths: StateTransitionPath[], isArrayData: boolean[]): SettingsTreeNode => {
     const children = Object.fromEntries(
       paths.length === 0
-        ? [["0", makeSeriesNode(DEFAULT_PATH, 0, /*isArray=*/ false, /*canDelete=*/ false)]]
+        ? [["0", makeSeriesNode(DEFAULT_PATH, 0, { isArray: false, canDelete: false })]]
         : paths.map((path, index) => [
             `${index}`,
-            makeSeriesNode(
-              path,
-              index,
-              /*isArray=*/ isArrayData[index] ?? false,
-              /*canDelete=*/ true,
-            ),
+            makeSeriesNode(path, index, {
+              isArray: isArrayData[index] ?? false,
+              canDelete: true,
+            }),
           ]),
     );
     return {
