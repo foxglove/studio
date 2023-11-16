@@ -113,7 +113,8 @@ export class BlockLoader {
   }
 
   /**
-   * Remove topics that are no longer requested to be preloaded from blocks to free up space
+   * Remove topics that are no longer requested to be preloaded or topics that will be re-loaded
+   * from blocks to free up space
    */
   #removeUnusedBlockTopics(): number {
     const topics = this.#topics;
@@ -127,8 +128,9 @@ export class BlockLoader {
         };
         const blockTopics = Object.keys(newMessagesByTopic);
         for (const topic of blockTopics) {
-          // remove topics that are no longer requested to be preloaded.
-          if (!topics.has(topic) && newMessagesByTopic[topic]) {
+          // remove topics that are no longer requested to be preloaded and topics that will
+          // be re-loaded (due to different subscription parameters)
+          if ((!topics.has(topic) || block.needTopics.has(topic)) && newMessagesByTopic[topic]) {
             for (const msg of newMessagesByTopic[topic]!) {
               blockBytesRemoved += msg.sizeInBytes;
             }
