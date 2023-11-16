@@ -34,7 +34,6 @@ import {
   ExtensionCatalog,
   useExtensionCatalog,
 } from "@foxglove/studio-base/context/ExtensionCatalogContext";
-import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import { usePerformance } from "@foxglove/studio-base/context/PerformanceContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
@@ -78,8 +77,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   useWarnImmediateReRender();
 
   const userScriptActions = useUserScriptState(selectUserScriptActions);
-
-  const nativeWindow = useNativeWindow();
 
   const isMounted = useMountedState();
 
@@ -160,9 +157,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     async (sourceId: string, args?: DataSourceArgs) => {
       log.debug(`Select Source: ${sourceId}`);
 
-      // Clear any previous represented filename
-      void nativeWindow?.setRepresentedFilename(undefined);
-
       const foundSource = playerSources.find(
         (source) => source.id === sourceId || source.legacyIds?.includes(sourceId),
       );
@@ -235,12 +229,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
-              // If we are selecting a single file, the desktop environment might have features to
-              // show the user which file they've selected (i.e. macOS proxy icon)
-              if (file) {
-                void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
-              }
-
               setBasePlayer(newPlayer);
               return;
             } else if (handle) {
@@ -260,10 +248,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               if (!isMounted()) {
                 return;
               }
-
-              // If we are selecting a single file, the desktop environment might have features to
-              // show the user which file they've selected (i.e. macOS proxy icon)
-              void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
 
               const newPlayer = foundSource.initialize({
                 file,
@@ -288,7 +272,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         enqueueSnackbar((error as Error).message, { variant: "error" });
       }
     },
-    [playerSources, metricsCollector, enqueueSnackbar, isMounted, addRecent, nativeWindow],
+    [playerSources, metricsCollector, enqueueSnackbar, isMounted, addRecent],
   );
 
   // Select a recent entry by id
