@@ -271,18 +271,15 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       const items = newItemsByPath[path.value];
 
       const dataCounts = R.pipe(
-        R.chain((data: readonly MessageAndData[] | undefined): readonly MessageAndData[] => {
+        R.chain((data: readonly MessageAndData[] | undefined): number[] => {
           if (data == undefined) {
             return [];
           }
-
-          return data;
+          return R.map((data: MessageAndData) => data.queriedData.length, data);
         }),
-        R.map((data: MessageAndData) => data.queriedData.length),
         R.uniq,
       )([...blocksForPath, items]);
-
-      outIsArrayData.push(R.all((numPoints) => numPoints > 1, dataCounts));
+      outIsArrayData.push(dataCounts.length > 0 && R.all((numPoints) => numPoints > 1, dataCounts));
 
       const isEmpty = dataCounts.length === 0;
       if (isEmpty) {
