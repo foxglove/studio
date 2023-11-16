@@ -9,6 +9,10 @@ export const MuiDialogActions: OverrideComponentReturn<"MuiDialogActions"> = {
     root: ({ theme }) => ({
       gap: theme.spacing(1),
       padding: theme.spacing(3),
+
+      "& > :not(:first-of-type)": {
+        marginLeft: "inherit",
+      },
     }),
   },
 };
