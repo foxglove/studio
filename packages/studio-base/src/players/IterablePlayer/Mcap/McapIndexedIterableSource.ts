@@ -16,7 +16,11 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import {
+  HEAP_NUMBER_SIZE,
+  OBJECT_BASE_SIZE,
+  estimateMessageObjectSize,
+} from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -175,10 +179,10 @@ export class McapIndexedIterableSource implements IIterableSource {
         const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
         const spec = args.topics.get(channelInfo.channel.topic);
         const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
-        const sizeInBytes = Math.max(
-          message.data.byteLength,
-          channelInfo.approxDeserializedMsgSize,
-        );
+        const sizeInBytes =
+          spec?.fields == undefined
+            ? Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize)
+            : OBJECT_BASE_SIZE + spec.fields.length * HEAP_NUMBER_SIZE; // Approximate object size by assuming fields to be floats
 
         yield {
           type: "message-event",
@@ -187,10 +191,7 @@ export class McapIndexedIterableSource implements IIterableSource {
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
             message: payload,
-            // Treat sliced messages as zero bytes. This is a rough approximation of course but the
-            // alternative is taking the performance hit of sizing the sliced fields for each
-            // message.
-            sizeInBytes: spec?.fields == undefined ? sizeInBytes : 0,
+            sizeInBytes,
             schemaName: channelInfo.schemaName ?? "",
           },
         };
