@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import DownloadIcon from "@mui/icons-material/Download";
 import { useTheme } from "@mui/material";
 import * as _ from "lodash-es";
 import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react";
@@ -37,7 +36,6 @@ import {
 import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
 } from "@foxglove/studio-base/components/PanelToolbar";
-import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { ChartDefaultView } from "@foxglove/studio-base/components/TimeBasedChart";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
@@ -271,29 +269,27 @@ function Plot(props: Props) {
     [legendDisplay],
   );
 
-  const handleDownloadCSV = useCallback(async () => {
-    // Because the full dataset is never in the rendering thread, we have to request it from the worker.
-    const data = await getFullData();
-    if (data == undefined) {
-      return;
-    }
-    const csvDatasets = [];
-    for (const dataset of data.datasets.values()) {
-      csvDatasets.push(dataset);
-    }
-    downloadCSV(csvDatasets, xAxisVal);
-  }, [getFullData, xAxisVal]);
-
   const getPanelContextMenuItems = useCallback(() => {
     const items: PanelContextMenuItem[] = [
       {
         type: "item",
         label: "Download plot data as CSV",
-        onclick: handleDownloadCSV,
+        onclick: async () => {
+          // Because the full dataset is never in the rendering thread, we have to request it from the worker.
+          const data = await getFullData();
+          if (data == undefined) {
+            return;
+          }
+          const csvDatasets = [];
+          for (const dataset of data.datasets.values()) {
+            csvDatasets.push(dataset);
+          }
+          downloadCSV(csvDatasets, xAxisVal);
+        },
       },
     ];
     return items;
-  }, [handleDownloadCSV]);
+  }, [getFullData, xAxisVal]);
 
   const onClickPath = useCallback((index: number) => {
     setFocusedPath(["paths", String(index)]);
@@ -307,13 +303,7 @@ function Plot(props: Props) {
       overflow="hidden"
       position="relative"
     >
-      <PanelToolbar
-        additionalIcons={[
-          <ToolbarIconButton key="download-csv" title="Download as CSV" onClick={handleDownloadCSV}>
-            <DownloadIcon />
-          </ToolbarIconButton>,
-        ]}
-      />
+      <PanelToolbar />
       <Stack
         direction={stackDirection}
         flex="auto"
