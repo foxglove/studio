@@ -9,6 +9,7 @@ import { PinholeCameraModel } from "@foxglove/den/image";
 import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
 import { Immutable, MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
 import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
+import { onlyLastByTopicMessage } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtension";
 import {
   ImageMarker as RosImageMarker,
   ImageMarkerArray as RosImageMarkerArray,
@@ -100,9 +101,9 @@ export class ImageAnnotations extends THREE.Object3D {
   }
 
   #filterMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
-    // only take multiple images in if synchronization is enabled
+    // if sync annotations not active, only take the last message for each topic
     if (this.#context.config().synchronize !== true) {
-      return msgs.slice(msgs.length - 1);
+      return onlyLastByTopicMessage(msgs);
     }
     return msgs;
   }
