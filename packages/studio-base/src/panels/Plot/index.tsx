@@ -309,12 +309,7 @@ function Plot(props: Props) {
     >
       <PanelToolbar
         additionalIcons={[
-          <ToolbarIconButton
-            disabled={yAxisPaths.length === 0}
-            key="download-csv"
-            title="Download as CSV"
-            onClick={handleDownloadCSV}
-          >
+          <ToolbarIconButton key="download-csv" title="Download as CSV" onClick={handleDownloadCSV}>
             <DownloadIcon />
           </ToolbarIconButton>,
         ]}
