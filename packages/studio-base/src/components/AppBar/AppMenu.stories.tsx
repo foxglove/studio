@@ -41,7 +41,7 @@ export default {
   decorators: [
     (Story, { args: { testId: _testId, ...args } }): JSX.Element => (
       <AppContext.Provider
-        value={{ appBarMenuItems: args.appBarMenuItems, buildPlayer: (child) => child }}
+        value={{ appBarMenuItems: args.appBarMenuItems, wrapPlayer: (child) => child }}
       >
         <MockCurrentLayoutProvider>
           <WorkspaceContextProvider>

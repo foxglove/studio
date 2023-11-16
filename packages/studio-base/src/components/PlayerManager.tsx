@@ -29,7 +29,6 @@ import {
   useExtensionCatalog,
 } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
-import { usePerformance } from "@foxglove/studio-base/context/PerformanceContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
   IDataSourceFactory,
@@ -59,9 +58,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   useWarnImmediateReRender();
 
-  const perfRegistry = usePerformance();
-
-  const { buildPlayer } = useAppContext();
+  const { wrapPlayer } = useAppContext();
 
   const nativeWindow = useNativeWindow();
 
@@ -124,10 +121,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       return undefined;
     }
 
-    const wrappedPlayer = buildPlayer(topicAliasPlayer, perfRegistry);
+    const wrappedPlayer = wrapPlayer(topicAliasPlayer);
     wrappedPlayer.setGlobalVariables(globalVariablesRef.current);
     return wrappedPlayer;
-  }, [topicAliasPlayer, buildPlayer, perfRegistry, globalVariablesRef]);
+  }, [topicAliasPlayer, wrapPlayer, globalVariablesRef]);
 
   const { enqueueSnackbar } = useSnackbar();
 
