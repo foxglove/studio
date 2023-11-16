@@ -269,7 +269,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       // We have already filtered out paths we can find in blocks so anything left here
       // should be included in the dataset.
       const items = newItemsByPath[path.value];
-
       const dataCounts = R.pipe(
         R.chain((data: readonly MessageAndData[] | undefined): number[] => {
           if (data == undefined) {
@@ -280,26 +279,19 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         R.uniq,
       )([...blocksForPath, items]);
       outIsArrayData.push(dataCounts.length > 0 && R.all((numPoints) => numPoints > 1, dataCounts));
+      outDatasets = outDatasets.concat(newBlockDataSets);
 
-      const isEmpty = dataCounts.length === 0;
-      if (isEmpty) {
-        outDatasets = outDatasets.concat({
-          data: [],
-        });
+      if (items == undefined) {
         return;
       }
-
-      outDatasets = outDatasets.concat(newBlockDataSets);
-      if (items != undefined) {
-        const newPathDataSets = messagesToDatasets({
-          blocks: [items],
-          path,
-          pathIndex,
-          startTime,
-          y,
-        });
-        outDatasets = outDatasets.concat(newPathDataSets);
-      }
+      const newPathDataSets = messagesToDatasets({
+        blocks: [items],
+        path,
+        pathIndex,
+        startTime,
+        y,
+      });
+      outDatasets = outDatasets.concat(newPathDataSets);
     });
 
     return {
