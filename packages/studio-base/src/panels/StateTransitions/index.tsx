@@ -52,7 +52,7 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fontMonospace } from "@foxglove/theme";
 
 import messagesToDatasets from "./messagesToDatasets";
-import { useStateTransitionsPanelSettings } from "./settings";
+import { PathState, useStateTransitionsPanelSettings } from "./settings";
 import { DEFAULT_PATH, stateTransitionPathDisplayName } from "./shared";
 import { StateTransitionConfig } from "./types";
 
@@ -236,19 +236,19 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return _.isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
   }, [decodedBlocks, itemsByPath]);
 
-  const { isArrayData, datasets, minY } = useMemo(() => {
+  const { pathState, datasets, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
       return {
         datasets: [],
         minY: undefined,
-        isArrayData: [],
+        pathState: [],
       };
     }
 
     let outMinY: number | undefined;
     let outDatasets: ChartDatasets = [];
-    const outIsArrayData: boolean[] = [];
+    const outPathState: PathState[] = [];
 
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
@@ -278,7 +278,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         }),
         R.uniq,
       )([...blocksForPath, items]);
-      outIsArrayData.push(dataCounts.length > 0 && R.all((numPoints) => numPoints > 1, dataCounts));
+      const isArray = dataCounts.length > 0 && R.all((numPoints) => numPoints > 1, dataCounts);
+      outPathState.push({
+        path,
+        isArray,
+      });
       outDatasets = outDatasets.concat(newBlockDataSets);
 
       if (items == undefined) {
@@ -297,7 +301,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return {
       datasets: outDatasets,
       minY: outMinY,
-      isArrayData: outIsArrayData,
+      pathState: outPathState,
     };
   }, [decodedBlocks, newItemsByPath, paths, startTime]);
 
@@ -410,7 +414,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   const data: ChartData = useShallowMemo({ datasets });
 
-  useStateTransitionsPanelSettings(config, saveConfig, isArrayData, focusedPath);
+  useStateTransitionsPanelSettings(config, saveConfig, pathState, focusedPath);
 
   return (
     <Stack flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>

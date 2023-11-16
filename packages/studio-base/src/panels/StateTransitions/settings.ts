@@ -21,15 +21,15 @@ import { StateTransitionConfig, StateTransitionPath } from "./types";
 // at the level of individual nodes in our tree. This keeps our DOM updates small since
 // the NodeEditor component is wrapped in a React.memo.
 
-type SeriesOptions = {
+export type PathState = {
+  path: StateTransitionPath;
+  // Whether the data the path refers to resolves to more than one value
   isArray: boolean;
-  canDelete: boolean;
 };
 const makeSeriesNode = memoizeWeak(
   (
-    path: StateTransitionPath,
     index: number,
-    { canDelete, isArray }: SeriesOptions,
+    { path, canDelete, isArray }: PathState & { canDelete: boolean },
   ): SettingsTreeNode => {
     return {
       actions: canDelete
@@ -71,38 +71,37 @@ const makeSeriesNode = memoizeWeak(
   },
 );
 
-const makeRootSeriesNode = memoizeWeak(
-  (paths: StateTransitionPath[], isArrayData: boolean[]): SettingsTreeNode => {
-    const children = Object.fromEntries(
-      paths.length === 0
-        ? [["0", makeSeriesNode(DEFAULT_PATH, 0, { isArray: false, canDelete: false })]]
-        : paths.map((path, index) => [
-            `${index}`,
-            makeSeriesNode(path, index, {
-              isArray: isArrayData[index] ?? false,
-              canDelete: true,
-            }),
-          ]),
-    );
-    return {
-      label: "Series",
-      children,
-      actions: [
-        {
-          type: "action",
-          id: "add-series",
-          label: "Add series",
-          display: "inline",
-          icon: "Addchart",
-        },
-      ],
-    };
-  },
-);
+const makeRootSeriesNode = memoizeWeak((paths: PathState[]): SettingsTreeNode => {
+  const children = Object.fromEntries(
+    paths.length === 0
+      ? [["0", makeSeriesNode(0, { path: DEFAULT_PATH, isArray: false, canDelete: false })]]
+      : paths.map(({ path, isArray }, index) => [
+          `${index}`,
+          makeSeriesNode(index, {
+            path,
+            isArray,
+            canDelete: true,
+          }),
+        ]),
+  );
+  return {
+    label: "Series",
+    children,
+    actions: [
+      {
+        type: "action",
+        id: "add-series",
+        label: "Add series",
+        display: "inline",
+        icon: "Addchart",
+      },
+    ],
+  };
+});
 
 function buildSettingsTree(
   config: StateTransitionConfig,
-  isArrayData: boolean[],
+  paths: PathState[],
   t: TFunction<"stateTransitions">,
 ): SettingsTreeNodes {
   const maxXError =
@@ -143,14 +142,14 @@ function buildSettingsTree(
         },
       },
     },
-    paths: makeRootSeriesNode(config.paths, isArrayData),
+    paths: makeRootSeriesNode(paths),
   };
 }
 
 export function useStateTransitionsPanelSettings(
   config: StateTransitionConfig,
   saveConfig: SaveConfig<StateTransitionConfig>,
-  isArrayData: boolean[],
+  paths: PathState[],
   focusedPath?: readonly string[],
 ): void {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
@@ -215,7 +214,7 @@ export function useStateTransitionsPanelSettings(
     updatePanelSettingsTree({
       actionHandler,
       focusedPath,
-      nodes: buildSettingsTree(config, isArrayData, t),
+      nodes: buildSettingsTree(config, paths, t),
     });
-  }, [actionHandler, config, focusedPath, t, updatePanelSettingsTree, isArrayData]);
+  }, [actionHandler, paths, config, focusedPath, t, updatePanelSettingsTree]);
 }
