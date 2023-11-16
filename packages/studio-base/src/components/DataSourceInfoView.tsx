@@ -7,8 +7,7 @@ import { MutableRefObject, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
-import { Time } from "@foxglove/rostime";
-import { subtract as subtractTimes } from "@foxglove/rostime";
+import { subtract as subtractTimes, Time } from "@foxglove/rostime";
 import {
   MessagePipelineContext,
   useMessagePipeline,

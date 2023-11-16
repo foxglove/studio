@@ -4,8 +4,7 @@
 
 import { useMemo, useRef } from "react";
 
-import { subtract as subtractTimes } from "@foxglove/rostime";
-import { areEqual, fromMillis, Time, toSec } from "@foxglove/rostime";
+import { subtract as subtractTimes, areEqual, fromMillis, Time, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import {
   MessagePipelineContext,
