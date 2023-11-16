@@ -2248,6 +2248,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/cdr@npm:^3.0.0":
+  version: 3.2.0
+  resolution: "@foxglove/cdr@npm:3.2.0"
+  checksum: 1c8497debd32714bbe26724df1dbde783fddd6e8ef2e126df87f10221691419c1d8f1fdfb6dd9fd066408638aaa325d41aa6ccc9d1291c3d3774f2b844c9e546
+  languageName: node
+  linkType: hard
+
 "@foxglove/chartjs-plugin-zoom@npm:2.0.4":
   version: 2.0.4
   resolution: "@foxglove/chartjs-plugin-zoom@npm:2.0.4"
@@ -2351,7 +2358,7 @@ __metadata:
     "@foxglove/ros2idl-parser": 0.3.1
     "@foxglove/rosmsg": 4.2.2
     "@foxglove/rosmsg-serialization": 2.0.2
-    "@foxglove/rosmsg2-serialization": 2.0.2
+    "@foxglove/rosmsg2-serialization": 2.0.3
     "@foxglove/schemas": 1.6.0
     "@foxglove/tsconfig": 2.0.0
     "@foxglove/wasm-bz2": 0.1.1
@@ -2486,7 +2493,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg2-serialization@npm:2.0.2, @foxglove/rosmsg2-serialization@npm:^2.0.0":
+"@foxglove/rosmsg2-serialization@npm:2.0.3":
+  version: 2.0.3
+  resolution: "@foxglove/rosmsg2-serialization@npm:2.0.3"
+  dependencies:
+    "@foxglove/cdr": ^3.0.0
+    "@foxglove/message-definition": ^0.2.0
+    "@foxglove/rostime": ^1.1.2
+  checksum: 24fb27ca90db82a868b752c0b904b766f8ff26254b1f42609c318001f0fb94fd32b056745fa12fa575c72a4d5be60413b9055d88afd94a9a5867aeb7f2420675
+  languageName: node
+  linkType: hard
+
+"@foxglove/rosmsg2-serialization@npm:^2.0.0":
   version: 2.0.2
   resolution: "@foxglove/rosmsg2-serialization@npm:2.0.2"
   dependencies:
@@ -2556,7 +2574,7 @@ __metadata:
     "@foxglove/rosmsg": 4.2.2
     "@foxglove/rosmsg-msgs-common": 3.1.0
     "@foxglove/rosmsg-serialization": 2.0.2
-    "@foxglove/rosmsg2-serialization": 2.0.2
+    "@foxglove/rosmsg2-serialization": 2.0.3
     "@foxglove/rostime": 1.1.2
     "@foxglove/schemas": 1.6.0
     "@foxglove/studio": "workspace:*"
