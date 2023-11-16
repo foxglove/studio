@@ -274,7 +274,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           if (data == undefined) {
             return [];
           }
-          return R.map((data: MessageAndData) => data.queriedData.length, data);
+          return data.map((message: MessageAndData) => message.queriedData.length);
         }),
         R.uniq,
       )([...blocksForPath, items]);
