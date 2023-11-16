@@ -19,6 +19,7 @@ import { useWarnImmediateReRender } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import {
   LayoutState,
   useCurrentLayoutSelector,
@@ -28,6 +29,7 @@ import {
   useExtensionCatalog,
 } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
+import { usePerformance } from "@foxglove/studio-base/context/PerformanceContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
   IDataSourceFactory,
@@ -41,32 +43,25 @@ import { Player } from "@foxglove/studio-base/players/types";
 
 const log = Logger.getLogger(__filename);
 
-//const EMPTY_USER_NODES: UserScripts = Object.freeze({});
 const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
 type PlayerManagerProps = {
   playerSources: IDataSourceFactory[];
 };
 
-//const userScriptsSelector = (state: LayoutState) =>
-//  state.selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
 const globalVariablesSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
 const selectTopicAliasFunctions = (catalog: ExtensionCatalog) =>
   catalog.installedTopicAliasFunctions;
 
-//const selectUserScriptActions = (store: UserScriptStore) => store.actions;
-
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
 
-  // fixme
-  //const perfRegistry = usePerformance();
-
   useWarnImmediateReRender();
 
-  // fixme
-  //const userScriptActions = useUserScriptState(selectUserScriptActions);
+  const perfRegistry = usePerformance();
+
+  const { buildPlayer } = useAppContext();
 
   const nativeWindow = useNativeWindow();
 
@@ -76,9 +71,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
-
-  // fixme
-  //const userScripts = useCurrentLayoutSelector(userScriptsSelector);
 
   const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
@@ -132,23 +124,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       return undefined;
     }
 
-    /*
-    const userScriptPlayer = new UserScriptPlayer(
-      topicAliasPlayer,
-      userScriptActions,
-      perfRegistry,
-    );
-    userScriptPlayer.setGlobalVariables(globalVariablesRef.current);
-
-    return userScriptPlayer;
-    */
-
-    topicAliasPlayer.setGlobalVariables(globalVariablesRef.current);
-    return topicAliasPlayer;
-  }, [globalVariablesRef, topicAliasPlayer]);
-
-  // fixme
-  //useLayoutEffect(() => void player?.setUserScripts(userScripts), [player, userScripts]);
+    const wrappedPlayer = buildPlayer(topicAliasPlayer, perfRegistry);
+    wrappedPlayer.setGlobalVariables(globalVariablesRef.current);
+    return wrappedPlayer;
+  }, [topicAliasPlayer, buildPlayer, perfRegistry, globalVariablesRef]);
 
   const { enqueueSnackbar } = useSnackbar();
 
