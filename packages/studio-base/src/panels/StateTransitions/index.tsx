@@ -269,6 +269,9 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       // We have already filtered out paths we can find in blocks so anything left here
       // should be included in the dataset.
       const items = newItemsByPath[path.value];
+
+      // We need to detect when the path produces more than one data point,
+      // since that is invalid input
       const dataCounts = R.pipe(
         R.chain((data: readonly MessageAndData[] | undefined): number[] => {
           if (data == undefined) {
@@ -279,6 +282,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         R.uniq,
       )([...blocksForPath, items]);
       const isArray = dataCounts.length > 0 && R.all((numPoints) => numPoints > 1, dataCounts);
+
       outPathState.push({
         path,
         isArray,
