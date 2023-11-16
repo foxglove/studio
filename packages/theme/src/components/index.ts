@@ -31,6 +31,7 @@ export * from "./MuiInputAdornment";
 export * from "./MuiInputBase";
 export * from "./MuiInputLabel";
 export * from "./MuiLink";
+export * from "./MuiLinearProgress";
 export * from "./MuiListItemButton";
 export * from "./MuiListItemText";
 export * from "./MuiListSubheader";
