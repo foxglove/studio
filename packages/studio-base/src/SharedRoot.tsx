@@ -26,7 +26,6 @@ export function SharedRoot(props: ISharedRootContext & { children: JSX.Element }
     enableGlobalCss = false,
     enableLaunchPreferenceScreen,
     extraProviders,
-    nativeAppMenu,
     nativeWindow,
   } = props;
 
@@ -46,7 +45,6 @@ export function SharedRoot(props: ISharedRootContext & { children: JSX.Element }
                 deepLinks,
                 enableLaunchPreferenceScreen,
                 extraProviders,
-                nativeAppMenu,
                 nativeWindow,
                 onAppBarDoubleClick,
               }}
