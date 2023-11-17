@@ -79,8 +79,10 @@ function parsedDefinitionsToDatatypes(
  * - https://github.com/foxglove/mcap/blob/main/docs/specification/well-known-schema-encodings.md
  */
 export function parseChannel(channel: Channel): ParsedChannel {
-  // We expect the schema to be non-empty unless the schema name is one of the well-known empty schema names.
+  // For ROS schemas, we expect the schema to be non-empty unless the
+  // schema name is one of the well-known empty schema names.
   if (
+    ["ros1msg", "ros2msg", "ros2idl"].includes(channel.schema?.encoding ?? "") &&
     channel.schema?.data.length === 0 &&
     !KNOWN_EMPTY_SCHEMA_NAMES.includes(channel.schema.name)
   ) {
