@@ -11,7 +11,7 @@ const COMPRESSED_POINTER_SIZE = 4; // Pointers use 4 bytes (also on 64-bit syste
 export const OBJECT_BASE_SIZE = 3 * COMPRESSED_POINTER_SIZE; // 3 compressed pointers
 const TYPED_ARRAY_BASE_SIZE = 25 * COMPRESSED_POINTER_SIZE; // byteLength, byteOffset, ..., see https://stackoverflow.com/a/45808835
 const SMALL_INTEGER_SIZE = COMPRESSED_POINTER_SIZE; // Small integers (up to 31 bits), pointer tagging
-export const HEAP_NUMBER_SIZE = 8 + 2 * COMPRESSED_POINTER_SIZE; // 4-byte map pointer + 8-byte payload + property pointer
+const HEAP_NUMBER_SIZE = 8 + 2 * COMPRESSED_POINTER_SIZE; // 4-byte map pointer + 8-byte payload + property pointer
 const FIELD_SIZE_BY_PRIMITIVE: Record<string, number> = {
   bool: SMALL_INTEGER_SIZE,
   int8: SMALL_INTEGER_SIZE,
