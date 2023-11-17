@@ -17,7 +17,6 @@ import {
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import {
-  HEAP_NUMBER_SIZE,
   OBJECT_BASE_SIZE,
   estimateMessageObjectSize,
 } from "@foxglove/studio-base/players/messageMemoryEstimation";
@@ -157,6 +156,31 @@ export class McapIndexedIterableSource implements IIterableSource {
 
     const topicNames = Array.from(topics.keys());
 
+    // Estimate memory size of sliced schemas.
+    const slicedMessageMemSize = new Map<number, number>();
+    const estimatedObjectSizeByType = new Map<string, number>(); // For caching purposes
+    for (const [channelId, channelInfo] of this.#channelInfoById.entries()) {
+      const fields = args.topics.get(channelInfo.channel.topic)?.fields;
+      if (fields != undefined && channelInfo.schemaName != undefined) {
+        const rootDatatype = channelInfo.parsedChannel.datatypes.get(channelInfo.schemaName);
+        const pickedRootDatatype = {
+          name: channelInfo.schemaName,
+          definitions:
+            rootDatatype?.definitions.filter((definition) => fields.includes(definition.name)) ??
+            [],
+        };
+        const sizeInBytes = estimateMessageObjectSize(
+          new Map([
+            ...channelInfo.parsedChannel.datatypes,
+            [channelInfo.schemaName, pickedRootDatatype],
+          ]),
+          channelInfo.schemaName,
+          estimatedObjectSizeByType,
+        );
+        slicedMessageMemSize.set(channelId, sizeInBytes);
+      }
+    }
+
     for await (const message of this.#reader.readMessages({
       startTime: toNanoSec(start),
       endTime: toNanoSec(end),
@@ -182,7 +206,7 @@ export class McapIndexedIterableSource implements IIterableSource {
         const sizeInBytes =
           spec?.fields == undefined
             ? Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize)
-            : OBJECT_BASE_SIZE + spec.fields.length * HEAP_NUMBER_SIZE; // Approximate object size by assuming fields to be floats
+            : slicedMessageMemSize.get(message.channelId) ?? OBJECT_BASE_SIZE;
 
         yield {
           type: "message-event",
