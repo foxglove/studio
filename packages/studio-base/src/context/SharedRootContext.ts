@@ -7,14 +7,12 @@ import { createContext, useContext } from "react";
 import { AppBarProps } from "@foxglove/studio-base/components/AppBar";
 import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import { IAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
-import { INativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import { IDataSourceFactory } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 interface ISharedRootContext {
   deepLinks: string[];
   appConfiguration?: IAppConfiguration;
   dataSources: IDataSourceFactory[];
-  nativeWindow?: INativeWindow;
   enableLaunchPreferenceScreen?: boolean;
   enableGlobalCss?: boolean;
   appBarLeftInset?: number;
