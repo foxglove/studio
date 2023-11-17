@@ -255,6 +255,9 @@ export function onlyLastByTopicMessage<T>(msgs: MessageEvent<T>[]): MessageEvent
   /**
    * NOTE: We group by topic because renderables are keyed by topic. If a renderable does not represent the current state of a topic,
    * what we group by will need to change.
+   *
+   * ALSO: for message converters. Both the original message and converted message are in the queue. This depends on the
+   * converted message being after the original message. Which is currently the case.
    */
   const msgsByTopic = _.groupBy(msgs, (msg) => msg.topic);
 
