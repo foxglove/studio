@@ -61,6 +61,7 @@ type RpcUpdateEvent = {
 async function loadDefaultFont(): Promise<FontFace> {
   // Passing a `url(data:...) format('woff2')` string does not work in Safari, which complains it
   // cannot load the data url due to it being cross-origin.
+  // https://bugs.webkit.org/show_bug.cgi?id=265000
   const fontFace = new FontFace("IBM Plex Mono", await (await fetch(PlexMono)).arrayBuffer());
   if (typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope) {
     (self as unknown as WorkerGlobalScope).fonts.add(fontFace);
