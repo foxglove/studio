@@ -340,6 +340,19 @@ export class BlockLoader {
         }
 
         const existingBlock = this.#blocks[currentBlockId];
+
+        // Calculate size of messages in the existing block that will be overridden.
+        // These have to be taken into account when calculating the size of the new block.
+        let overridenBlockMessagesSize = 0;
+        for (const topic of Object.keys(messagesByTopic)) {
+          const messages = existingBlock?.messagesByTopic[topic];
+          if (messages) {
+            overridenBlockMessagesSize += messages.reduce((acc, msg) => acc + msg.sizeInBytes, 0);
+          }
+        }
+        const newBlockSizeInBytes =
+          (existingBlock?.sizeInBytes ?? 0) - overridenBlockMessagesSize + sizeInBytes;
+
         this.#blocks[currentBlockId] = {
           needTopics: new Map(),
           messagesByTopic: {
@@ -347,8 +360,12 @@ export class BlockLoader {
             // Any new topics override the same previous topic
             ...messagesByTopic,
           },
-          sizeInBytes: (existingBlock?.sizeInBytes ?? 0) + sizeInBytes,
+          sizeInBytes: newBlockSizeInBytes,
         };
+
+        // Subtract the size of overridden messages from the the total size of all blocks.
+        // (The size of new messages is already added above).
+        totalBlockSizeBytes -= overridenBlockMessagesSize;
 
         progress(this.#calculateProgress(topics));
       }
