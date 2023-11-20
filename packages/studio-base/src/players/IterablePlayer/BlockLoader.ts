@@ -91,6 +91,7 @@ export class BlockLoader {
 
     this.#abortController.abort();
     this.#activeChangeCondvar.notifyAll();
+    // fixme - this join has [object Object] - this is no longer an array of topics...?
     log.debug(`Preloaded topics: ${[...topics].join(", ")}`);
 
     // Update all the blocks with any missing topics
