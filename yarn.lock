@@ -6262,7 +6262,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jest@npm:29.5.6, @types/jest@npm:>=26.0.0":
+"@types/jest@npm:29.5.8":
+  version: 29.5.8
+  resolution: "@types/jest@npm:29.5.8"
+  dependencies:
+    expect: ^29.0.0
+    pretty-format: ^29.0.0
+  checksum: ca8438a5b4c098c8c023e9d5b279ea306494a1d0b5291cfb498100fa780377145f068b2a021d545b0398bbe0328dcc37044dd3aaf3c6c0fe9b0bef7b46a63453
+  languageName: node
+  linkType: hard
+
+"@types/jest@npm:>=26.0.0":
   version: 29.5.6
   resolution: "@types/jest@npm:29.5.6"
   dependencies:
@@ -11805,7 +11815,7 @@ __metadata:
     "@types/babel__core": ^7.20.3
     "@types/babel__preset-env": ^7.9.4
     "@types/case-sensitive-paths-webpack-plugin": 2.1.7
-    "@types/jest": 29.5.6
+    "@types/jest": 29.5.8
     "@types/license-checker": ^25.0.4
     "@types/semver": ^7.5.3
     "@typescript-eslint/eslint-plugin": 6.10.0
