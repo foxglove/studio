@@ -40,7 +40,6 @@ export class TopicAliasingPlayer implements Player {
   readonly #player: Player;
 
   #inputs: Immutable<StateFactoryInput>;
-  #pendingSubscriptions: undefined | SubscribePayload[];
   #aliasedSubscriptions: undefined | SubscribePayload[];
   #subscriptions: SubscribePayload[] = [];
 
@@ -91,26 +90,8 @@ export class TopicAliasingPlayer implements Player {
 
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
     this.#subscriptions = subscriptions;
-
-    if (this.#skipAliasing) {
-      console.log("skip alias");
-      this.#player.setSubscriptions(subscriptions);
-      return;
-    }
-
-    // If we have aliases but haven't recieved a topic list from an active state from
-    // the wrapped player yet we have to delay setSubscriptions until we have the topic
-    // list to set up the aliases.
-    // fixme - why? if the alias function outputs don't do anything then
-    // we will have delayed the subscriptions for no reason?
-    if (this.#inputs.topics != undefined) {
-      this.#aliasedSubscriptions = this.#stateProcessor.aliasSubscriptions(subscriptions);
-      console.log("set subs", this.#aliasedSubscriptions);
-      this.#player.setSubscriptions(this.#aliasedSubscriptions);
-      this.#pendingSubscriptions = undefined;
-    } else {
-      this.#pendingSubscriptions = subscriptions;
-    }
+    this.#aliasedSubscriptions = this.#stateProcessor.aliasSubscriptions(subscriptions);
+    this.#player.setSubscriptions(this.#aliasedSubscriptions);
   }
 
   public setPublishers(publishers: AdvertiseOptions[]): void {
@@ -156,8 +137,6 @@ export class TopicAliasingPlayer implements Player {
   public setGlobalVariables(globalVariables: GlobalVariables): void {
     this.#player.setGlobalVariables(globalVariables);
 
-    // fixme - wait for topics to be set?
-
     // Set this before the lastPlayerstate skip below so we have global variables when
     // a player state is provided later.
     this.#inputs = { ...this.#inputs, variables: globalVariables };
@@ -165,7 +144,11 @@ export class TopicAliasingPlayer implements Player {
     // We can skip re-processing if we don't have any alias functions setup or we have not
     // had any player state provided yet. The player state handler onPlayerState will handle alias
     // function processing when it is called.
-    if (this.#skipAliasing || this.#lastPlayerState == undefined) {
+    if (
+      this.#skipAliasing ||
+      this.#lastPlayerState == undefined ||
+      this.#inputs.topics == undefined
+    ) {
       return;
     }
 
@@ -176,15 +159,9 @@ export class TopicAliasingPlayer implements Player {
     const shouldReprocess = stateProcessor !== this.#stateProcessor;
     this.#stateProcessor = stateProcessor;
 
-    // Generate a new set of subscription aliases if we have a new processor
-    // If this set is different than the current set of aliasedSubscriptions we need to update
-    // the pending subscriptions so they are set
-    // fixme - why wait to set the subscriptions?
+    // If we have a new processor we might also have new subscriptions for downstream
     if (shouldReprocess) {
-      const aliasedSubscriptions = this.#stateProcessor.aliasSubscriptions(this.#subscriptions);
-      if (!_.isEqual(this.#aliasedSubscriptions, aliasedSubscriptions)) {
-        this.#aliasedSubscriptions = this.#pendingSubscriptions = aliasedSubscriptions;
-      }
+      this.#resetSubscriptions();
     }
 
     // Re-process the last player state if the processor has changed since we might have new downstream topics
@@ -228,20 +205,10 @@ export class TopicAliasingPlayer implements Player {
         // if the state processor is changed, then we might need to re-process subscriptions since
         // we might now be able to produce new subscriptions
         if (this.#stateProcessor !== stateProcessor) {
-          const aliasedSubscriptions = stateProcessor.aliasSubscriptions(this.#subscriptions);
-          if (!_.isEqual(this.#aliasedSubscriptions, aliasedSubscriptions)) {
-            this.#aliasedSubscriptions = this.#pendingSubscriptions = aliasedSubscriptions;
-
-            // fixme - can I set subscriptions on the underlying player here?
-            // this logic is repeated in a few places now - maybe better to use a function?
-          }
+          this.#stateProcessor = stateProcessor;
+          this.#resetSubscriptions();
         }
-        this.#stateProcessor = stateProcessor;
       }
-
-      // fixme - what if state processor is different - what about subs?
-      // if the incoming this.#subscriptions have not changed
-      // in setSubscriptions we should handle this
 
       // remember the last player state so we can re-use it when global variables are set
       this.#lastPlayerState = playerState;
@@ -249,14 +216,18 @@ export class TopicAliasingPlayer implements Player {
       // Process the player state using the latest aliases
       const newState = this.#stateProcessor.process(playerState, this.#subscriptions);
       await listener(newState);
-
-      // We have new subscriptions to set on the underlying player, apply these and clear
-      // any pending subscriptions so we don't set them again
-      // fixme - why after listener fires?
-      if (this.#pendingSubscriptions) {
-        this.setSubscriptions(this.#pendingSubscriptions);
-        this.#pendingSubscriptions = undefined;
-      }
     });
+  }
+
+  /**
+   * Re-calculate the subscriptions using the latest state processor. If the subscriptions have
+   * changed then call setSubscriptions on the wrapped player.
+   */
+  #resetSubscriptions() {
+    const aliasedSubscriptions = this.#stateProcessor.aliasSubscriptions(this.#subscriptions);
+    if (!_.isEqual(this.#aliasedSubscriptions, aliasedSubscriptions)) {
+      this.#aliasedSubscriptions = aliasedSubscriptions;
+      this.#player.setSubscriptions(aliasedSubscriptions);
+    }
   }
 }

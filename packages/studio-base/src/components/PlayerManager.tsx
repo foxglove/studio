@@ -66,9 +66,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
 
-  // fixme - not good to rerender the player manager when global variables are changing
-  // the player manager is not a component we should be re-running often because of how high up the stack it is
-  // this doesn't need to be here - we can get the latest global variables
   const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
   const topicAliasFunctions = useExtensionCatalog(selectTopicAliasFunctions);
