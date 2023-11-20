@@ -74,6 +74,9 @@ function parsedDefinitionsToDatatypes(
  * Process a channel/schema and extract information that can be used to deserialize messages on the
  * channel, and schemas in the format expected by Studio's RosDatatypes.
  *
+ * Empty ROS schemas (except std_msgs/[msg/]Empty) are treated as errors. If you want to allow empty
+ * schemas then use the `allowEmptySchema` option.
+ *
  * See:
  * - https://github.com/foxglove/mcap/blob/main/docs/specification/well-known-message-encodings.md
  * - https://github.com/foxglove/mcap/blob/main/docs/specification/well-known-schema-encodings.md
