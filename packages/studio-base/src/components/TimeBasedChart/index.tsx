@@ -76,6 +76,9 @@ const useStyles = makeStyles()((theme) => ({
       pointerEvents: "auto",
     },
   },
+  stateTransition: {
+    padding: theme.spacing(0, 1, 2),
+  },
   tooltip: {
     maxWidth: "none",
   },
@@ -116,6 +119,7 @@ export type Props = {
   xAxes?: ScaleOptions<"linear">;
   yAxes: ScaleOptions<"linear">;
   annotations?: AnnotationOptions[];
+  isStateTransition?: boolean;
   isSynced?: boolean;
   linesToHide?: {
     [key: string]: boolean;
@@ -148,6 +152,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     datasetId,
     defaultView,
     height,
+    isStateTransition = false,
     isSynced = false,
     showXAxisLabels,
     type,
@@ -808,7 +813,11 @@ export default function TimeBasedChart(props: Props): JSX.Element {
             </div>
 
             {showReset && (
-              <div className={classes.resetZoomButton}>
+              <div
+                className={cx(classes.resetZoomButton, {
+                  [classes.stateTransition]: isStateTransition,
+                })}
+              >
                 <Button
                   variant="contained"
                   color="inherit"

@@ -404,6 +404,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         <div className={classes.chartWrapper} ref={sizeRef}>
           <TimeBasedChart
             zoom
+            isStateTransition
             isSynced={config.isSynced}
             showXAxisLabels
             width={width ?? 0}
