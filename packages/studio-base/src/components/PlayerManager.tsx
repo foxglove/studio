@@ -12,8 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { useSnackbar } from "notistack";
-import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
-import { useLatest, useMountedState } from "react-use";
+import { PropsWithChildren, useCallback, useMemo, useRef, useState } from "react";
+import { useMountedState } from "react-use";
 
 import { useWarnImmediateReRender } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
@@ -66,52 +66,45 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
 
-  const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
-
-  const topicAliasFunctions = useExtensionCatalog(selectTopicAliasFunctions);
-
   const { recents, addRecent } = useIndexedDbRecents();
 
-  // We don't want to recreate the player when the these variables change, but we do want to
-  // initialize it with the right order, so make a variable for its initial value we can use in the
-  // dependency array to the player useMemo.
-  //
-  // Updating the player with new values in handled by effects below the player useMemo or within
-  // the message pipeline
-  const globalVariablesRef = useLatest(globalVariables);
-
-  // Initialize the topic aliasing player with the alias functions and global variables we
-  // have at first load. Any changes in alias functions caused by dynamically loaded
-  // extensions or new variables have to be set separately because we can only construct
-  // the wrapping player once since the underlying player doesn't allow us set a new
-  // listener after the initial listener is set.
-  const [initialTopicAliasFunctions] = useState(topicAliasFunctions);
-  const [initialGlobalVariables] = useState(globalVariables);
   const topicAliasPlayer = useMemo(() => {
     if (!basePlayer) {
       return undefined;
     }
 
-    return new TopicAliasingPlayer(
-      basePlayer,
-      initialTopicAliasFunctions ?? [],
-      initialGlobalVariables,
-    );
-  }, [basePlayer, initialGlobalVariables, initialTopicAliasFunctions]);
+    return new TopicAliasingPlayer(basePlayer);
+  }, [basePlayer]);
 
-  // Topic aliases can change if we hot load a new extension with new alias functions.
-  useEffect(() => {
-    if (topicAliasFunctions !== initialTopicAliasFunctions) {
-      topicAliasPlayer?.setAliasFunctions(topicAliasFunctions ?? []);
-    }
-  }, [initialTopicAliasFunctions, topicAliasPlayer, topicAliasFunctions]);
+  // When building wrappedPlayer we want to provide the latest value of the global variables. We
+  // also want to avoid re-rendering the PlayerManager when the variables change since nothing
+  // actually changes in the react state.
+  const globalVariablesRef = useRef<GlobalVariables>(EMPTY_GLOBAL_VARIABLES);
 
-  // Topic alias player needs updated global variables.
-  useEffect(() => {
-    if (globalVariables !== initialGlobalVariables) {
-      topicAliasPlayer?.setGlobalVariables(globalVariables);
-    }
-  }, [globalVariables, initialGlobalVariables, topicAliasPlayer]);
+  // Update topic player global variables. We do not return anything since we don't need to
+  // re-render the PlayerManager when this happens.
+  useCurrentLayoutSelector(
+    useCallback(
+      (state) => {
+        const globalVariables = globalVariablesSelector(state);
+        globalVariablesRef.current = globalVariables;
+        topicAliasPlayer?.setGlobalVariables(globalVariables);
+      },
+      [globalVariablesRef, topicAliasPlayer],
+    ),
+  );
+
+  // Update the alias functions when they change. We do not need to re-render the player manager
+  // since nothing in the local state has changed.
+  useExtensionCatalog(
+    useCallback(
+      (state) => {
+        const topicAliasFunctions = selectTopicAliasFunctions(state);
+        topicAliasPlayer?.setAliasFunctions(topicAliasFunctions ?? []);
+      },
+      [topicAliasPlayer],
+    ),
+  );
 
   const player = useMemo(() => {
     if (!topicAliasPlayer) {
