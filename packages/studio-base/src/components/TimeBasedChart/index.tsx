@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, Fade, Tooltip, buttonClasses, useTheme } from "@mui/material";
+import { Button, Fade, Tooltip, buttonClasses } from "@mui/material";
 import { ChartOptions, InteractionMode, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import * as _ from "lodash-es";
@@ -66,7 +66,7 @@ const useStyles = makeStyles()((theme) => ({
     position: "sticky",
     display: "flex",
     justifyContent: "flex-end",
-    padding: theme.spacing(0, 1, 4),
+    paddingInline: theme.spacing(1),
     right: 0,
     left: 0,
     bottom: 0,
@@ -75,9 +75,6 @@ const useStyles = makeStyles()((theme) => ({
     [`.${buttonClasses.root}`]: {
       pointerEvents: "auto",
     },
-  },
-  stateTransition: {
-    padding: theme.spacing(0, 1, 2),
   },
   tooltip: {
     maxWidth: "none",
@@ -119,7 +116,7 @@ export type Props = {
   xAxes?: ScaleOptions<"linear">;
   yAxes: ScaleOptions<"linear">;
   annotations?: AnnotationOptions[];
-  isStateTransition?: boolean;
+  resetButtonPaddingBottom?: number;
   isSynced?: boolean;
   linesToHide?: {
     [key: string]: boolean;
@@ -152,8 +149,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     datasetId,
     defaultView,
     height,
-    isStateTransition = false,
     isSynced = false,
+    resetButtonPaddingBottom = 4,
     showXAxisLabels,
     type,
     width,
@@ -229,8 +226,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const bounds = dataBounds ?? datasetBounds;
 
-  const theme = useTheme();
-  const { classes, cx } = useStyles();
+  const { classes, cx, theme } = useStyles();
   const componentId = useMemo(() => uuidv4(), []);
   const isMounted = useMountedState();
   const canvasContainer = useRef<HTMLDivElement>(ReactNull);
@@ -814,9 +810,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
             {showReset && (
               <div
-                className={cx(classes.resetZoomButton, {
-                  [classes.stateTransition]: isStateTransition,
-                })}
+                className={classes.resetZoomButton}
+                style={{ paddingBottom: theme.spacing(resetButtonPaddingBottom) }}
               >
                 <Button
                   variant="contained"
