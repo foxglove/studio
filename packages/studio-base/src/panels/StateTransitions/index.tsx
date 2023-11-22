@@ -404,13 +404,13 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         <div className={classes.chartWrapper} ref={sizeRef}>
           <TimeBasedChart
             zoom
-            isStateTransition
             isSynced={config.isSynced}
             showXAxisLabels
             width={width ?? 0}
             height={height}
             data={data}
             dataBounds={databounds}
+            resetButtonPaddingBottom={2}
             type="scatter"
             xAxes={xScale}
             xAxisIsPlaybackTime
