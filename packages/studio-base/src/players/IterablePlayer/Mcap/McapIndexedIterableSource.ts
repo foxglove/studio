@@ -35,6 +35,7 @@ export class McapIndexedIterableSource implements IIterableSource {
       schemaName: string | undefined;
       // Guesstimate of the memory size in bytes of a deserialized message object
       approxDeserializedMsgSize: number;
+      msgSizeByField: Map<string, number>;
     }
   >();
   #start?: Time;
@@ -73,18 +74,32 @@ export class McapIndexedIterableSource implements IIterableSource {
         continue;
       }
 
-      let parsedChannel;
+      let parsedChannel: ParsedChannel;
       let approxDeserializedMsgSize;
+      const msgSizeByField = new Map<string, number>();
       try {
         parsedChannel = parseChannel({ messageEncoding: channel.messageEncoding, schema });
-        approxDeserializedMsgSize =
-          schema?.name != undefined
-            ? estimateMessageObjectSize(
-                parsedChannel.datatypes,
-                schema.name,
-                estimatedObjectSizeByType,
-              )
-            : 0;
+        // Determine the size of each schema sub-field. This is going to be used for estimating
+        // the size of sliced messages.
+        parsedChannel.datatypes.get(schema?.name ?? "")?.definitions.forEach((field) => {
+          const fieldSchemaName = `${schema?.name}-${field.name}`;
+          const fieldSizeInBytes = estimateMessageObjectSize(
+            new Map([
+              [fieldSchemaName, { name: fieldSchemaName, definitions: [field] }],
+              ...parsedChannel.datatypes,
+            ]),
+            fieldSchemaName,
+            estimatedObjectSizeByType,
+          );
+          // Subtract the object base size here, it will be added only once per sliced message object.
+          msgSizeByField.set(field.name, fieldSizeInBytes - OBJECT_BASE_SIZE);
+        });
+        // Since we know already the sizes of each individual sub-field, we just sum them up to get the
+        // total message size.
+        approxDeserializedMsgSize = [...msgSizeByField.values()].reduce(
+          (acc, fieldSize) => acc + fieldSize,
+          OBJECT_BASE_SIZE,
+        );
       } catch (error) {
         problems.push({
           severity: "error",
@@ -98,6 +113,7 @@ export class McapIndexedIterableSource implements IIterableSource {
         parsedChannel,
         schemaName: schema?.name,
         approxDeserializedMsgSize,
+        msgSizeByField,
       });
 
       let topic = topicsByName.get(channel.topic);
@@ -156,31 +172,6 @@ export class McapIndexedIterableSource implements IIterableSource {
 
     const topicNames = Array.from(topics.keys());
 
-    // Estimate memory size of sliced schemas.
-    const slicedMessageMemSize = new Map<number, number>();
-    const estimatedObjectSizeByType = new Map<string, number>(); // For caching purposes
-    for (const [channelId, channelInfo] of this.#channelInfoById.entries()) {
-      const fields = args.topics.get(channelInfo.channel.topic)?.fields;
-      if (fields != undefined && channelInfo.schemaName != undefined) {
-        const rootDatatype = channelInfo.parsedChannel.datatypes.get(channelInfo.schemaName);
-        const pickedRootDatatype = {
-          name: channelInfo.schemaName,
-          definitions:
-            rootDatatype?.definitions.filter((definition) => fields.includes(definition.name)) ??
-            [],
-        };
-        const sizeInBytes = estimateMessageObjectSize(
-          new Map([
-            ...channelInfo.parsedChannel.datatypes,
-            [channelInfo.schemaName, pickedRootDatatype],
-          ]),
-          channelInfo.schemaName,
-          estimatedObjectSizeByType,
-        );
-        slicedMessageMemSize.set(channelId, sizeInBytes);
-      }
-    }
-
     for await (const message of this.#reader.readMessages({
       startTime: toNanoSec(start),
       endTime: toNanoSec(end),
@@ -206,7 +197,10 @@ export class McapIndexedIterableSource implements IIterableSource {
         const sizeInBytes =
           spec?.fields == undefined
             ? Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize)
-            : slicedMessageMemSize.get(message.channelId) ?? OBJECT_BASE_SIZE;
+            : spec.fields.reduce(
+                (acc, field) => acc + (channelInfo.msgSizeByField.get(field) ?? 0),
+                OBJECT_BASE_SIZE,
+              );
 
         yield {
           type: "message-event",
