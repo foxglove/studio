@@ -172,6 +172,20 @@ export class McapIndexedIterableSource implements IIterableSource {
 
     const topicNames = Array.from(topics.keys());
 
+    // Estimate memory size for sliced messages. We pre-calculate the total size here to avoid
+    // multiple field-size lookups when iterating over messages.
+    const slicedMsgSizeByChannelId = new Map<number, number>();
+    for (const [channelId, channelInfo] of this.#channelInfoById.entries()) {
+      const fields = args.topics.get(channelInfo.channel.topic)?.fields;
+      if (fields != undefined) {
+        const sizeInBytes = fields.reduce(
+          (acc, field) => acc + (channelInfo.msgSizeByField.get(field) ?? 0),
+          OBJECT_BASE_SIZE,
+        );
+        slicedMsgSizeByChannelId.set(channelId, sizeInBytes);
+      }
+    }
+
     for await (const message of this.#reader.readMessages({
       startTime: toNanoSec(start),
       endTime: toNanoSec(end),
@@ -197,10 +211,7 @@ export class McapIndexedIterableSource implements IIterableSource {
         const sizeInBytes =
           spec?.fields == undefined
             ? Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize)
-            : spec.fields.reduce(
-                (acc, field) => acc + (channelInfo.msgSizeByField.get(field) ?? 0),
-                OBJECT_BASE_SIZE,
-              );
+            : slicedMsgSizeByChannelId.get(message.channelId) ?? OBJECT_BASE_SIZE;
 
         yield {
           type: "message-event",
