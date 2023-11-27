@@ -156,3 +156,33 @@ export function estimateMessageObjectSize(
 
   return sizeInBytes;
 }
+
+/**
+ * Determine the size of each schema sub-field. This can be used for estimating
+ * the size of sliced messages.
+ *
+ * @param datatypes
+ * @param typeName
+ * @param knownTypeSizes
+ * @returns
+ */
+export function estimateMessageFieldSizes(
+  datatypes: MessageDefinitionMap,
+  typeName: string,
+  knownTypeSizes: Map<string, number>,
+): Record<string, number> {
+  const sizeByField: Record<string, number> = {};
+  datatypes.get(typeName)?.definitions.forEach((field) => {
+    const fieldSchemaName = `${typeName}-${field.name}`;
+    const fieldSizeInBytes = estimateMessageObjectSize(
+      new Map([[fieldSchemaName, { name: fieldSchemaName, definitions: [field] }], ...datatypes]),
+      fieldSchemaName,
+      knownTypeSizes,
+    );
+
+    // Subtract the object base size here, it will be added only once per sliced message object.
+    sizeByField[field.name] = fieldSizeInBytes - OBJECT_BASE_SIZE;
+  });
+
+  return sizeByField;
+}

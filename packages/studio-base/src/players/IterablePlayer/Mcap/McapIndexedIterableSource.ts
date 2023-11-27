@@ -18,7 +18,7 @@ import {
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import {
   OBJECT_BASE_SIZE,
-  estimateMessageObjectSize,
+  estimateMessageFieldSizes,
 } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -35,7 +35,7 @@ export class McapIndexedIterableSource implements IIterableSource {
       schemaName: string | undefined;
       // Guesstimate of the memory size in bytes of a deserialized message object
       approxDeserializedMsgSize: number;
-      msgSizeByField: Map<string, number>;
+      msgSizeByField: Record<string, number>;
     }
   >();
   #start?: Time;
@@ -74,29 +74,21 @@ export class McapIndexedIterableSource implements IIterableSource {
         continue;
       }
 
-      let parsedChannel: ParsedChannel;
+      let parsedChannel;
       let approxDeserializedMsgSize;
-      const msgSizeByField = new Map<string, number>();
+      let msgSizeByField;
       try {
         parsedChannel = parseChannel({ messageEncoding: channel.messageEncoding, schema });
         // Determine the size of each schema sub-field. This is going to be used for estimating
         // the size of sliced messages.
-        parsedChannel.datatypes.get(schema?.name ?? "")?.definitions.forEach((field) => {
-          const fieldSchemaName = `${schema?.name}-${field.name}`;
-          const fieldSizeInBytes = estimateMessageObjectSize(
-            new Map([
-              [fieldSchemaName, { name: fieldSchemaName, definitions: [field] }],
-              ...parsedChannel.datatypes,
-            ]),
-            fieldSchemaName,
-            estimatedObjectSizeByType,
-          );
-          // Subtract the object base size here, it will be added only once per sliced message object.
-          msgSizeByField.set(field.name, fieldSizeInBytes - OBJECT_BASE_SIZE);
-        });
+        msgSizeByField = estimateMessageFieldSizes(
+          parsedChannel.datatypes,
+          schema?.name ?? "",
+          estimatedObjectSizeByType,
+        );
         // Since we know already the sizes of each individual sub-field, we just sum them up to get the
-        // total message size.
-        approxDeserializedMsgSize = [...msgSizeByField.values()].reduce(
+        // total message size. Note that the minimum size is OBJECT_BASE_SIZE.
+        approxDeserializedMsgSize = Object.values(msgSizeByField).reduce(
           (acc, fieldSize) => acc + fieldSize,
           OBJECT_BASE_SIZE,
         );
@@ -174,15 +166,15 @@ export class McapIndexedIterableSource implements IIterableSource {
 
     // Estimate memory size for sliced messages. We pre-calculate the total size here to avoid
     // multiple field-size lookups when iterating over messages.
-    const slicedMsgSizeByChannelId = new Map<number, number>();
+    const slicedMsgSizeByChannelId: Record<number, number> = {};
     for (const [channelId, channelInfo] of this.#channelInfoById.entries()) {
       const fields = args.topics.get(channelInfo.channel.topic)?.fields;
       if (fields != undefined) {
         const sizeInBytes = fields.reduce(
-          (acc, field) => acc + (channelInfo.msgSizeByField.get(field) ?? 0),
+          (acc, field) => acc + (channelInfo.msgSizeByField[field] ?? 0),
           OBJECT_BASE_SIZE,
         );
-        slicedMsgSizeByChannelId.set(channelId, sizeInBytes);
+        slicedMsgSizeByChannelId[channelId] = sizeInBytes;
       }
     }
 
@@ -211,7 +203,7 @@ export class McapIndexedIterableSource implements IIterableSource {
         const sizeInBytes =
           spec?.fields == undefined
             ? Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize)
-            : slicedMsgSizeByChannelId.get(message.channelId) ?? OBJECT_BASE_SIZE;
+            : slicedMsgSizeByChannelId[message.channelId] ?? OBJECT_BASE_SIZE;
 
         yield {
           type: "message-event",
