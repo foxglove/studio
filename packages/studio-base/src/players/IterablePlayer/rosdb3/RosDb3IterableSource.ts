@@ -15,6 +15,7 @@ import {
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { basicDatatypes } from "@foxglove/studio-base/util/basicDatatypes";
 
 import {
   IIterableSource,
@@ -95,7 +96,11 @@ export class RosDb3IterableSource implements IIterableSource {
       parsedMessageDefinitionsByTopic[topicDef.name] = fullParsedMessageDefinitions;
       this.#approxDeserializedMsgSizeByType.set(
         topicDef.type,
-        estimateMessageObjectSize(datatypes, topicDef.type, estimatedObjectSizeByType),
+        estimateMessageObjectSize(
+          new Map([...basicDatatypes, ...datatypes]),
+          topicDef.type,
+          estimatedObjectSizeByType,
+        ),
       );
     }
 
