@@ -12,20 +12,14 @@
 //   You may not use this file except in compliance with the License.
 
 import { useSnackbar } from "notistack";
-import {
-  PropsWithChildren,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from "react";
+import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
 import { useLatest, useMountedState } from "react-use";
 
 import { useWarnImmediateReRender } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import { useAppContext } from "@foxglove/studio-base/context/AppContext";
 import {
   LayoutState,
   useCurrentLayoutSelector,
@@ -34,50 +28,36 @@ import {
   ExtensionCatalog,
   useExtensionCatalog,
 } from "@foxglove/studio-base/context/ExtensionCatalogContext";
-import { useNativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
   IDataSourceFactory,
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  UserScriptStore,
-  useUserScriptState,
-} from "@foxglove/studio-base/context/UserScriptStateContext";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import { TopicAliasingPlayer } from "@foxglove/studio-base/players/TopicAliasingPlayer/TopicAliasingPlayer";
-import UserScriptPlayer from "@foxglove/studio-base/players/UserScriptPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
-import { UserScripts } from "@foxglove/studio-base/types/panels";
 
 const log = Logger.getLogger(__filename);
 
-const EMPTY_USER_NODES: UserScripts = Object.freeze({});
 const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
 type PlayerManagerProps = {
   playerSources: IDataSourceFactory[];
 };
 
-const userScriptsSelector = (state: LayoutState) =>
-  state.selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
 const globalVariablesSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
 const selectTopicAliasFunctions = (catalog: ExtensionCatalog) =>
   catalog.installedTopicAliasFunctions;
-
-const selectUserScriptActions = (store: UserScriptStore) => store.actions;
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
 
   useWarnImmediateReRender();
 
-  const userScriptActions = useUserScriptState(selectUserScriptActions);
-
-  const nativeWindow = useNativeWindow();
+  const { wrapPlayer } = useAppContext();
 
   const isMounted = useMountedState();
 
@@ -86,7 +66,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
 
-  const userScripts = useCurrentLayoutSelector(userScriptsSelector);
   const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
   const topicAliasFunctions = useExtensionCatalog(selectTopicAliasFunctions);
@@ -139,12 +118,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       return undefined;
     }
 
-    const userScriptPlayer = new UserScriptPlayer(topicAliasPlayer, userScriptActions);
-    userScriptPlayer.setGlobalVariables(globalVariablesRef.current);
-    return userScriptPlayer;
-  }, [globalVariablesRef, topicAliasPlayer, userScriptActions]);
-
-  useLayoutEffect(() => void player?.setUserScripts(userScripts), [player, userScripts]);
+    const wrappedPlayer = wrapPlayer(topicAliasPlayer);
+    wrappedPlayer.setGlobalVariables(globalVariablesRef.current);
+    return wrappedPlayer;
+  }, [topicAliasPlayer, wrapPlayer, globalVariablesRef]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -153,9 +130,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const selectSource = useCallback(
     async (sourceId: string, args?: DataSourceArgs) => {
       log.debug(`Select Source: ${sourceId}`);
-
-      // Clear any previous represented filename
-      void nativeWindow?.setRepresentedFilename(undefined);
 
       const foundSource = playerSources.find(
         (source) => source.id === sourceId || source.legacyIds?.includes(sourceId),
@@ -229,12 +203,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
-              // If we are selecting a single file, the desktop environment might have features to
-              // show the user which file they've selected (i.e. macOS proxy icon)
-              if (file) {
-                void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
-              }
-
               setBasePlayer(newPlayer);
               return;
             } else if (handle) {
@@ -254,10 +222,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               if (!isMounted()) {
                 return;
               }
-
-              // If we are selecting a single file, the desktop environment might have features to
-              // show the user which file they've selected (i.e. macOS proxy icon)
-              void nativeWindow?.setRepresentedFilename((file as { path?: string }).path); // File.path is added by Electron
 
               const newPlayer = foundSource.initialize({
                 file,
@@ -282,7 +246,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         enqueueSnackbar((error as Error).message, { variant: "error" });
       }
     },
-    [playerSources, metricsCollector, enqueueSnackbar, isMounted, addRecent, nativeWindow],
+    [playerSources, metricsCollector, enqueueSnackbar, isMounted, addRecent],
   );
 
   // Select a recent entry by id

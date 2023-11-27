@@ -9,7 +9,7 @@ import {
   Square12Filled,
   Square12Regular,
 } from "@fluentui/react-icons";
-import { ButtonBase, Checkbox, Tooltip, Typography } from "@mui/material";
+import { ButtonBase, Checkbox, Tooltip, Typography, buttonBaseClasses } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
@@ -113,16 +113,19 @@ const useStyles = makeStyles<void, "plotName" | "actionButton">()((theme, _param
     color: theme.palette.error.main,
   },
   actionButton: {
-    height: ROW_HEIGHT,
-    width: ROW_HEIGHT,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     position: "sticky",
     right: 0,
 
-    ":hover": {
-      backgroundColor: theme.palette.action.hover,
+    [`.${buttonBaseClasses.root}`]: {
+      height: ROW_HEIGHT,
+      width: ROW_HEIGHT,
+
+      ":hover": {
+        backgroundColor: theme.palette.action.hover,
+      },
     },
   },
 }));
@@ -176,6 +179,14 @@ export function PlotLegendRow({
 
   // When there are no series configured we render an extra row to show an "add series" button.
   const isAddSeriesRow = paths.length === 0;
+
+  const handleDeletePath = () => {
+    const newPaths = paths.slice();
+    if (newPaths.length > 0) {
+      newPaths.splice(index, 1);
+    }
+    savePaths(newPaths);
+  };
 
   return (
     <div
@@ -250,17 +261,7 @@ export function PlotLegendRow({
             <Add12Regular />
           </ButtonBase>
         ) : (
-          <ButtonBase
-            title="Delete series"
-            aria-label="Delete series"
-            onClick={() => {
-              const newPaths = paths.slice();
-              if (newPaths.length > 0) {
-                newPaths.splice(index, 1);
-              }
-              savePaths(newPaths);
-            }}
-          >
+          <ButtonBase title="Delete series" aria-label="Delete series" onClick={handleDeletePath}>
             <Dismiss12Regular />
           </ButtonBase>
         )}

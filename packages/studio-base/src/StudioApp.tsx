@@ -18,12 +18,7 @@ import MultiProvider from "./components/MultiProvider";
 import PlayerManager from "./components/PlayerManager";
 import SendNotificationToastAdapter from "./components/SendNotificationToastAdapter";
 import StudioToastProvider from "./components/StudioToastProvider";
-import NativeAppMenuContext from "./context/NativeAppMenuContext";
-import NativeWindowContext from "./context/NativeWindowContext";
-import { UserScriptStateProvider } from "./context/UserScriptStateContext";
 import CurrentLayoutProvider from "./providers/CurrentLayoutProvider";
-import ExtensionCatalogProvider from "./providers/ExtensionCatalogProvider";
-import ExtensionMarketplaceProvider from "./providers/ExtensionMarketplaceProvider";
 import PanelCatalogProvider from "./providers/PanelCatalogProvider";
 import { LaunchPreference } from "./screens/LaunchPreference";
 
@@ -40,9 +35,6 @@ function contextMenuHandler(event: MouseEvent) {
 export function StudioApp(): JSX.Element {
   const {
     dataSources,
-    extensionLoaders,
-    nativeAppMenu,
-    nativeWindow,
     deepLinks,
     enableLaunchPreferenceScreen,
     extraProviders,
@@ -56,21 +48,10 @@ export function StudioApp(): JSX.Element {
     /* eslint-disable react/jsx-key */
     <TimelineInteractionStateProvider />,
     <CurrentLayoutProvider />,
-    <ExtensionMarketplaceProvider />,
-    <ExtensionCatalogProvider loaders={extensionLoaders} />,
-    <UserScriptStateProvider />,
     <PlayerManager playerSources={dataSources} />,
     <EventsProvider />,
     /* eslint-enable react/jsx-key */
   ];
-
-  if (nativeAppMenu) {
-    providers.push(<NativeAppMenuContext.Provider value={nativeAppMenu} />);
-  }
-
-  if (nativeWindow) {
-    providers.push(<NativeWindowContext.Provider value={nativeWindow} />);
-  }
 
   if (extraProviders) {
     providers.unshift(...extraProviders);
