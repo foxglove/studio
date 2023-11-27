@@ -119,8 +119,8 @@ function buildSettingsTree(
         showIntermediate: {
           label: "Show intermediate",
           input: "boolean",
-          value: config.showIntermediate,
-          help: "Display intermediate state transition messages for state that has not changed from the last state transition",
+          value: config.showPoints,
+          help: "Display a point for every state transition message",
         },
       },
     },
@@ -168,7 +168,7 @@ export function useStateTransitionsPanelSettings(
         if (input === "boolean" && _.isEqual(path, ["general", "isSynced"])) {
           saveConfig({ isSynced: value });
         } else if (input === "boolean" && _.isEqual(path, ["general", "showIntermediate"])) {
-          saveConfig({ showIntermediate: value });
+          saveConfig({ showPoints: value });
         } else if (path[0] === "xAxis") {
           saveConfig(
             produce((draft) => {

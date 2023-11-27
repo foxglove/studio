@@ -256,7 +256,7 @@ function StateTransitions(props: Props) {
     return _.isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
   }, [decodedBlocks, itemsByPath]);
 
-  const showIntermediate = config.showIntermediate === true;
+  const showPoints = config.showPoints === true;
 
   const { pathState, data, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
@@ -286,7 +286,7 @@ function StateTransitions(props: Props) {
         pathIndex,
         startTime,
         y,
-        showIntermediate,
+        showPoints,
       });
 
       // We have already filtered out paths we can find in blocks so anything left here
@@ -312,7 +312,7 @@ function StateTransitions(props: Props) {
         pathIndex,
         startTime,
         y,
-        showIntermediate,
+        showPoints,
       });
       outDatasets.push(newPathDataSet);
     });
@@ -322,7 +322,7 @@ function StateTransitions(props: Props) {
       minY: outMinY,
       pathState: outPathState,
     };
-  }, [decodedBlocks, newItemsByPath, paths, startTime, showIntermediate]);
+  }, [decodedBlocks, newItemsByPath, paths, startTime, showPoints]);
 
   const yScale = useMemo<ScaleOptions<"linear">>(() => {
     return {

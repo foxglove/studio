@@ -23,7 +23,7 @@ type Args = {
   y: number;
   pathIndex: number;
   blocks: readonly (readonly MessageAndData[] | undefined)[];
-  showIntermediate: boolean;
+  showPoints: boolean;
 };
 
 /**
@@ -31,7 +31,7 @@ type Args = {
  * dataset with different labels and colors applied per-point.
  */
 export function messagesToDataset(args: Args): ChartDataset {
-  const { path, startTime, y, blocks, showIntermediate } = args;
+  const { path, startTime, y, blocks, showPoints: showIntermediate } = args;
 
   const dataset: ChartDataset = {
     borderWidth: 10,
@@ -40,7 +40,7 @@ export function messagesToDataset(args: Args): ChartDataset {
     pointBackgroundColor: "rgba(0, 0, 0, 0.4)",
     pointBorderColor: "transparent",
     pointHoverRadius: 3,
-    pointRadius: 1.25,
+    pointRadius: showIntermediate ? 1.25 : 0,
     pointStyle: "circle",
     showLine: true,
   };
