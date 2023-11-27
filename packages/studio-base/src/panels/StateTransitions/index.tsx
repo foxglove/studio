@@ -443,6 +443,45 @@ function StateTransitions(props: Props) {
 
   useStateTransitionsPanelSettings(config, saveConfig, pathState, focusedPath);
 
+  const pathLegend = useMemo(
+    () => (
+      <Stack className={classes.chartOverlay} position="absolute" paddingTop={0.5}>
+        {(paths.length === 0 ? [DEFAULT_PATH] : paths).map((path, index) => (
+          <div className={classes.row} key={index} style={{ height: heightPerTopic }}>
+            <Button
+              size="small"
+              color="inherit"
+              data-testid="edit-topic-button"
+              className={classes.button}
+              endIcon={paths.length === 0 ? <Add16Filled /> : <Edit16Filled />}
+              onClick={() => {
+                setSelectedPanelIds([panelId]);
+                openPanelSettings();
+                setFocusedPath(["paths", String(index)]);
+              }}
+            >
+              <Typography variant="inherit" noWrap>
+                {paths.length === 0
+                  ? "Click to add a series"
+                  : stateTransitionPathDisplayName(path, index)}
+              </Typography>
+            </Button>
+          </div>
+        ))}
+      </Stack>
+    ),
+    [
+      classes.button,
+      classes.chartOverlay,
+      classes.row,
+      heightPerTopic,
+      openPanelSettings,
+      panelId,
+      paths,
+      setSelectedPanelIds,
+    ],
+  );
+
   return (
     <Stack flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar />
@@ -466,31 +505,7 @@ function StateTransitions(props: Props) {
             onClick={onClick}
             currentTime={currentTimeSinceStart}
           />
-
-          <Stack className={classes.chartOverlay} position="absolute" paddingTop={0.5}>
-            {(paths.length === 0 ? [DEFAULT_PATH] : paths).map((path, index) => (
-              <div className={classes.row} key={index} style={{ height: heightPerTopic }}>
-                <Button
-                  size="small"
-                  color="inherit"
-                  data-testid="edit-topic-button"
-                  className={classes.button}
-                  endIcon={paths.length === 0 ? <Add16Filled /> : <Edit16Filled />}
-                  onClick={() => {
-                    setSelectedPanelIds([panelId]);
-                    openPanelSettings();
-                    setFocusedPath(["paths", String(index)]);
-                  }}
-                >
-                  <Typography variant="inherit" noWrap>
-                    {paths.length === 0
-                      ? "Click to add a series"
-                      : stateTransitionPathDisplayName(path, index)}
-                  </Typography>
-                </Button>
-              </div>
-            ))}
-          </Stack>
+          {pathLegend}
         </div>
       </Stack>
     </Stack>
