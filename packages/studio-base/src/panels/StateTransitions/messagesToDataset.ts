@@ -31,7 +31,7 @@ type Args = {
  * dataset with different labels and colors applied per-point.
  */
 export function messagesToDataset(args: Args): ChartDataset {
-  const { path, startTime, y, blocks, showPoints: showIntermediate } = args;
+  const { path, startTime, y, blocks, showPoints } = args;
 
   const dataset: ChartDataset = {
     borderWidth: 10,
@@ -40,7 +40,7 @@ export function messagesToDataset(args: Args): ChartDataset {
     pointBackgroundColor: "rgba(0, 0, 0, 0.4)",
     pointBorderColor: "transparent",
     pointHoverRadius: 3,
-    pointRadius: showIntermediate ? 1.25 : 0,
+    pointRadius: showPoints ? 1.25 : 0,
     pointStyle: "circle",
     showLine: true,
   };
@@ -101,7 +101,7 @@ export function messagesToDataset(args: Args): ChartDataset {
         constantName,
       };
 
-      if (isNewSegment || showIntermediate) {
+      if (isNewSegment || showPoints) {
         dataset.data.push(lastDatum);
 
         // after we add a datum we clear the last datum so we don't try to add it again at the end
