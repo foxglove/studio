@@ -34,7 +34,6 @@ const createViewport = (width: number, height: number, min: number, max: number)
 const FAKE_BOUNDS = createBounds(0, 100);
 const FAKE_VIEWPORT = createViewport(800, 600, 0, 100);
 const MAX_POINTS = 1024;
-const MIN_SIZE = 0.05;
 
 const FAKE_DATASET = createDataset(10);
 const EMPTY_DATASET = createDataset(0);
@@ -48,7 +47,6 @@ describe("updateSource", () => {
         view: FAKE_VIEWPORT,
         viewBounds: FAKE_BOUNDS,
         maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
       },
       // we want to ensure it returns a new, initialized source
       {
@@ -72,7 +70,6 @@ describe("updateSource", () => {
         view: FAKE_VIEWPORT,
         viewBounds: FAKE_BOUNDS,
         maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
       },
       before,
     );
@@ -92,7 +89,6 @@ describe("updateSource", () => {
         view: FAKE_VIEWPORT,
         viewBounds: FAKE_BOUNDS,
         maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
       },
       before,
     );
@@ -112,95 +108,10 @@ describe("updateSource", () => {
         view: FAKE_VIEWPORT,
         viewBounds: FAKE_BOUNDS,
         maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
       },
       before,
     );
     expect(after.cursor).toEqual(10);
-  });
-
-  it("waits for enough data to guess chunkSize", () => {
-    const initial = initSource();
-    const first = updateSource(
-      createPath(FAKE_PATH),
-      {
-        raw: createDataset(1),
-        view: FAKE_VIEWPORT,
-        viewBounds: FAKE_BOUNDS,
-        maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
-      },
-      initial,
-    );
-    expect(first.cursor).toEqual(0);
-    expect(first.dataset).not.toEqual(undefined);
-
-    const second = updateSource(
-      createPath(FAKE_PATH),
-      {
-        raw: createDataset(50),
-        view: FAKE_VIEWPORT,
-        viewBounds: FAKE_BOUNDS,
-        maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
-      },
-      first,
-    );
-    expect(second.cursor).toEqual(50);
-    expect(second.numBuckets).not.toEqual(0);
-    expect(second.chunkSize).not.toEqual(0);
-  });
-
-  it("incorporates new points smaller than chunkSize", () => {
-    const before = updateSource(
-      createPath(FAKE_PATH),
-      {
-        raw: FAKE_DATASET,
-        view: FAKE_VIEWPORT,
-        viewBounds: FAKE_BOUNDS,
-        maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
-      },
-      initSource(),
-    );
-    const after = updateSource(
-      createPath(FAKE_PATH),
-      {
-        raw: createDataset(11), // ie less than the chunk size
-        view: FAKE_VIEWPORT,
-        viewBounds: FAKE_BOUNDS,
-        maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
-      },
-      before,
-    );
-    expect(after.cursor).toEqual(11);
-  });
-
-  it("incorporates new points greater than chunkSize", () => {
-    const before = updateSource(
-      createPath(FAKE_PATH),
-      {
-        raw: FAKE_DATASET,
-        view: FAKE_VIEWPORT,
-        viewBounds: FAKE_BOUNDS,
-        maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
-      },
-      initSource(),
-    );
-    const after = updateSource(
-      createPath(FAKE_PATH),
-      {
-        raw: createDataset(100),
-        view: FAKE_VIEWPORT,
-        viewBounds: FAKE_BOUNDS,
-        maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
-      },
-      before,
-    );
-    expect(after.cursor).toEqual(100);
   });
 
   it("uses scatter plot algorithm on scatter dataset", () => {
@@ -215,7 +126,6 @@ describe("updateSource", () => {
         view: FAKE_VIEWPORT,
         viewBounds: FAKE_BOUNDS,
         maxPoints: MAX_POINTS,
-        minSize: MIN_SIZE,
       },
       before,
     );
