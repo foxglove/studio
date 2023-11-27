@@ -158,7 +158,7 @@ function datasetContainsArray(dataset: Immutable<(MessageAndData[] | undefined)[
     }),
     R.uniq,
   )(dataset);
-  return dataCounts.length > 0 && R.all((numPoints) => numPoints > 1, dataCounts);
+  return dataCounts.length > 0 && dataCounts.every((numPoints) => numPoints > 1);
 }
 
 type Props = {
