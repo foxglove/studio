@@ -478,7 +478,7 @@ export function shouldResetViewport(
     return false;
   }
 
-  const havePartial = R.any(isPartialState, pathStates);
+  const havePartial = pathStates.some(isPartialState);
   if (havePartial) {
     const {
       bounds: { x: viewBounds },
