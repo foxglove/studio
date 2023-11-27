@@ -12,8 +12,8 @@ import {
 import {
   downsampleScatter,
   downsampleTimeseries,
+  MAX_POINTS as DESIRED_POINTS,
 } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
-import { downsampleLTTB } from "@foxglove/studio-base/components/TimeBasedChart/lttb";
 import { PlotViewport, Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 
 import {
@@ -34,10 +34,6 @@ type PathMap<T> = Map<PlotPath, T>;
 type SourceState = {
   // The number of data points we have downsampled
   cursor: number;
-  // The minimum number of points we need in order to downsample
-  chunkSize: number;
-  // The number of buckets (points) this source has used so far
-  numBuckets: number;
   // The downsampled dataset for this source
   dataset: TypedDataSet | undefined;
 };
@@ -55,8 +51,6 @@ type PathState = {
 
 export const initSource = (): SourceState => ({
   cursor: 0,
-  chunkSize: 0,
-  numBuckets: 0,
   dataset: undefined,
 });
 
@@ -85,14 +79,9 @@ export const initDownsampled = (): Downsampled => {
   };
 };
 
-// This is the desired number of data points for each plot across all signals
-// and data sources. Beyond this threshold, ChartJS can no longer render at
-// 60FPS.
-//
 // Since the total number of buckets is an estimate and can be wrong, we may
 // actually end up with more points than this, but we reset when the number of
 // points in a plot exceeds MAX_POINTS.
-const DESIRED_POINTS = 3_000;
 const MAX_POINTS = DESIRED_POINTS * 1.2;
 
 // This factor is used for two related things:
@@ -105,38 +94,16 @@ const ZOOM_RESET_FACTOR = 0.2;
 
 const downsampleDataset = (
   data: TypedData[],
-  numPoints: number,
-  startBucket?: number,
+  view: PlotViewport,
+  numPoints?: number,
 ): TypedData[] | undefined => {
-  const indices = downsampleLTTB(data, getTypedLength(data), numPoints, startBucket);
-  if (indices == undefined) {
-    return undefined;
-  }
+  const indices = downsampleTimeseries(iterateTyped(data), view, numPoints);
   const resolved = resolveTypedIndices(data, indices);
   if (resolved == undefined) {
     return undefined;
   }
 
   return resolved;
-};
-
-const concatDataset = (a: TypedDataSet, b: TypedDataSet): TypedDataSet => ({
-  ...a,
-  data: concatTyped(a.data, b.data),
-});
-
-const getLastPoint = (data: TypedData[]): [x: number, y: number] | undefined => {
-  const lastSlice = data[data.length - 1];
-  if (lastSlice == undefined) {
-    return undefined;
-  }
-
-  const x = lastSlice.x[lastSlice.x.length - 1];
-  const y = lastSlice.y[lastSlice.y.length - 1];
-  if (x == undefined || y == undefined) {
-    return undefined;
-  }
-  return [x, y];
 };
 
 const combineBounds = (bounds: Bounds1D[]): Bounds1D | undefined => {
@@ -173,8 +140,6 @@ const getPlotBounds = (data: PlotData): Bounds1D | undefined => {
     combineBounds,
   )([...datasets.values()]);
 };
-
-const getBoundsRange = ({ max, min }: Bounds1D): number => Math.abs(max - min);
 
 /**
  * Get the ratio of one unit in viewport space to the number of pixels it
@@ -273,9 +238,6 @@ type SourceParams = {
   view: PlotViewport;
   viewBounds: Bounds1D;
   maxPoints: number;
-  // We do not decide on a number of buckets until after we have enough data to
-  // fill this proportion of the viewport.
-  minSize: number; // [0..1]
 };
 
 /**
@@ -287,9 +249,8 @@ export function updateSource(
   params: SourceParams,
   state: SourceState,
 ): SourceState {
-  const { raw, view, viewBounds, maxPoints, minSize } = params;
-  const viewportRange = getBoundsRange(viewBounds);
-  const { cursor: oldCursor, dataset: previous, chunkSize, numBuckets } = state;
+  const { raw, view, maxPoints } = params;
+  const { cursor: oldCursor, dataset: previous } = state;
   if (raw == undefined) {
     return initSource();
   }
@@ -321,7 +282,7 @@ export function updateSource(
   // Both present serious drawbacks for memory, since we would have to store an
   // additional copy of the entire dataset with these transformations applied.
   if (isDerivative(path) || isHeaderStamp(path)) {
-    const downsampled = downsampleDataset(applyTransforms(raw.data, path), maxPoints);
+    const downsampled = downsampleDataset(applyTransforms(raw.data, path), view, maxPoints);
     if (downsampled == undefined) {
       return state;
     }
@@ -334,9 +295,7 @@ export function updateSource(
     };
   }
 
-  // The LTTB downsampling algorithm only works for series plots, not scatter
-  // plots. We must fall back to using our existing downsampleScatter
-  // algorithm.
+  // The downsampling algorithm only works for series plots, not scatter plots.
   if (path.showLine === false) {
     const indices = downsampleScatter(iterateTyped(raw.data), view);
     const resolved = resolveTypedIndices(raw.data, indices);
@@ -362,107 +321,8 @@ export function updateSource(
     return state;
   }
 
-  // we wait around until we have greater than `minSize` data so that we can
-  // guess how much of the visual range the full plot might occupy
-  //
-  // this is just a guess, but mostly works, and if the plot gets too dense we
-  // will downsample again anyway
-  const newRange = getBoundsRange(newBounds);
-  if (previous == undefined || chunkSize === 0) {
-    const proportion = newRange / viewportRange;
-    if (proportion < minSize) {
-      // Before we can infer a reasonable bucket size, we still want to show
-      // data, so we fall back to the previous algorithm
-      const indices = downsampleTimeseries(iterateTyped(raw.data), view);
-      const resolved = resolveTypedIndices(raw.data, indices);
-      if (resolved == undefined) {
-        return state;
-      }
-
-      return {
-        ...state,
-        dataset: {
-          ...raw,
-          pointRadius: 0,
-          data: resolved,
-        },
-      };
-    }
-
-    const bestGuessBuckets = Math.min(
-      Math.floor((newRange / viewportRange) * maxPoints),
-      maxPoints,
-    );
-    const downsampled = downsampleDataset(newData, bestGuessBuckets);
-    if (downsampled == undefined) {
-      return state;
-    }
-
-    return {
-      ...state,
-      cursor: newCursor,
-      chunkSize: newCursor,
-      numBuckets: bestGuessBuckets,
-      dataset: {
-        ...raw,
-        pointRadius: 0,
-        data: downsampled,
-      },
-    };
-  }
-
-  // in order for the downsampled signal to maintain the same visual density
-  // over the entire plot, the number of points we downsample needs to stay the
-  // same; this is what `chunkSize` does.
-  //
-  // most of the time, however, we receive new points in quantities far smaller
-  // than `chunkSize`, so to get around this (but still retain visual density)
-  // we reuse raw points that already exist in the dataset and start our
-  // downsample a few buckets _before_ the points we're adding. this is because
-  // the point we choose for each bucket depends on the point we chose in the
-  // previous bucket, and so on.
-  //
-  // we then append any new _downsampled_ points to our accumulated downsampled
-  // dataset.
-  const numNewPoints = newCursor - oldCursor;
-  if (numNewPoints >= chunkSize) {
-    // the `chunkSize` is also the upper bound for the number of points we
-    // process in one go (again to maintain similar visual density)
-    const downsampled = downsampleDataset(sliceTyped(newData, 0, chunkSize), numBuckets);
-    if (downsampled == undefined) {
-      return state;
-    }
-
-    // we go around again and consume all the data we can
-    return updateSource(path, params, {
-      ...state,
-      cursor: oldCursor + chunkSize,
-      dataset: concatDataset(previous, { ...previous, data: downsampled }),
-    });
-  }
-
-  const numOldPoints = chunkSize - numNewPoints;
-  const rawStart = newCursor - chunkSize;
-  const pointsPerBucket = Math.trunc(chunkSize / numBuckets);
-  const lastRawBucket = Math.max(
-    (numOldPoints - (numOldPoints % pointsPerBucket)) / pointsPerBucket - 2,
-    0,
-  );
-  const downsampled = downsampleDataset(sliceTyped(raw.data, rawStart), numBuckets, lastRawBucket);
-  const lastPoint = getLastPoint(previous.data);
-  if (downsampled == undefined || lastPoint == undefined) {
-    return state;
-  }
-
-  const [lastX] = lastPoint;
-  let firstNew = -1;
-  for (const { index, x } of iterateTyped(downsampled)) {
-    if (x > lastX) {
-      firstNew = index;
-      break;
-    }
-  }
-  if (firstNew === -1) {
+  const downsampled = downsampleDataset(newData, view, maxPoints);
+  if (downsampled == undefined) {
     return state;
   }
 
@@ -470,8 +330,9 @@ export function updateSource(
     ...state,
     cursor: newCursor,
     dataset: {
-      ...previous,
-      data: concatTyped(previous.data, sliceTyped(downsampled, firstNew)),
+      ...raw,
+      pointRadius: 0,
+      data: concatTyped(previous?.data ?? [], downsampled),
     },
   };
 }
@@ -515,7 +376,7 @@ type PathParameters = {
  * and downsample what's left.
  */
 function updatePartialView(path: PlotPath, params: PathParameters, state: PathState): PathState {
-  const { blockData, currentData, viewBounds, maxPoints } = params;
+  const { blockData, currentData, viewBounds, view, maxPoints } = params;
   const data = sliceBounds(mergeTyped(blockData?.data ?? [], currentData?.data ?? []), viewBounds);
   const numSliced = getTypedLength(data);
   if (numSliced <= maxPoints) {
@@ -530,7 +391,7 @@ function updatePartialView(path: PlotPath, params: PathParameters, state: PathSt
     };
   }
 
-  const downsampled = downsampleDataset(applyTransforms(data, path), maxPoints);
+  const downsampled = downsampleDataset(applyTransforms(data, path), view, maxPoints);
   if (downsampled == undefined) {
     return state;
   }
@@ -570,11 +431,7 @@ export function updatePath(path: PlotPath, params: PathParameters, state: PathSt
     }
   }
 
-  const newBlocks = updateSource(
-    path,
-    { raw: blockData, view, viewBounds, maxPoints, minSize: 0.05 },
-    blocks,
-  );
+  const newBlocks = updateSource(path, { raw: blockData, view, viewBounds, maxPoints }, blocks);
 
   // Skip computing current entirely if block data is bigger than it
   if (blockData != undefined && currentData != undefined) {
@@ -594,11 +451,7 @@ export function updatePath(path: PlotPath, params: PathParameters, state: PathSt
     }
   }
 
-  const newCurrent = updateSource(
-    path,
-    { raw: currentData, view, viewBounds, maxPoints, minSize: 0 },
-    current,
-  );
+  const newCurrent = updateSource(path, { raw: currentData, view, viewBounds, maxPoints }, current);
   const newState: PathState = {
     ...state,
     blocks: newBlocks,
