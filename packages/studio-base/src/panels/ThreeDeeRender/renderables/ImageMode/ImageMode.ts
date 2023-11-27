@@ -305,9 +305,7 @@ export class ImageMode
     if (this.#removeImageTimeout == undefined) {
       this.#removeImageTimeout = setTimeout(() => {
         this.#removeImageTimeout = undefined;
-        this.imageRenderable?.dispose();
-        this.imageRenderable?.removeFromParent();
-        this.imageRenderable = undefined;
+        this.#removeImageRenderable();
         this.#clearCameraModel();
       }, REMOVE_IMAGE_TIMEOUT_MS);
     }
@@ -316,6 +314,13 @@ export class ImageMode
     this.#latestImage = undefined;
     super.removeAllRenderables();
   }
+
+  #removeImageRenderable = (): void => {
+    this.#latestImage = undefined;
+    this.imageRenderable?.dispose();
+    this.imageRenderable?.removeFromParent();
+    this.imageRenderable = undefined;
+  };
 
   /**
    * If no image topic is selected, automatically select the first available one from `renderer.topics`.
@@ -341,8 +346,8 @@ export class ImageMode
    **/
   protected setImageTopic(imageTopic: Topic): void {
     const matchingCalibrationTopic = this.#getMatchingCalibrationTopic(imageTopic.name);
-    // clear renderables so that they can be reinstantiated
-    this.removeAllRenderables();
+    // don't want renderables shared across topics to ensure clean state for new topic
+    this.#removeImageRenderable();
 
     this.renderer.updateConfig((draft) => {
       draft.imageMode.imageTopic = imageTopic.name;
