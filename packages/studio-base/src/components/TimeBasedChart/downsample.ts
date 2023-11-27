@@ -193,8 +193,6 @@ export function downsampleScatter(points: Iterable<Point>, view: PlotViewport): 
     indices.push(datum.index);
   }
 
-  // Technically a lie because this may have downsampled but we say it did not
-  // so the points are still rendered
   return indices;
 }
 
