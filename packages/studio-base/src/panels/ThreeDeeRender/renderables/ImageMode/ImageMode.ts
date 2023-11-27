@@ -309,6 +309,7 @@ export class ImageMode
         this.imageRenderable?.removeFromParent();
         this.imageRenderable = undefined;
         this.#clearCameraModel();
+        this.renderer.queueAnimationFrame();
       }, REMOVE_IMAGE_TIMEOUT_MS);
     }
     this.#annotations.removeAllRenderables();
@@ -625,11 +626,6 @@ export class ImageMode
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
 
-    if (this.#removeImageTimeout != undefined) {
-      clearTimeout(this.#removeImageTimeout);
-      this.#removeImageTimeout = undefined;
-    }
-
     const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
 
     this.#latestImage = { topic: messageEvent.topic, image };
@@ -641,6 +637,12 @@ export class ImageMode
 
     renderable.userData.receiveTime = receiveTime;
     renderable.setImage(image, /*resizeWidth=*/ undefined, (size) => {
+      // Clear timeout after decoding the image so that we know the next image is valid
+      if (this.#removeImageTimeout != undefined) {
+        clearTimeout(this.#removeImageTimeout);
+        this.#removeImageTimeout = undefined;
+      }
+
       if (this.#fallbackCameraModelActive()) {
         this.#updateFallbackCameraModel(size, getFrameIdFromImage(image));
       }
