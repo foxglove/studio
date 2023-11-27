@@ -67,7 +67,7 @@ describe("downsampleTimeseries", () => {
       ]),
       bounds,
     );
-    expect(result).toEqual([0, 1, 2, 3, 4]);
+    expect(result).toEqual([0, 2, 4]);
   });
 });
 
