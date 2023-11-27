@@ -65,9 +65,12 @@ describe("downsampleTimeseries", () => {
         { x: 1, y: 4, value: 4 },
         { x: 2, y: 5, value: 5 },
       ]),
-      bounds,
+      {
+        ...bounds,
+        width: bounds.width * 4,
+      },
     );
-    expect(result).toEqual([0, 2, 4]);
+    expect(result).toEqual([0, 1, 2, 3, 4]);
   });
 });
 
