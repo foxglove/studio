@@ -15,10 +15,21 @@ type Dataset<T> = ChartDataset<"scatter", T>;
 // 60FPS.
 export const MAX_POINTS = 5_000;
 
+// Each interval can produce up to this many points
+const POINTS_PER_INTERVAL = 4;
+
+// Points that appear within this threshold are visually indistinguishable
+export const MINIMUM_PIXEL_DISTANCE = 3;
+
 /**
- * Downsample a timeseries dataset
+ * Downsample a timeseries dataset by returning the indices of a subset of
+ * points that are deemed to be representative of the original dataset when
+ * rendered with the given viewport.
  *
- * This function assumes the dataset x axis time and sorted.
+ * This function assumes that points are sorted and that x- values are
+ * monotonically increasing.
+ *
+ * If `maxPoints` is provided, downsampleTimeseries will return only up to `maxPoints` points.
  *
  * The downsampled data preserves the shape of the original data. The algorithm does this by
  * downsampling within an interval. Each interval tracks the first datum of the interval,
@@ -40,12 +51,20 @@ export const MAX_POINTS = 5_000;
 export function downsampleTimeseries(
   points: Iterable<Point>,
   view: PlotViewport,
-  numPoints?: number,
+  maxPoints?: number,
 ): number[] {
   const { bounds, width, height } = view;
 
-  // Each interval can produce up to four points
-  const numIntervals = (numPoints ?? width) / 4;
+  const numPixelIntervals = Math.trunc(width / MINIMUM_PIXEL_DISTANCE);
+  // When maxPoints is provided, we should take either that constant or
+  // the number of pixel-defined intervals, whichever is fewer
+  const numPoints = Math.min(
+    maxPoints ?? numPixelIntervals * POINTS_PER_INTERVAL,
+    numPixelIntervals * POINTS_PER_INTERVAL,
+  );
+  // We then calculate the number of intervals based on the number of points we
+  // decided on
+  const numIntervals = Math.trunc(numPoints / POINTS_PER_INTERVAL);
   const pixelPerXValue = numIntervals / (bounds.x.max - bounds.x.min);
   const pixelPerYValue = height / (bounds.y.max - bounds.y.min);
 
