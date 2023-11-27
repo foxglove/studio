@@ -289,8 +289,6 @@ function StateTransitions(props: Props) {
         showIntermediate,
       });
 
-      outDatasets.push(newBlockDataSet);
-
       // We have already filtered out paths we can find in blocks so anything left here
       // should be included in the dataset.
       const items = newItemsByPath[path.value];
