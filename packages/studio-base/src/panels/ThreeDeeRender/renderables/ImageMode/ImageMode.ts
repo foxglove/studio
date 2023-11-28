@@ -134,9 +134,6 @@ export class ImageMode
   #dragStartMouseCoords = new THREE.Vector2();
   #hasModifiedView = false;
 
-  // Will need to change when synchronization is implemented (FG-2686)
-  #latestImage: { topic: string; image: AnyImage } | undefined;
-
   public constructor(renderer: IRenderer, name: string = ImageMode.extensionId) {
     super(name, renderer);
 
@@ -306,17 +303,15 @@ export class ImageMode
       this.#removeImageTimeout = setTimeout(() => {
         this.#removeImageTimeout = undefined;
         this.#removeImageRenderable();
-        this.#clearCameraModel();
       }, REMOVE_IMAGE_TIMEOUT_MS);
     }
+    this.#clearCameraModel();
     this.#annotations.removeAllRenderables();
     this.messageHandler.clear();
-    this.#latestImage = undefined;
     super.removeAllRenderables();
   }
 
   #removeImageRenderable = (): void => {
-    this.#latestImage = undefined;
     this.imageRenderable?.dispose();
     this.imageRenderable?.removeFromParent();
     this.imageRenderable = undefined;
@@ -352,6 +347,9 @@ export class ImageMode
     this.renderer.updateConfig((draft) => {
       draft.imageMode.imageTopic = imageTopic.name;
       if (matchingCalibrationTopic != undefined) {
+        if (draft.imageMode.calibrationTopic !== matchingCalibrationTopic.name) {
+          this.#clearCameraModel();
+        }
         draft.imageMode.calibrationTopic = matchingCalibrationTopic.name;
       }
     });
@@ -636,8 +634,6 @@ export class ImageMode
     }
 
     const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
-
-    this.#latestImage = { topic: messageEvent.topic, image };
 
     if (this.#cameraModel) {
       renderable.userData.cameraInfo = this.#cameraModel.info;
@@ -945,7 +941,7 @@ export class ImageMode
         type: "item",
         label: "Download image",
         onclick: this.#getDownloadImageCallback(),
-        disabled: this.#latestImage == undefined,
+        disabled: this.imageRenderable?.getDecodedImage() == undefined,
       },
     ];
   }
