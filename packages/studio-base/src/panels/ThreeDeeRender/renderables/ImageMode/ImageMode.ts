@@ -311,11 +311,11 @@ export class ImageMode
     super.removeAllRenderables();
   }
 
-  #removeImageRenderable = (): void => {
+  #removeImageRenderable(): void {
     this.imageRenderable?.dispose();
     this.imageRenderable?.removeFromParent();
     this.imageRenderable = undefined;
-  };
+  }
 
   /**
    * If no image topic is selected, automatically select the first available one from `renderer.topics`.
