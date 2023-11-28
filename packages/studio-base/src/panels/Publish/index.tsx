@@ -16,7 +16,13 @@ import { useEffect, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
+import { MessageDefinition } from "@foxglove/message-definition";
+import CommonRosTypes from "@foxglove/rosmsg-msgs-common";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
+import {
+  MessagePipelineContext,
+  useMessagePipeline,
+} from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -24,6 +30,7 @@ import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToa
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { useDefaultPanelTitle } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { defaultConfig, usePublishPanelSettings } from "./settings";
@@ -93,11 +100,35 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
   return { error, parsedObject };
 }
 
+function selectDatasourceProfile(ctx: MessagePipelineContext) {
+  return ctx.playerState.profile;
+}
+
 function Publish(props: Props) {
   const { saveConfig, config } = props;
-  const { topics, datatypes, capabilities } = useDataSourceInfo();
+  const { topics, datatypes: datasourceDatatypes, capabilities } = useDataSourceInfo();
   const { classes } = useStyles({ buttonColor: config.buttonColor });
   const [debouncedTopicName] = useDebounce(config.topicName ?? "", 500);
+  const datasourceProfile = useMessagePipeline(selectDatasourceProfile);
+
+  const datatypes = useMemo(() => {
+    // Add common ROS datatypes, depending on the datasource profile.
+    const commonTypes: Record<string, MessageDefinition> | undefined = {
+      ros1: CommonRosTypes.ros1,
+      ros2: CommonRosTypes.ros2galactic,
+    }[datasourceProfile ?? ""];
+
+    if (commonTypes == undefined) {
+      return datasourceDatatypes;
+    }
+
+    const additionalTypes: RosDatatypes = new Map();
+    for (const dataType in commonTypes) {
+      additionalTypes.set(dataType, commonTypes[dataType]!);
+    }
+
+    return new Map([...additionalTypes, ...datasourceDatatypes]);
+  }, [datasourceProfile, datasourceDatatypes]);
 
   const publish = usePublisher({
     name: "Publish",
