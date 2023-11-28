@@ -70,7 +70,7 @@ describe("downsampleTimeseries", () => {
         width: bounds.width * MINIMUM_PIXEL_DISTANCE,
       },
     );
-    expect(result).toEqual([0, 2, 4]);
+    expect(result).toEqual([0, 1, 2, 3, 4]);
   });
 });
 
