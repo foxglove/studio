@@ -4,9 +4,9 @@
 
 import { StoryObj, StoryFn } from "@storybook/react";
 import { waitFor } from "@storybook/testing-library";
+import * as _ from "lodash-es";
 import { useCallback } from "react";
 import { useAsync } from "react-use";
-import * as _ from "lodash-es";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
