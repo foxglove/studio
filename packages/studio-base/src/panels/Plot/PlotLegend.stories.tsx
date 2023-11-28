@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj, StoryFn } from "@storybook/react";
-import { waitFor } from "@storybook/testing-library";
 import * as _ from "lodash-es";
 import { useCallback } from "react";
 import { useAsync } from "react-use";
@@ -171,7 +170,7 @@ export const LimitWidth: StoryObj = {
   },
 
   play: async (ctx) => {
-    await waitFor(() => ctx.parameters.storyReady);
+    await ctx.parameters.storyReady;
   },
 
   parameters: {
