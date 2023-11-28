@@ -241,8 +241,8 @@ function Chart(props: Props): JSX.Element {
     return out;
   }, [data, typedData, height, options, isBoundsReset, width]);
 
-  // Flush all new to the worker, coalescing them together if there is more
-  // than one.
+  // Flush all new updates to the worker, coalescing them together if there is
+  // more than one.
   const flushUpdates = useCallback(
     async (send: RpcSend | undefined) => {
       if (send == undefined || isSending.current) {
