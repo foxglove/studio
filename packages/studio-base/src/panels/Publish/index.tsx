@@ -122,12 +122,8 @@ function Publish(props: Props) {
       return datasourceDatatypes;
     }
 
-    const additionalTypes: RosDatatypes = new Map();
-    for (const dataType in commonTypes) {
-      additionalTypes.set(dataType, commonTypes[dataType]!);
-    }
-
-    return new Map([...additionalTypes, ...datasourceDatatypes]);
+    // datasourceDatatypes is added after commonTypes to take precedence (override) any commonTypes of the same name
+    return new Map([...Object.entries(commonTypes), ...datasourceDatatypes]);
   }, [datasourceProfile, datasourceDatatypes]);
 
   const publish = usePublisher({
