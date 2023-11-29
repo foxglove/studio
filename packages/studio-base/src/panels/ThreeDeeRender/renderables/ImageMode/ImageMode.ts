@@ -505,59 +505,73 @@ export class ImageMode
     const path = action.payload.path;
     const category = path[0]!;
     const value = action.payload.value;
-    if (category === "imageMode") {
-      const prevImageModeConfig = this.getImageModeSettings();
-      this.saveSetting(path, value);
-      const config = this.getImageModeSettings();
-      const calibrationTopicChanged =
-        config.calibrationTopic !== prevImageModeConfig.calibrationTopic;
-      if (calibrationTopicChanged) {
-        const changingToUnselectedCalibration = config.calibrationTopic == undefined;
-        if (changingToUnselectedCalibration) {
-          this.renderer.enableImageOnlySubscriptionMode();
-        }
 
-        const changingFromUnselectedCalibration = prevImageModeConfig.calibrationTopic == undefined;
-        if (changingFromUnselectedCalibration) {
-          this.renderer.disableImageOnlySubscriptionMode();
-        }
-      }
-      const imageTopicChanged = config.imageTopic !== prevImageModeConfig.imageTopic;
-      if (imageTopicChanged && config.imageTopic != undefined) {
-        const imageTopic = this.renderer.topics?.find((topic) => topic.name === config.imageTopic);
-        if (imageTopic) {
-          this.setImageTopic(imageTopic);
-        }
-      }
-
-      if (config.rotation !== prevImageModeConfig.rotation) {
-        this.#camera.setRotation(config.rotation);
-      }
-      if (config.flipHorizontal !== prevImageModeConfig.flipHorizontal) {
-        this.#camera.setFlipHorizontal(config.flipHorizontal);
-      }
-      if (config.flipVertical !== prevImageModeConfig.flipVertical) {
-        this.#camera.setFlipVertical(config.flipVertical);
-      }
-      this.imageRenderable?.setSettings({
-        ...this.imageRenderable.userData.settings,
-        colorMode: config.colorMode,
-        flatColor: config.flatColor,
-        gradient: config.gradient as [string, string],
-        colorMap: config.colorMap,
-        explicitAlpha: config.explicitAlpha,
-        minValue: config.minValue,
-        maxValue: config.maxValue,
-      });
-      if (config.synchronize !== prevImageModeConfig.synchronize) {
-        this.removeAllRenderables();
-      }
-      this.messageHandler.setConfig(config);
-
-      this.#updateViewAndRenderables();
-    } else {
+    if (category !== "imageMode") {
       return;
     }
+
+    const prevImageModeConfig = this.getImageModeSettings();
+    this.saveSetting(path, value);
+    const config = this.getImageModeSettings();
+
+    const calibrationTopicChanged =
+      config.calibrationTopic !== prevImageModeConfig.calibrationTopic;
+    if (calibrationTopicChanged) {
+      this.#clearCameraModel();
+      const changingToUnselectedCalibration = config.calibrationTopic == undefined;
+      if (changingToUnselectedCalibration) {
+        this.renderer.enableImageOnlySubscriptionMode();
+        const decodedImage = this.imageRenderable?.getDecodedImage();
+        const lastImageMessage = this.imageRenderable?.userData.image;
+        // if we've already received an image, use it to create a fallback camera model
+        // otherwise we would need to wait for the next image
+        if (decodedImage && lastImageMessage) {
+          this.#updateFallbackCameraModel(
+            { width: decodedImage.width, height: decodedImage.height },
+            getFrameIdFromImage(lastImageMessage),
+          );
+        }
+      }
+
+      const changingFromUnselectedCalibration = prevImageModeConfig.calibrationTopic == undefined;
+      if (changingFromUnselectedCalibration) {
+        this.renderer.disableImageOnlySubscriptionMode();
+      }
+    }
+
+    const imageTopicChanged = config.imageTopic !== prevImageModeConfig.imageTopic;
+    if (imageTopicChanged && config.imageTopic != undefined) {
+      const imageTopic = this.renderer.topics?.find((topic) => topic.name === config.imageTopic);
+      if (imageTopic) {
+        this.setImageTopic(imageTopic);
+      }
+    }
+
+    if (config.rotation !== prevImageModeConfig.rotation) {
+      this.#camera.setRotation(config.rotation);
+    }
+    if (config.flipHorizontal !== prevImageModeConfig.flipHorizontal) {
+      this.#camera.setFlipHorizontal(config.flipHorizontal);
+    }
+    if (config.flipVertical !== prevImageModeConfig.flipVertical) {
+      this.#camera.setFlipVertical(config.flipVertical);
+    }
+    this.imageRenderable?.setSettings({
+      ...this.imageRenderable.userData.settings,
+      colorMode: config.colorMode,
+      flatColor: config.flatColor,
+      gradient: config.gradient as [string, string],
+      colorMap: config.colorMap,
+      explicitAlpha: config.explicitAlpha,
+      minValue: config.minValue,
+      maxValue: config.maxValue,
+    });
+    if (config.synchronize !== prevImageModeConfig.synchronize) {
+      this.removeAllRenderables();
+    }
+    this.messageHandler.setConfig(config);
+
+    this.#updateViewAndRenderables();
 
     // Update the settings sidebar
     this.updateSettingsTree();
