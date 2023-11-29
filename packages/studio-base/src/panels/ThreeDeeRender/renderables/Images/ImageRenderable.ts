@@ -73,6 +73,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   protected decoder?: WorkerImageDecoder;
   #receivedImageSequenceNumber = 0;
   #displayedImageSequenceNumber = 0;
+  #showingErrorImage = false;
 
   #disposed = false;
 
@@ -193,6 +194,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         this.#decodedImage = result;
         this.#textureNeedsUpdate = true;
         this.update();
+        this.#showingErrorImage = false;
 
         onDecoded?.(result);
         this.removeError(DECODE_IMAGE_ERR_KEY);
@@ -203,7 +205,10 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         if (this.isDisposed()) {
           return;
         }
-        void this.#setErrorImage(seq);
+        // avoid needing to recreate error image if it already shown
+        if (!this.#showingErrorImage) {
+          void this.#setErrorImage(seq);
+        }
         this.addError(DECODE_IMAGE_ERR_KEY, `Error decoding image: ${err.message}`);
       });
   }
@@ -219,6 +224,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.#decodedImage = errorBitmap;
     this.#textureNeedsUpdate = true;
     this.update();
+    this.#showingErrorImage = true;
     this.renderer.queueAnimationFrame();
   }
 
