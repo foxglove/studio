@@ -12,6 +12,9 @@ import {
 import {
   downsampleScatter,
   downsampleTimeseries,
+  State as DownsampleState,
+  init as initTimeseries,
+  continueDownsample,
   MAX_POINTS as DESIRED_POINTS,
 } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
 import { PlotViewport, Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
@@ -36,6 +39,7 @@ type SourceState = {
   cursor: number;
   // The downsampled dataset for this source
   dataset: TypedDataSet | undefined;
+  downsample: DownsampleState | undefined;
 };
 
 // PathState represents the downsample state for a single signal, including the
@@ -51,6 +55,7 @@ type PathState = {
 
 export const initSource = (): SourceState => ({
   cursor: 0,
+  downsample: undefined,
   dataset: undefined,
 });
 
@@ -250,7 +255,7 @@ export function updateSource(
   state: SourceState,
 ): SourceState {
   const { raw, view, maxPoints } = params;
-  const { cursor: oldCursor, dataset: previous } = state;
+  const { cursor: oldCursor, downsample, dataset: previous } = state;
   if (raw == undefined) {
     return initSource();
   }
@@ -321,18 +326,24 @@ export function updateSource(
     return state;
   }
 
-  const downsampled = downsampleDataset(newData, view, maxPoints);
-  if (downsampled == undefined) {
+  const [indices, newDownsample] = continueDownsample(
+    iterateTyped(newData),
+    downsample ?? initTimeseries(view, maxPoints),
+  );
+
+  const resolved = resolveTypedIndices(raw.data, indices);
+  if (resolved == undefined) {
     return state;
   }
 
   return {
     ...state,
+    downsample: newDownsample,
     cursor: newCursor,
     dataset: {
       ...raw,
       pointRadius: 0,
-      data: concatTyped(previous?.data ?? [], downsampled),
+      data: concatTyped(previous?.data ?? [], resolved),
     },
   };
 }
