@@ -30,7 +30,6 @@ import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToa
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import { useDefaultPanelTitle } from "@foxglove/studio-base/providers/PanelStateContextProvider";
-import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { defaultConfig, usePublishPanelSettings } from "./settings";
