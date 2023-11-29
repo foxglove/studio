@@ -628,10 +628,12 @@ export class ImageMode
     const topic = messageEvent.topic;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const frameId = "header" in image ? image.header.frame_id : image.frame_id;
+
     if (this.#removeImageTimeout != undefined) {
       clearTimeout(this.#removeImageTimeout);
       this.#removeImageTimeout = undefined;
     }
+
     const renderable = this.#getImageRenderable(topic, receiveTime, image, frameId);
 
     if (this.#cameraModel) {
