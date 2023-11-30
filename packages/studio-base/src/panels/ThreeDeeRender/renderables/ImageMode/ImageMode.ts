@@ -521,16 +521,7 @@ export class ImageMode
       const changingToUnselectedCalibration = config.calibrationTopic == undefined;
       if (changingToUnselectedCalibration) {
         this.renderer.enableImageOnlySubscriptionMode();
-        const decodedImage = this.imageRenderable?.getDecodedImage();
-        const lastImageMessage = this.imageRenderable?.userData.image;
-        // if we've already received an image, use it to create a fallback camera model
-        // otherwise we would need to wait for the next image
-        if (decodedImage && lastImageMessage) {
-          this.#updateFallbackCameraModel(
-            { width: decodedImage.width, height: decodedImage.height },
-            getFrameIdFromImage(lastImageMessage),
-          );
-        }
+        this.#handleChangeToUnselectedCalibration();
       }
 
       const changingFromUnselectedCalibration = prevImageModeConfig.calibrationTopic == undefined;
@@ -657,6 +648,7 @@ export class ImageMode
     renderable.setImage(image, /*resizeWidth=*/ undefined, (size) => {
       if (this.#fallbackCameraModelActive()) {
         this.#updateFallbackCameraModel(size, getFrameIdFromImage(image));
+        this.#updateViewAndRenderables();
       }
     });
   };
@@ -669,7 +661,6 @@ export class ImageMode
       focalLength: DEFAULT_FOCAL_LENGTH,
     });
     this.#updateCameraModel(cameraInfo);
-    this.#updateViewAndRenderables();
   };
 
   #fallbackCameraModelActive = (): boolean => {
@@ -682,6 +673,19 @@ export class ImageMode
     this.#camera.updateCamera(undefined);
     this.#camera.updateProjectionMatrix();
   };
+
+  #handleChangeToUnselectedCalibration() {
+    const decodedImage = this.imageRenderable?.getDecodedImage();
+    const lastImageMessage = this.imageRenderable?.userData.image;
+    // if we've already received an image, use it to create a fallback camera model
+    // otherwise we would need to wait for the next image
+    if (decodedImage && lastImageMessage) {
+      this.#updateFallbackCameraModel(
+        { width: decodedImage.width, height: decodedImage.height },
+        getFrameIdFromImage(lastImageMessage),
+      );
+    }
+  }
 
   #getImageRenderable(
     topicName: string,
