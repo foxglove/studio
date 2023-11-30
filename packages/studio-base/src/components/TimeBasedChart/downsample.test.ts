@@ -65,7 +65,7 @@ describe("downsampleTimeseries", () => {
         const [newIndices, newState] = continueDownsample(iterateObjects(v), oldState);
         return [[...oldIndices, ...newIndices], newState];
       },
-      [[], init(bounds)],
+      [[], init(realBounds)],
       R.splitEvery(Math.trunc(numPoints / numSplits), dataset),
     );
 
