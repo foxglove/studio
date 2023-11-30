@@ -514,6 +514,10 @@ export function shouldResetViewport(
     )(pathStates);
   }
 
+  if (!R.equals(oldViewport.bounds.y, newViewport.bounds.y)) {
+    return true;
+  }
+
   const { x: oldX } = getScale(oldViewport);
   const { x: newX } = getScale(newViewport);
   const didZoom = Math.abs(newX / oldX - 1) > ZOOM_RESET_FACTOR;

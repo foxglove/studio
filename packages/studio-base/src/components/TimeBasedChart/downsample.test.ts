@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets";
 import * as R from "ramda";
+
+import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets";
 
 import {
   MINIMUM_PIXEL_DISTANCE,
@@ -37,15 +38,15 @@ describe("downsampleTimeseries", () => {
     expect(result).toEqual([0, 1, 2, 5]);
   });
 
-  it("handles partial downsample state", () => {
-    const bounds = {
+  it("correctly pauses and resumes downsampling", () => {
+    const realBounds = {
       width: 648,
       height: 1466,
       bounds: { x: { min: 0, max: 1785 }, y: { min: -1, max: 1 } },
     };
 
     const numPoints = 10_000;
-    const deltaX = bounds.bounds.x.max / numPoints;
+    const deltaX = realBounds.bounds.x.max / numPoints;
     const dataset = R.range(0, numPoints).map((v) => {
       const x = v * deltaX;
       return {
@@ -55,7 +56,7 @@ describe("downsampleTimeseries", () => {
       };
     });
 
-    const fullPoints = downsampleTimeseries(iterateObjects(dataset), bounds);
+    const fullPoints = downsampleTimeseries(iterateObjects(dataset), realBounds);
 
     const numSplits = 400;
     const [indices, finalState] = R.reduce(
