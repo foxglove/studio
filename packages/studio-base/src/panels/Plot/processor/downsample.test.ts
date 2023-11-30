@@ -2,12 +2,19 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as R from "ramda";
+
+import { fromSec } from "@foxglove/rostime";
+
 import { getTypedLength } from "@foxglove/studio-base/components/Chart/datasets";
 import { Bounds1D, PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { datumToTyped, concatTyped } from "../datasets";
+import { TypedData } from "../internalTypes";
 
 import {
   shouldResetViewport,
   updateSource,
+  SourceState,
   initSource,
   updatePath,
   initPath,
@@ -75,6 +82,64 @@ describe("updateSource", () => {
     );
 
     expect(after).toEqual(before);
+  });
+
+  it("produces the same result for incremental and non-", () => {
+    const bounds = {
+      width: 648,
+      height: 1466,
+      bounds: { x: { min: 0, max: 1785 }, y: { min: -1, max: 1 } },
+    };
+
+    const numPoints = 10_000;
+    const deltaX = bounds.bounds.x.max / numPoints;
+    const dataset = R.range(0, numPoints).map((v) => {
+      const x = v * deltaX;
+      return {
+        x,
+        y: Math.cos(x),
+        value: 0,
+        receiveTime: fromSec(v),
+      };
+    });
+
+    const fullPoints = updateSource(
+      createPath(FAKE_PATH),
+      {
+        raw: {
+          data: [datumToTyped(dataset)],
+        },
+        view: FAKE_VIEWPORT,
+        viewBounds: FAKE_BOUNDS,
+        maxPoints: MAX_POINTS,
+      },
+      initSource(),
+    );
+
+    const numSplits = 2;
+    const [partialPoints] = R.reduce(
+      ([oldState, oldData]: [SourceState, TypedData[]], v): [SourceState, TypedData[]] => {
+        const newData = concatTyped(oldData, [datumToTyped(v)]);
+        const newState = updateSource(
+          createPath(FAKE_PATH),
+          {
+            raw: {
+              data: newData,
+            },
+            view: FAKE_VIEWPORT,
+            viewBounds: FAKE_BOUNDS,
+            maxPoints: MAX_POINTS,
+          },
+          oldState,
+        );
+
+        return [newState, newData];
+      },
+      [initSource(), []],
+      R.splitEvery(Math.trunc(numPoints / numSplits), dataset),
+    );
+
+    expect(partialPoints).toEqual(fullPoints);
   });
 
   it("resets when the dataset becomes empty", () => {

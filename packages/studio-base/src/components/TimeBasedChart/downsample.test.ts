@@ -3,8 +3,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets";
+import * as R from "ramda";
 
-import { MINIMUM_PIXEL_DISTANCE, downsampleTimeseries, downsampleScatter } from "./downsample";
+import {
+  MINIMUM_PIXEL_DISTANCE,
+  downsampleTimeseries,
+  init,
+  continueDownsample,
+  finishDownsample,
+  downsampleScatter,
+  State,
+} from "./downsample";
 
 describe("downsampleTimeseries", () => {
   const bounds = {
@@ -26,6 +35,41 @@ describe("downsampleTimeseries", () => {
       bounds,
     );
     expect(result).toEqual([0, 1, 2, 5]);
+  });
+
+  it("handles partial downsample state", () => {
+    const bounds = {
+      width: 648,
+      height: 1466,
+      bounds: { x: { min: 0, max: 1785 }, y: { min: -1, max: 1 } },
+    };
+
+    const numPoints = 10_000;
+    const deltaX = bounds.bounds.x.max / numPoints;
+    const dataset = R.range(0, numPoints).map((v) => {
+      const x = v * deltaX;
+      return {
+        x,
+        y: Math.cos(x),
+        value: 0,
+      };
+    });
+
+    const fullPoints = downsampleTimeseries(iterateObjects(dataset), bounds);
+
+    const numSplits = 400;
+    const [indices, finalState] = R.reduce(
+      (a: [number[], State], v) => {
+        const [oldIndices, oldState] = a;
+        const [newIndices, newState] = continueDownsample(iterateObjects(v), oldState);
+        return [[...oldIndices, ...newIndices], newState];
+      },
+      [[], init(bounds)],
+      R.splitEvery(Math.trunc(numPoints / numSplits), dataset),
+    );
+
+    const partialPoints = [...indices, ...finishDownsample(finalState)];
+    expect(fullPoints).toEqual(partialPoints);
   });
 
   it("preserves distinctly labeled segments", () => {

@@ -34,7 +34,7 @@ type PathMap<T> = Map<PlotPath, T>;
 
 // SourceState represents the downsample state of a signal from a signal
 // source--current or blocks.
-type SourceState = {
+export type SourceState = {
   // The number of data points we have downsampled
   cursor: number;
   // The downsampled dataset for this source
@@ -321,16 +321,10 @@ export function updateSource(
   }
 
   const newData = sliceTyped(raw.data, oldCursor);
-  const newBounds = getXBounds(newData);
-  if (newBounds == undefined) {
-    return state;
-  }
-
   const [indices, newDownsample] = continueDownsample(
     iterateTyped(newData),
     downsample ?? initTimeseries(view, maxPoints),
   );
-
   const resolved = resolveTypedIndices(raw.data, indices);
   if (resolved == undefined) {
     return state;
