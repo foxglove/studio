@@ -483,6 +483,19 @@ export function shouldResetViewport(
     return false;
   }
 
+  const {
+    bounds: { x: newBounds },
+  } = newViewport;
+  const {
+    bounds: { x: oldBounds },
+  } = oldViewport;
+
+  // Special case for when the user moves the viewport beyond min of the
+  // visible dataset
+  if (oldBounds.max <= 0 && newBounds.max >= 0) {
+    return true;
+  }
+
   const havePartial = pathStates.some(isPartialState);
   if (havePartial) {
     const {
@@ -522,9 +535,6 @@ export function shouldResetViewport(
   const { x: newX } = getScale(newViewport);
   const didZoom = Math.abs(newX / oldX - 1) > ZOOM_RESET_FACTOR;
 
-  const {
-    bounds: { x: newBounds },
-  } = newViewport;
   if (
     didZoom &&
     dataBounds != undefined &&

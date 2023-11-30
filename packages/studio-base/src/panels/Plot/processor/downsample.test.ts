@@ -300,6 +300,23 @@ describe("shouldResetViewport", () => {
       ),
     ).toEqual(true);
   });
+
+  it("should reset when moving from before dataset", () => {
+    expect(
+      shouldResetViewport(
+        [
+          {
+            ...initPath(),
+            dataset: createDataset(0),
+            isPartial: true,
+          },
+        ],
+        createViewport(800, 600, -10, -5),
+        createViewport(800, 600, 0, 20),
+        undefined,
+      ),
+    ).toEqual(true);
+  });
 });
 
 describe("updateDownsample", () => {
