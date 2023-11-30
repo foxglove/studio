@@ -302,8 +302,8 @@ const ImageModeFoxgloveImage = ({
 
   let mono16Raw: MessageEvent<Partial<RawImage>>;
   {
-    const width = 640;
-    const height = 480;
+    const width = 160;
+    const height = 120;
     const mono16Data = new DataView(new ArrayBuffer(width * height * 2));
     for (let r = 0; r < height; r++) {
       for (let c = 0; c < width; c++) {
@@ -442,12 +442,12 @@ export const DownloadRawImage: StoryObj<React.ComponentProps<typeof ImageModeFox
   play: async () => {
     const { click, pointer } = userEvent.setup();
     // need to wait until the images are done decoding
-    await delay(300);
+    await delay(500);
     await pointer({ target: document.querySelector("canvas")!, keys: "[MouseRight]" });
     const downloadButton = await screen.findByText("Download image");
     await click(downloadButton);
     // Add an extra delay after rendering the downloaded image to avoid flaky stores
-    await delay(1000);
+    await delay(800);
   },
 };
 
