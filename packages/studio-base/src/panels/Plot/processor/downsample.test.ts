@@ -282,6 +282,24 @@ describe("shouldResetViewport", () => {
       ),
     ).toEqual(true);
   });
+
+  it("should reset if y-bounds change", () => {
+    const viewport = createViewport(800, 600, 0, 20);
+    expect(
+      shouldResetViewport(
+        [],
+        viewport,
+        {
+          ...viewport,
+          bounds: {
+            ...viewport.bounds,
+            y: { min: 0, max: 100 },
+          },
+        },
+        createBounds(0, 100),
+      ),
+    ).toEqual(true);
+  });
 });
 
 describe("updateDownsample", () => {
