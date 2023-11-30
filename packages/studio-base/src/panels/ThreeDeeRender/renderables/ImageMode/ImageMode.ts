@@ -521,7 +521,9 @@ export class ImageMode
       const changingToUnselectedCalibration = config.calibrationTopic == undefined;
       if (changingToUnselectedCalibration) {
         this.renderer.enableImageOnlySubscriptionMode();
-        this.#handleChangeToUnselectedCalibration();
+        if (this.imageRenderable) {
+          this.#updateFallbackCameraModelFor(this.imageRenderable);
+        }
       }
 
       const changingFromUnselectedCalibration = prevImageModeConfig.calibrationTopic == undefined;
@@ -645,23 +647,35 @@ export class ImageMode
     }
 
     renderable.userData.receiveTime = receiveTime;
-    renderable.setImage(image, /*resizeWidth=*/ undefined, (size) => {
+    renderable.setImage(image, /*resizeWidth=*/ undefined, () => {
       if (this.#fallbackCameraModelActive()) {
-        this.#updateFallbackCameraModel(size, getFrameIdFromImage(image));
+        this.#updateFallbackCameraModelFor(renderable);
         this.#updateViewAndRenderables();
       }
     });
   };
 
-  #updateFallbackCameraModel = (size: { width: number; height: number }, frameId: string): void => {
-    const cameraInfo = createFallbackCameraInfoForImage({
-      frameId,
-      height: size.height,
-      width: size.width,
-      focalLength: DEFAULT_FOCAL_LENGTH,
-    });
-    this.#updateCameraModel(cameraInfo);
-  };
+  /** Creates a fallback camera model based off of the renderable with a decoded image and updates the camera.
+   * Will no-op if there is not a decodedImage on the renderable.
+   * Be sure to call `#updateViewAndRenderables` after calling this method to update the camera and renderable.
+   */
+  #updateFallbackCameraModelFor(renderable: ImageRenderable) {
+    const decodedImage = renderable.getDecodedImage();
+    const lastImageMessage = renderable.userData.image;
+    // if we've already received an image, use it to create a fallback camera model
+    // otherwise we would need to wait for the next image
+    if (decodedImage && lastImageMessage) {
+      const frameId = getFrameIdFromImage(lastImageMessage);
+      const { width, height } = decodedImage;
+      const cameraInfo = createFallbackCameraInfoForImage({
+        frameId,
+        height,
+        width,
+        focalLength: DEFAULT_FOCAL_LENGTH,
+      });
+      this.#updateCameraModel(cameraInfo);
+    }
+  }
 
   #fallbackCameraModelActive = (): boolean => {
     // Don't use #getImageModeSettings here for performance reasons
@@ -673,19 +687,6 @@ export class ImageMode
     this.#camera.updateCamera(undefined);
     this.#camera.updateProjectionMatrix();
   };
-
-  #handleChangeToUnselectedCalibration() {
-    const decodedImage = this.imageRenderable?.getDecodedImage();
-    const lastImageMessage = this.imageRenderable?.userData.image;
-    // if we've already received an image, use it to create a fallback camera model
-    // otherwise we would need to wait for the next image
-    if (decodedImage && lastImageMessage) {
-      this.#updateFallbackCameraModel(
-        { width: decodedImage.width, height: decodedImage.height },
-        getFrameIdFromImage(lastImageMessage),
-      );
-    }
-  }
 
   #getImageRenderable(
     topicName: string,
