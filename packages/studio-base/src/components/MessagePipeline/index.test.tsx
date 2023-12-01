@@ -20,10 +20,6 @@ import { DeepPartial } from "ts-essentials";
 
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import {
-  EMPTY_GLOBAL_VARIABLES,
-  GlobalVariables,
-} from "@foxglove/studio-base/hooks/useGlobalVariables";
-import {
   Player,
   PlayerCapabilities,
   PlayerPresence,
@@ -45,13 +41,7 @@ async function doubleAct(fn: () => Promise<void>) {
   await act(async () => await promise);
 }
 
-function makeTestHook({
-  player,
-  globalVariables,
-}: {
-  player?: Player;
-  globalVariables?: GlobalVariables;
-}) {
+function makeTestHook({ player }: { player?: Player }) {
   const all: MessagePipelineContext[] = [];
   function Hook() {
     const value = useMessagePipeline(useCallback((ctx) => ctx, []));
@@ -63,12 +53,7 @@ function makeTestHook({
     const [config] = useState(() => makeMockAppConfiguration());
     return (
       <AppConfigurationContext.Provider value={config}>
-        <MessagePipelineProvider
-          player={currentPlayer}
-          globalVariables={globalVariables ?? EMPTY_GLOBAL_VARIABLES}
-        >
-          {children}
-        </MessagePipelineProvider>
+        <MessagePipelineProvider player={currentPlayer}>{children}</MessagePipelineProvider>
       </AppConfigurationContext.Provider>
     );
   }

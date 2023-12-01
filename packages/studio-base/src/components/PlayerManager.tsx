@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { useSnackbar } from "notistack";
-import { PropsWithChildren, useCallback, useMemo, useRef, useState } from "react";
+import { PropsWithChildren, useCallback, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
 
 import { useWarnImmediateReRender } from "@foxglove/hooks";
@@ -20,7 +20,6 @@ import Logger from "@foxglove/log";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
-import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   ExtensionCatalog,
   useExtensionCatalog,
@@ -30,15 +29,12 @@ import PlayerSelectionContext, {
   IDataSourceFactory,
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import { TopicAliasingPlayer } from "@foxglove/studio-base/players/TopicAliasingPlayer/TopicAliasingPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
 const log = Logger.getLogger(__filename);
-
-const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
 type PlayerManagerProps = {
   playerSources: readonly IDataSourceFactory[];
@@ -63,37 +59,13 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const { recents, addRecent } = useIndexedDbRecents();
 
-  // When building wrappedPlayer we want to provide the latest value of the global variables. We
-  // also want to avoid re-rendering the PlayerManager when the variables change since nothing
-  // actually changes in the react state.
-  const globalVariablesRef = useRef<GlobalVariables>(EMPTY_GLOBAL_VARIABLES);
-
   const topicAliasPlayer = useMemo(() => {
     if (!basePlayer) {
       return undefined;
     }
 
-    const topicPlayer = new TopicAliasingPlayer(basePlayer);
-    topicPlayer.setGlobalVariables(globalVariablesRef.current);
-    return topicPlayer;
+    return new TopicAliasingPlayer(basePlayer);
   }, [basePlayer]);
-
-  // Update topic player global variables. We do not return anything from our selector because we
-  // don't want to cause a re-render of the component.
-  useCurrentLayoutSelector(
-    useCallback(
-      (state) => {
-        const globalVariables =
-          state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
-
-        if (globalVariables !== globalVariablesRef.current) {
-          globalVariablesRef.current = globalVariables;
-          topicAliasPlayer?.setGlobalVariables(globalVariables);
-        }
-      },
-      [globalVariablesRef, topicAliasPlayer],
-    ),
-  );
 
   // Update the alias functions when they change. We do not need to re-render the player manager
   // since nothing in the local state has changed.
@@ -112,10 +84,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       return undefined;
     }
 
-    const wrappedPlayer = wrapPlayer(topicAliasPlayer);
-    wrappedPlayer.setGlobalVariables(globalVariablesRef.current);
-    return wrappedPlayer;
-  }, [topicAliasPlayer, wrapPlayer, globalVariablesRef]);
+    return wrapPlayer(topicAliasPlayer);
+  }, [topicAliasPlayer, wrapPlayer]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -269,9 +239,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   return (
     <>
       <PlayerSelectionContext.Provider value={value}>
-        <MessagePipelineProvider player={player} globalVariables={globalVariablesRef.current}>
-          {children}
-        </MessagePipelineProvider>
+        <MessagePipelineProvider player={player}>{children}</MessagePipelineProvider>
       </PlayerSelectionContext.Provider>
     </>
   );

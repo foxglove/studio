@@ -9,6 +9,7 @@ import { StoreApi, useStore } from "zustand";
 import { useGuaranteedContext } from "@foxglove/hooks";
 import { Immutable } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
@@ -28,6 +29,8 @@ import {
 import { MessagePipelineContext } from "./types";
 
 export type { MessagePipelineContext };
+
+const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
 // exported only for MockMessagePipelineProvider
 export const ContextInternal = createContext<StoreApi<MessagePipelineInternalState> | undefined>(
@@ -62,18 +65,12 @@ type ProviderProps = {
   // responsible for providing player state information downstream in a context -- so this
   // information is passed in and merged with other player state.
   player?: Player;
-
-  globalVariables: GlobalVariables;
 };
 
 const selectRenderDone = (state: MessagePipelineInternalState) => state.renderDone;
 const selectSubscriptions = (state: MessagePipelineInternalState) => state.public.subscriptions;
 
-export function MessagePipelineProvider({
-  children,
-  player,
-  globalVariables,
-}: ProviderProps): React.ReactElement {
+export function MessagePipelineProvider({ children, player }: ProviderProps): React.ReactElement {
   const promisesToWaitForRef = useRef<FramePromise[]>([]);
 
   // We make a new store when the player changes. This throws away any state from the previous store
@@ -123,6 +120,29 @@ export function MessagePipelineProvider({
   const msPerFrameRef = useRef<number>(16);
   msPerFrameRef.current = 1000 / (messageRate ?? 60);
 
+  // Track the last global variables we've received in the layout selector so we can avoid setting
+  // the variables on a player unless they have changed because we don't want to tell a player about
+  // new variables when there aren't any and make it potentially do work.
+  const globalVariablesRef = useRef<GlobalVariables>(EMPTY_GLOBAL_VARIABLES);
+
+  // Update topic player global variables. We do not return anything from our selector because we
+  // don't want to cause a re-render of the component.
+  useCurrentLayoutSelector(
+    useCallback(
+      (state) => {
+        const globalVariables =
+          state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
+
+        // See note on globalVariablesRef
+        if (globalVariables !== globalVariablesRef.current) {
+          globalVariablesRef.current = globalVariables;
+          player?.setGlobalVariables(globalVariables);
+        }
+      },
+      [globalVariablesRef, player],
+    ),
+  );
+
   useEffect(() => {
     const dispatch = store.getState().dispatch;
     if (!player) {
@@ -152,10 +172,6 @@ export function MessagePipelineProvider({
       });
     };
   }, [player, store]);
-
-  useEffect(() => {
-    player?.setGlobalVariables(globalVariables);
-  }, [player, globalVariables]);
 
   return <ContextInternal.Provider value={store}>{children}</ContextInternal.Provider>;
 }
