@@ -529,7 +529,7 @@ export class ImageMode
       if (changingToUnselectedCalibration) {
         this.renderer.enableImageOnlySubscriptionMode();
         if (this.imageRenderable) {
-          this.#updateFallbackCameraModelFor(this.imageRenderable);
+          this.#updateFallbackCameraModel(this.imageRenderable);
         }
       }
 
@@ -654,7 +654,7 @@ export class ImageMode
     renderable.userData.receiveTime = receiveTime;
     renderable.setImage(image, /*resizeWidth=*/ undefined, () => {
       if (this.#fallbackCameraModelActive()) {
-        this.#updateFallbackCameraModelFor(renderable);
+        this.#updateFallbackCameraModel(renderable);
         this.#updateViewAndRenderables();
       }
     });
@@ -664,7 +664,7 @@ export class ImageMode
    * Will no-op if there is not a decodedImage on the renderable.
    * Be sure to call `#updateViewAndRenderables` after calling this method to update the camera and renderable.
    */
-  #updateFallbackCameraModelFor(renderable: ImageRenderable) {
+  #updateFallbackCameraModel(renderable: ImageRenderable) {
     const decodedImage = renderable.getDecodedImage();
     const lastImageMessage = renderable.userData.image;
     // if we've already received an image, use it to create a fallback camera model
