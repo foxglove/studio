@@ -20,10 +20,7 @@ import Logger from "@foxglove/log";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
-import {
-  LayoutState,
-  useCurrentLayoutSelector,
-} from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   ExtensionCatalog,
   useExtensionCatalog,
@@ -47,8 +44,6 @@ type PlayerManagerProps = {
   playerSources: readonly IDataSourceFactory[];
 };
 
-const globalVariablesSelector = (state: LayoutState) =>
-  state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
 const selectTopicAliasFunctions = (catalog: ExtensionCatalog) =>
   catalog.installedTopicAliasFunctions;
 
@@ -68,27 +63,33 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const { recents, addRecent } = useIndexedDbRecents();
 
-  const topicAliasPlayer = useMemo(() => {
-    if (!basePlayer) {
-      return undefined;
-    }
-
-    return new TopicAliasingPlayer(basePlayer);
-  }, [basePlayer]);
-
   // When building wrappedPlayer we want to provide the latest value of the global variables. We
   // also want to avoid re-rendering the PlayerManager when the variables change since nothing
   // actually changes in the react state.
   const globalVariablesRef = useRef<GlobalVariables>(EMPTY_GLOBAL_VARIABLES);
 
-  // Update topic player global variables. We do not return anything since we don't need to
-  // re-render the PlayerManager when this happens.
+  const topicAliasPlayer = useMemo(() => {
+    if (!basePlayer) {
+      return undefined;
+    }
+
+    const topicPlayer = new TopicAliasingPlayer(basePlayer);
+    topicPlayer.setGlobalVariables(globalVariablesRef.current);
+    return topicPlayer;
+  }, [basePlayer]);
+
+  // Update topic player global variables. We do not return anything from our selector because we
+  // don't want to cause a re-render of the component.
   useCurrentLayoutSelector(
     useCallback(
       (state) => {
-        const globalVariables = globalVariablesSelector(state);
-        globalVariablesRef.current = globalVariables;
-        topicAliasPlayer?.setGlobalVariables(globalVariables);
+        const globalVariables =
+          state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
+
+        if (globalVariables !== globalVariablesRef.current) {
+          globalVariablesRef.current = globalVariables;
+          topicAliasPlayer?.setGlobalVariables(globalVariables);
+        }
       },
       [globalVariablesRef, topicAliasPlayer],
     ),
