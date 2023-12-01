@@ -25,6 +25,7 @@ import {
   PlayerPresence,
   TopicStats,
 } from "@foxglove/studio-base/players/types";
+import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import delay from "@foxglove/studio-base/util/delay";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
@@ -53,7 +54,9 @@ function makeTestHook({ player }: { player?: Player }) {
     const [config] = useState(() => makeMockAppConfiguration());
     return (
       <AppConfigurationContext.Provider value={config}>
-        <MessagePipelineProvider player={currentPlayer}>{children}</MessagePipelineProvider>
+        <MockCurrentLayoutProvider>
+          <MessagePipelineProvider player={currentPlayer}>{children}</MessagePipelineProvider>
+        </MockCurrentLayoutProvider>
       </AppConfigurationContext.Provider>
     );
   }
