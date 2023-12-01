@@ -73,6 +73,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
   protected decoder?: WorkerImageDecoder;
   #receivedImageSequenceNumber = 0;
   #displayedImageSequenceNumber = 0;
+  #showingErrorImage = false;
 
   #disposed = false;
 
@@ -170,11 +171,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     this.userData.settings = newSettings;
   }
 
-  public setImage(
-    image: AnyImage,
-    resizeWidth?: number,
-    onDecoded?: (result: { width: number; height: number }) => void,
-  ): void {
+  public setImage(image: AnyImage, resizeWidth?: number, onDecoded?: () => void): void {
     this.userData.image = image;
 
     const seq = ++this.#receivedImageSequenceNumber;
@@ -193,8 +190,9 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         this.#decodedImage = result;
         this.#textureNeedsUpdate = true;
         this.update();
+        this.#showingErrorImage = false;
 
-        onDecoded?.(result);
+        onDecoded?.();
         this.removeError(DECODE_IMAGE_ERR_KEY);
         this.renderer.queueAnimationFrame();
       })
@@ -203,8 +201,29 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         if (this.isDisposed()) {
           return;
         }
+        // avoid needing to recreate error image if it already shown
+        if (!this.#showingErrorImage) {
+          void this.#setErrorImage(seq, onDecoded);
+        }
         this.addError(DECODE_IMAGE_ERR_KEY, `Error decoding image: ${err.message}`);
       });
+  }
+
+  async #setErrorImage(seq: number, onDecoded?: () => void): Promise<void> {
+    const errorBitmap = await getErrorImage(64, 64);
+    if (this.isDisposed()) {
+      return;
+    }
+    if (this.#displayedImageSequenceNumber > seq) {
+      return;
+    }
+    this.#decodedImage = errorBitmap;
+    this.#textureNeedsUpdate = true;
+    this.update();
+    this.#showingErrorImage = true;
+    // call ondecoded to display the error image when calibration is None
+    onDecoded?.();
+    this.renderer.queueAnimationFrame();
   }
 
   protected async decodeImage(
@@ -280,6 +299,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
         !bitmapDimensionsEqual(decodedImage, canvasTexture.image as ImageBitmap | undefined)
       ) {
         if (canvasTexture?.image instanceof ImageBitmap) {
+          // don't close the image if it is the error image
           canvasTexture.image.close();
         }
         canvasTexture?.dispose();
@@ -480,3 +500,35 @@ function createGeometry(
 
 const bitmapDimensionsEqual = (a?: ImageBitmap, b?: ImageBitmap) =>
   a?.width === b?.width && a?.height === b?.height;
+
+async function getErrorImage(width: number, height: number): Promise<ImageBitmap> {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw Error("Could not instantiate 2D canvas context");
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+
+  // Draw outline
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, 0, width, height);
+
+  // Draw X
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(width, height);
+  ctx.moveTo(width, 0);
+  ctx.lineTo(0, height);
+  ctx.stroke();
+
+  // Get the updated image data
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const bitmap = await createImageBitmap(imageData, { resizeWidth: width });
+
+  return bitmap;
+}

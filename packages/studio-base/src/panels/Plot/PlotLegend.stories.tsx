@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { StoryObj, StoryFn } from "@storybook/react";
-import { waitFor } from "@storybook/testing-library";
+import * as _ from "lodash-es";
 import { useCallback } from "react";
 import { useAsync } from "react-use";
 
@@ -11,7 +11,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
 import { fixture, paths } from "@foxglove/studio-base/panels/Plot/index.stories";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
-import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
+import { useReadySignal, ReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 
 export default {
   title: "panels/Plot/PlotLegend",
@@ -45,8 +45,17 @@ const exampleConfig: PlotConfig = {
   maxXValue: 3,
 };
 
+function useDebouncedReadySignal(): ReadySignal {
+  const readySignal = useReadySignal();
+  return React.useMemo(() => {
+    return _.debounce(() => {
+      readySignal();
+    }, 3000);
+  }, [readySignal]);
+}
+
 function Wrapper(Wrapped: StoryFn): JSX.Element {
-  const readySignal = useReadySignal({ count: 10 });
+  const readySignal = useDebouncedReadySignal();
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
   const delayedFixture = useAsync(async () => fixture, []);
   return (
@@ -141,7 +150,7 @@ export const Dark: StoryObj = {
 
 export const LimitWidth: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 6 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -161,7 +170,7 @@ export const LimitWidth: StoryObj = {
   },
 
   play: async (ctx) => {
-    await waitFor(() => ctx.parameters.storyReady);
+    await ctx.parameters.storyReady;
   },
 
   parameters: {
