@@ -12,18 +12,16 @@
 //   You may not use this file except in compliance with the License.
 
 import { useSnackbar } from "notistack";
-import { PropsWithChildren, useCallback, useMemo, useState } from "react";
+import { PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
 
 import { useWarnImmediateReRender } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
+import { Immutable } from "@foxglove/studio";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
-import {
-  ExtensionCatalog,
-  useExtensionCatalog,
-} from "@foxglove/studio-base/context/ExtensionCatalogContext";
+import { ExtensionCatalogContext } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import PlayerSelectionContext, {
   DataSourceArgs,
   IDataSourceFactory,
@@ -31,7 +29,10 @@ import PlayerSelectionContext, {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useIndexedDbRecents, { RecentRecord } from "@foxglove/studio-base/hooks/useIndexedDbRecents";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
-import { TopicAliasingPlayer } from "@foxglove/studio-base/players/TopicAliasingPlayer/TopicAliasingPlayer";
+import {
+  TopicAliasFunctions,
+  TopicAliasingPlayer,
+} from "@foxglove/studio-base/players/TopicAliasingPlayer/TopicAliasingPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
 const log = Logger.getLogger(__filename);
@@ -39,9 +40,6 @@ const log = Logger.getLogger(__filename);
 type PlayerManagerProps = {
   playerSources: readonly IDataSourceFactory[];
 };
-
-const selectTopicAliasFunctions = (catalog: ExtensionCatalog) =>
-  catalog.installedTopicAliasFunctions;
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
@@ -69,15 +67,20 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   // Update the alias functions when they change. We do not need to re-render the player manager
   // since nothing in the local state has changed.
-  useExtensionCatalog(
-    useCallback(
-      (state) => {
-        const topicAliasFunctions = selectTopicAliasFunctions(state);
-        topicAliasPlayer?.setAliasFunctions(topicAliasFunctions ?? []);
-      },
-      [topicAliasPlayer],
-    ),
-  );
+  const extensionCatalogContext = useContext(ExtensionCatalogContext);
+  useEffect(() => {
+    // Stable empty alias functions if we don't have any
+    const emptyAliasFunctions: Immutable<TopicAliasFunctions> = [];
+
+    // We only want to set alias functions on the player when the functions have changed
+    let topicAliasFunctions = extensionCatalogContext.getState().installedTopicAliasFunctions;
+    return extensionCatalogContext.subscribe((state) => {
+      if (topicAliasFunctions !== state.installedTopicAliasFunctions) {
+        topicAliasFunctions = state.installedTopicAliasFunctions ?? emptyAliasFunctions;
+        topicAliasPlayer?.setAliasFunctions(topicAliasFunctions);
+      }
+    });
+  }, [extensionCatalogContext, topicAliasPlayer]);
 
   const player = useMemo(() => {
     if (!topicAliasPlayer) {
