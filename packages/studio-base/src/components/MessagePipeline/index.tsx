@@ -141,7 +141,11 @@ export function MessagePipelineProvider({ children, player }: ProviderProps): Re
     // Track the last global variables we've received in the layout selector so we can avoid setting
     // the variables on a player unless they have changed because we don't want to tell a player about
     // new variables when there aren't any and make it potentially do work.
-    let lastGlobalVariablesInstance: GlobalVariables | undefined;
+    let lastGlobalVariablesInstance: GlobalVariables | undefined =
+      currentLayoutContext?.actions.getCurrentLayoutState().selectedLayout?.data?.globalVariables ??
+      EMPTY_GLOBAL_VARIABLES;
+
+    player?.setGlobalVariables(lastGlobalVariablesInstance);
 
     const onLayoutStateUpdate = (state: LayoutState) => {
       const globalVariables = state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
