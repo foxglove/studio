@@ -29,8 +29,7 @@ export type { TopicAliasFunctions };
 
 /**
  * This is a player that wraps an underlying player and applies aliases to all topic names
- * in data emitted from the player. It is inserted into the player chain before
- * UserScriptPlayer so that UserScriptPlayer can use the aliased topics.
+ * in data emitted from the player.
  *
  * Aliases that alias input topics to other input topics or that request conflicting
  * aliases from multiple input topics to the same output topic are disallowed and flagged
@@ -57,17 +56,13 @@ export class TopicAliasingPlayer implements Player {
   // mutex prevents invoking the listener concurrently.
   #listener?: MutexLocked<(state: PlayerState) => Promise<void>>;
 
-  public constructor(
-    player: Player,
-    aliasFunctions: Immutable<TopicAliasFunctions>,
-    variables: Immutable<GlobalVariables>,
-  ) {
+  public constructor(player: Player) {
     this.#player = player;
-    this.#skipAliasing = aliasFunctions.length === 0;
+    this.#skipAliasing = true;
     this.#inputs = {
-      aliasFunctions,
+      aliasFunctions: [],
       topics: undefined,
-      variables,
+      variables: {},
     };
   }
 
