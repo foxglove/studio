@@ -202,5 +202,5 @@ export default function useProvider<T>(
       },
       data,
     };
-  }, [data, state, getDatasetBounds, mergeState]);
+  }, [data, provider, state, getDatasetBounds, mergeState]);
 }
