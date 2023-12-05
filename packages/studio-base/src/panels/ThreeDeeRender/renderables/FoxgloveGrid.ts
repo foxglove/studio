@@ -523,6 +523,7 @@ export class FoxgloveGrid extends SceneExtension<FoxgloveGridRenderable> {
           updatedUserSettings.colorMap = settings.colorMap;
           draft.topics[topic] = updatedUserSettings;
         });
+        this.updateSettingsTree();
       }
 
       // Check color
