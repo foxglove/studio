@@ -24,8 +24,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointExtensionUtils";
 import type { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
-import { autoSelectColorSettings } from "./colorMode";
-import { colorHasTransparency, getColorConverter } from "./colorMode";
+import { autoSelectColorSettings, colorHasTransparency, getColorConverter } from "./colorMode";
 import { FieldReader, getReader, isSupportedField } from "./pointClouds/fieldReaders";
 import type { AnyRendererSubscription, IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
