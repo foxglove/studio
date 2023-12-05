@@ -5,7 +5,7 @@
 import { t } from "i18next";
 import * as THREE from "three";
 
-import { PackedElementField, PointCloud } from "@foxglove/schemas";
+import { PointCloud } from "@foxglove/schemas";
 import { SettingsTreeNode, Topic } from "@foxglove/studio";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
@@ -30,7 +30,7 @@ import {
   RGBA_PACKED_FIELDS,
 } from "./colorMode";
 import { POINTCLOUD_DATATYPES as FOXGLOVE_POINTCLOUD_DATATYPES } from "../foxglove";
-import { PointCloud2, POINTCLOUD_DATATYPES as ROS_POINTCLOUD_DATATYPES, PointField } from "../ros";
+import { PointCloud2, POINTCLOUD_DATATYPES as ROS_POINTCLOUD_DATATYPES } from "../ros";
 
 export type LayerSettingsPointExtension = BaseSettings &
   ColorModeSettings & {
@@ -144,11 +144,9 @@ export function autoSelectColorField(
   { supportsPackedRgbModes }: { supportsPackedRgbModes: boolean },
 ): void {
   // Prefer color fields first
+  const supportedFields = pointCloud.fields.filter(isSupportedField);
   if (supportsPackedRgbModes) {
-    for (const field of pointCloud.fields) {
-      if (!isSupportedField(field)) {
-        continue;
-      }
+    for (const field of supportedFields) {
       const fieldNameLower = field.name.toLowerCase();
       if (RGBA_PACKED_FIELDS.has(fieldNameLower)) {
         output.colorField = field.name;
@@ -167,10 +165,7 @@ export function autoSelectColorField(
   }
 
   // Intensity fields are second priority
-  for (const field of pointCloud.fields) {
-    if (!isSupportedField(field)) {
-      continue;
-    }
+  for (const field of supportedFields) {
     if (INTENSITY_FIELDS.has(field.name)) {
       output.colorField = field.name;
       output.colorMode = "colormap";
@@ -179,10 +174,18 @@ export function autoSelectColorField(
     }
   }
 
+  // Next check to see if there is a `z` field
+  for (const field of supportedFields) {
+    if (field.name === "z") {
+      output.colorField = field.name;
+      output.colorMode = "colormap";
+      output.colorMap = "turbo";
+      return;
+    }
+  }
+
   // Fall back to using the first point cloud field
-  const firstField = (pointCloud.fields as readonly (PackedElementField | PointField)[]).find(
-    (field) => isSupportedField(field),
-  );
+  const firstField = supportedFields[0];
   if (firstField != undefined) {
     output.colorField = firstField.name;
     output.colorMode = "colormap";
