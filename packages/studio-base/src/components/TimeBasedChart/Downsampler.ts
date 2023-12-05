@@ -4,8 +4,9 @@
 
 import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets";
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
+import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
 
-import { downsample, MAX_POINTS } from "./downsample";
+import { downsampleStates, MAX_POINTS } from "./downsample";
 import { ChartDatasets, PlotViewport } from "./types";
 
 type UpdateParams = {
@@ -67,8 +68,19 @@ export class Downsampler {
         return dataset;
       }
 
-      const downsampled = downsample(dataset, iterateObjects(dataset.data), view, numPoints);
-      const resolved = downsampled.map((i) => dataset.data[i]);
+      const downsampled = downsampleStates(iterateObjects(dataset.data), view, numPoints);
+      const resolved = downsampled.map(([index, numStates]) => {
+        const point = dataset.data[index];
+        if (point == undefined || numStates === 1) {
+          return point;
+        }
+
+        return {
+          ...point,
+          labelColor: grey,
+          label: undefined,
+        };
+      });
 
       // NaN item values create gaps in the line
       const undefinedToNanData = resolved.map((item) => {
