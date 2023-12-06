@@ -4,9 +4,9 @@
 
 import { Point } from "@foxglove/studio-base/components/Chart/datasets";
 
+import { calculateIntervals } from "./downsample";
 import type { PlotViewport } from "./types";
 
-import { calculateIntervals } from "./downsample";
 
 export type StatePoint = {
   x: number;

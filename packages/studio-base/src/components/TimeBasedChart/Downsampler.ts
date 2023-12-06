@@ -6,8 +6,8 @@ import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets"
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
 
-import { downsampleStates } from "./downsampleStates";
 import { MAX_POINTS } from "./downsample";
+import { downsampleStates } from "./downsampleStates";
 import { ChartDatasets, PlotViewport } from "./types";
 
 type UpdateParams = {
