@@ -82,12 +82,13 @@ describe("downsampleStates", () => {
   });
 
   it("does not consolidate interval with same state as before", () => {
-    // in:  A--|-AA|--A
-    // out: A--|-A-|--A
+    // in:  A--|AAA|--A
+    // out: A--|A--|--A
     const result = downsampleStates(
       iterateObjects(
         createData([
           [0, A],
+          [49, A],
           [50, A],
           [51, A],
           [100, A],
@@ -99,8 +100,8 @@ describe("downsampleStates", () => {
     expect(result).toEqual(
       createResult([
         [0, 0],
-        [50, 1],
-        [100, 3],
+        [49, 1],
+        [100, 4],
       ]),
     );
   });
