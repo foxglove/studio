@@ -6,7 +6,8 @@ import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets"
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
 
-import { downsampleStates, MAX_POINTS } from "./downsample";
+import { downsampleStates } from "./downsampleStates";
+import { MAX_POINTS } from "./downsample";
 import { ChartDatasets, PlotViewport } from "./types";
 
 type UpdateParams = {
@@ -69,16 +70,25 @@ export class Downsampler {
       }
 
       const downsampled = downsampleStates(iterateObjects(dataset.data), view, numPoints);
-      const resolved = downsampled.map(([index, numStates]) => {
+      const yValue = dataset.data[0]?.y ?? 0
+      const resolved = downsampled.map(({ x, index }) => {
+        if (index == undefined) {
+          return {
+            x,
+            y: yValue,
+            labelColor: grey,
+            label: undefined,
+          };
+        }
+
         const point = dataset.data[index];
-        if (point == undefined || numStates === 1) {
+        if (point == undefined) {
           return point;
         }
 
         return {
           ...point,
-          labelColor: grey,
-          label: undefined,
+          x,
         };
       });
 
