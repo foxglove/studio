@@ -23,7 +23,8 @@ export const MINIMUM_PIXEL_DISTANCE = 3;
 
 type IntervalItem = { xPixel: number; yPixel: number; label: string | undefined; index: number };
 
-export type State = {
+// Contains the state of an ongoing downsample operation.
+export type DownsampleState = {
   cursor: number;
   pixelPerXValue: number;
   pixelPerYValue: number;
@@ -33,7 +34,11 @@ export type State = {
   intMax: IntervalItem | undefined;
 };
 
-export const init = (view: PlotViewport, maxPoints?: number): State => {
+/**
+ * Initialize a stateful downsampling operation with a fixed viewport and
+ * maximum number of points.
+ */
+export function initDownsample(view: PlotViewport, maxPoints?: number): DownsampleState {
   const { bounds, width, height } = view;
 
   const numPixelIntervals = Math.trunc(width / MINIMUM_PIXEL_DISTANCE);
@@ -59,9 +64,13 @@ export const init = (view: PlotViewport, maxPoints?: number): State => {
     intMin: undefined,
     intMax: undefined,
   };
-};
+}
 
-export const finishDownsample = (state: State): number[] => {
+/**
+ * Complete a downsampling operation by calculating the indices the last
+ * interval produced.
+ */
+export function finishDownsample(state: DownsampleState): number[] {
   const indices = [];
   const { intMin, intMax, intLast, intFirst } = state;
 
@@ -81,9 +90,18 @@ export const finishDownsample = (state: State): number[] => {
   }
 
   return indices;
-};
+}
 
-export const continueDownsample = (points: Iterable<Point>, state: State): [number[], State] => {
+/**
+ * Consume the provided `points` and return both the indices consuming these
+ * points produced and the new state of the downsampling operation.
+ *
+ * `points` should consist solely of _new_ points.
+ */
+export function continueDownsample(
+  points: Iterable<Point>,
+  state: DownsampleState,
+): [number[], DownsampleState] {
   const { pixelPerXValue, pixelPerYValue, cursor } = state;
   let { intFirst, intLast, intMin, intMax } = state;
 
@@ -158,7 +176,7 @@ export const continueDownsample = (points: Iterable<Point>, state: State): [numb
       intLast,
     },
   ];
-};
+}
 
 /**
  * Downsample a timeseries dataset by returning the indices of a subset of
@@ -192,7 +210,7 @@ export function downsampleTimeseries(
   view: PlotViewport,
   maxPoints?: number,
 ): number[] {
-  const [indices, state] = continueDownsample(points, init(view, maxPoints));
+  const [indices, state] = continueDownsample(points, initDownsample(view, maxPoints));
   return [...indices, ...finishDownsample(state)];
 }
 

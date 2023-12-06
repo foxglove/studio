@@ -9,11 +9,11 @@ import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets"
 import {
   MINIMUM_PIXEL_DISTANCE,
   downsampleTimeseries,
-  init,
+  initDownsample,
   continueDownsample,
   finishDownsample,
   downsampleScatter,
-  State,
+  DownsampleState,
 } from "./downsample";
 
 describe("downsampleTimeseries", () => {
@@ -60,12 +60,12 @@ describe("downsampleTimeseries", () => {
 
     const numSplits = 400;
     const [indices, finalState] = R.reduce(
-      (a: [number[], State], v) => {
+      (a: [number[], DownsampleState], v) => {
         const [oldIndices, oldState] = a;
         const [newIndices, newState] = continueDownsample(iterateObjects(v), oldState);
         return [[...oldIndices, ...newIndices], newState];
       },
-      [[], init(realBounds)],
+      [[], initDownsample(realBounds)],
       R.splitEvery(Math.trunc(numPoints / numSplits), dataset),
     );
 

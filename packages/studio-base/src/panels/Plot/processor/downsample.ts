@@ -12,8 +12,8 @@ import {
 import {
   downsampleScatter,
   downsampleTimeseries,
-  State as DownsampleState,
-  init as initTimeseries,
+  DownsampleState,
+  initDownsample as initTimeseries,
   continueDownsample,
   MAX_POINTS as DESIRED_POINTS,
 } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
@@ -39,7 +39,7 @@ export type SourceState = {
   cursor: number;
   // The downsampled dataset for this source
   dataset: TypedDataSet | undefined;
-  downsample: DownsampleState | undefined;
+  downsampleState: DownsampleState | undefined;
 };
 
 // PathState represents the downsample state for a single signal, including the
@@ -55,7 +55,7 @@ type PathState = {
 
 export const initSource = (): SourceState => ({
   cursor: 0,
-  downsample: undefined,
+  downsampleState: undefined,
   dataset: undefined,
 });
 
@@ -66,6 +66,8 @@ export const initPath = (): PathState => ({
   isPartial: false,
 });
 
+// Describes the complete state of a downsampled plot, including the states of
+// all of that plot's downsampled signals.
 export type Downsampled = {
   // Indicates that this dataset can be sent to the rendering thread
   isValid: boolean;
@@ -83,11 +85,6 @@ export const initDownsampled = (): Downsampled => {
     data: EmptyPlotData,
   };
 };
-
-// Since the total number of buckets is an estimate and can be wrong, we may
-// actually end up with more points than this, but we reset when the number of
-// points in a plot exceeds MAX_POINTS.
-const MAX_POINTS = DESIRED_POINTS * 1.2;
 
 // This factor is used for two related things:
 // * When the viewport's x-axis shrinks or grows by this amount (as a
@@ -111,6 +108,9 @@ const downsampleDataset = (
   return resolved;
 };
 
+/**
+ * Produce the union of all of the provided bounds.
+ */
 const combineBounds = (bounds: Bounds1D[]): Bounds1D | undefined => {
   if (bounds.length === 0) {
     return undefined;
@@ -150,13 +150,19 @@ const getPlotBounds = (data: PlotData): Bounds1D | undefined => {
  * Get the ratio of one unit in viewport space to the number of pixels it
  * occupies.
  */
-const getScale = ({ width, height, bounds: { x, y } }: PlotViewport): { x: number; y: number } => ({
+const getPixelSize = ({
+  width,
+  height,
+  bounds: { x, y },
+}: PlotViewport): { x: number; y: number } => ({
   x: (x.max - x.min) / width,
   y: (y.max - y.min) / height,
 });
 
 const isPartialState = (state: PathState) => state.isPartial;
 
+// Given a `value` representing a value on the x-axis, find the index of the
+// point in the data set that is closest to that value using binary search.
 const findPointBinary = (
   lookup: ReturnType<typeof fastFindIndices>,
   data: TypedData[],
@@ -207,31 +213,31 @@ const getVisibleBounds = (
   blockData: TypedDataSet | undefined,
   currentData: TypedDataSet | undefined,
 ): Bounds1D | undefined => {
-  if (blockData == undefined || currentData == undefined) {
-    if (blockData != undefined) {
-      return getXBounds(blockData.data);
-    }
+  const allBounds = [];
 
-    if (currentData != undefined) {
-      return getXBounds(currentData.data);
+  if (blockData != undefined) {
+    const bounds = getXBounds(blockData.data);
+    if (bounds != undefined) {
+      allBounds.push(bounds);
     }
-
-    return undefined;
   }
 
-  const blockBounds = getXBounds(blockData.data);
-  const currentBounds = getXBounds(currentData.data);
-  if (blockBounds == undefined || currentBounds == undefined) {
-    return undefined;
+  if (currentData != undefined) {
+    const bounds = getXBounds(currentData.data);
+    if (bounds != undefined) {
+      allBounds.push(bounds);
+    }
   }
 
-  return combineBounds([blockBounds, currentBounds]);
+  // Return undefined to indicate there are no visible bounds
+  return allBounds.length !== 0 ? combineBounds(allBounds) : undefined;
 };
 
 const isDerivative = (path: PlotPath): boolean => path.value.endsWith(".@derivative");
 const isHeaderStamp = (path: PlotPath): boolean => path.timestampMethod === "headerStamp";
 const noop: (data: TypedData[]) => TypedData[] = R.identity;
 
+// Apply any dataset-wide transformations.
 const applyTransforms = (data: TypedData[], path: PlotPath): TypedData[] =>
   R.pipe(
     isDerivative(path) ? derivative : noop,
@@ -255,7 +261,7 @@ export function updateSource(
   state: SourceState,
 ): SourceState {
   const { raw, view, maxPoints } = params;
-  const { cursor: oldCursor, downsample, dataset: previous } = state;
+  const { cursor: oldCursor, downsampleState, dataset: previous } = state;
   if (raw == undefined) {
     return initSource();
   }
@@ -323,7 +329,7 @@ export function updateSource(
   const newData = sliceTyped(raw.data, oldCursor);
   const [indices, newDownsample] = continueDownsample(
     iterateTyped(newData),
-    downsample ?? initTimeseries(view, maxPoints),
+    downsampleState ?? initTimeseries(view, maxPoints),
   );
   const resolved = resolveTypedIndices(raw.data, indices);
   if (resolved == undefined) {
@@ -332,7 +338,7 @@ export function updateSource(
 
   return {
     ...state,
-    downsample: newDownsample,
+    downsampleState: newDownsample,
     cursor: newCursor,
     dataset: {
       ...raw,
@@ -342,6 +348,11 @@ export function updateSource(
   };
 }
 
+/**
+ * Merge together the block and current data for a signal, handling the case
+ * where either one is undefined. This is conceptually similar to the merging
+ * we do elsewhere but it operates on raw datasets.
+ */
 function resolveDataset(
   blocks: TypedDataSet | undefined,
   current: TypedDataSet | undefined,
@@ -531,8 +542,8 @@ export function shouldResetViewport(
     return true;
   }
 
-  const { x: oldX } = getScale(oldViewport);
-  const { x: newX } = getScale(newViewport);
+  const { x: oldX } = getPixelSize(oldViewport);
+  const { x: newX } = getPixelSize(newViewport);
   const didZoom = Math.abs(newX / oldX - 1) > ZOOM_RESET_FACTOR;
 
   if (
@@ -591,16 +602,6 @@ export function updateDownsample(
 
   // The "maximum" number of buckets each dataset can have
   const pointsPerDataset = DESIRED_POINTS / numDatasets;
-
-  // Check whether this dataset has gotten too big
-  const numPreviousPoints = R.pipe(
-    R.map((dataset: TypedDataSet) => getTypedLength(dataset.data)),
-    R.sum,
-  )([...previous.datasets.values()]);
-  const didExceedMax = previous.datasets.size > 0 && numPreviousPoints > MAX_POINTS;
-  if (didExceedMax) {
-    return updateDownsample(view, blocks, current, initDownsampled());
-  }
 
   const newPaths: PathMap<PathState> = new Map();
   const newDatasets: DatasetsByPath = new Map();

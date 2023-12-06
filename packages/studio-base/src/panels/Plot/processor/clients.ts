@@ -204,7 +204,7 @@ export function getClientData(client: Client): PlotData | undefined {
   }
 
   return R.pipe(
-    applyDerivativeToPlotData,
     sortPlotDataByHeaderStamp,
+    applyDerivativeToPlotData,
   )(mergeAllData(blockData, currentData));
 }

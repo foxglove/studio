@@ -87,6 +87,9 @@ export const concatEffects =
 export const findClient = (state: State, id: string): Client | undefined =>
   state.clients.find((client) => client.id === id);
 
+/**
+ * Replace the state of a client with the given ID with the provided client state.
+ */
 export const mutateClient = (state: State, id: string, newClient: Client): State => ({
   ...state,
   clients: state.clients.map((client) => (client.id === id ? newClient : client)),
