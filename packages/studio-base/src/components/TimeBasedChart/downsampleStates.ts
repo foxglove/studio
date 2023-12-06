@@ -137,7 +137,7 @@ export function downsampleStates(
     if (interval == undefined || isNew) {
       interval = {
         x,
-        endX: bounds.x.min + xPixel * xValuePerPixel + xValuePerPixel,
+        endX: xPixel * xValuePerPixel + xValuePerPixel,
         xPixel,
         index,
         labels: [
