@@ -181,11 +181,10 @@ export const RGBA_PACKED_FIELDS = new Set<string>(["rgb", "rgba"]);
 export const INTENSITY_FIELDS = new Set<string>(["intensity", "i"]);
 
 /**
- * Selects optimal color field for settings given a list of fields
+ * Mutates output to select optimal color settings given a list of fields
  * @param output - settings object to apply auto selection of colorfield to
  * @param fields - array of string field names. PointField names should already have been checked for support
  * @param { supportsPackedRgbModes, supportsRgbaFieldsMode } - whether or not the message supports packed rgb modes or rgba fields mode
- * @returns - changes output object to have desired color field selected
  */
 
 export function autoSelectColorSettings<Settings extends ColorModeSettings>(
