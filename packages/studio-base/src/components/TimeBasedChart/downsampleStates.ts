@@ -6,9 +6,9 @@ import { Point } from "@foxglove/studio-base/components/Chart/datasets";
 
 import type { PlotViewport } from "./types";
 
-import { MINIMUM_PIXEL_DISTANCE } from "./downsample";
+import { calculateIntervals } from "./downsample";
 
-type StatePoint = {
+export type StatePoint = {
   x: number;
   index: number | undefined;
 };
@@ -27,26 +27,26 @@ function addLabel(label: Label, labels: Label[]): Label[] {
   return [...labels, label];
 }
 
-type Interval = { x: number; xPixel: number; labels: Label[]; index: number };
-
-// get:    o--|--o-oo-|-o
-// return: o-----|-oo-|-o
+type Interval = {
+  // The x coordinate of the beginning of the interval
+  x: number;
+  // The pixel coordinate of the beginning of the interval
+  xPixel: number;
+  // The x coordinate of the end of the interval
+  endX: number;
+  // All of the labels that appeared in this interval
+  labels: Immutable<Label[]>;
+  // The index of the point that started the interval
+  index: number;
+};
 
 export function downsampleStates(
   points: Iterable<Point>,
   view: PlotViewport,
   maxPoints?: number,
 ): StatePoint[] {
-  const { bounds, width } = view;
-
-  const numPixelIntervals = Math.trunc(width / MINIMUM_PIXEL_DISTANCE);
-  // When maxPoints is provided, we should take either that constant or
-  // the number of pixel-defined intervals, whichever is fewer
-  const numPoints = Math.min(maxPoints ?? numPixelIntervals, numPixelIntervals);
-  // We then calculate the number of intervals based on the number of points we
-  // decided on
-  const numIntervals = Math.trunc(numPoints);
-  const pixelPerXValue = numIntervals / (bounds.x.max - bounds.x.min);
+  const { bounds } = view;
+  const { pixelPerXValue } = calculateIntervals(view, 2, maxPoints);
   const xValuePerPixel = 1 / pixelPerXValue;
 
   const indices: StatePoint[] = [];
@@ -60,6 +60,46 @@ export function downsampleStates(
   const maxX = bounds.x.max + xRange * 0.5;
 
   let firstPastBounds: number | undefined = undefined;
+
+  /**
+   * Conclude the current interval, producing one or more StatePoint.
+   *
+   * If the interval contained just one state, we leave the original point in
+   * place.
+   *
+   * If the interval contained multiple states, we produce two points:
+   * * One at the x-value of the first point in the interval
+   * * One at the x-value of the end of the interval (which is not a real point)
+   * This allows the renderer to draw a gray line segment between these two points.
+   */
+  const finishInterval = () => {
+    if (interval == undefined) {
+      return;
+    }
+
+    const { labels, endX } = interval;
+    const [first] = labels;
+    const last = labels.at(-1);
+    const haveMultiple = labels.length > 1;
+
+    if (first == undefined || last == undefined) {
+      return;
+    }
+
+    indices.push({
+      x: interval.x,
+      index: haveMultiple ? undefined : first.index,
+    });
+
+    if (!haveMultiple) {
+      return;
+    }
+
+    indices.push({
+      x: endX,
+      index: last.index,
+    });
+  };
 
   for (const datum of points) {
     const { index, label, x } = datum;
@@ -88,33 +128,16 @@ export function downsampleStates(
       continue;
     }
 
-    const xPixel = Math.trunc(datum.x * pixelPerXValue);
+    const xPixel = Math.trunc(x * pixelPerXValue);
     const isNew = interval?.xPixel !== xPixel;
-
     if (interval != undefined && isNew) {
-      const { labels } = interval;
-      const [first] = labels;
-      const last = labels.at(-1);
-      const haveMultiple = labels.length > 1;
-
-      if (first != undefined && last != undefined) {
-        indices.push({
-          x: interval.x,
-          index: haveMultiple ? undefined : first.index,
-        });
-
-        if (haveMultiple) {
-          indices.push({
-            x: interval.x + xValuePerPixel,
-            index: last.index,
-          });
-        }
-      }
+      finishInterval();
     }
 
     if (interval == undefined || isNew) {
       interval = {
         x,
+        endX: bounds.x.min + xPixel * xValuePerPixel + xValuePerPixel,
         xPixel,
         index,
         labels: [
@@ -137,11 +160,14 @@ export function downsampleStates(
   }
 
   if (interval != undefined) {
-    //indices.push([interval.index, new Set(interval.labels).size]);
+    finishInterval();
   }
 
   if (firstPastBounds != undefined) {
-    //indices.push([firstPastBounds, 1]);
+    indices.push({
+      x: maxX,
+      index: firstPastBounds,
+    });
   }
 
   return indices;
