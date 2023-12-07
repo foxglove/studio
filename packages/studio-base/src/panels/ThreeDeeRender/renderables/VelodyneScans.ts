@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as _ from "lodash-es";
+
 import { toNanoSec, toSec } from "@foxglove/rostime";
 import { NumericType, PointCloud as FoxglovePointCloud } from "@foxglove/schemas";
 import { MessageEvent, SettingsTreeAction } from "@foxglove/studio";
@@ -20,8 +22,8 @@ import {
   Transformer,
 } from "@foxglove/velodyne-cloud";
 
+import { autoSelectColorSettings } from "./colorMode";
 import {
-  autoSelectColorField,
   createInstancePickingMaterial,
   createPickingMaterial,
   DEFAULT_POINT_SETTINGS,
@@ -137,9 +139,36 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
       {
         type: "schema",
         schemaNames: VELODYNE_SCAN_DATATYPES,
-        subscription: { handler: this.#handleVelodyneScan },
+        subscription: {
+          handler: this.#handleVelodyneScan,
+          filterQueue: this.#processMessageQueue.bind(this),
+        },
       },
     ];
+  }
+
+  #processMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
+    if (msgs.length === 0) {
+      return msgs;
+    }
+    const msgsByTopic = _.groupBy(msgs, (msg) => msg.topic);
+    const finalQueue: MessageEvent<T>[] = [];
+    for (const topic in msgsByTopic) {
+      const topicMsgs = msgsByTopic[topic]!;
+      const userSettings = this.renderer.config.topics[topic] as
+        | Partial<LayerSettingsVelodyneScans>
+        | undefined;
+      // if the topic has a decaytime add all messages to queue for topic
+      if ((userSettings?.decayTime ?? DEFAULT_SETTINGS.decayTime) > 0) {
+        finalQueue.push(...topicMsgs);
+        continue;
+      }
+      const latestMsg = topicMsgs[topicMsgs.length - 1];
+      if (latestMsg) {
+        finalQueue.push(latestMsg);
+      }
+    }
+    return finalQueue;
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -218,6 +247,16 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
       return;
     }
 
+    // Update the mapping of topic to point cloud field names if necessary
+    let fields = this.#pointCloudFieldsByTopic.get(messageEvent.topic);
+    let fieldsUpdated = false;
+    if (!fields || fields.length !== pointCloud.fields.length) {
+      fields = pointCloud.fields.map((field) => field.name);
+      this.#pointCloudFieldsByTopic.set(messageEvent.topic, fields);
+      fieldsUpdated = true;
+      this.updateSettingsTree();
+    }
+
     let renderable = this.renderables.get(topic);
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
@@ -225,8 +264,8 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
         | Partial<LayerSettingsVelodyneScans>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
-      if (settings.colorField == undefined) {
-        autoSelectColorField(settings, pointCloud, { supportsPackedRgbModes: false });
+      if (settings.colorField == undefined && fieldsUpdated) {
+        autoSelectColorSettings(settings, fields, { supportsPackedRgbModes: false });
 
         // Update user settings with the newly selected color field
         this.renderer.updateConfig((draft) => {
@@ -263,15 +302,6 @@ export class VelodyneScans extends SceneExtension<PointCloudHistoryRenderable> {
       this.add(renderable);
       this.renderables.set(topic, renderable);
     }
-
-    // Update the mapping of topic to point cloud field names if necessary
-    let fields = this.#pointCloudFieldsByTopic.get(messageEvent.topic);
-    if (!fields || fields.length !== pointCloud.fields.length) {
-      fields = pointCloud.fields.map((field) => field.name);
-      this.#pointCloudFieldsByTopic.set(messageEvent.topic, fields);
-      this.updateSettingsTree();
-    }
-
     renderable.updatePointCloud(
       pointCloud,
       messageEvent.message as RosObject,

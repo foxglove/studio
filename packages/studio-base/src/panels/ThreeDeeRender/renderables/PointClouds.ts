@@ -2,15 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as _ from "lodash-es";
 import * as THREE from "three";
 
-import { filterMap } from "@foxglove/den/collection";
 import { Time, toNanoSec } from "@foxglove/rostime";
 import { NumericType, PackedElementField, PointCloud } from "@foxglove/schemas";
-import { SettingsTreeAction } from "@foxglove/studio";
+import { SettingsTreeAction, MessageEvent } from "@foxglove/studio";
 import { DynamicBufferGeometry } from "@foxglove/studio-base/panels/ThreeDeeRender/DynamicBufferGeometry";
 import {
-  autoSelectColorField,
   createGeometry,
   createInstancePickingMaterial,
   createPickingMaterial,
@@ -25,7 +24,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/pointExtensionUtils";
 import type { RosObject, RosValue } from "@foxglove/studio-base/players/types";
 
-import { colorHasTransparency, getColorConverter } from "./colorMode";
+import { autoSelectColorSettings, colorHasTransparency, getColorConverter } from "./colorMode";
 import { FieldReader, getReader, isSupportedField } from "./pointClouds/fieldReaders";
 import type { AnyRendererSubscription, IRenderer } from "../IRenderer";
 import { BaseUserData, Renderable } from "../Renderable";
@@ -707,14 +706,45 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
       {
         type: "schema",
         schemaNames: ROS_POINTCLOUD_DATATYPES,
-        subscription: { handler: this.#handleRosPointCloud },
+        subscription: {
+          handler: this.#handleRosPointCloud,
+          filterQueue: this.#processMessageQueue.bind(this),
+        },
       },
       {
         type: "schema",
         schemaNames: FOXGLOVE_POINTCLOUD_DATATYPES,
-        subscription: { handler: this.#handleFoxglovePointCloud },
+        subscription: {
+          handler: this.#handleFoxglovePointCloud,
+          filterQueue: this.#processMessageQueue.bind(this),
+        },
       },
     ];
+  }
+
+  #processMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
+    if (msgs.length === 0) {
+      return msgs;
+    }
+    const msgsByTopic = _.groupBy(msgs, (msg) => msg.topic);
+    const finalQueue: MessageEvent<T>[] = [];
+    for (const topic in msgsByTopic) {
+      const topicMsgs = msgsByTopic[topic]!;
+      const userSettings = this.renderer.config.topics[topic] as
+        | Partial<LayerSettingsPointClouds>
+        | undefined;
+      // if the topic has a decaytime add all messages to queue for topic
+      if ((userSettings?.decayTime ?? DEFAULT_SETTINGS.decayTime) > 0) {
+        finalQueue.push(...topicMsgs);
+        continue;
+      }
+      const latestMsg = topicMsgs[topicMsgs.length - 1];
+      if (latestMsg) {
+        finalQueue.push(latestMsg);
+      }
+    }
+
+    return finalQueue;
   }
 
   public override settingsNodes(): SettingsTreeEntry[] {
@@ -792,21 +822,15 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
   };
 
   #handleFoxglovePointCloud = (messageEvent: PartialMessageEvent<PointCloud>): void => {
-    const topic = messageEvent.topic;
+    const { topic, schemaName } = messageEvent;
     const pointCloud = normalizePointCloud(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const messageTime = toNanoSec(pointCloud.timestamp);
     const frameId = pointCloud.frame_id;
 
-    // Update the mapping of topic to point cloud field names if necessary
-    let fields = this.#fieldsByTopic.get(topic);
-    if (!fields || fields.length !== pointCloud.fields.length) {
-      fields = pointCloud.fields.map((field) => field.name);
-      this.#fieldsByTopic.set(topic, fields);
-      this.updateSettingsTree();
-    }
     this.#handlePointCloud(
       topic,
+      schemaName,
       pointCloud,
       receiveTime,
       messageTime,
@@ -816,29 +840,15 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
   };
 
   #handleRosPointCloud = (messageEvent: PartialMessageEvent<PointCloud2>): void => {
-    const topic = messageEvent.topic;
+    const { topic, schemaName } = messageEvent;
     const pointCloud = normalizePointCloud2(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     const messageTime = toNanoSec(pointCloud.header.stamp);
     const frameId = pointCloud.header.frame_id;
 
-    // Update the mapping of topic to point cloud field names if necessary
-    let fields = this.#fieldsByTopic.get(topic);
-    // filter count to compare only supported fields
-    const numSupportedFields = pointCloud.fields.reduce((numSupported, field) => {
-      return numSupported + (isSupportedField(field) ? 1 : 0);
-    }, 0);
-    if (!fields || fields.length !== numSupportedFields) {
-      // Omit fields with count != 1
-      fields = filterMap(pointCloud.fields, (field) =>
-        isSupportedField(field) ? field.name : undefined,
-      );
-      this.#fieldsByTopic.set(topic, fields);
-      this.updateSettingsTree();
-    }
-
     this.#handlePointCloud(
       topic,
+      schemaName,
       pointCloud,
       receiveTime,
       messageTime,
@@ -849,12 +859,29 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
 
   #handlePointCloud(
     topic: string,
+    schemaName: string,
     pointCloud: PointCloud | PointCloud2,
     receiveTime: bigint,
     messageTime: bigint,
     originalMessage: RosObject,
     frameId: string,
   ): void {
+    // Update the mapping of topic to point cloud field names if necessary
+    let fields = this.#fieldsByTopic.get(topic);
+    // filter count to compare only supported fields
+    const numSupportedFields = pointCloud.fields.reduce((numSupported, field) => {
+      return numSupported + (isSupportedField(field) ? 1 : 0);
+    }, 0);
+    let fieldsForTopicUpdated = false;
+    if (!fields || fields.length !== numSupportedFields) {
+      // Omit fields with count != 1 (only applies to ros pointclouds)
+      // can't use filterMap here because of incompatible types
+      fields = pointCloud.fields.filter(isSupportedField).map((field) => field.name);
+      this.#fieldsByTopic.set(topic, fields);
+      fieldsForTopicUpdated = true;
+      this.updateSettingsTree();
+    }
+
     let renderable = this.renderables.get(topic);
     if (!renderable) {
       // Set the initial settings from default values merged with any user settings
@@ -862,8 +889,13 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
         | Partial<LayerSettingsPointClouds>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
-      if (settings.colorField == undefined) {
-        autoSelectColorField(settings, pointCloud, { supportsPackedRgbModes: true });
+
+      // want to avoid setting this if fields didn't update
+      if (settings.colorField == undefined && fieldsForTopicUpdated) {
+        autoSelectColorSettings(settings, fields, {
+          supportsPackedRgbModes: ROS_POINTCLOUD_DATATYPES.has(schemaName),
+          supportsRgbaFieldsMode: FOXGLOVE_POINTCLOUD_DATATYPES.has(schemaName),
+        });
 
         // Update user settings with the newly selected color field
         this.renderer.updateConfig((draft) => {
@@ -873,6 +905,7 @@ export class PointClouds extends SceneExtension<PointCloudHistoryRenderable> {
           updatedUserSettings.colorMap = settings.colorMap;
           draft.topics[topic] = updatedUserSettings;
         });
+        this.updateSettingsTree();
       }
 
       const material = pointCloudMaterial(settings);

@@ -11,20 +11,19 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Add16Filled, Edit16Filled } from "@fluentui/react-icons";
-import { Button, Typography } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import * as _ from "lodash-es";
+import * as R from "ramda";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
-import { useShallowMemo } from "@foxglove/hooks";
 import { add as addTimes, fromSec, subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
+import { Immutable } from "@foxglove/studio";
+import { useBlocksSubscriptions } from "@foxglove/studio-base/PanelAPI";
 import {
+  MessageAndData,
   MessageDataItemsByPath,
   useDecodeMessagePathsForMessagesByTopic,
 } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
@@ -39,9 +38,8 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
-import { ChartData, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { PathLegend } from "@foxglove/studio-base/panels/StateTransitions/PathLegend";
 import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
@@ -49,9 +47,8 @@ import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fontMonospace } from "@foxglove/theme";
 
-import messagesToDatasets from "./messagesToDatasets";
-import { useStateTransitionsPanelSettings } from "./settings";
-import { DEFAULT_PATH, stateTransitionPathDisplayName } from "./shared";
+import { messagesToDataset } from "./messagesToDataset";
+import { PathState, useStateTransitionsPanelSettings } from "./settings";
 import { StateTransitionConfig } from "./types";
 
 const fontSize = 10;
@@ -62,43 +59,7 @@ const useStyles = makeStyles()((theme) => ({
   chartWrapper: {
     position: "relative",
     marginTop: theme.spacing(0.5),
-  },
-  chartOverlay: {
-    top: 0,
-    left: 0,
-    right: 0,
-    pointerEvents: "none",
-  },
-  row: {
-    paddingInline: theme.spacing(0.5),
-    pointerEvents: "none",
-  },
-  button: {
-    minWidth: "auto",
-    textAlign: "left",
-    pointerEvents: "auto",
-    fontWeight: "normal",
-    padding: theme.spacing(0, 1),
-    maxWidth: "100%",
-
-    "&:hover": {
-      backgroundColor: tinycolor(theme.palette.background.paper).setAlpha(0.67).toString(),
-      backgroundImage: `linear-gradient(to right, ${theme.palette.action.focus}, ${theme.palette.action.focus})`,
-    },
-    ".MuiButton-endIcon": {
-      opacity: 0.8,
-      fontSize: 14,
-      marginLeft: theme.spacing(0.5),
-
-      svg: {
-        fontSize: "1em",
-        height: "1em",
-        width: "1em",
-      },
-    },
-    ":not(:hover) .MuiButton-endIcon": {
-      display: "none",
-    },
+    height: "100%",
   },
 }));
 
@@ -135,8 +96,27 @@ function selectCurrentTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.currentTime;
 }
 
+function selectStartTime(ctx: MessagePipelineContext) {
+  return ctx.playerState.activeData?.startTime;
+}
+
 function selectEndTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.endTime;
+}
+
+function datasetContainsArray(dataset: Immutable<(MessageAndData[] | undefined)[]>) {
+  // We need to detect when the path produces more than one data point,
+  // since that is invalid input
+  const dataCounts = R.pipe(
+    R.chain((data: Immutable<MessageAndData[] | undefined>): number[] => {
+      if (data == undefined) {
+        return [];
+      }
+      return data.map((message) => message.queriedData.length);
+    }),
+    R.uniq,
+  )(dataset);
+  return dataCounts.length > 0 && dataCounts.every((numPoints) => numPoints > 1);
 }
 
 type Props = {
@@ -144,16 +124,14 @@ type Props = {
   saveConfig: SaveConfig<StateTransitionConfig>;
 };
 
-const StateTransitions = React.memo(function StateTransitions(props: Props) {
+function StateTransitions(props: Props) {
   const { config, saveConfig } = props;
   const { paths } = config;
   const { classes } = useStyles();
 
   const pathStrings = useMemo(() => paths.map(({ value }) => value), [paths]);
 
-  const { openPanelSettings } = useWorkspaceActions();
-  const { id: panelId, setMessagePathDropConfig } = usePanelContext();
-  const { setSelectedPanelIds } = useSelectedPanels();
+  const { setMessagePathDropConfig } = usePanelContext();
   const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
 
   useEffect(() => {
@@ -180,7 +158,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     });
   }, [saveConfig, setMessagePathDropConfig]);
 
-  const { startTime } = PanelAPI.useDataSourceInfo();
+  const startTime = useMessagePipeline(selectStartTime);
   const currentTime = useMessagePipeline(selectCurrentTime);
   const currentTimeSinceStart = useMemo(
     () => (currentTime && startTime ? toSec(subtractTimes(currentTime, startTime)) : undefined),
@@ -208,7 +186,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     [paths],
   );
 
-  const blocks = PanelAPI.useBlocksSubscriptions(subscriptions);
+  const blocks = useBlocksSubscriptions(subscriptions);
   const decodedBlocks = useMemo(
     () => blocks.map(decodeMessagePathsForMessagesByTopic),
     [blocks, decodeMessagePathsForMessagesByTopic],
@@ -234,17 +212,21 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return _.isEmpty(newItemsNotInBlocks) ? EMPTY_ITEMS_BY_PATH : newItemsNotInBlocks;
   }, [decodedBlocks, itemsByPath]);
 
-  const { datasets, minY } = useMemo(() => {
+  const showPoints = config.showPoints === true;
+
+  const { pathState, data, minY } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
       return {
         datasets: [],
         minY: undefined,
+        pathState: [],
       };
     }
 
     let outMinY: number | undefined;
-    let outDatasets: ChartDatasets = [];
+    const outDatasets: ChartDatasets = [];
+    const outPathState: PathState[] = [];
 
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
@@ -254,36 +236,49 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
       const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
 
-      const newBlockDataSets = messagesToDatasets({
+      const newBlockDataSet = messagesToDataset({
         blocks: blocksForPath,
         path,
         pathIndex,
         startTime,
         y,
+        showPoints,
       });
-
-      outDatasets = outDatasets.concat(newBlockDataSets);
 
       // We have already filtered out paths we can find in blocks so anything left here
       // should be included in the dataset.
       const items = newItemsByPath[path.value];
-      if (items) {
-        const newPathDataSets = messagesToDatasets({
-          blocks: [items],
-          path,
-          pathIndex,
-          startTime,
-          y,
-        });
-        outDatasets = outDatasets.concat(newPathDataSets);
+
+      // We need to detect when the path produces more than one data point,
+      // since that is invalid input
+      const isArray = datasetContainsArray([...blocksForPath, items]);
+
+      outPathState.push({
+        path,
+        isArray,
+      });
+      outDatasets.push(newBlockDataSet);
+
+      if (items == undefined) {
+        return;
       }
+      const newPathDataSet = messagesToDataset({
+        blocks: [items],
+        path,
+        pathIndex,
+        startTime,
+        y,
+        showPoints,
+      });
+      outDatasets.push(newPathDataSet);
     });
 
     return {
-      datasets: outDatasets,
+      data: { datasets: outDatasets },
       minY: outMinY,
+      pathState: outPathState,
     };
-  }, [decodedBlocks, newItemsByPath, paths, startTime]);
+  }, [decodedBlocks, newItemsByPath, paths, startTime, showPoints]);
 
   const yScale = useMemo<ScaleOptions<"linear">>(() => {
     return {
@@ -309,11 +304,21 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     };
   }, []);
 
-  const databounds: undefined | Bounds = useMemo(() => {
-    if (
-      (config.xAxisMinValue != undefined || config.xAxisMaxValue != undefined) &&
-      endTimeSinceStart != undefined
-    ) {
+  // Compute the fixed bounds (either via min/max x-axis config or end time since start).
+  //
+  // For recordings, the bounds are actually fixed but for live connections the "endTimeSinceStart"
+  // will increase and these bounds are not technically fixed. But in those instances there is also
+  // new data coming in when the bounds are changing.
+  //
+  // We need to keep the fixedBounds reference stable (if it can be stable) for the databounds memo
+  // below, otherwise playing through a recording will update the currentTimeSince start and return
+  // a new fixedBounds reference which causes expensive downstream rendering.
+  const fixedBounds = useMemo(() => {
+    if (endTimeSinceStart == undefined) {
+      return undefined;
+    }
+
+    if (config.xAxisMinValue != undefined || config.xAxisMaxValue != undefined) {
       return {
         x: {
           min: config.xAxisMinValue ?? 0,
@@ -321,30 +326,30 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         },
         y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
       };
-    } else if (config.xAxisRange != undefined && currentTimeSinceStart != undefined) {
+    }
+
+    // If we have no configured xAxis min/max or range, then we set the x axis max to end time
+    // This will mirror the plot behavior of showing the full x-axis for data time range rather
+    // than constantly adjusting the end time to the latest loaded state transition while data
+    // is loading.
+    return {
+      x: { min: 0, max: endTimeSinceStart },
+      y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
+    };
+  }, [config.xAxisMaxValue, config.xAxisMinValue, endTimeSinceStart]);
+
+  // Compute the data bounds. The bounds are either a fixed amount of lookback from the current time
+  // or they are fixed bounds with a specific range.
+  const databounds: undefined | Bounds = useMemo(() => {
+    if (config.xAxisRange != undefined && currentTimeSinceStart != undefined) {
       return {
         x: { min: currentTimeSinceStart - config.xAxisRange, max: currentTimeSinceStart },
         y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
       };
-    } else if (endTimeSinceStart != undefined) {
-      // If we have no configured xAxis min/max or range, then we set the x axis max to end time
-      // This will mirror the plot behavior of showing the full x-axis for data time range rather
-      // than constantly adjusting the end time to the latest loaded state transition while data
-      // is loading.
-      return {
-        x: { min: 0, max: endTimeSinceStart },
-        y: { min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
-      };
     }
 
-    return undefined;
-  }, [
-    config.xAxisMaxValue,
-    config.xAxisMinValue,
-    config.xAxisRange,
-    currentTimeSinceStart,
-    endTimeSinceStart,
-  ]);
+    return fixedBounds;
+  }, [config.xAxisRange, currentTimeSinceStart, fixedBounds]);
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // an existing resize observation.
@@ -392,15 +397,13 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     [messagePipeline],
   );
 
-  const data: ChartData = useShallowMemo({ datasets });
-
-  useStateTransitionsPanelSettings(config, saveConfig, focusedPath);
+  useStateTransitionsPanelSettings(config, saveConfig, pathState, focusedPath);
 
   return (
     <Stack flexGrow={1} overflow="hidden" style={{ zIndex: 0 }}>
       <PanelToolbar />
-      <Stack fullWidth flex="auto" overflowX="hidden" overflowY="auto">
-        <div className={classes.chartWrapper} style={{ height }} ref={sizeRef}>
+      <Stack fullWidth fullHeight flex="auto" overflowX="hidden" overflowY="auto">
+        <div className={classes.chartWrapper} ref={sizeRef}>
           <TimeBasedChart
             zoom
             isSynced={config.isSynced}
@@ -409,6 +412,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             height={height}
             data={data}
             dataBounds={databounds}
+            resetButtonPaddingBottom={2}
             type="scatter"
             xAxes={xScale}
             xAxisIsPlaybackTime
@@ -418,36 +422,16 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             onClick={onClick}
             currentTime={currentTimeSinceStart}
           />
-
-          <Stack className={classes.chartOverlay} position="absolute" paddingTop={0.5}>
-            {(paths.length === 0 ? [DEFAULT_PATH] : paths).map((path, index) => (
-              <div className={classes.row} key={index} style={{ height: heightPerTopic }}>
-                <Button
-                  size="small"
-                  color="inherit"
-                  data-testid="edit-topic-button"
-                  className={classes.button}
-                  endIcon={paths.length === 0 ? <Add16Filled /> : <Edit16Filled />}
-                  onClick={() => {
-                    setSelectedPanelIds([panelId]);
-                    openPanelSettings();
-                    setFocusedPath(["paths", String(index)]);
-                  }}
-                >
-                  <Typography variant="inherit" noWrap>
-                    {paths.length === 0
-                      ? "Click to add a series"
-                      : stateTransitionPathDisplayName(path, index)}
-                  </Typography>
-                </Button>
-              </div>
-            ))}
-          </Stack>
+          <PathLegend
+            paths={paths}
+            heightPerTopic={heightPerTopic}
+            setFocusedPath={setFocusedPath}
+          />
         </div>
       </Stack>
     </Stack>
   );
-});
+}
 
 const defaultConfig: StateTransitionConfig = {
   paths: [],

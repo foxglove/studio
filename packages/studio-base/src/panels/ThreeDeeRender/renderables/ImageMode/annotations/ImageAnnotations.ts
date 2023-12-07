@@ -4,11 +4,13 @@
 
 import { t } from "i18next";
 import * as THREE from "three";
+import { Opaque } from "ts-essentials";
 
 import { PinholeCameraModel } from "@foxglove/den/image";
 import { ImageAnnotations as FoxgloveImageAnnotations } from "@foxglove/schemas";
 import { Immutable, MessageEvent, SettingsTreeAction, Topic } from "@foxglove/studio";
 import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
+import { onlyLastByTopicMessage } from "@foxglove/studio-base/panels/ThreeDeeRender/SceneExtension";
 import {
   ImageMarker as RosImageMarker,
   ImageMarkerArray as RosImageMarkerArray,
@@ -27,7 +29,7 @@ import { IMessageHandler, MessageRenderState } from "../MessageHandler";
 
 const MISSING_SYNCHRONIZED_ANNOTATION = "MISSING_SYNCHRONIZED_ANNOTATION";
 
-type TopicName = string & { __brand: "TopicName" };
+type TopicName = Opaque<string, "TopicName">;
 
 interface ImageAnnotationsContext {
   initialScale: number;
@@ -91,9 +93,20 @@ export class ImageAnnotations extends THREE.Object3D {
       {
         type: "schema",
         schemaNames: ALL_SUPPORTED_ANNOTATION_SCHEMAS,
-        subscription: { handler: this.#context.messageHandler.handleAnnotations },
+        subscription: {
+          handler: this.#context.messageHandler.handleAnnotations,
+          filterQueue: this.#filterMessageQueue.bind(this),
+        },
       },
     ];
+  }
+
+  #filterMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
+    // if sync annotations not active, only take the last message for each topic
+    if (this.#context.config().synchronize !== true) {
+      return onlyLastByTopicMessage(msgs);
+    }
+    return msgs;
   }
 
   public dispose(): void {

@@ -58,7 +58,6 @@ import {
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { useDefaultWebLaunchPreference } from "@foxglove/studio-base/hooks/useDefaultWebLaunchPreference";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
-import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
@@ -82,7 +81,7 @@ const useStyles = makeStyles()({
 });
 
 type WorkspaceProps = CustomWindowControlsProps & {
-  deepLinks?: string[];
+  deepLinks?: readonly string[];
   appBarLeftInset?: number;
   onAppBarDoubleClick?: () => void;
   // eslint-disable-next-line react/no-unused-prop-types
@@ -171,56 +170,6 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       containerRef.current.focus();
     }
   }, []);
-
-  useNativeAppMenuEvent(
-    "open",
-    useCallback(async () => {
-      dialogActions.dataSource.open("start");
-    }, [dialogActions.dataSource]),
-  );
-
-  useNativeAppMenuEvent(
-    "open-file",
-    useCallback(async () => {
-      await dialogActions.openFile.open();
-    }, [dialogActions.openFile]),
-  );
-
-  useNativeAppMenuEvent(
-    "open-connection",
-    useCallback(() => {
-      dialogActions.dataSource.open("connection");
-    }, [dialogActions.dataSource]),
-  );
-
-  useNativeAppMenuEvent(
-    "open-demo",
-    useCallback(() => {
-      dialogActions.dataSource.open("demo");
-    }, [dialogActions.dataSource]),
-  );
-
-  useNativeAppMenuEvent(
-    "open-help-about",
-    useCallback(() => {
-      dialogActions.preferences.open("about");
-    }, [dialogActions.preferences]),
-  );
-
-  useNativeAppMenuEvent(
-    "open-help-general",
-    useCallback(() => {
-      dialogActions.preferences.open("general");
-    }, [dialogActions.preferences]),
-  );
-
-  useNativeAppMenuEvent("open-help-docs", () => {
-    window.open("https://foxglove.dev/docs", "_blank");
-  });
-
-  useNativeAppMenuEvent("open-help-slack", () => {
-    window.open("https://foxglove.dev/slack", "_blank");
-  });
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -453,6 +402,32 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
     setUnappliedTime({ time: undefined });
   }, [playerPresence, seek, unappliedTime]);
 
+  const appBar = useMemo(
+    () => (
+      <AppBarComponent
+        leftInset={props.appBarLeftInset}
+        onDoubleClick={props.onAppBarDoubleClick}
+        showCustomWindowControls={props.showCustomWindowControls}
+        isMaximized={props.isMaximized}
+        onMinimizeWindow={props.onMinimizeWindow}
+        onMaximizeWindow={props.onMaximizeWindow}
+        onUnmaximizeWindow={props.onUnmaximizeWindow}
+        onCloseWindow={props.onCloseWindow}
+      />
+    ),
+    [
+      AppBarComponent,
+      props.appBarLeftInset,
+      props.isMaximized,
+      props.onAppBarDoubleClick,
+      props.onCloseWindow,
+      props.onMaximizeWindow,
+      props.onMinimizeWindow,
+      props.onUnmaximizeWindow,
+      props.showCustomWindowControls,
+    ],
+  );
+
   return (
     <PanelStateContextProvider>
       {dataSourceDialog.open && <DataSourceDialog />}
@@ -460,16 +435,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       <SyncAdapters />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        <AppBarComponent
-          leftInset={props.appBarLeftInset}
-          onDoubleClick={props.onAppBarDoubleClick}
-          showCustomWindowControls={props.showCustomWindowControls}
-          isMaximized={props.isMaximized}
-          onMinimizeWindow={props.onMinimizeWindow}
-          onMaximizeWindow={props.onMaximizeWindow}
-          onUnmaximizeWindow={props.onUnmaximizeWindow}
-          onCloseWindow={props.onCloseWindow}
-        />
+        {appBar}
         <Sidebars
           leftItems={leftSidebarItems}
           selectedLeftKey={leftSidebarOpen ? leftSidebarItem : undefined}

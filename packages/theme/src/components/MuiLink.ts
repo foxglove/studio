@@ -5,6 +5,9 @@
 import { OverrideComponentReturn } from "../types";
 
 export const MuiLink: OverrideComponentReturn<"MuiLink"> = {
+  defaultProps: {
+    color: "primary",
+  },
   styleOverrides: {
     root: {
       cursor: "pointer",

@@ -23,7 +23,7 @@ import { fromSec } from "@foxglove/rostime";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
 import { BlockCache, MessageEvent } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture, triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
-import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
+import { useReadySignal, ReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const locationMessages = [
@@ -387,10 +387,20 @@ function PlotWrapper(props: {
   );
 }
 
+function useDebouncedReadySignal(): ReadySignal {
+  const readySignal = useReadySignal();
+  return React.useMemo(() => {
+    return _.debounce(() => {
+      readySignal();
+    }, 3000);
+  }, [readySignal]);
+}
+
 export default {
   title: "panels/Plot",
   component: Plot,
   parameters: {
+    colorScheme: "light",
     chromatic: { delay: 50 },
   },
   excludeStories: ["paths", "fixture"],
@@ -405,7 +415,7 @@ export const Empty: StoryObj = {
 
 export const LineGraph: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={exampleConfig} />;
   },
@@ -417,13 +427,14 @@ export const LineGraph: StoryObj = {
   name: "line graph",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 };
 
 export const LineGraphWithValuesAndDisabledSeries: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     const config = produce(exampleConfig, (draft) => {
@@ -441,13 +452,14 @@ export const LineGraphWithValuesAndDisabledSeries: StoryObj = {
   name: "line graph with values and disabled series",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 };
 
 export const LineGraphWithXMinMax: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
       <PlotWrapper
@@ -471,7 +483,7 @@ export const LineGraphWithXMinMax: StoryObj = {
 
 export const LineGraphWithXRange: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
       <PlotWrapper
@@ -496,7 +508,7 @@ export const LineGraphWithXRange: StoryObj = {
 
 export const LineGraphWithNoTitle: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={{ ...exampleConfig, title: undefined }} />;
   },
@@ -508,13 +520,14 @@ export const LineGraphWithNoTitle: StoryObj = {
   name: "line graph with no title",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 };
 
 export const LineGraphWithSettings: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 2 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return (
       <PlotWrapper
@@ -552,6 +565,7 @@ export const LineGraphWithSettings: StoryObj = {
 export const LineGraphWithSettingsChinese: StoryObj = {
   ...LineGraphWithSettings,
   parameters: {
+    colorScheme: "light",
     ...LineGraphWithSettings.parameters,
     forceLanguage: "zh",
   },
@@ -559,6 +573,7 @@ export const LineGraphWithSettingsChinese: StoryObj = {
 export const LineGraphWithSettingsJapanese: StoryObj = {
   ...LineGraphWithSettings,
   parameters: {
+    colorScheme: "light",
     ...LineGraphWithSettings.parameters,
     forceLanguage: "ja",
   },
@@ -566,7 +581,7 @@ export const LineGraphWithSettingsJapanese: StoryObj = {
 
 export const LineGraphWithLegendsHidden: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     return <PlotWrapper pauseFrame={pauseFrame} config={{ ...exampleConfig, showLegend: false }} />;
   },
@@ -578,6 +593,7 @@ export const LineGraphWithLegendsHidden: StoryObj = {
   name: "line graph with legends hidden",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 };
@@ -594,7 +610,7 @@ const useStyles = makeStyles()(() => ({
 
 export const InALineGraphWithMultiplePlotsXAxesAreSynced: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 10 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
     const { classes } = useStyles();
 
@@ -632,6 +648,7 @@ export const InALineGraphWithMultiplePlotsXAxesAreSynced: StoryObj = {
   name: "in a line graph with multiple plots, x-axes are synced",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -680,8 +697,8 @@ export const LineGraphAfterZoom: StoryObj = {
   name: "line graph after zoom",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
-    colorScheme: "dark",
   },
 
   play: async (ctx) => {
@@ -691,7 +708,7 @@ export const LineGraphAfterZoom: StoryObj = {
 
 export const TimestampMethodHeaderStamp: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -715,6 +732,7 @@ export const TimestampMethodHeaderStamp: StoryObj = {
   name: "timestampMethod: headerStamp",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -725,7 +743,7 @@ export const TimestampMethodHeaderStamp: StoryObj = {
 
 export const LongPath: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -749,6 +767,7 @@ export const LongPath: StoryObj = {
   name: "long path",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -759,7 +778,7 @@ export const LongPath: StoryObj = {
 
 export const DisabledPath: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -787,6 +806,7 @@ export const DisabledPath: StoryObj = {
   name: "disabled path",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -797,7 +817,7 @@ export const DisabledPath: StoryObj = {
 
 export const HiddenConnectingLines: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -827,6 +847,7 @@ export const HiddenConnectingLines: StoryObj = {
   name: "hidden connecting lines",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -837,7 +858,7 @@ export const HiddenConnectingLines: StoryObj = {
 
 export const ReferenceLine: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -861,6 +882,7 @@ export const ReferenceLine: StoryObj = {
   name: "reference line",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -871,7 +893,7 @@ export const ReferenceLine: StoryObj = {
 
 export const WithMinAndMaxYValues: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -910,7 +932,7 @@ export const WithMinAndMaxYValues: StoryObj = {
 
 export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -934,6 +956,7 @@ export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
   name: "with just min Y value less than minimum value",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -944,7 +967,7 @@ export const WithJustMinYValueLessThanMinimumValue: StoryObj = {
 
 export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -968,6 +991,7 @@ export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
   name: "with just min Y value more than minimum value",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -978,7 +1002,7 @@ export const WithJustMinYValueMoreThanMinimumValue: StoryObj = {
 
 export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1002,6 +1026,7 @@ export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
   name: "with just min Y value more than maximum value",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1012,7 +1037,7 @@ export const WithJustMinYValueMoreThanMaximumValue: StoryObj = {
 
 export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 5 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1036,6 +1061,7 @@ export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
   name: "with just max Y value less than maximum value",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1046,7 +1072,7 @@ export const WithJustMaxYValueLessThanMaximumValue: StoryObj = {
 
 export const WithJustMaxYValueMoreThanMaximumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1070,6 +1096,7 @@ export const WithJustMaxYValueMoreThanMaximumValue: StoryObj = {
   name: "with just max Y value more than maximum value",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1080,7 +1107,7 @@ export const WithJustMaxYValueMoreThanMaximumValue: StoryObj = {
 
 export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1104,6 +1131,7 @@ export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
   name: "with just max Y value less than minimum value",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1114,7 +1142,7 @@ export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
 
 export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1143,6 +1171,7 @@ export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
   name: "scatter plot plus line graph plus reference line",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1153,7 +1182,7 @@ export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
 
 export const IndexBasedXAxisForArray: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1178,6 +1207,7 @@ export const IndexBasedXAxisForArray: StoryObj = {
   name: "index-based x-axis for array",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1188,11 +1218,10 @@ export const IndexBasedXAxisForArray: StoryObj = {
 
 export const IndexBasedXAxisForArrayWithUpdate: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
+    const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     const [ourFixture, setOurFixture] = useState(structuredClone(fixture));
-
-    const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     useEffect(() => {
       setOurFixture((oldValue) => {
@@ -1241,17 +1270,18 @@ export const IndexBasedXAxisForArrayWithUpdate: StoryObj = {
   name: "index-based x-axis for array with update",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
   play: async (ctx) => {
-    await waitFor(() => ctx.parameters.storyReady);
+    await waitFor(() => ctx.parameters.storyReady, { timeout: 10000 });
   },
 };
 
 export const CustomXAxisTopic: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1276,6 +1306,7 @@ export const CustomXAxisTopic: StoryObj = {
   name: "custom x-axis topic",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1286,7 +1317,7 @@ export const CustomXAxisTopic: StoryObj = {
 
 export const CustomXAxisTopicWithXLimits: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1324,7 +1355,7 @@ export const CustomXAxisTopicWithXLimits: StoryObj = {
 
 export const CurrentCustomXAxisTopic: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     // As above, but just shows a single point instead of the whole line.
@@ -1350,6 +1381,7 @@ export const CurrentCustomXAxisTopic: StoryObj = {
   name: "current custom x-axis topic",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1360,7 +1392,7 @@ export const CurrentCustomXAxisTopic: StoryObj = {
 
 export const CustomXAxisTopicWithMismatchedDataLengths: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1396,6 +1428,7 @@ export const CustomXAxisTopicWithMismatchedDataLengths: StoryObj = {
   name: "custom x-axis topic with mismatched data lengths",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1406,7 +1439,7 @@ export const CustomXAxisTopicWithMismatchedDataLengths: StoryObj = {
 
 export const SuperCloseValues: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 1 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1457,6 +1490,7 @@ export const SuperCloseValues: StoryObj = {
   name: "super close values",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1467,7 +1501,7 @@ export const SuperCloseValues: StoryObj = {
 
 export const TimeValues: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1492,6 +1526,7 @@ export const TimeValues: StoryObj = {
   name: "time values",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1502,7 +1537,7 @@ export const TimeValues: StoryObj = {
 
 export const PreloadedDataInBinaryBlocks: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1523,6 +1558,7 @@ export const PreloadedDataInBinaryBlocks: StoryObj = {
   name: "preloaded data in binary blocks",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1533,7 +1569,7 @@ export const PreloadedDataInBinaryBlocks: StoryObj = {
 
 export const MixedStreamedAndPreloadedData: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1558,6 +1594,7 @@ export const MixedStreamedAndPreloadedData: StoryObj = {
   name: "mixed streamed and preloaded data",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1568,7 +1605,7 @@ export const MixedStreamedAndPreloadedData: StoryObj = {
 
 export const PreloadedDataAndItsDerivative: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1593,6 +1630,7 @@ export const PreloadedDataAndItsDerivative: StoryObj = {
   name: "preloaded data and its derivative",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1603,7 +1641,7 @@ export const PreloadedDataAndItsDerivative: StoryObj = {
 
 export const PreloadedDataAndItsNegative: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1628,6 +1666,7 @@ export const PreloadedDataAndItsNegative: StoryObj = {
   name: "preloaded data and its negative",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1638,7 +1677,7 @@ export const PreloadedDataAndItsNegative: StoryObj = {
 
 export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1663,6 +1702,7 @@ export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
   name: "preloaded data and its absolute value",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 
@@ -1673,7 +1713,7 @@ export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
 
 export const DifferentLineSizes: StoryObj = {
   render: function Story() {
-    const readySignal = useReadySignal({ count: 3 });
+    const readySignal = useDebouncedReadySignal();
     const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
     return (
@@ -1703,6 +1743,7 @@ export const DifferentLineSizes: StoryObj = {
   name: "different line sizes",
 
   parameters: {
+    colorScheme: "light",
     useReadySignal: true,
   },
 

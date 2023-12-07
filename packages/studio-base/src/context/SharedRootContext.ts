@@ -7,22 +7,16 @@ import { createContext, useContext } from "react";
 import { AppBarProps } from "@foxglove/studio-base/components/AppBar";
 import { CustomWindowControlsProps } from "@foxglove/studio-base/components/AppBar/CustomWindowControls";
 import { IAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
-import { INativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
-import { INativeWindow } from "@foxglove/studio-base/context/NativeWindowContext";
 import { IDataSourceFactory } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 
 interface ISharedRootContext {
-  deepLinks: string[];
+  deepLinks: readonly string[];
   appConfiguration?: IAppConfiguration;
-  dataSources: IDataSourceFactory[];
-  extensionLoaders: readonly ExtensionLoader[];
-  nativeAppMenu?: INativeAppMenu;
-  nativeWindow?: INativeWindow;
+  dataSources: readonly IDataSourceFactory[];
   enableLaunchPreferenceScreen?: boolean;
   enableGlobalCss?: boolean;
   appBarLeftInset?: number;
-  extraProviders?: JSX.Element[];
+  extraProviders?: readonly JSX.Element[];
   customWindowControlProps?: CustomWindowControlsProps;
   onAppBarDoubleClick?: () => void;
   AppBarComponent?: (props: AppBarProps) => JSX.Element;
@@ -31,7 +25,6 @@ interface ISharedRootContext {
 const SharedRootContext = createContext<ISharedRootContext>({
   deepLinks: [],
   dataSources: [],
-  extensionLoaders: [],
 });
 SharedRootContext.displayName = "SharedRootContext";
 

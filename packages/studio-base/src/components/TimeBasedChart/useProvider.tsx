@@ -173,7 +173,7 @@ export default function useProvider<T>(
   }, [provider, view]);
 
   return useMemo(() => {
-    if (data == undefined) {
+    if (provider != undefined) {
       if (state == undefined) {
         return undefined;
       }
@@ -190,14 +190,17 @@ export default function useProvider<T>(
       return mergeState(full, partial);
     }
 
-    const bounds = getDatasetBounds(data.datasets);
-    if (bounds == undefined) {
+    if (data == undefined) {
       return undefined;
     }
 
+    const bounds = getDatasetBounds(data.datasets);
     return {
-      bounds,
+      bounds: bounds ?? {
+        x: { min: 0, max: 0 },
+        y: { min: 0, max: 0 },
+      },
       data,
     };
-  }, [data, state, getDatasetBounds, mergeState]);
+  }, [data, provider, state, getDatasetBounds, mergeState]);
 }
