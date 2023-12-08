@@ -108,7 +108,7 @@ export const FontFeatureSettings: StoryObj = {
       <tbody>
         {fontFeatures.map(({ label, text }) => (
           <tr key={label}>
-            <th>{label}</th> <td>{text}</td>
+            <th style={{ width: 100 }}>{label}</th> <td>{text}</td>
           </tr>
         ))}
       </tbody>
