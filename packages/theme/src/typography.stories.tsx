@@ -98,6 +98,8 @@ export const Variants: StoryObj = {
 const fontFeatures = [
   { label: "tnum", text: "0123456789" },
   { label: "calt", text: "=> == === 1x1 2*2 3xA ++ :=" },
+  // we don't currently use these ligatures but putting it in just so we never forget it exists
+  { label: "cv08 / cv10", text: "显示时间戳在" },
 ];
 
 export const FontFeatureSettings: StoryObj = {
