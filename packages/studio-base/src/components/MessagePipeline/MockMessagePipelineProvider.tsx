@@ -216,39 +216,8 @@ export default function MockMessagePipelineProvider(
           });
         } else {
           set((state) => {
-            // In the real pipeline, the messageEventsBySubscriberId only change
-            // on player listener callback - not on subscriber changes
-            //
-            // In tests, the first setSubscriptions call happens after we've already set props.messages
-            // So we have some special logic to detect the change of subscriptions
-            // and update messageEventsBySubscriberId.
             const newState = reducer(state, action);
-            const messages = newState.public.playerState.activeData?.messages;
-            if (action.type === "update-subscriber" && messages && messages.length !== 0) {
-              let changed = false;
-              const messageEventsBySubscriberId = new Map<string, Immutable<MessageEvent[]>>();
-              for (const [id, subs] of newState.subscriptionsById) {
-                const existingMsgs = newState.public.messageEventsBySubscriberId.get(id);
-                const newMsgs = messages.filter(
-                  (msg) => subs.find((sub) => sub.topic === msg.topic) != undefined,
-                );
-                if (existingMsgs && shallowequal(existingMsgs, newMsgs)) {
-                  messageEventsBySubscriberId.set(id, existingMsgs);
-                } else {
-                  messageEventsBySubscriberId.set(id, newMsgs);
-                  changed = true;
-                  continue;
-                }
-              }
 
-              if (changed) {
-                newState.public = {
-                  ...newState.public,
-                  messageEventsBySubscriberId,
-                };
-              }
-              return { ...newState, dispatch: state.dispatch };
-            }
             return { ...newState, dispatch: state.dispatch };
           });
         }
@@ -256,9 +225,13 @@ export default function MockMessagePipelineProvider(
       const reset = () => {
         throw new Error("not implemented");
       };
-      const initialPublicState = getPublicState(undefined, props, dispatch);
+
+      // exclude messages from initial state because there are no subscribers yet
+      // messages are only emitted from a player at the request of subscribers
+      const mockProps = _.omit(props, ["children", "messages"]);
+      const initialPublicState = getPublicState(undefined, mockProps, dispatch);
       return {
-        mockProps: _.omit(props, "children"),
+        mockProps,
         player: undefined,
         dispatch,
         reset,
@@ -278,6 +251,9 @@ export default function MockMessagePipelineProvider(
     }),
   );
 
+  // Can't be useLayoutEffect because we want child useEffect calls to resolve first to set subscribers
+  // That way we can call `set-mock-props` after subscribers have been set, and we can emit messages that were subscribed to
+  // If we `useLayoutEffect`, it will emit the initial messages with no subscribers set, which is not consistent with the real behavior
   useEffect(() => {
     store.getState().dispatch({ type: "set-mock-props", mockProps: _.omit(props, "children") });
   }, [props, store]);

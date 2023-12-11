@@ -62,7 +62,7 @@ export type MessagePipelineInternalState = {
    * for dispatching messages needs to iterate over the array of IDs.
    */
   subscriberIdsByTopic: Map<string, string[]>;
-  /** This holds the last message emitted by the player on each topic. This should attempt to be used before
+  /** This holds the last message emitted by the player on each topic. Attempt to use this before falling back to player backfill.
    */
   lastMessageEventByTopic: Map<string, MessageEvent>;
   /** Function to call when react render has completed with the latest state */

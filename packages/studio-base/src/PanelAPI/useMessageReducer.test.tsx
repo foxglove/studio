@@ -170,7 +170,7 @@ describe("useMessageReducer", () => {
     );
 
     messages = [messageFoo];
-    rerender({ topics: ["/foo"] });
+    rerender({ topics: ["/foo"] }); // subscriptions unchanged
 
     expect(restore.mock.calls).toEqual([[undefined]]);
     expect(addMessage.mock.calls).toEqual([[1, messageFoo]]);
@@ -362,21 +362,21 @@ describe("useMessageReducer", () => {
     return Wrapper;
   }
 
-  it("doesn't call addMessage when requested topics change player", async () => {
+  it("calls add message for messages from newly subscribed topic, given that topic has emitted messages previously", async () => {
     const restore = jest.fn();
     const addMessage = jest.fn();
 
     restore.mockReturnValue(0);
     addMessage.mockImplementation((_, msg) => msg.message.value);
 
-    const message1: MessageEvent = {
+    const messageFoo: MessageEvent = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 1 },
       schemaName: "foo",
       sizeInBytes: 0,
     };
-    const message2: MessageEvent = {
+    const messageBar: MessageEvent = {
       topic: "/bar",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
@@ -411,7 +411,7 @@ describe("useMessageReducer", () => {
       () =>
         void (promise = player.emit({
           activeData: {
-            messages: [message1, message2],
+            messages: [messageFoo, messageBar], // foo message being emitted here
             currentTime: { sec: 0, nsec: 0 },
             startTime: { sec: 0, nsec: 0 },
             endTime: { sec: 1, nsec: 0 },
@@ -436,53 +436,18 @@ describe("useMessageReducer", () => {
 
     // restore call with undefined, then add message called with our subscribed message
     expect(restore.mock.calls).toEqual([[undefined], [undefined]]);
-    expect(addMessage.mock.calls).toEqual([[0, message2]]);
+    expect(addMessage.mock.calls).toEqual([[0, messageBar]]);
     expect(result.current).toEqual(2);
 
     rerender({ topics: ["/bar", "/foo"] });
 
-    // no additional calls
-    expect(restore.mock.calls).toEqual([[undefined], [undefined]]);
-    expect(addMessage.mock.calls).toEqual([[0, message2]]);
-    // the same result is repeated
-    expect(result.current).toEqual(2);
-
-    let promise2: Promise<void>;
-    act(
-      () =>
-        void (promise2 = player.emit({
-          activeData: {
-            messages: [message1, message2],
-            currentTime: { sec: 0, nsec: 0 },
-            startTime: { sec: 0, nsec: 0 },
-            endTime: { sec: 1, nsec: 0 },
-            isPlaying: true,
-            speed: 0.2,
-            lastSeekTime: 1234,
-            topics: [
-              { name: "/foo", schemaName: "foo" },
-              { name: "/bar", schemaName: "foo" },
-            ],
-            topicStats: new Map(),
-            datatypes: new Map(
-              Object.entries({ foo: { definitions: [] }, bar: { definitions: [] } }),
-            ),
-            totalBytesReceived: 1234,
-          },
-        })),
-    );
-    await act(async () => {
-      await promise2;
-    });
-
     expect(restore.mock.calls).toEqual([[undefined], [undefined]]);
     expect(addMessage.mock.calls).toEqual([
-      [0, message2],
-      [2, message1],
-      [1, message2],
+      [0, messageBar],
+      [2, messageFoo],
     ]);
-    // the same result is repeated
-    expect(result.current).toEqual(2);
+    // foo message after subscribing to that topic
+    expect(result.current).toEqual(1);
   });
 
   it("doesn't re-render when player topics or other playerState changes", async () => {
