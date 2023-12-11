@@ -155,8 +155,8 @@ export const threeDee = {
   noImageTopicsAvailable: "No image topics available.",
   imageTopicDNE: "Image topic does not exist.",
   imageAndCalibrationDNE: "Image and calibration topics do not exist.",
-  waitingForCalibrationAndImages: "Waiting for messages...",
-  waitingForCalibration: "Waiting for calibration messages...",
-  waitingForImages: "Waiting for image messages...",
-  waitingForSyncAnnotations: "Waiting for sync annotations...",
+  waitingForCalibrationAndImages: "Waiting for messages…",
+  waitingForCalibration: "Waiting for calibration messages…",
+  waitingForImages: "Waiting for image messages…",
+  waitingForSyncAnnotations: "Waiting for synchronized annotations…",
 };
