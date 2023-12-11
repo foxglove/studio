@@ -451,7 +451,15 @@ export function updatePath(path: PlotPath, params: PathParameters, state: PathSt
     // show the data that is immediately visible and do not need to
     // incrementally downsample.
     const { min, max } = viewBounds;
-    if (max !== min && max < combinedBounds.max) {
+    const range = max - min;
+    // When we're streaming live data, it can cause us to switch into a partial
+    // view of the dataset if we fall far enough behind, because the viewport
+    // is stretched to fit the dataset by the main thread, but only with some
+    // delay. Adding in leeway prevents that from happening, such that many
+    // more points have to accumulate before our viewport changes to a partial
+    // one.
+    const leeway = range * ZOOM_RESET_FACTOR * 2;
+    if (max !== min && max + leeway < combinedBounds.max) {
       return updatePartialView(path, params, state);
     }
 
