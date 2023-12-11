@@ -401,7 +401,7 @@ function updatePartialView(path: PlotPath, params: PathParameters, state: PathSt
       ...state,
       isPartial: true,
       dataset: {
-        ...blockData,
+        ...(blockData ?? currentData),
         // pointRadius will be default
         data,
       },
@@ -417,7 +417,7 @@ function updatePartialView(path: PlotPath, params: PathParameters, state: PathSt
     ...state,
     isPartial: true,
     dataset: {
-      ...blockData,
+      ...(blockData ?? currentData),
       pointRadius: 0,
       data: downsampled,
     },
