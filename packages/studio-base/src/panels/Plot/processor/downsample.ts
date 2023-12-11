@@ -163,7 +163,7 @@ const isPartialState = (state: PathState) => state.isPartial;
 
 // Given a `value` representing a value on the x-axis, find the index of the
 // point in the data set that is closest to that value using binary search.
-const findPointBinary = (
+const findIndexBinary = (
   lookup: ReturnType<typeof fastFindIndices>,
   data: TypedData[],
   start: number,
@@ -190,8 +190,8 @@ const findPointBinary = (
   }
 
   return value < pivot
-    ? findPointBinary(lookup, data, start, mid - 1, value)
-    : findPointBinary(lookup, data, mid + 1, end, value);
+    ? findIndexBinary(lookup, data, start, mid - 1, value)
+    : findIndexBinary(lookup, data, mid + 1, end, value);
 };
 
 /**
@@ -200,8 +200,8 @@ const findPointBinary = (
 const sliceBounds = (data: TypedData[], bounds: Bounds1D): TypedData[] => {
   const lookup = fastFindIndices(data);
   const length = getTypedLength(data);
-  const start = findPointBinary(lookup, data, 0, length, bounds.min);
-  const end = findPointBinary(lookup, data, 0, length, bounds.max);
+  const start = findIndexBinary(lookup, data, 0, length, bounds.min);
+  const end = findIndexBinary(lookup, data, 0, length, bounds.max);
   if (start == undefined) {
     return data;
   }
@@ -237,11 +237,12 @@ const isDerivative = (path: PlotPath): boolean => path.value.endsWith(".@derivat
 const isHeaderStamp = (path: PlotPath): boolean => path.timestampMethod === "headerStamp";
 const noop: (data: TypedData[]) => TypedData[] = R.identity;
 
-// Apply any dataset-wide transformations.
+// Apply any dataset-wide transformations, including sorting data points by
+// their header stamps and calculating the derivative.
 const applyTransforms = (data: TypedData[], path: PlotPath): TypedData[] =>
   R.pipe(
-    isDerivative(path) ? derivative : noop,
     isHeaderStamp(path) ? sortDataByHeaderStamp : noop,
+    isDerivative(path) ? derivative : noop,
   )(data);
 
 type SourceParams = {
@@ -512,30 +513,33 @@ export function shouldResetViewport(
     const {
       bounds: { x: viewBounds },
     } = newViewport;
-    return R.pipe(
-      R.filter(isPartialState),
-      R.any(({ dataset }: PathState) => {
-        if (dataset == undefined) {
-          return false;
-        }
 
-        const pathBounds = getXBounds(dataset.data);
-        if (pathBounds == undefined) {
-          return false;
-        }
+    return pathStates.some((state) => {
+      if (!isPartialState(state)) {
+        return false;
+      }
 
-        const maxRange = pathBounds.max - pathBounds.min;
-        const innerStart = pathBounds.min + maxRange * ZOOM_RESET_FACTOR;
-        const innerEnd = pathBounds.min + maxRange * (1 - ZOOM_RESET_FACTOR);
+      const { dataset } = state;
+      if (dataset == undefined) {
+        return false;
+      }
 
-        return (
-          viewBounds.min < pathBounds.min ||
-          viewBounds.min > innerStart ||
-          viewBounds.max > pathBounds.max ||
-          viewBounds.max < innerEnd
-        );
-      }),
-    )(pathStates);
+      const pathBounds = getXBounds(dataset.data);
+      if (pathBounds == undefined) {
+        return false;
+      }
+
+      const maxRange = pathBounds.max - pathBounds.min;
+      const innerStart = pathBounds.min + maxRange * ZOOM_RESET_FACTOR;
+      const innerEnd = pathBounds.min + maxRange * (1 - ZOOM_RESET_FACTOR);
+
+      return (
+        viewBounds.min < pathBounds.min ||
+        viewBounds.min > innerStart ||
+        viewBounds.max > pathBounds.max ||
+        viewBounds.max < innerEnd
+      );
+    });
   }
 
   if (!R.equals(oldViewport.bounds.y, newViewport.bounds.y)) {

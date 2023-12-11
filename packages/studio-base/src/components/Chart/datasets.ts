@@ -138,6 +138,17 @@ export function findIndices(dataset: TypedData[], index: number): Indices | unde
 /**
  * fastFindIndices returns a faster version of findIndices in exchange for
  * doing some compute ahead of time.
+ *
+ * The "calculations ahead of time" refers to calculating the offsets of all of
+ * the slices--in other words, the mapping from an index in the (conceptual)
+ * list to the slice it falls into. Doing this ahead of time allows us to use
+ * binary search to look up the slice and offset inside of that slice for a
+ * given point; since the number of points is accumulative, we can't do this
+ * efficiently when we're starting from nothing. In addition, we're also able
+ * to "cache" the next offset to make reads of sequential points much faster.
+ *
+ * You use this in lieu of the slow version when you know you're about to do a
+ * lot of reads from a dataset, such as when downsampling.
  */
 export const fastFindIndices = (dataset: TypedData[]): ((index: number) => Indices | undefined) => {
   // Calculate the first index of each slice in `dataset`.

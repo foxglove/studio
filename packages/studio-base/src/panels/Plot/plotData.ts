@@ -185,26 +185,6 @@ export function reducePlotData(data: PlotData[]): PlotData {
   return reduced;
 }
 
-/**
- * Merge block and current data. If block data contains any portion of current
- * data, we use that instead of current data.
- */
-export function mergeAllData(blockData: PlotData, currentData: PlotData): PlotData {
-  const { bounds: blockBounds } = blockData;
-  const { bounds: currentBounds } = currentData;
-
-  let datasets: PlotData[] = [];
-  if (blockBounds.x.min <= currentBounds.x.min && blockBounds.x.max > currentBounds.x.max) {
-    // ignore current data if block data covers it already
-    datasets = [blockData];
-  } else {
-    // unbounded plots should also use current data
-    datasets = [blockData, currentData];
-  }
-
-  return reducePlotData(datasets);
-}
-
 type PathData = [PlotPath, PlotDataItem[] | undefined];
 export function buildPlotData(
   args: Im<{

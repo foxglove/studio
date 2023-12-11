@@ -25,6 +25,13 @@ type IntervalItem = { xPixel: number; yPixel: number; label: string | undefined;
 
 // Contains the state of an ongoing downsample operation.
 export type DownsampleState = {
+  // The input to continueDownsample is an Iterable<Point> that produces only
+  // new points. In other words, we don't pass in any points that have already
+  // been consumed by the downsampling operation. Despite that, we have to be
+  // able to calculate indices of the conceptual "complete" dataset, since
+  // that's what the callers use to produce datasets that only contain those
+  // indices. To do that, we keep track of the number of points that have been
+  // consumed and use that to calculate the correct index.
   cursor: number;
   pixelPerXValue: number;
   pixelPerYValue: number;

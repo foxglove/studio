@@ -38,6 +38,8 @@ describe("downsampleTimeseries", () => {
     expect(result).toEqual([0, 1, 2, 5]);
   });
 
+  // This test ensures that splitting up the dataset into arbitrary pieces
+  // still results in the same downsampled points.
   it("correctly pauses and resumes downsampling", () => {
     const realBounds = {
       width: 648,
