@@ -66,12 +66,12 @@ export type BuiltinPanelExtensionContext = {
    * @param options Addiotional options:
    *  - Optional abort signal that allows to abort fetching of the asset. Note that this
    *    might not be supported by all fetching methods.
-   *  - Optional baseUrl which may be used to resolve package:// URIs
+   *  - Optional referenceUrl URL which may be used to resolve package:// URIs
    * @returns
    */
   unstable_fetchAsset: (
     uri: string,
-    options?: { signal?: AbortSignal; baseUrl?: string },
+    options?: { signal?: AbortSignal; referenceUrl?: string },
   ) => Promise<Asset>;
 
   /**

@@ -990,10 +990,10 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
     }
   }
 
-  async #getFileFetch(url: string, baseUrl?: string): Promise<string> {
+  async #getFileFetch(url: string, referenceUrl?: string): Promise<string> {
     try {
       log.debug(`fetch(${url}) requested`);
-      const asset = await this.renderer.fetchAsset(url, { baseUrl });
+      const asset = await this.renderer.fetchAsset(url, { referenceUrl });
       return this.#textDecoder.decode(asset.data);
     } catch (err) {
       throw new Error(`Failed to fetch "${url}": ${err}`);
@@ -1088,7 +1088,9 @@ function createRenderable(args: {
       // Use embedded materials if the mesh is a Collada file
       const embedded = isCollada ? EmbeddedMaterialUsage.Use : EmbeddedMaterialUsage.Ignore;
       const marker = createMeshMarker(frameId, pose, embedded, visual.geometry, baseUrl, color);
-      return new RenderableMeshResource(name, marker, undefined, renderer, { baseUrl });
+      return new RenderableMeshResource(name, marker, undefined, renderer, {
+        referenceUrl: baseUrl,
+      });
     }
     default:
       throw new Error(`Unrecognized visual geometryType: ${type}`);

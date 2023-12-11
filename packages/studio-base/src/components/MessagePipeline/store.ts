@@ -186,9 +186,9 @@ export function createMessagePipelineStore({
             return await builtinFetch(uri, options);
           } else if (
             pkgName &&
-            options?.baseUrl != undefined &&
-            !options.baseUrl.startsWith("package://") &&
-            options.baseUrl.includes(pkgName)
+            options?.referenceUrl != undefined &&
+            !options.referenceUrl.startsWith("package://") &&
+            options.referenceUrl.includes(pkgName)
           ) {
             // As last resort to load the package://<pkgName>/<pkgPath> URL, we resolve the package URL to
             // be relative of the base URL (which contains <pkgName> and is not a package:// URL itself).
@@ -196,7 +196,7 @@ export function createMessagePipelineStore({
             //   base URL: https://example.com/<pkgName>/urdf/robot.urdf
             //   resolved: https://example.com/<pkgName>/<pkgPath>
             const resolvedUrl =
-              options.baseUrl.slice(0, options.baseUrl.lastIndexOf(pkgName)) + pkgPath;
+              options.referenceUrl.slice(0, options.referenceUrl.lastIndexOf(pkgName)) + pkgPath;
             return await builtinFetch(resolvedUrl, options);
           }
         }

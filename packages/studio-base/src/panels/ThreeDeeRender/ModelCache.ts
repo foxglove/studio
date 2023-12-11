@@ -29,7 +29,8 @@ export type ModelCacheOptions = {
 
 type LoadModelOptions = {
   overrideMediaType?: string;
-  baseUrl?: string;
+  /** A URL to e.g. a URDf which may be used to resolve mesh package:// URLs */
+  referenceUrl?: string;
 };
 
 export type LoadedModel = THREE.Group | THREE.Scene;
@@ -85,7 +86,7 @@ export class ModelCache {
   ): Promise<LoadedModel> {
     const GLB_MAGIC = 0x676c5446; // "glTF"
 
-    const asset = await this.#fetchAsset(url, { baseUrl: options.baseUrl });
+    const asset = await this.#fetchAsset(url, { referenceUrl: options.referenceUrl });
 
     const buffer = asset.data;
     if (buffer.byteLength < 4) {

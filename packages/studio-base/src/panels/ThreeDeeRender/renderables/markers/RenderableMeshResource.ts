@@ -19,7 +19,7 @@ const MESH_FETCH_FAILED = "MESH_FETCH_FAILED";
 export class RenderableMeshResource extends RenderableMarker {
   #mesh: THREE.Group | THREE.Scene | undefined;
   #material: THREE.MeshStandardMaterial;
-  #baseUrl: string | undefined;
+  #referenceUrl: string | undefined;
 
   /** Track updates to avoid race conditions when asynchronously loading models */
   #updateId = 0;
@@ -29,12 +29,12 @@ export class RenderableMeshResource extends RenderableMarker {
     marker: Marker,
     receiveTime: bigint | undefined,
     renderer: IRenderer,
-    options?: { baseUrl?: string },
+    options?: { referenceUrl?: string },
   ) {
     super(topic, marker, receiveTime, renderer);
 
     this.#material = makeStandardMaterial(marker.color);
-    this.#baseUrl = options?.baseUrl;
+    this.#referenceUrl = options?.referenceUrl;
     this.update(marker, receiveTime, true);
   }
 
@@ -127,7 +127,7 @@ export class RenderableMeshResource extends RenderableMarker {
   ): Promise<THREE.Group | THREE.Scene | undefined> {
     const cachedModel = await this.renderer.modelCache.load(
       url,
-      { baseUrl: this.#baseUrl },
+      { referenceUrl: this.#referenceUrl },
       (err) => {
         this.renderer.settings.errors.add(
           this.userData.settingsPath,
