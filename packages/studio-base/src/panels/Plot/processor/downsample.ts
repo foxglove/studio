@@ -199,51 +199,17 @@ const findIndexBinary = (
 /**
  * Check whether the point at `index` falls within `bounds`.
  */
-const isInViewport = (
-  lookup: Lookup,
-  data: TypedData[],
-  index: number,
-  bounds: Bounds1D,
-): boolean | undefined => {
-  const { min, max } = bounds;
-  const location = lookup(index);
-  if (location == undefined) {
-    return undefined;
-  }
-  const [slice, offset] = location;
-  const x = data[slice]?.x[offset];
-  if (x == undefined) {
-    return undefined;
-  }
-
-  return x >= min && x <= max;
-};
-
 /**
  * Get the portion of TypedData[] that falls within `bounds`.
  */
 const sliceBounds = (data: TypedData[], bounds: Bounds1D): TypedData[] => {
   const lookup = fastFindIndices(data);
   const length = getTypedLength(data);
-
-  // For both the start point and the end point, we want to ensure they fall
-  // outside of the viewport so as to not make it seem like the data ends when
-  // it doesn't.
-  let start = findIndexBinary(lookup, data, 0, length, bounds.min);
+  const start = findIndexBinary(lookup, data, 0, length, bounds.min);
   if (start == undefined) {
     return data;
   }
-  while (start >= 0 && isInViewport(lookup, data, start, bounds) === true) {
-    start--;
-  }
-
-  let end = findIndexBinary(lookup, data, 0, length, bounds.max);
-  if (end != undefined) {
-    while (end < length && isInViewport(lookup, data, end, bounds) === true) {
-      end++;
-    }
-  }
-
+  const end = findIndexBinary(lookup, data, 0, length, bounds.max);
   return sliceTyped(data, start, end);
 };
 
