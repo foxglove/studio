@@ -161,10 +161,12 @@ const getPixelSize = ({
 
 const isPartialState = (state: PathState) => state.isPartial;
 
+type Lookup = ReturnType<typeof fastFindIndices>;
+
 // Given a `value` representing a value on the x-axis, find the index of the
 // point in the data set that is closest to that value using binary search.
 const findIndexBinary = (
-  lookup: ReturnType<typeof fastFindIndices>,
+  lookup: Lookup,
   data: TypedData[],
   start: number,
   end: number,
@@ -195,15 +197,51 @@ const findIndexBinary = (
 };
 
 /**
+ * Check whether the point at `index` falls within `bounds`.
+ */
+const isInViewport = (
+  lookup: Lookup,
+  data: TypedData[],
+  index: number,
+  bounds: Bounds1D,
+): boolean | undefined => {
+  const { min, max } = bounds;
+  const location = lookup(index);
+  if (location == undefined) {
+    return undefined;
+  }
+  const [slice, offset] = location;
+  const x = data[slice]?.x[offset];
+  if (x == undefined) {
+    return undefined;
+  }
+
+  return x >= min && x <= max;
+};
+
+/**
  * Get the portion of TypedData[] that falls within `bounds`.
  */
 const sliceBounds = (data: TypedData[], bounds: Bounds1D): TypedData[] => {
   const lookup = fastFindIndices(data);
   const length = getTypedLength(data);
-  const start = findIndexBinary(lookup, data, 0, length, bounds.min);
-  const end = findIndexBinary(lookup, data, 0, length, bounds.max);
+
+  // For both the start point and the end point, we want to ensure they fall
+  // outside of the viewport so as to not make it seem like the data ends when
+  // it doesn't.
+  let start = findIndexBinary(lookup, data, 0, length, bounds.min);
   if (start == undefined) {
     return data;
+  }
+  while (start >= 0 && isInViewport(lookup, data, start, bounds) === true) {
+    start--;
+  }
+
+  let end = findIndexBinary(lookup, data, 0, length, bounds.max);
+  if (end != undefined) {
+    while (end < length && isInViewport(lookup, data, end, bounds) === true) {
+      end++;
+    }
   }
 
   return sliceTyped(data, start, end);
@@ -394,7 +432,16 @@ type PathParameters = {
  */
 function updatePartialView(path: PlotPath, params: PathParameters, state: PathState): PathState {
   const { blockData, currentData, viewBounds, view, maxPoints } = params;
-  const data = sliceBounds(mergeTyped(blockData?.data ?? [], currentData?.data ?? []), viewBounds);
+
+  const maxRange = viewBounds.max - viewBounds.min;
+  const buffer = maxRange * ZOOM_RESET_FACTOR;
+  const partialBounds = {
+    min: viewBounds.min - buffer,
+    max: viewBounds.max + buffer,
+  };
+
+  const mergedData = mergeTyped(blockData?.data ?? [], currentData?.data ?? []);
+  const data = applyTransforms(sliceBounds(mergedData, partialBounds), path);
   const numSliced = getTypedLength(data);
   if (numSliced <= maxPoints) {
     return {
@@ -408,7 +455,7 @@ function updatePartialView(path: PlotPath, params: PathParameters, state: PathSt
     };
   }
 
-  const downsampled = downsampleDataset(applyTransforms(data, path), view, maxPoints);
+  const downsampled = downsampleDataset(data, view, maxPoints);
   if (downsampled == undefined) {
     return state;
   }
@@ -514,7 +561,7 @@ export function shouldResetViewport(
       bounds: { x: viewBounds },
     } = newViewport;
 
-    return pathStates.some((state) => {
+    const didPathReset = pathStates.some((state) => {
       if (!isPartialState(state)) {
         return false;
       }
@@ -540,6 +587,10 @@ export function shouldResetViewport(
         viewBounds.max < innerEnd
       );
     });
+
+    if (didPathReset) {
+      return true;
+    }
   }
 
   if (!R.equals(oldViewport.bounds.y, newViewport.bounds.y)) {
@@ -636,7 +687,9 @@ export function updateDownsample(
   return {
     ...downsampled,
     data: {
+      // Prefer properties from current data if it's around
       ...blocks,
+      ...current,
       datasets: newDatasets,
     },
     paths: newPaths,
