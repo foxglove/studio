@@ -41,8 +41,8 @@ import {
 
 import { normalizeAnnotations } from "./annotations/normalizeAnnotations";
 import { Annotation } from "./annotations/types";
-import { IMAGE_MODE_HUD_GROUP_ID } from "./constants";
 import {
+  IMAGE_MODE_HUD_GROUP_ID,
   WAITING_FOR_BOTH_MESSAGES_HUD_ID,
   WAITING_FOR_CALIBRATION_HUD_ID,
   WAITING_FOR_IMAGES_NOTICE_ID,
