@@ -77,7 +77,7 @@ export class Downsampler {
             x,
             y: yValue,
             labelColor: grey,
-            label: "(multiple states)",
+            label: "[...]",
           };
         }
 
