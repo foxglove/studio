@@ -124,7 +124,7 @@ export function downsampleStates(
     indices.push({
       x: interval.x,
       index: haveMultiple ? undefined : first.index,
-      states: R.uniq(labels.map(({ value }) => value)),
+      ...(haveMultiple ? { states: R.uniq(labels.map(({ value }) => value)) } : undefined),
     });
 
     if (!haveMultiple) {

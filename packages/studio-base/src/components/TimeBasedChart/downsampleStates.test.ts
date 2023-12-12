@@ -4,7 +4,7 @@
 
 import { iterateObjects } from "@foxglove/studio-base/components/Chart/datasets";
 
-import { downsampleStates, StatePoint } from "./downsampleStates";
+import { downsampleStates } from "./downsampleStates";
 import { ChartDatum as Datum } from "./types";
 
 const createData = (refs: [x: number, label: string][]): Datum[] =>
@@ -12,12 +12,6 @@ const createData = (refs: [x: number, label: string][]): Datum[] =>
     x,
     y: 0,
     label,
-  }));
-
-const createResult = (refs: [x: number, index: number | undefined][]): StatePoint[] =>
-  refs.map(([x, index]) => ({
-    x,
-    index,
   }));
 
 const A = "a";
@@ -47,13 +41,11 @@ describe("downsampleStates", () => {
       bounds,
       numPoints,
     );
-    expect(result).toEqual(
-      createResult([
-        [0, 0],
-        [50, 1],
-        [100, 2],
-      ]),
-    );
+    expect(result).toEqual([
+      { x: 0, index: 0 },
+      { x: 50, index: 1 },
+      { x: 100, index: 2 },
+    ]);
   });
 
   it("consolidates interval with more than one state", () => {
@@ -71,14 +63,12 @@ describe("downsampleStates", () => {
       bounds,
       numPoints,
     );
-    expect(result).toEqual(
-      createResult([
-        [0, 0],
-        [50, undefined],
-        [secondInterval, 2],
-        [100, 3],
-      ]),
-    );
+    expect(result).toEqual([
+      { x: 0, index: 0 },
+      { x: 50, index: undefined, states: ["b", "a"] },
+      { x: secondInterval, index: 2 },
+      { x: 100, index: 3 },
+    ]);
   });
 
   it("does not consolidate interval with same state as before", () => {
@@ -97,12 +87,10 @@ describe("downsampleStates", () => {
       bounds,
       numPoints,
     );
-    expect(result).toEqual(
-      createResult([
-        [0, 0],
-        [49, 1],
-        [100, 4],
-      ]),
-    );
+    expect(result).toEqual([
+      { x: 0, index: 0 },
+      { x: 49, index: 1 },
+      { x: 100, index: 4 },
+    ]);
   });
 });
