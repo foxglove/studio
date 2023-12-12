@@ -2,13 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { ChartDataset } from "chart.js";
-
 import { Point } from "@foxglove/studio-base/components/Chart/datasets";
 
 import type { PlotViewport } from "./types";
-
-type Dataset<T> = ChartDataset<"scatter", T>;
 
 // This is the desired number of data points for each plot across all signals
 // and data sources. Beyond this threshold, ChartJS can no longer render at
@@ -277,19 +273,4 @@ export function downsampleScatter(points: Iterable<Point>, view: PlotViewport): 
   }
 
   return indices;
-}
-
-/**
- * Given a dataset and a viewport, `downsample` chooses a list of
- * representative points that, when plotted, resemble the full dataset.
- */
-export function downsample<T>(
-  dataset: Dataset<T>,
-  points: Iterable<Point>,
-  view: PlotViewport,
-  numPoints?: number,
-): number[] {
-  return dataset.showLine !== true
-    ? downsampleScatter(points, view)
-    : downsampleTimeseries(points, view, numPoints);
 }

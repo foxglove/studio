@@ -18,7 +18,9 @@ export type StatePoint = {
 };
 
 type Label = {
+  // The index at which this label first appeared
   index: number;
+  // The value of the label
   value: string;
 };
 
