@@ -2,6 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as R from "ramda";
+
+import { Immutable } from "@foxglove/studio";
 import { Point } from "@foxglove/studio-base/components/Chart/datasets";
 
 import { calculateIntervals } from "./downsample";
@@ -15,6 +18,7 @@ export type StatePoint = {
   // should include. If this is undefined, this segment consists of more than
   // one states and it should be rendered as such.
   index: number | undefined;
+  states?: string[];
 };
 
 type Label = {
@@ -120,6 +124,7 @@ export function downsampleStates(
     indices.push({
       x: interval.x,
       index: haveMultiple ? undefined : first.index,
+      states: R.uniq(labels.map(({ value }) => value)),
     });
 
     if (!haveMultiple) {

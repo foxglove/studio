@@ -71,13 +71,14 @@ export class Downsampler {
 
       const downsampled = downsampleStates(iterateObjects(dataset.data), view, numPoints);
       const yValue = dataset.data[0]?.y ?? 0;
-      const resolved = downsampled.map(({ x, index }) => {
+      const resolved = downsampled.map(({ x, index, states }) => {
         if (index == undefined) {
           return {
             x,
             y: yValue,
             labelColor: grey,
             label: "[...]",
+            states,
           };
         }
 
