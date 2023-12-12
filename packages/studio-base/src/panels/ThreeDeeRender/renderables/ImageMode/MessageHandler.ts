@@ -105,11 +105,18 @@ export const WAITING_FOR_IMAGE_EMPTY_HUD_ITEM: HUDItem = {
   displayType: "empty",
 };
 
-export const WAITING_FOR_SYNC_HUD_ITEM: HUDItem = {
-  id: "WAITING_FOR_SYNC",
+export const WAITING_FOR_SYNC_NOTICE_HUD_ITEM: HUDItem = {
+  id: "WAITING_FOR_SYNC_NOTICE",
   group: IMAGE_MODE_HUD_GROUP_ID,
   getMessage: () => t3D("waitingForSyncAnnotations"),
   displayType: "notice",
+};
+
+export const WAITING_FOR_SYNC_EMPTY_HUD_ITEM: HUDItem = {
+  id: "WAITING_FOR_SYNC_EMPTY",
+  group: IMAGE_MODE_HUD_GROUP_ID,
+  getMessage: () => t3D("waitingForSyncAnnotations"),
+  displayType: "empty",
 };
 /**
  * Processes and normalizes incoming messages and manages state of
@@ -371,7 +378,19 @@ export class MessageHandler implements IMessageHandler {
       waitingForImage && calibrationRequired,
       WAITING_FOR_IMAGE_NOTICE_HUD_ITEM,
     );
-    this.#hud.displayIfTrue(state.missingAnnotationTopics?.length, WAITING_FOR_SYNC_HUD_ITEM);
+
+    const waitingForSync =
+      !!state.missingAnnotationTopics && state.missingAnnotationTopics.length > 0;
+    this.#hud.displayIfTrue(
+      waitingForSync && calibrationRequired,
+      WAITING_FOR_SYNC_NOTICE_HUD_ITEM,
+    );
+
+    // it is an empty state if calibration not required
+    this.#hud.displayIfTrue(
+      waitingForSync && !calibrationRequired,
+      WAITING_FOR_SYNC_EMPTY_HUD_ITEM,
+    );
   }
 
   #getRenderState(): Readonly<Partial<MessageHandlerState>> {

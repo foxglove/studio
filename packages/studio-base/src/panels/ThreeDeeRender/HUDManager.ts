@@ -44,9 +44,8 @@ export class HUDItemManager {
     }
   }
 
-  public displayIfTrue(value: unknown, hudItem: HUDItem): void {
-    // Gets in loop of wanting to cast to boolean and no boolean cast
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  public displayIfTrue(value: boolean, hudItem: HUDItem): void {
     if (value) {
       this.addHUDItem(hudItem);
     } else {

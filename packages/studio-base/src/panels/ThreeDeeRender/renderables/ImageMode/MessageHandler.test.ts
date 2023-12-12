@@ -22,7 +22,8 @@ import {
   WAITING_FOR_CALIBRATION_HUD_ITEM,
   WAITING_FOR_IMAGE_EMPTY_HUD_ITEM,
   WAITING_FOR_IMAGE_NOTICE_HUD_ITEM,
-  WAITING_FOR_SYNC_HUD_ITEM,
+  WAITING_FOR_SYNC_EMPTY_HUD_ITEM,
+  WAITING_FOR_SYNC_NOTICE_HUD_ITEM,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/MessageHandler";
 
 import { PartialMessageEvent } from "../../SceneExtension";
@@ -43,11 +44,8 @@ function wrapInMessageEvent<T>(
 }
 
 describe("MessageHandler: synchronized = false", () => {
-  let hud = new HUDItemManager(() => {});
-  beforeEach(() => {
-    hud = new HUDItemManager(() => {});
-  });
   it("should return an empty state if no messages are handled", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = { synchronize: false };
     const messageHandler = new MessageHandler(initConfig, hud);
 
@@ -59,6 +57,7 @@ describe("MessageHandler: synchronized = false", () => {
   });
 
   it("should have camera info if handled camera info", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = { synchronize: false, calibrationTopic: "exists" };
     const messageHandler = new MessageHandler(initConfig, hud);
 
@@ -76,6 +75,7 @@ describe("MessageHandler: synchronized = false", () => {
     ]);
   });
   it("should have image if handled image", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       { synchronize: false, calibrationTopic: "info" },
       hud,
@@ -92,6 +92,7 @@ describe("MessageHandler: synchronized = false", () => {
   });
 
   it("should have annotations if handled annotations", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: false,
@@ -113,6 +114,7 @@ describe("MessageHandler: synchronized = false", () => {
     expect(state.annotationsByTopic?.get("annotations")).not.toBeUndefined();
   });
   it("clears image if image topic changed", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = { synchronize: false, imageTopic: "image1" };
     const messageHandler = new MessageHandler(initConfig, hud);
 
@@ -125,6 +127,7 @@ describe("MessageHandler: synchronized = false", () => {
     expect(state.image).toBeUndefined();
   });
   it("clears cameraInfo if calibration topic changed", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: false,
       calibrationTopic: "calibration1",
@@ -143,6 +146,7 @@ describe("MessageHandler: synchronized = false", () => {
     expect(state.cameraInfo).toBeUndefined();
   });
   it("clears cameraInfo if calibration set to undefined", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: false,
       calibrationTopic: "calibration1",
@@ -161,6 +165,7 @@ describe("MessageHandler: synchronized = false", () => {
     expect(state.cameraInfo).toBeUndefined();
   });
   it("clears specific annotations if annotations subscriptions change", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: false,
       annotations: {
@@ -197,6 +202,7 @@ describe("MessageHandler: synchronized = false", () => {
     expect(state.annotationsByTopic?.get("annotations2")).toBeUndefined();
   });
   it("listener function called whenever a message is handled or when config changes", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: false,
       imageTopic: "image",
@@ -232,6 +238,7 @@ describe("MessageHandler: synchronized = false", () => {
     expect(listener).toHaveBeenCalledTimes(4);
   });
   it("should keep image and camera info if switching from unsync to sync to sync", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = { synchronize: false, imageTopic: "image", calibrationTopic: "calib" };
     const messageHandler = new MessageHandler(initConfig, hud);
     const listener = jest.fn();
@@ -258,11 +265,8 @@ describe("MessageHandler: synchronized = false", () => {
 });
 
 describe("MessageHandler: synchronized = true", () => {
-  let hud = new HUDItemManager(() => {});
-  beforeEach(() => {
-    hud = new HUDItemManager(() => {});
-  });
   it("handles and shows camera info in state", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       { synchronize: true, calibrationTopic: "calibration" },
       hud,
@@ -280,6 +284,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("handles and shows image in state with no active annotations", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler({ synchronize: true }, hud);
 
     const image = wrapInMessageEvent<RawImage>("image", "foxglove.RawImage", 0n);
@@ -290,6 +295,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("does not show state with annotations if only handled annotations", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -314,6 +320,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("shows state with image and annotations if they have the same timestamp", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -346,6 +353,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("shows state without image and annotations if they have different header timestamps", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -390,6 +398,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("shows most recent image and annotations with same timestamps", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -439,6 +448,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("shows most older image and annotations with same timestamps if newer messages have different timestamps", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -489,6 +499,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("does not show image in state if it hasn't received requisite annotations at same timestamp", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -520,6 +531,7 @@ describe("MessageHandler: synchronized = true", () => {
   });
 
   it("clears image when image topic changed", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       imageTopic: "image1",
       synchronize: true,
@@ -547,6 +559,7 @@ describe("MessageHandler: synchronized = true", () => {
     expect(state.image).toBeUndefined();
   });
   it("clears specific annotations if annotations subscriptions change", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: true,
       imageTopic: "image",
@@ -593,6 +606,7 @@ describe("MessageHandler: synchronized = true", () => {
     expect(state.annotationsByTopic?.get("annotations2")).toBeUndefined();
   });
   it("listener function called whenever a message is handled or when config changes", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: true,
       imageTopic: "image",
@@ -634,11 +648,8 @@ describe("MessageHandler: synchronized = true", () => {
 });
 
 describe("MessageHandler: hud item display", () => {
-  let hud = new HUDItemManager(() => {});
-  beforeEach(() => {
-    hud = new HUDItemManager(() => {});
-  });
   it("init: waiting for images if no calibration topic specified", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler({ synchronize: false }, hud);
 
     messageHandler.getRenderStateAndUpdateHUD();
@@ -647,6 +658,7 @@ describe("MessageHandler: hud item display", () => {
     expect(hudItems).toEqual([WAITING_FOR_IMAGE_EMPTY_HUD_ITEM]);
   });
   it("init: waiting for both if calibration topic specified", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       { synchronize: false, calibrationTopic: "exists" },
       hud,
@@ -658,6 +670,7 @@ describe("MessageHandler: hud item display", () => {
     expect(hudItems).toEqual([WAITING_FOR_BOTH_HUD_ITEM, WAITING_FOR_IMAGE_NOTICE_HUD_ITEM]);
   });
   it("waiting for image notice if calibration received", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       { synchronize: false, calibrationTopic: "exists" },
       hud,
@@ -675,6 +688,7 @@ describe("MessageHandler: hud item display", () => {
     expect(hudItems).toEqual([WAITING_FOR_IMAGE_NOTICE_HUD_ITEM]);
   });
   it("is waiting for calibration if topic specified and image received", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       { synchronize: false, calibrationTopic: "info" },
       hud,
@@ -689,6 +703,7 @@ describe("MessageHandler: hud item display", () => {
   });
 
   it("is waiting for image if image topic is changed after recieving image", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = { synchronize: false, imageTopic: "image1" };
     const messageHandler = new MessageHandler(initConfig, hud);
 
@@ -703,6 +718,7 @@ describe("MessageHandler: hud item display", () => {
   });
 
   it("shows waiting for Both if calibration topic changed after only receiving calibration message", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: false,
       calibrationTopic: "calibration1",
@@ -725,6 +741,7 @@ describe("MessageHandler: hud item display", () => {
   });
 
   it("shows waiting for calibration if calibration topic changed after receiving both image and calibration messages", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: false,
       calibrationTopic: "calibration1",
@@ -749,6 +766,7 @@ describe("MessageHandler: hud item display", () => {
     expect(hudItems).toEqual([WAITING_FOR_CALIBRATION_HUD_ITEM]);
   });
   it("displays waiting for image after calibration is set to undefined", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = {
       synchronize: false,
       calibrationTopic: "calibration1",
@@ -771,6 +789,7 @@ describe("MessageHandler: hud item display", () => {
   });
 
   it("displays no info after receiving calibration and image", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       { synchronize: false, calibrationTopic: "calibration" },
       hud,
@@ -791,6 +810,7 @@ describe("MessageHandler: hud item display", () => {
   });
 
   it("displays no info after receiving image when calibration topic is undefined", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       { synchronize: false, calibrationTopic: undefined },
       hud,
@@ -804,6 +824,7 @@ describe("MessageHandler: hud item display", () => {
     expect(hudItems).toEqual([]);
   });
   it("displays no info after receiving image when synchronized is true", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler({ synchronize: true }, hud);
 
     const image = wrapInMessageEvent<RawImage>("image", "foxglove.RawImage", 0n);
@@ -815,6 +836,7 @@ describe("MessageHandler: hud item display", () => {
   });
 
   it("displays waiting for image after receiving annotations when synced", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -839,6 +861,7 @@ describe("MessageHandler: hud item display", () => {
   });
 
   it("displays no info after receiving synced annotations and image", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -868,7 +891,8 @@ describe("MessageHandler: hud item display", () => {
     expect(hudItems).toEqual([]);
   });
 
-  it("displays waiting for sync after receiving image and annotations with mismatched timestamps", () => {
+  it("displays waiting for sync empty state (calibration=None) after receiving image and annotations with mismatched timestamps", () => {
+    const hud = new HUDItemManager(() => {});
     const messageHandler = new MessageHandler(
       {
         synchronize: true,
@@ -906,10 +930,60 @@ describe("MessageHandler: hud item display", () => {
     messageHandler.getRenderStateAndUpdateHUD();
 
     const hudItems = _.sortBy(hud.getHUDItems(), "id");
-    expect(hudItems).toEqual([WAITING_FOR_SYNC_HUD_ITEM]);
+    expect(hudItems).toEqual([WAITING_FOR_SYNC_EMPTY_HUD_ITEM]);
+  });
+
+  it("displays waiting for sync empty state (calibrationTopic exists) after receiving image and annotations with mismatched timestamps", () => {
+    const hud = new HUDItemManager(() => {});
+    const messageHandler = new MessageHandler(
+      {
+        synchronize: true,
+        annotations: {
+          annotations1: { visible: true },
+          annotations2: { visible: true },
+        },
+        calibrationTopic: "calibration",
+      },
+      hud,
+    );
+    const time = 2n;
+
+    const image = wrapInMessageEvent<RawImage>("image", "foxglove.RawImage", 0n, {
+      timestamp: fromNanoSec(time),
+    });
+
+    const annotation1 = createCircleAnnotations([time]);
+    const annotationMessage1 = wrapInMessageEvent(
+      "annotations1",
+      "foxglove.ImageAnnotations",
+      0n,
+      annotation1,
+    );
+    const annotation2 = createCircleAnnotations([time + 1n]);
+    const annotationMessage2 = wrapInMessageEvent(
+      "annotations2",
+      "foxglove.ImageAnnotations",
+      0n,
+      annotation2,
+    );
+
+    const cameraInfo = wrapInMessageEvent<CameraCalibration>(
+      "calibration",
+      "foxglove.CameraCalibration",
+      0n,
+    );
+    messageHandler.handleCameraInfo(cameraInfo);
+    messageHandler.handleRawImage(image);
+    messageHandler.handleAnnotations(annotationMessage1 as MessageEvent<ImageAnnotations>);
+    messageHandler.handleAnnotations(annotationMessage2 as MessageEvent<ImageAnnotations>);
+    messageHandler.getRenderStateAndUpdateHUD();
+
+    const hudItems = _.sortBy(hud.getHUDItems(), "id");
+    expect(hudItems).toEqual([WAITING_FOR_SYNC_NOTICE_HUD_ITEM]);
   });
 
   it("displays no info after going from unsynced to synced and back", () => {
+    const hud = new HUDItemManager(() => {});
     const initConfig = { synchronize: false, calibrationTopic: "calibration" };
     const messageHandler = new MessageHandler(initConfig, hud);
 

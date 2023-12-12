@@ -423,7 +423,7 @@ export class ImageMode
     const imageTopicAvailable = !(
       imageTopic && !imageTopics.some((topic) => topic.value === imageTopic)
     );
-    this.renderer.settings.errors.errorIfFalsey(
+    this.renderer.settings.errors.errorIfFalse(
       imageTopicAvailable,
       IMAGE_TOPIC_PATH,
       IMAGE_TOPIC_UNAVAILABLE,
@@ -434,7 +434,7 @@ export class ImageMode
       calibrationTopic && !calibrationTopics.some((topic) => topic.value === calibrationTopic)
     );
 
-    this.renderer.settings.errors.errorIfFalsey(
+    this.renderer.settings.errors.errorIfFalse(
       calibrationTopicAvailable,
       CALIBRATION_TOPIC_PATH,
       CALIBRATION_TOPIC_UNAVAILABLE,

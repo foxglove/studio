@@ -118,9 +118,8 @@ export class LayerErrors extends EventEmitter<LayerErrorEvents> {
    * @param errorId - id unique to error
    * @param errorMessage - error message
    */
-  public errorIfFalsey(value: unknown, path: Path, errorId: string, errorMessage: string): void {
-    // Gets in loop of wanting to cast to boolean and no boolean cast
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  public errorIfFalse(value: boolean, path: Path, errorId: string, errorMessage: string): void {
     if (!value) {
       this.add(path, errorId, errorMessage);
     } else {
