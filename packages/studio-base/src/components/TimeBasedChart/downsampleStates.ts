@@ -160,7 +160,13 @@ export function downsampleStates(
       continue;
     }
 
+    // This only seems to occur when we've inserted a dummy final point, which
+    // we need to add
     if (label == undefined) {
+      indices.push({
+        x,
+        index,
+      });
       continue;
     }
 
