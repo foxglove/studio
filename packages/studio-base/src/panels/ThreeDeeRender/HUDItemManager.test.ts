@@ -4,7 +4,7 @@
 
 import * as _ from "lodash-es";
 
-import { HUDItem, HUDItemManager, HUD_ID_PRIORITIES } from "./HUDManager";
+import { HUDItem, HUDItemManager, HUD_ID_PRIORITIES } from "./HUDItemManager";
 
 describe("HUDItemManager", () => {
   let manager: HUDItemManager;

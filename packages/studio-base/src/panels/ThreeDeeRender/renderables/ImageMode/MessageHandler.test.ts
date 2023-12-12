@@ -15,7 +15,7 @@ import {
   TextAnnotation,
 } from "@foxglove/schemas";
 import { MessageEvent } from "@foxglove/studio";
-import { HUDItemManager } from "@foxglove/studio-base/panels/ThreeDeeRender/HUDManager";
+import { HUDItemManager } from "@foxglove/studio-base/panels/ThreeDeeRender/HUDItemManager";
 import {
   MessageHandler,
   WAITING_FOR_BOTH_HUD_ITEM,

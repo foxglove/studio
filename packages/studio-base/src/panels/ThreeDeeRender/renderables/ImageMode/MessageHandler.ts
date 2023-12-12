@@ -18,7 +18,10 @@ import {
   ImageAnnotations as FoxgloveImageAnnotations,
 } from "@foxglove/schemas";
 import { Immutable, MessageEvent } from "@foxglove/studio";
-import { HUDItem, HUDItemManager } from "@foxglove/studio-base/panels/ThreeDeeRender/HUDManager";
+import {
+  HUDItem,
+  HUDItemManager,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/HUDItemManager";
 import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import {
   AnyImage,

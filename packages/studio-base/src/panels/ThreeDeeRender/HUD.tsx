@@ -10,7 +10,7 @@ import { makeStyles } from "tss-react/mui";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 
-import { HUDItem } from "./HUDManager";
+import { HUDItem } from "./HUDItemManager";
 import { useRendererProperty } from "./RendererContext";
 
 const useStyles = makeStyles()((theme) => ({

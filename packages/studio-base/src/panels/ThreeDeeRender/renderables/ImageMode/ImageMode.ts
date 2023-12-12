@@ -19,7 +19,7 @@ import {
 } from "@foxglove/studio";
 import { PanelContextMenuItem } from "@foxglove/studio-base/components/PanelContextMenu";
 import { DraggedMessagePath } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import { HUDItem } from "@foxglove/studio-base/panels/ThreeDeeRender/HUDManager";
+import { HUDItem } from "@foxglove/studio-base/panels/ThreeDeeRender/HUDItemManager";
 import { Path } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import {
   IMAGE_MODE_HUD_GROUP_ID,
