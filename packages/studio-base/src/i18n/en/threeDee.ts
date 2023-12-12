@@ -154,6 +154,7 @@ export const threeDee = {
   // HUD Items and empty states
   noImageTopicsAvailable: "No image topics available.",
   imageTopicDNE: "Image topic does not exist.",
+  calibrationTopicDNE: "Calibration topic does not exist.",
   imageAndCalibrationDNE: "Image and calibration topics do not exist.",
   waitingForCalibrationAndImages: "Waiting for messages…",
   waitingForCalibration: "Waiting for calibration messages…",

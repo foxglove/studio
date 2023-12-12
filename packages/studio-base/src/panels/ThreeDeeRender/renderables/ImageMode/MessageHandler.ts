@@ -39,6 +39,14 @@ import {
 import { normalizeAnnotations } from "./annotations/normalizeAnnotations";
 import { Annotation } from "./annotations/types";
 import { IMAGE_MODE_HUD_GROUP_ID } from "./constants";
+import {
+  WAITING_FOR_BOTH_MESSAGES_HUD_ID,
+  WAITING_FOR_CALIBRATION_HUD_ID,
+  WAITING_FOR_IMAGES_NOTICE_ID,
+  WAITING_FOR_IMAGES_EMPTY_HUD_ID,
+  WAITING_FOR_SYNC_NOTICE_HUD_ID,
+  WAITING_FOR_SYNC_EMPTY_HUD_ID,
+} from "./constants";
 import { PartialMessageEvent } from "../../SceneExtension";
 import { CompressedImage as RosCompressedImage, Image as RosImage, CameraInfo } from "../../ros";
 import { t3D } from "../../t3D";
@@ -77,43 +85,44 @@ type RenderStateListener = (
   oldState: MessageRenderState | undefined,
 ) => void;
 
+// Have constants for the HUD items so that they don't need to be recreated and GCed every message
 export const WAITING_FOR_BOTH_HUD_ITEM: HUDItem = {
-  id: "WAITING_FOR_BOTH_MESSAGES",
+  id: WAITING_FOR_BOTH_MESSAGES_HUD_ID,
   group: IMAGE_MODE_HUD_GROUP_ID,
   getMessage: () => t3D("waitingForCalibrationAndImages"),
   displayType: "empty",
 };
 
 export const WAITING_FOR_CALIBRATION_HUD_ITEM: HUDItem = {
-  id: "WAITING_FOR_CALIBRATION",
+  id: WAITING_FOR_CALIBRATION_HUD_ID,
   group: IMAGE_MODE_HUD_GROUP_ID,
   getMessage: () => t3D("waitingForCalibration"),
   displayType: "empty",
 };
 
 export const WAITING_FOR_IMAGE_NOTICE_HUD_ITEM: HUDItem = {
-  id: "WAITING_FOR_IMAGES_NOTICE",
+  id: WAITING_FOR_IMAGES_NOTICE_ID,
   group: IMAGE_MODE_HUD_GROUP_ID,
   getMessage: () => t3D("waitingForImages"),
   displayType: "notice",
 };
 
 export const WAITING_FOR_IMAGE_EMPTY_HUD_ITEM: HUDItem = {
-  id: "WAITING_FOR_IMAGES_EMPTY",
+  id: WAITING_FOR_IMAGES_EMPTY_HUD_ID,
   group: IMAGE_MODE_HUD_GROUP_ID,
   getMessage: () => t3D("waitingForImages"),
   displayType: "empty",
 };
 
 export const WAITING_FOR_SYNC_NOTICE_HUD_ITEM: HUDItem = {
-  id: "WAITING_FOR_SYNC_NOTICE",
+  id: WAITING_FOR_SYNC_NOTICE_HUD_ID,
   group: IMAGE_MODE_HUD_GROUP_ID,
   getMessage: () => t3D("waitingForSyncAnnotations"),
   displayType: "notice",
 };
 
 export const WAITING_FOR_SYNC_EMPTY_HUD_ITEM: HUDItem = {
-  id: "WAITING_FOR_SYNC_EMPTY",
+  id: WAITING_FOR_SYNC_EMPTY_HUD_ID,
   group: IMAGE_MODE_HUD_GROUP_ID,
   getMessage: () => t3D("waitingForSyncAnnotations"),
   displayType: "empty",

@@ -2,6 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import {
+  BOTH_TOPICS_DO_NOT_EXIST_HUD_ITEM_ID,
+  IMAGE_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+  CALIBRATION_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+  WAITING_FOR_BOTH_MESSAGES_HUD_ID,
+  WAITING_FOR_IMAGES_EMPTY_HUD_ID,
+  WAITING_FOR_CALIBRATION_HUD_ID,
+  WAITING_FOR_SYNC_EMPTY_HUD_ID,
+} from "./renderables/ImageMode/constants";
+
 export type HUDItem = {
   /** Unique identifier for the item. Adding a message with the same id twice will result in a no-op */
   id: string;
@@ -14,6 +24,20 @@ export type HUDItem = {
   /** Display type */
   displayType: "empty" | "notice";
 };
+
+/** Priority list of HUD item ids. IDs earlier in the list should be shown before items later in the list.
+ * This list is reversed before use to take advantage of `indexOf` for items that aren't included being lower priority than items on the list.
+ * IDs not in this list will be shown after all items in this list.
+ */
+export const HUD_ID_PRIORITIES = [
+  BOTH_TOPICS_DO_NOT_EXIST_HUD_ITEM_ID,
+  IMAGE_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+  CALIBRATION_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+  WAITING_FOR_BOTH_MESSAGES_HUD_ID,
+  WAITING_FOR_IMAGES_EMPTY_HUD_ID,
+  WAITING_FOR_CALIBRATION_HUD_ID,
+  WAITING_FOR_SYNC_EMPTY_HUD_ID,
+].reverse();
 
 export class HUDItemManager {
   #HUDItemsById = new Map<string, HUDItem>();
@@ -53,8 +77,17 @@ export class HUDItemManager {
     }
   }
 
+  /** Returns list of HUD items in ascending priority order.
+   * High priority items will be last in the list.
+   */
   public getHUDItems(): HUDItem[] {
-    return Array.from(this.#HUDItemsById.values());
+    // sort by priority on return
+    // high priority items should be at the end of the list
+    return Array.from(this.#HUDItemsById.values()).sort((a, b) => {
+      const aPriority = HUD_ID_PRIORITIES.indexOf(a.id);
+      const bPriority = HUD_ID_PRIORITIES.indexOf(b.id);
+      return aPriority - bPriority;
+    });
   }
 
   public clear(): void {

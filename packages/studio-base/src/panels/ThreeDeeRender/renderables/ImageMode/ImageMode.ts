@@ -48,6 +48,11 @@ import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { ImageModeCamera } from "./ImageModeCamera";
 import { IMessageHandler, MessageHandler, MessageRenderState } from "./MessageHandler";
 import { ImageAnnotations } from "./annotations/ImageAnnotations";
+import {
+  BOTH_TOPICS_DO_NOT_EXIST_HUD_ITEM_ID,
+  IMAGE_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+  CALIBRATION_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+} from "./constants";
 import type {
   AnyRendererSubscription,
   IRenderer,
@@ -420,43 +425,48 @@ export class ImageMode
     // add unselected camera calibration option
     calibrationTopics.unshift({ label: "None", value: undefined });
 
-    const imageTopicAvailable = !(
+    const imageTopicExists = !(
       imageTopic && !imageTopics.some((topic) => topic.value === imageTopic)
     );
     this.renderer.settings.errors.errorIfFalse(
-      imageTopicAvailable,
+      imageTopicExists,
       IMAGE_TOPIC_PATH,
       IMAGE_TOPIC_UNAVAILABLE,
       `${imageTopic} is not available`,
     );
 
-    const calibrationTopicAvailable = !(
+    const calibrationTopicExists = !(
       calibrationTopic && !calibrationTopics.some((topic) => topic.value === calibrationTopic)
     );
 
     this.renderer.settings.errors.errorIfFalse(
-      calibrationTopicAvailable,
+      calibrationTopicExists,
       CALIBRATION_TOPIC_PATH,
       CALIBRATION_TOPIC_UNAVAILABLE,
       `${calibrationTopic} is not available`,
     );
 
-    const bothTopicsDoNotExist = !imageTopicAvailable && !calibrationTopicAvailable;
+    const bothTopicsDoNotExist = !imageTopicExists && !calibrationTopicExists;
     this.hud.displayIfTrue(bothTopicsDoNotExist, {
-      id: "BOTH_TOPICS_DO_NOT_EXIST",
+      id: BOTH_TOPICS_DO_NOT_EXIST_HUD_ITEM_ID,
       displayType: "empty",
       group: "IMAGE_MODE",
       getMessage: () => t3D("imageAndCalibrationDNE"),
     });
 
-    if (calibrationTopic == undefined) {
-      this.hud.displayIfTrue(!imageTopicAvailable, {
-        id: "IMAGE_TOPIC_DOES_NOT_EXIST",
-        displayType: "empty",
-        group: "IMAGE_MODE",
-        getMessage: () => t3D("imageTopicDNE"),
-      });
-    }
+    this.hud.displayIfTrue(!imageTopicExists && calibrationTopic == undefined, {
+      id: IMAGE_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+      displayType: "empty",
+      group: "IMAGE_MODE",
+      getMessage: () => t3D("imageTopicDNE"),
+    });
+
+    this.hud.displayIfTrue(imageTopicExists && !calibrationTopicExists, {
+      id: CALIBRATION_TOPIC_DOES_NOT_EXIST_HUD_ITEM_ID,
+      displayType: "empty",
+      group: "IMAGE_MODE",
+      getMessage: () => t3D("calibrationTopicDNE"),
+    });
 
     const imageTopicError = this.renderer.settings.errors.errors.errorAtPath(IMAGE_TOPIC_PATH);
     const calibrationTopicError =
