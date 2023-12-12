@@ -13,7 +13,7 @@
 
 import { Immutable } from "immer";
 import * as _ from "lodash-es";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import shallowequal from "shallowequal";
 import { Writable } from "ts-essentials";
 import { createStore } from "zustand";
@@ -191,22 +191,34 @@ export default function MockMessagePipelineProvider(
     }
   }
 
+  const [hasSubscribers, setHasSubscribers] = useState<boolean>(false);
+
+  const mockProps = useMemo(() => {
+    // only include messages in props once we have subscribers, to reflect actual behavior of player
+    // and to prevent messages from being emitted before subscribers are set, so that they can go to their respective subscribers
+    if (hasSubscribers) {
+      return _.omit(props, "children");
+    }
+    return _.omit(props, ["children", "messages"]);
+  }, [props, hasSubscribers]);
+
   const [store] = useState(() =>
     createStore<MockMessagePipelineState>((set) => {
       const dispatch: MockMessagePipelineState["dispatch"] = (action) => {
         if (action.type === "set-mock-props") {
           set((state) => {
-            if (shallowequal(state.mockProps, action.mockProps)) {
+            const actionMockProps = action.mockProps;
+            if (shallowequal(state.mockProps, actionMockProps)) {
               return state;
             }
-            const publicState = getPublicState(state, action.mockProps, state.dispatch);
+            const publicState = getPublicState(state, actionMockProps, state.dispatch);
             const newState = reducer(state, {
               type: "update-player-state",
               playerState: publicState.playerState as Writable<PlayerState>,
             });
             return {
               ...newState,
-              mockProps: action.mockProps,
+              mockProps: actionMockProps,
               dispatch: state.dispatch,
               public: {
                 ...publicState,
@@ -218,6 +230,14 @@ export default function MockMessagePipelineProvider(
           set((state) => {
             const newState = reducer(state, action);
 
+            if (
+              !hasSubscribers &&
+              action.type === "update-subscriber" &&
+              action.payloads.length > 0
+            ) {
+              setHasSubscribers(true);
+            }
+
             return { ...newState, dispatch: state.dispatch };
           });
         }
@@ -228,7 +248,6 @@ export default function MockMessagePipelineProvider(
 
       // exclude messages from initial state because there are no subscribers yet
       // messages are only emitted from a player at the request of subscribers
-      const mockProps = _.omit(props, ["children", "messages"]);
       const initialPublicState = getPublicState(undefined, mockProps, dispatch);
       return {
         mockProps,
@@ -255,8 +274,8 @@ export default function MockMessagePipelineProvider(
   // That way we can call `set-mock-props` after subscribers have been set, and we can emit messages that were subscribed to
   // If we `useLayoutEffect`, it will emit the initial messages with no subscribers set, which is not consistent with the real behavior
   useEffect(() => {
-    store.getState().dispatch({ type: "set-mock-props", mockProps: _.omit(props, "children") });
-  }, [props, store]);
+    store.getState().dispatch({ type: "set-mock-props", mockProps });
+  }, [mockProps, store]);
 
   return <ContextInternal.Provider value={store}>{props.children}</ContextInternal.Provider>;
 }
