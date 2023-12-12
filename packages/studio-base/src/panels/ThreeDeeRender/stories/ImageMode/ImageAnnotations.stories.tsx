@@ -1314,7 +1314,7 @@ const SyncAnnotationsStory = (args: SyncAnnotationsStoryArgs): JSX.Element => {
   );
 };
 
-export const WaitingSyncAnnotationsWaitingWithCalibration: StoryObj<SyncAnnotationsStoryArgs> = {
+export const SyncAnnotationsWaitingWithCalibration: StoryObj<SyncAnnotationsStoryArgs> = {
   render: SyncAnnotationsStory,
   args: {
     hasCalibrationTopic: true,
