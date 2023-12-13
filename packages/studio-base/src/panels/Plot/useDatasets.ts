@@ -25,7 +25,14 @@ import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedCha
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
 
-import { initBlockState, refreshBlockTopics, processBlocks, BlockState } from "./blocks";
+import {
+  initBlockState,
+  refreshBlockTopics,
+  processBlocks,
+  prepareUpdate,
+  ClientUpdate,
+  BlockState,
+} from "./blocks";
 import { PlotParams } from "./internalTypes";
 import { getPaths } from "./params";
 import { PlotData } from "./plotData";
@@ -228,24 +235,40 @@ function useData(id: string, params: PlotParams) {
       return;
     }
 
-    const {
-      state: newState,
-      updates,
-    } = processBlocks(blocks, blockSubscriptions, blockState);
+    const clientPairs = R.toPairs(clients);
+    const clientsAndUpdates = clientPairs.map(([id, client]): [string, Client, ClientUpdate[]] => {
+      const { state: newBlocks, updates } = processBlocks(
+        blocks,
+        blockSubscriptions,
+        client.blocks,
+      );
+      const newClient = {
+        ...client,
+        blocks: newBlocks,
+      };
+      return [id, newClient, updates.map((update): ClientUpdate => ({ id, update }))];
+    });
 
-    blockState = newState;
-
-    void service?.addBlock(
-      R.pipe(
-        R.map((topic: string): [string, MessageEvent[]] => [topic, []]),
-        R.fromPairs,
-      )(resetTopics),
-      resetTopics,
+    const { updates, messages } = prepareUpdate(
+      clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates ?? []),
+      blocks,
     );
 
-    for (const bundle of newData) {
-      void service?.addBlock(bundle, []);
-    }
+    clients = R.fromPairs(clientsAndUpdates.map(([id, client]) => [id, client]));
+
+    console.log(updates, messages);
+
+    //void service?.addBlock(
+    //R.pipe(
+    //R.map((topic: string): [string, MessageEvent[]] => [topic, []]),
+    //R.fromPairs,
+    //)(resetTopics),
+    //resetTopics,
+    //);
+
+    //for (const bundle of newData) {
+    //void service?.addBlock(bundle, []);
+    //}
   }, [blockSubscriptions, blocks]);
 }
 
