@@ -129,22 +129,25 @@ export function continueDownsample(
     // create a new interval when encountering a new label to preserve the transition from one label to another
     if (intFirst?.xPixel !== x || (intLast?.label != undefined && intLast.label !== datum.label)) {
       // add the min value from previous interval if it doesn't match the first or last of that interval
+      const newPoints: number[] = [];
       if (intMin && intMin.yPixel !== intFirst?.yPixel && intMin.yPixel !== intLast?.yPixel) {
-        indices.push(intMin.index);
+        newPoints.push(intMin.index);
       }
 
       // add the max value from previous interval if it doesn't match the first or last of that interval
       if (intMax && intMax.yPixel !== intFirst?.yPixel && intMax.yPixel !== intLast?.yPixel) {
-        indices.push(intMax.index);
+        newPoints.push(intMax.index);
       }
 
       // add the last value if it doesn't match the first
       if (intLast && intFirst?.yPixel !== intLast.yPixel) {
-        indices.push(intLast.index);
+        newPoints.push(intLast.index);
       }
 
       // always add the first datum of an new interval
-      indices.push(index);
+      newPoints.push(index);
+
+      indices.push(...newPoints.sort((a, b) => a - b));
 
       intFirst = { xPixel: x, yPixel: y, index, label };
       intLast = { xPixel: x, yPixel: y, index, label };
