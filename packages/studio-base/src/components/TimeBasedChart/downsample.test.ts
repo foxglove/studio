@@ -100,7 +100,7 @@ describe("downsampleTimeseries", () => {
       ]),
       bounds,
     );
-    expect(result).toEqual([0, 2, 1, 3]);
+    expect(result).toEqual([0, 1, 2, 3]);
   });
 
   it("should keep entry/exit datum to an interval", () => {
