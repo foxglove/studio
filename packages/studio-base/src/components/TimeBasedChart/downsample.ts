@@ -96,7 +96,8 @@ export function finishDownsample(state: DownsampleState): number[] {
     indices.push(intLast.index);
   }
 
-  return indices;
+  // Ensure that the indices are in the same order they appeared in the dataset
+  return indices.sort((a, b) => a - b);
 }
 
 /**
