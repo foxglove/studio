@@ -186,3 +186,69 @@ export function estimateMessageFieldSizes(
 
   return sizeByField;
 }
+
+function estimateObjectSize(obj: unknown): number {
+  switch (typeof obj) {
+    case "number":
+    case "boolean": {
+      return SMALL_INTEGER_SIZE;
+    }
+    case "bigint": {
+      return HEAP_NUMBER_SIZE;
+    }
+    case "string": {
+      return obj.length;
+    }
+    case "object": {
+      if (Array.isArray(obj)) {
+        if (obj.length === 0) {
+          return OBJECT_BASE_SIZE;
+        }
+
+        return (
+          OBJECT_BASE_SIZE + obj.length * (COMPRESSED_POINTER_SIZE + estimateObjectSize(obj[0]))
+        );
+      } else if (ArrayBuffer.isView(obj)) {
+        return TYPED_ARRAY_BASE_SIZE + obj.byteLength;
+      }
+
+      let propertiesSize = 0;
+      const numProps = Object.keys(obj!).length;
+      if (numProps > MAX_NUM_FAST_PROPERTIES) {
+        // If there are too many properties, V8 stores Objects in dictionary mode (slow properties)
+        // with each object having a self-contained dictionary. This dictionary contains the key, value
+        // and details of properties. Below we estimate the size of this additional dictionary. Formula
+        // adapted from
+        // medium.com/@bpmxmqd/v8-engine-jsobject-structure-analysis-and-memory-optimization-ideas-be30cfcdcd16
+        const propertiesDictSize =
+          16 + 5 * 8 + 2 ** Math.ceil(Math.log2((numProps + 2) * 1.5)) * 3 * 4;
+        propertiesSize = propertiesDictSize;
+      } else {
+        propertiesSize = COMPRESSED_POINTER_SIZE * numProps;
+      }
+
+      const valuesSize = Object.values(obj!).reduce((acc, val) => acc + estimateObjectSize(val), 0);
+      return OBJECT_BASE_SIZE + propertiesSize + valuesSize;
+    }
+    case "symbol":
+    case "undefined":
+    case "function": {
+      throw new Error(`Can't estimate size for type ${typeof obj}`);
+    }
+  }
+}
+
+export class MessageMemoryEstimator {
+  #cachedSizeEstimateByTopic: Record<string, number> = {};
+
+  public estimateMsgObjectSizeInBytes(msg: unknown, topic: string): number {
+    const cachedSizeEstimate = this.#cachedSizeEstimateByTopic[topic];
+    if (cachedSizeEstimate != undefined) {
+      return cachedSizeEstimate;
+    }
+
+    const objectSizeEstimate = estimateObjectSize(msg);
+    this.#cachedSizeEstimateByTopic[topic] = objectSizeEstimate;
+    return objectSizeEstimate;
+  }
+}

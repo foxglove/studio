@@ -16,10 +16,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import {
-  OBJECT_BASE_SIZE,
-  estimateMessageFieldSizes,
-} from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { MessageMemoryEstimator } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -33,13 +30,11 @@ export class McapIndexedIterableSource implements IIterableSource {
       channel: McapTypes.Channel;
       parsedChannel: ParsedChannel;
       schemaName: string | undefined;
-      // Guesstimate of the memory size in bytes of a deserialized message object
-      approxDeserializedMsgSize: number;
-      msgSizeByField: Record<string, number>;
     }
   >();
   #start?: Time;
   #end?: Time;
+  #messageMemoryEstimator = new MessageMemoryEstimator();
 
   public constructor(reader: McapIndexedReader) {
     this.#reader = reader;
@@ -62,7 +57,6 @@ export class McapIndexedIterableSource implements IIterableSource {
     const datatypes: RosDatatypes = new Map();
     const problems: PlayerProblem[] = [];
     const publishersByTopic = new Map<string, Set<string>>();
-    const estimatedObjectSizeByType = new Map<string, number>();
 
     for (const channel of this.#reader.channelsById.values()) {
       const schema = this.#reader.schemasById.get(channel.schemaId);
@@ -75,23 +69,8 @@ export class McapIndexedIterableSource implements IIterableSource {
       }
 
       let parsedChannel;
-      let approxDeserializedMsgSize;
-      let msgSizeByField;
       try {
         parsedChannel = parseChannel({ messageEncoding: channel.messageEncoding, schema });
-        // Determine the size of each schema sub-field. This is going to be used for estimating
-        // the size of sliced messages.
-        msgSizeByField = estimateMessageFieldSizes(
-          parsedChannel.datatypes,
-          schema?.name ?? "",
-          estimatedObjectSizeByType,
-        );
-        // Since we know already the sizes of each individual sub-field, we just sum them up to get the
-        // total message size. Note that the minimum size is OBJECT_BASE_SIZE.
-        approxDeserializedMsgSize = Object.values(msgSizeByField).reduce(
-          (acc, fieldSize) => acc + fieldSize,
-          OBJECT_BASE_SIZE,
-        );
       } catch (error) {
         problems.push({
           severity: "error",
@@ -104,8 +83,6 @@ export class McapIndexedIterableSource implements IIterableSource {
         channel,
         parsedChannel,
         schemaName: schema?.name,
-        approxDeserializedMsgSize,
-        msgSizeByField,
       });
 
       let topic = topicsByName.get(channel.topic);
@@ -163,20 +140,7 @@ export class McapIndexedIterableSource implements IIterableSource {
     }
 
     const topicNames = Array.from(topics.keys());
-
-    // Estimate memory size for sliced messages. We pre-calculate the total size here to avoid
-    // multiple field-size lookups when iterating over messages.
-    const slicedMsgSizeByChannelId: Record<number, number> = {};
-    for (const [channelId, channelInfo] of this.#channelInfoById.entries()) {
-      const fields = args.topics.get(channelInfo.channel.topic)?.fields;
-      if (fields != undefined) {
-        const sizeInBytes = fields.reduce(
-          (acc, field) => acc + (channelInfo.msgSizeByField[field] ?? 0),
-          OBJECT_BASE_SIZE,
-        );
-        slicedMsgSizeByChannelId[channelId] = sizeInBytes;
-      }
-    }
+    this.#messageMemoryEstimator = new MessageMemoryEstimator(); // Reset cache for now as slicing options might have changed
 
     for await (const message of this.#reader.readMessages({
       startTime: toNanoSec(start),
@@ -200,10 +164,14 @@ export class McapIndexedIterableSource implements IIterableSource {
         const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
         const spec = args.topics.get(channelInfo.channel.topic);
         const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
+        const estimatedMemorySize = this.#messageMemoryEstimator.estimateMsgObjectSizeInBytes(
+          payload,
+          channelInfo.channel.topic,
+        );
         const sizeInBytes =
           spec?.fields == undefined
-            ? Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize)
-            : slicedMsgSizeByChannelId[message.channelId] ?? OBJECT_BASE_SIZE;
+            ? Math.max(message.data.byteLength, estimatedMemorySize)
+            : estimatedMemorySize;
 
         yield {
           type: "message-event",
@@ -251,12 +219,20 @@ export class McapIndexedIterableSource implements IIterableSource {
         }
 
         try {
+          const deserializedMessage = channelInfo.parsedChannel.deserialize(message.data);
+          const sizeInBytes = Math.max(
+            message.data.byteLength,
+            this.#messageMemoryEstimator.estimateMsgObjectSizeInBytes(
+              deserializedMessage,
+              channelInfo.channel.topic,
+            ),
+          );
           messages.push({
             topic: channelInfo.channel.topic,
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
-            message: channelInfo.parsedChannel.deserialize(message.data),
-            sizeInBytes: Math.max(message.data.byteLength, channelInfo.approxDeserializedMsgSize),
+            message: deserializedMessage,
+            sizeInBytes,
             schemaName: channelInfo.schemaName ?? "",
           });
         } catch (err) {
