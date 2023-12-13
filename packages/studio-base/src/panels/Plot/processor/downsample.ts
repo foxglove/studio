@@ -419,9 +419,12 @@ function updatePartialView(path: PlotPath, params: PathParameters, state: PathSt
   };
 
   const mergedData = mergeTyped(blockData?.data ?? [], currentData?.data ?? []);
+  const data = applyTransforms(sliceBounds(mergedData, partialBounds), path);
+
+  // Scatter plots use a different downsampling algorithm
   if (blockData?.showLine === false || currentData?.showLine === false) {
-    const indices = downsampleScatter(iterateTyped(mergedData), view);
-    const resolved = resolveTypedIndices(mergedData, indices);
+    const indices = downsampleScatter(iterateTyped(data), view);
+    const resolved = resolveTypedIndices(data, indices);
     if (resolved == undefined) {
       return state;
     }
@@ -436,7 +439,6 @@ function updatePartialView(path: PlotPath, params: PathParameters, state: PathSt
     };
   }
 
-  const data = applyTransforms(sliceBounds(mergedData, partialBounds), path);
   const downsampled = downsampleDataset(data, view, maxPoints);
   if (downsampled == undefined) {
     return state;
