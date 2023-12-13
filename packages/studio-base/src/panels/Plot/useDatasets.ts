@@ -25,7 +25,7 @@ import { TypedDataProvider } from "@foxglove/studio-base/components/TimeBasedCha
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
 
-import { initBlockState, refreshBlockTopics, processBlocks } from "./blocks";
+import { initBlockState, refreshBlockTopics, processBlocks, BlockState } from "./blocks";
 import { PlotParams } from "./internalTypes";
 import { getPaths } from "./params";
 import { PlotData } from "./plotData";
@@ -34,12 +34,12 @@ type Service = Comlink.Remote<(typeof import("./useDatasets.worker"))["service"]
 type Client = {
   params: PlotParams | undefined;
   setter: (topics: SubscribePayload[]) => void;
+  blocks: BlockState;
 };
 
 let worker: Worker | undefined;
 let service: Service | undefined;
 let numClients: number = 0;
-let blockState = initBlockState();
 let clients: Record<string, Client> = {};
 
 const pending: ((service: Service) => void)[] = [];
@@ -112,6 +112,30 @@ function getPayloadsFromPaths(paths: readonly string[]): SubscribePayload[] {
   )(paths);
 }
 
+function getPayloadsFromClient(client: Client): SubscribePayload[] {
+  const { params } = client;
+  if (params == undefined) {
+    return [];
+  }
+
+  const { xAxisPath, paths: yAxisPaths } = params;
+
+  return R.pipe(
+    getPayloadsFromPaths,
+    R.chain((v): SubscribePayload[] => {
+      const partial: SubscribePayload = {
+        ...v,
+        preloadType: "partial",
+      };
+
+      // Subscribe to both "partial" and "full" when using "full" In
+      // theory, "full" should imply "partial" but not doing this breaks
+      // MockMessagePipelineProvider
+      return [partial, { ...partial, preloadType: "full" }];
+    }),
+  )(getPaths(yAxisPaths, xAxisPath));
+}
+
 // Calculate the list of unique topics that _all_ of the plots need and
 // nominate one panel to subscribe to the topics on behalf of the rest.
 function chooseClient() {
@@ -121,33 +145,10 @@ function chooseClient() {
 
   const clientList = Object.values(clients);
   const subscriptions = R.pipe(
-    R.chain((client: Client): SubscribePayload[] => {
-      const { params } = client;
-      if (params == undefined) {
-        return [];
-      }
-
-      const { xAxisPath, paths: yAxisPaths } = params;
-
-      return R.pipe(
-        getPayloadsFromPaths,
-        R.chain((v): SubscribePayload[] => {
-          const partial: SubscribePayload = {
-            ...v,
-            preloadType: "partial",
-          };
-
-          // Subscribe to both "partial" and "full" when using "full" In
-          // theory, "full" should imply "partial" but not doing this breaks
-          // MockMessagePipelineProvider
-          return [partial, { ...partial, preloadType: "full" }];
-        }),
-      )(getPaths(yAxisPaths, xAxisPath));
-    }),
+    R.chain(getPayloadsFromClient),
     (v) => mergeSubscriptions(v) as SubscribePayload[],
   )(clientList);
   clientList[0]?.setter(subscriptions);
-  blockState = refreshBlockTopics(subscriptions, blockState);
 }
 
 // Subscribe to "current" messages (those near the seek head) and forward new
@@ -160,6 +161,7 @@ function useData(id: string, params: PlotParams) {
       ...clients,
       [id]: {
         params: undefined,
+        blocks: initBlockState(),
         setter: setSubscribed,
       },
     };
@@ -178,9 +180,14 @@ function useData(id: string, params: PlotParams) {
       return;
     }
 
+    const { blocks } = client;
     clients = {
       ...clients,
-      [id]: { ...client, params },
+      [id]: {
+        ...client,
+        blocks: refreshBlockTopics(getPayloadsFromClient(client), blocks),
+        params,
+      },
     };
     chooseClient();
   }, [id, params]);
@@ -220,10 +227,10 @@ function useData(id: string, params: PlotParams) {
     if (blockSubscriptions.length === 0) {
       return;
     }
+
     const {
       state: newState,
-      resetTopics,
-      newData,
+      updates,
     } = processBlocks(blocks, blockSubscriptions, blockState);
 
     blockState = newState;
@@ -286,7 +293,6 @@ export default function useDatasets(params: PlotParams): {
       if (numClients === 0) {
         worker?.terminate();
         worker = service = undefined;
-        blockState = initBlockState();
       }
     };
   }, []);
