@@ -324,7 +324,7 @@ export function updateSource(
   }
 
   // The downsampling algorithm only works for series plots, not scatter plots.
-  if (path.showLine === false) {
+  if (path.showLine === false || raw.showLine === false) {
     const indices = downsampleScatter(iterateTyped(raw.data), view);
     const resolved = resolveTypedIndices(raw.data, indices);
     if (resolved == undefined) {
@@ -419,6 +419,23 @@ function updatePartialView(path: PlotPath, params: PathParameters, state: PathSt
   };
 
   const mergedData = mergeTyped(blockData?.data ?? [], currentData?.data ?? []);
+  if (blockData?.showLine === false || currentData?.showLine === false) {
+    const indices = downsampleScatter(iterateTyped(mergedData), view);
+    const resolved = resolveTypedIndices(mergedData, indices);
+    if (resolved == undefined) {
+      return state;
+    }
+
+    return {
+      ...state,
+      isPartial: true,
+      dataset: {
+        ...(blockData ?? currentData),
+        data: resolved,
+      },
+    };
+  }
+
   const data = applyTransforms(sliceBounds(mergedData, partialBounds), path);
   const downsampled = downsampleDataset(data, view, maxPoints);
   if (downsampled == undefined) {
