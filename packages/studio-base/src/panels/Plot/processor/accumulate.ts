@@ -11,7 +11,6 @@ import { PlotData, EmptyPlotData, appendPlotData, buildPlotData, resolvePath } f
 
 type Cursors = Record<string, number>;
 export type Accumulated = {
-  cursors: Cursors;
   data: PlotData;
 };
 
@@ -53,14 +52,8 @@ export function buildPlot(
   });
 }
 
-export function initAccumulated(topics: readonly string[]): Accumulated {
-  const cursors: Cursors = {};
-  for (const topic of topics) {
-    cursors[topic] = 0;
-  }
-
+export function initAccumulated(): Accumulated {
   return {
-    cursors,
     data: EmptyPlotData,
   };
 }
@@ -87,11 +80,9 @@ export function accumulate(
   params: PlotParams,
   messages: Messages,
 ): Accumulated {
-  const { cursors: oldCursors, data: oldData } = previous;
-  const [newCursors, newMessages] = getNewMessages(oldCursors, messages);
+  const { data: oldData } = previous;
 
   return {
-    cursors: newCursors,
-    data: appendPlotData(oldData, buildPlot(metadata, globalVariables, params, newMessages)),
+    data: appendPlotData(oldData, buildPlot(metadata, globalVariables, params, messages)),
   };
 }

@@ -7,7 +7,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 
 import { Accumulated } from "./accumulate";
 import { Downsampled } from "./downsample";
-import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
+import { PlotParams, MetadataEnums } from "../internalTypes";
 import { PlotData } from "../plotData";
 import { BlockUpdate } from "../blocks";
 
@@ -27,7 +27,6 @@ export type State = {
   globalVariables: GlobalVariables;
   // all block data that was sent, but has not yet been used by a client
   pending: BlockUpdate[];
-  current: Messages;
   metadata: MetadataEnums;
 };
 

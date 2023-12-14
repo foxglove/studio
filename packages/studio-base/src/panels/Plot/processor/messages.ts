@@ -16,14 +16,13 @@ import {
   sendData,
   mapClients,
   noEffects,
-  keepEffects,
-  getAllTopics,
   concatEffects,
   mutateClient,
 } from "./state";
 import { State, StateAndEffects, Client, SideEffects } from "./types";
 import { isSingleMessage } from "../params";
 import { BlockUpdate, ClientUpdate } from "../blocks";
+import { Messages } from "../internalTypes";
 
 export function receiveMetadata(
   topics: readonly Topic[],
@@ -38,15 +37,6 @@ export function receiveMetadata(
       enumValues: enumValuesByDatatypeAndField(datatypes),
       structures: messagePathStructures(datatypes),
     },
-  };
-}
-
-export function evictCache(state: State): State {
-  const { current } = state;
-  const topics = getAllTopics(state);
-  return {
-    ...state,
-    current: R.pick(topics, current),
   };
 }
 
@@ -80,7 +70,7 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
         const newBlockData = accumulate(
           metadata,
           globalVariables,
-          shouldReset ? initAccumulated(client.topics) : client.blocks,
+          shouldReset ? initAccumulated() : client.blocks,
           params,
           {
             [topic]: topicMessages.slice(start, end).flatMap((v) => v),
@@ -119,18 +109,11 @@ export function addBlock(update: BlockUpdate, state: State): StateAndEffects {
 }
 
 export function addCurrent(events: readonly MessageEvent[], state: State): StateAndEffects {
-  const { current: oldCurrent } = state;
-  const newState: State = {
-    ...state,
-    current: R.pipe(
-      R.groupBy((v: MessageEvent) => v.topic),
-      R.mergeWith(R.concat, oldCurrent),
-    )(events),
-  };
+  const current: Messages = R.groupBy((v: MessageEvent) => v.topic, events) as Messages;
 
   return R.pipe(
     mapClients((client): [Client, SideEffects] => {
-      const { current, metadata, globalVariables } = newState;
+      const { metadata, globalVariables } = state;
       const { id, params } = client;
       if (params == undefined) {
         return noEffects(client);
@@ -141,7 +124,7 @@ export function addCurrent(events: readonly MessageEvent[], state: State): State
           metadata,
           globalVariables,
           params,
-          R.map((messages) => messages.slice(-1), current),
+          R.map((messages) => (messages ?? []).slice(-1), current),
         );
         return [client, [sendData(id, plotData)]];
       }
@@ -154,8 +137,7 @@ export function addCurrent(events: readonly MessageEvent[], state: State): State
         [rebuildClient(id)],
       ];
     }),
-    keepEffects(evictCache),
-  )(newState);
+  )(state);
 }
 
 export function clearCurrent(state: State): StateAndEffects {
@@ -168,7 +150,7 @@ export function clearCurrent(state: State): StateAndEffects {
     return [
       {
         ...client,
-        current: initAccumulated(client.topics),
+        current: initAccumulated(),
       },
       [rebuildClient(client.id)],
     ];

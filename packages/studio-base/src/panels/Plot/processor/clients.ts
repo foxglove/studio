@@ -9,16 +9,14 @@ import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/Me
 import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 
-import { initAccumulated, accumulate } from "./accumulate";
 import { initDownsampled } from "./downsample";
-import { evictCache, applyBlockUpdate } from "./messages";
+import { applyBlockUpdate } from "./messages";
 import {
   findClient,
   noEffects,
   mutateClient,
   mapClients,
   rebuildClient,
-  keepEffects,
   concatEffects,
   initClient,
 } from "./state";
@@ -53,8 +51,7 @@ function mergeAllData(blockData: PlotData, currentData: PlotData): PlotData {
   return reducePlotData(datasets);
 }
 
-export function refreshClient(client: Client, state: State): [Client, SideEffects] {
-  const { current, metadata, globalVariables } = state;
+export function refreshClient(client: Client): [Client, SideEffects] {
   const { id, params } = client;
   if (params == undefined) {
     return noEffects(client);
@@ -62,12 +59,10 @@ export function refreshClient(client: Client, state: State): [Client, SideEffect
 
   // TODO(cfoust): 12/14/23 inform main thread to reset state
   const topics = getParamTopics(params);
-  const initialState = initAccumulated(topics);
   return [
     {
       ...client,
       topics,
-      current: accumulate(metadata, globalVariables, initialState, params, current),
     },
     [rebuildClient(id)],
   ];
@@ -103,7 +98,7 @@ export function updateVariables(variables: GlobalVariables, state: State): State
       return noEffects(client);
     }
 
-    return refreshClient(client, newState);
+    return refreshClient(client);
   })(newState);
 }
 
@@ -115,17 +110,13 @@ export function updateParams(id: string, params: PlotParams, state: State): Stat
         return noEffects(client);
       }
 
-      return refreshClient(
-        {
-          ...client,
-          params,
-          topics: getParamTopics(params),
-          downsampled: initDownsampled(),
-        },
-        state,
-      );
+      return refreshClient({
+        ...client,
+        params,
+        topics: getParamTopics(params),
+        downsampled: initDownsampled(),
+      });
     }),
-    keepEffects(evictCache),
     concatEffects((newState: State): StateAndEffects => {
       const { pending } = newState;
 
@@ -192,30 +183,10 @@ export function register(
 }
 
 export function unregister(id: string, state: State): State {
-  return evictCache({
+  return {
     ...state,
     clients: R.filter(({ id: clientId }: Client) => clientId !== id, state.clients),
-  });
-}
-
-export const MESSAGE_CULL_THRESHOLD = 15_000;
-
-export function compressClients(state: State): StateAndEffects {
-  const { isLive, current } = state;
-  if (!isLive) {
-    return noEffects(state);
-  }
-
-  return mapClients(refreshClient)({
-    ...state,
-    current: R.map(
-      (messages) =>
-        messages.length > MESSAGE_CULL_THRESHOLD
-          ? messages.slice(messages.length - MESSAGE_CULL_THRESHOLD)
-          : messages,
-      current,
-    ),
-  });
+  };
 }
 
 export function getClientData(client: Client): PlotData | undefined {

@@ -33,7 +33,6 @@ import {
   unregister,
   updateParams,
   updateView,
-  compressClients,
   mutateClient,
   addBlock,
 } from "./processor";
@@ -149,10 +148,6 @@ function handleEffects([newState, effects]: StateAndEffects): void {
     }
   }
 }
-
-setInterval(() => {
-  handleEffects(compressClients(state));
-}, 2000);
 
 export const service = {
   addBlock(update: BlockUpdate): void {

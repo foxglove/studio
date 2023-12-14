@@ -12,6 +12,5 @@ export {
   updateView,
   updateVariables,
   getClientData,
-  compressClients,
 } from "./clients";
 export { addBlock, addCurrent, clearCurrent, receiveMetadata } from "./messages";

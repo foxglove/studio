@@ -26,8 +26,8 @@ export function initClient(id: string, params: PlotParams | undefined): Client {
     params,
     topics,
     view: undefined,
-    blocks: initAccumulated(topics),
-    current: initAccumulated(topics),
+    blocks: initAccumulated(),
+    current: initAccumulated(),
     downsampled: initDownsampled(),
   };
 }
@@ -48,7 +48,6 @@ export function initProcessor(): State {
     isLive: false,
     clients: [],
     globalVariables: {},
-    current: {},
     pending: [],
     metadata: {
       topics: [],
