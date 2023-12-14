@@ -34,6 +34,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
 } from "@foxglove/studio-base/panels/Map/FilteredPointLayer";
+import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import { buildSettingsTree, Config, validateCustomUrl } from "./config";
@@ -57,6 +58,7 @@ const memoizedFilterMessages = memoizeWeak((msgs: readonly MessageEvent[]) =>
 
 function MapPanel(props: MapPanelProps): JSX.Element {
   const { context } = props;
+  const [colorScheme, setColorScheme] = useState<"dark" | "light">("light");
 
   const mapContainerRef = useRef<HTMLDivElement>(ReactNull);
 
@@ -373,6 +375,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     context.watch("currentFrame");
     context.watch("allFrames");
     context.watch("previewTime");
+    context.watch("colorScheme");
 
     // The render event handler updates the state for our messages an triggers a component render
     //
@@ -398,6 +401,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       // Only update the current frame if we have new messages.
       if (renderState.currentFrame && renderState.currentFrame.length > 0) {
         setCurrentMapMessages(renderState.currentFrame.filter(isValidMapMessage));
+      }
+
+      if (renderState.colorScheme) {
+        setColorScheme(renderState.colorScheme);
       }
     };
 
@@ -700,18 +707,20 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   }, [renderDone]);
 
   return (
-    <Stack ref={sizeRef} fullHeight fullWidth position="relative">
-      {!center && <EmptyState>Waiting for first GPS point…</EmptyState>}
-      <Stack
-        position="absolute"
-        ref={mapContainerRef}
-        style={{
-          inset: 0,
-          cursor: "auto",
-          visibility: center ? "visible" : "hidden",
-        }}
-      />
-    </Stack>
+    <ThemeProvider isDark={colorScheme === "dark"}>
+      <Stack ref={sizeRef} fullHeight fullWidth position="relative">
+        {!center && <EmptyState>Waiting for first GPS point...</EmptyState>}
+        <Stack
+          position="absolute"
+          ref={mapContainerRef}
+          style={{
+            inset: 0,
+            cursor: "auto",
+            visibility: center ? "visible" : "hidden",
+          }}
+        />
+      </Stack>
+    </ThemeProvider>
   );
 }
 
