@@ -13,13 +13,18 @@
 
 import { Immutable } from "immer";
 import * as _ from "lodash-es";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import shallowequal from "shallowequal";
 import { Writable } from "ts-essentials";
 import { createStore } from "zustand";
 
+import { Condvar } from "@foxglove/den/async";
 import { Time, isLessThan } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
+import {
+  FramePromise,
+  pauseFrameForPromises,
+} from "@foxglove/studio-base/components/MessagePipeline/pauseFrameForPromise";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import {
   AdvertiseOptions,
@@ -90,6 +95,7 @@ function getPublicState(
   prevState: MockMessagePipelineState | undefined,
   props: MockMessagePipelineProps,
   dispatch: MockMessagePipelineState["dispatch"],
+  promisesToWaitForRef: MutableRefObject<FramePromise[]>,
 ): Omit<MessagePipelineInternalState["public"], "messageEventsBySubscriberId"> {
   let startTime = prevState?.public.playerState.activeData?.startTime;
   let currentTime = props.currentTime;
@@ -171,13 +177,22 @@ function getPublicState(
       props.capabilities?.includes(PlayerCapabilities.setSpeed) === true ? noop : undefined,
     seekPlayback: props.seekPlayback,
 
-    pauseFrame: props.pauseFrame ?? (() => noop),
+    pauseFrame:
+      props.pauseFrame ??
+      function (name) {
+        const condvar = new Condvar();
+        promisesToWaitForRef.current.push({ name, promise: condvar.wait() });
+        return () => {
+          condvar.notifyAll();
+        };
+      },
   };
 }
 
 export default function MockMessagePipelineProvider(
   props: React.PropsWithChildren<MockMessagePipelineProps>,
 ): React.ReactElement {
+  const promisesToWaitForRef = useRef<FramePromise[]>([]);
   const startTime = useRef<Time | undefined>();
   let currentTime = props.currentTime;
   if (!currentTime) {
@@ -204,14 +219,25 @@ export default function MockMessagePipelineProvider(
 
   const [store] = useState(() =>
     createStore<MockMessagePipelineState>((set) => {
-      const dispatch: MockMessagePipelineState["dispatch"] = (action) => {
+      const dispatch: MockMessagePipelineState["dispatch"] = async (action) => {
+        const promisesToWaitFor = promisesToWaitForRef.current;
+        if (promisesToWaitFor.length > 0) {
+          promisesToWaitForRef.current = [];
+          await pauseFrameForPromises(promisesToWaitFor);
+        }
+
         if (action.type === "set-mock-props") {
           set((state) => {
             const actionMockProps = action.mockProps;
             if (shallowequal(state.mockProps, actionMockProps)) {
               return state;
             }
-            const publicState = getPublicState(state, actionMockProps, state.dispatch);
+            const publicState = getPublicState(
+              state,
+              actionMockProps,
+              state.dispatch,
+              promisesToWaitForRef,
+            );
             const newState = reducer(state, {
               type: "update-player-state",
               playerState: publicState.playerState as Writable<PlayerState>,
@@ -248,7 +274,12 @@ export default function MockMessagePipelineProvider(
 
       // exclude messages from initial state because there are no subscribers yet
       // messages are only emitted from a player at the request of subscribers
-      const initialPublicState = getPublicState(undefined, mockProps, dispatch);
+      const initialPublicState = getPublicState(
+        undefined,
+        mockProps,
+        dispatch,
+        promisesToWaitForRef,
+      );
       return {
         mockProps,
         player: undefined,
