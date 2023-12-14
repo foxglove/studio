@@ -212,7 +212,19 @@ export default function MockMessagePipelineProvider(
     // only include messages in props once we have subscribers, to reflect actual behavior of player
     // and to prevent messages from being emitted before subscribers are set, so that they can go to their respective subscribers
     if (hasSubscribers) {
-      return _.omit(props, "children");
+      const propsNoChildren = _.omit(props, "children");
+      // mimic seek backfill behavior that happens after new subscribers are added.
+      // note that for the mock use-case that this will only happen the first time subscribers are added, since we don't reset `hasSubscribers`
+      return {
+        ...propsNoChildren,
+        activeData:
+          propsNoChildren.noActiveData === true
+            ? undefined
+            : {
+                ...propsNoChildren.activeData,
+                lastSeekTime: (propsNoChildren.activeData?.lastSeekTime ?? 0) + 1,
+              },
+      };
     }
     return _.omit(props, ["children", "messages"]);
   }, [props, hasSubscribers]);
@@ -222,8 +234,10 @@ export default function MockMessagePipelineProvider(
       const dispatch: MockMessagePipelineState["dispatch"] = async (action) => {
         const promisesToWaitFor = promisesToWaitForRef.current;
         if (promisesToWaitFor.length > 0) {
-          promisesToWaitForRef.current = [];
           await pauseFrameForPromises(promisesToWaitFor);
+          // normally in the player listener this comes before the await, but when working with stories this hasn't been enough
+          // so for this case we'll wait until all promises have resolved before clearing them
+          promisesToWaitForRef.current = [];
         }
 
         if (action.type === "set-mock-props") {

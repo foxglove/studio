@@ -30,6 +30,9 @@ import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockApp
 
 import * as PanelAPI from ".";
 
+// MockMessagePipeline initial restore call arguments from initial, then backfill seek after getting subscriptions for initial messages
+const initialRestoreCallArguments = [[undefined], [undefined]];
+
 describe("useMessageReducer", () => {
   it("calls restore to initialize without messages", async () => {
     const addMessage = jest.fn();
@@ -48,7 +51,7 @@ describe("useMessageReducer", () => {
       },
     );
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([]);
     expect(result.current).toEqual(1);
   });
@@ -97,7 +100,7 @@ describe("useMessageReducer", () => {
       },
     );
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([[1, message]]);
     expect(result.current).toEqual(2);
   });
@@ -129,7 +132,7 @@ describe("useMessageReducer", () => {
       },
     );
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessages.mock.calls).toEqual([[1, [message]]]);
     expect(result.current).toEqual(2);
   });
@@ -172,21 +175,21 @@ describe("useMessageReducer", () => {
     messages = [messageFoo];
     rerender({ topics: ["/foo"] }); // subscriptions unchanged
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([[1, messageFoo]]);
     expect(result.current).toEqual(2);
 
     // Subscribe to a new topic, then receive a message on that topic
     rerender({ topics: ["/foo", "/bar"] });
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([[1, messageFoo]]);
     expect(result.current).toEqual(2);
 
     messages = [messageBar];
     rerender({ topics: ["/foo", "/bar"] });
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([
       [1, messageFoo],
       [2, messageBar],
@@ -241,21 +244,21 @@ describe("useMessageReducer", () => {
     messages = [message1];
     rerender({ topics: ["/foo"] });
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessages.mock.calls).toEqual([[1, [message1]]]);
     expect(result.current).toEqual(2);
 
     // Subscribe to a new topic, then receive a message on that topic
     rerender({ topics: ["/foo", "/bar"] });
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessages.mock.calls).toEqual([[1, [message1]]]);
     expect(result.current).toEqual(2);
 
     messages = [message2, message3];
     rerender({ topics: ["/foo", "/bar"] });
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessages.mock.calls).toEqual([
       [1, [message1]],
       [2, [message2, message3]],
@@ -335,7 +338,7 @@ describe("useMessageReducer", () => {
     messages = [message1];
     rerender();
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([[1, message1]]);
     expect(result.current).toEqual(2);
 
@@ -343,7 +346,7 @@ describe("useMessageReducer", () => {
     activeData = { lastSeekTime: 1 };
     rerender();
 
-    expect(restore.mock.calls).toEqual([[undefined], [undefined]]);
+    expect(restore.mock.calls).toEqual([...initialRestoreCallArguments, [undefined]]);
     expect(addMessage.mock.calls).toEqual([[1, message1]]);
     expect(result.current).toEqual(1);
   });
@@ -480,7 +483,7 @@ describe("useMessageReducer", () => {
       },
     );
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([[1, message]]);
     expect(result.current).toEqual(2);
 
@@ -489,7 +492,7 @@ describe("useMessageReducer", () => {
     capabilities = ["some_capability"];
     rerender();
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(addMessage.mock.calls).toEqual([[1, message]]);
     expect(result.current).toEqual(2);
   });
@@ -547,9 +550,9 @@ describe("useMessageReducer", () => {
       },
     );
 
-    expect(restore.mock.calls).toEqual([[undefined]]);
+    expect(restore.mock.calls).toEqual(initialRestoreCallArguments);
     expect(result.current).toEqual(2);
     rerender({ addMessages: jest.fn() });
-    expect(restore.mock.calls).toEqual([[undefined], [2]]);
+    expect(restore.mock.calls).toEqual([...initialRestoreCallArguments, [2]]);
   });
 });
