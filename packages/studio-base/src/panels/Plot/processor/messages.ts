@@ -11,10 +11,19 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/enums";
 
 import { initAccumulated, accumulate, buildPlot } from "./accumulate";
-import { rebuildClient, sendData, mapClients, noEffects, keepEffects, getAllTopics } from "./state";
+import {
+  rebuildClient,
+  sendData,
+  mapClients,
+  noEffects,
+  keepEffects,
+  getAllTopics,
+  concatEffects,
+  mutateClient,
+} from "./state";
 import { State, StateAndEffects, Client, SideEffects } from "./types";
-import { Messages } from "../internalTypes";
 import { isSingleMessage } from "../params";
+import { BlockUpdate, ClientUpdate } from "../blocks";
 
 export function receiveMetadata(
   topics: readonly Topic[],
@@ -33,62 +42,80 @@ export function receiveMetadata(
 }
 
 export function evictCache(state: State): State {
-  const { blocks, current } = state;
+  const { current } = state;
   const topics = getAllTopics(state);
   return {
     ...state,
-    blocks: R.pick(topics, blocks),
     current: R.pick(topics, current),
   };
 }
 
-export function addBlock(block: Messages, resetTopics: string[], state: State): StateAndEffects {
-  const { blocks, pending, metadata, globalVariables } = state;
+export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEffects {
+  const { metadata, globalVariables } = state;
+  const { messages, updates } = update;
 
-  const blockTopics = Object.keys(block);
-  const clientTopics = getAllTopics(state);
-  const [usedTopics, unusedTopics] = R.partition(
-    (topic) => clientTopics.includes(topic),
-    blockTopics,
+  return R.reduce(
+    (stateAndEffects: StateAndEffects, clientUpdate: ClientUpdate): StateAndEffects => {
+      return concatEffects((state: State): StateAndEffects => {
+        const client = state.clients.find(({ id }) => id === clientUpdate.id);
+        if (client == undefined) {
+          return noEffects(state);
+        }
+
+        const { params } = client;
+        if (params == undefined || isSingleMessage(params)) {
+          return noEffects(state);
+        }
+
+        const {
+          update: { range, topic, shouldReset },
+        } = clientUpdate;
+
+        const [start, end] = range;
+        const topicMessages = messages[topic];
+        if (topicMessages == undefined) {
+          return noEffects(state);
+        }
+
+        const newBlockData = accumulate(
+          metadata,
+          globalVariables,
+          shouldReset ? initAccumulated(client.topics) : client.blocks,
+          params,
+          {
+            [topic]: topicMessages.slice(start, end).flatMap((v) => v),
+          },
+        );
+
+        return [
+          mutateClient(state, client.id, {
+            ...client,
+            blocks: newBlockData,
+          }),
+          [rebuildClient(client.id)],
+        ];
+      })(stateAndEffects);
+    },
+    noEffects(state),
+    updates,
   );
-  const usedData = R.pick(usedTopics, block);
-  const unusedData = R.pick(unusedTopics, block);
+}
+
+export function addBlock(update: BlockUpdate, state: State): StateAndEffects {
+  const { pending } = state;
+  const { updates, messages } = update;
+
+  // If we get updates for clients that haven't registered yet, we've got to
+  // keep that data around and use it when they register
+  const clientIds = state.clients.map(({ id }) => id);
+  const unused = updates.filter(({ id }) => !clientIds.includes(id));
 
   const newState = {
     ...state,
-    pending: R.mergeWith(R.concat, pending, unusedData),
-    blocks: R.pipe(
-      // Remove data for any topics that have been reset
-      R.omit(resetTopics),
-      // Merge the new block into the existing blocks
-      (newBlocks) => R.mergeWith(R.concat, newBlocks, usedData),
-    )(blocks),
+    pending: [...pending, ...(unused.length > 0 ? [{ messages, updates: unused }] : [])],
   };
 
-  return mapClients((client, { blocks: newBlocks }): [Client, SideEffects] => {
-    const { id, params } = client;
-    const relevantTopics = R.intersection(blockTopics, client.topics);
-    const shouldReset = R.intersection(relevantTopics, resetTopics).length > 0;
-    if (params == undefined || isSingleMessage(params) || relevantTopics.length === 0) {
-      return [client, []];
-    }
-
-    const newBlockData = accumulate(
-      metadata,
-      globalVariables,
-      shouldReset ? initAccumulated(client.topics) : client.blocks,
-      params,
-      newBlocks,
-    );
-
-    return [
-      {
-        ...client,
-        blocks: newBlockData,
-      },
-      [rebuildClient(id)],
-    ];
-  })(newState);
+  return applyBlockUpdate(update, newState);
 }
 
 export function addCurrent(events: readonly MessageEvent[], state: State): StateAndEffects {

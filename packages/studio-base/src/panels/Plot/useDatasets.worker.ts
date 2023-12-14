@@ -14,14 +14,13 @@ import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import strPack from "@foxglove/studio-base/util/strPack";
 
-import { PlotParams, TypedData, Messages } from "./internalTypes";
+import { PlotParams, TypedData } from "./internalTypes";
 import { isSingleMessage } from "./params";
 import { PlotData, StateHandler, getProvidedData } from "./plotData";
 import {
   SideEffectType,
   State,
   StateAndEffects,
-  addBlock,
   addCurrent,
   clearCurrent,
   findClient,
@@ -36,8 +35,10 @@ import {
   updateView,
   compressClients,
   mutateClient,
+  addBlock,
 } from "./processor";
 import { updateDownsample } from "./processor/downsample";
+import { BlockUpdate } from "./blocks";
 
 type Setter = ProviderStateSetter<TypedData[]>;
 
@@ -154,8 +155,8 @@ setInterval(() => {
 }, 2000);
 
 export const service = {
-  addBlock(block: Messages, resetTopics: string[]): void {
-    handleEffects(addBlock(strPack(block), resetTopics, state));
+  addBlock(update: BlockUpdate): void {
+    handleEffects(addBlock(strPack(update), state));
   },
   addCurrent(events: readonly MessageEvent[]): void {
     handleEffects(addCurrent(events, state));

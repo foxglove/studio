@@ -17,15 +17,17 @@ import {
 } from "./types";
 import { PlotParams } from "../internalTypes";
 import { PlotData } from "../plotData";
+import { getParamTopics } from "../params";
 
 export function initClient(id: string, params: PlotParams | undefined): Client {
+  const topics = params != undefined ? getParamTopics(params) : [];
   return {
     id,
     params,
-    topics: [],
+    topics,
     view: undefined,
-    blocks: initAccumulated([]),
-    current: initAccumulated([]),
+    blocks: initAccumulated(topics),
+    current: initAccumulated(topics),
     downsampled: initDownsampled(),
   };
 }
@@ -46,9 +48,8 @@ export function initProcessor(): State {
     isLive: false,
     clients: [],
     globalVariables: {},
-    blocks: {},
     current: {},
-    pending: {},
+    pending: [],
     metadata: {
       topics: [],
       datatypes: new Map(),

@@ -9,6 +9,7 @@ import { Accumulated } from "./accumulate";
 import { Downsampled } from "./downsample";
 import { PlotParams, Messages, MetadataEnums } from "../internalTypes";
 import { PlotData } from "../plotData";
+import { BlockUpdate } from "../blocks";
 
 export type Client = {
   id: string;
@@ -24,9 +25,8 @@ export type State = {
   isLive: boolean;
   clients: Client[];
   globalVariables: GlobalVariables;
-  blocks: Messages;
   // all block data that was sent, but has not yet been used by a client
-  pending: Messages;
+  pending: BlockUpdate[];
   current: Messages;
   metadata: MetadataEnums;
 };

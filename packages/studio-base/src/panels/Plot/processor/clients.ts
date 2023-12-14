@@ -11,7 +11,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 
 import { initAccumulated, accumulate } from "./accumulate";
 import { initDownsampled } from "./downsample";
-import { evictCache } from "./messages";
+import { evictCache, applyBlockUpdate } from "./messages";
 import {
   findClient,
   noEffects,
@@ -21,7 +21,6 @@ import {
   keepEffects,
   concatEffects,
   initClient,
-  getAllTopics,
 } from "./state";
 import { StateAndEffects, SideEffects, State, Client } from "./types";
 import { PlotParams } from "../internalTypes";
@@ -32,6 +31,7 @@ import {
   reducePlotData,
   sortPlotDataByHeaderStamp,
 } from "../plotData";
+import { BlockUpdate } from "../blocks";
 
 /**
  * Merge block and current data. If block data contains any portion of current
@@ -54,19 +54,19 @@ function mergeAllData(blockData: PlotData, currentData: PlotData): PlotData {
 }
 
 export function refreshClient(client: Client, state: State): [Client, SideEffects] {
-  const { blocks, current, metadata, globalVariables } = state;
+  const { current, metadata, globalVariables } = state;
   const { id, params } = client;
   if (params == undefined) {
     return noEffects(client);
   }
 
+  // TODO(cfoust): 12/14/23 inform main thread to reset state
   const topics = getParamTopics(params);
   const initialState = initAccumulated(topics);
   return [
     {
       ...client,
       topics,
-      blocks: accumulate(metadata, globalVariables, initialState, params, blocks),
       current: accumulate(metadata, globalVariables, initialState, params, current),
     },
     [rebuildClient(id)],
@@ -127,33 +127,40 @@ export function updateParams(id: string, params: PlotParams, state: State): Stat
     }),
     keepEffects(evictCache),
     concatEffects((newState: State): StateAndEffects => {
-      const { pending, blocks } = newState;
+      const { pending } = newState;
 
-      const allNewTopics = getAllTopics(newState);
-      const newData = R.pick(allNewTopics, pending);
-      if (R.isEmpty(newData)) {
-        return [newState, []];
-      }
-
-      const newTopics = Object.keys(newData);
-
-      // Move new data now used by at least one client into the real block data
-      const migrated = {
-        ...newState,
-        pending: R.omit(allNewTopics, pending),
-        blocks: {
-          ...blocks,
-          ...newData,
+      // When we receive params for a client, we check to see whether any of
+      // the pending data we have in the queue applies to them.
+      const clientIds = newState.clients.map(({ id }) => id);
+      const allUpdates = pending.map(
+        (update: BlockUpdate): [next: BlockUpdate, applied: BlockUpdate] => {
+          const { updates } = update;
+          const [used, unused] = R.partition(({ id }) => clientIds.includes(id), updates);
+          return [
+            { ...update, updates: unused },
+            { ...update, updates: used },
+          ];
         },
-      };
+      );
 
-      return mapClients((client, nextState) => {
-        const { topics } = client;
-        if (R.intersection(newTopics, topics).length === 0) {
-          return noEffects(client);
-        }
-        return refreshClient(client, nextState);
-      })(migrated);
+      const newPending: BlockUpdate[] = allUpdates
+        .filter(([unused]) => unused.updates.length > 0)
+        .map(([unused]) => unused);
+
+      const updatesToApply: BlockUpdate[] = allUpdates
+        .filter(([, used]) => used.updates.length > 0)
+        .map(([, used]) => used);
+
+      return R.reduce(
+        (a: StateAndEffects, update: BlockUpdate): StateAndEffects => {
+          return concatEffects((nextState) => applyBlockUpdate(update, nextState))(a);
+        },
+        noEffects({
+          ...newState,
+          pending: newPending,
+        }),
+        updatesToApply,
+      );
     }),
   )(state);
 }

@@ -235,40 +235,29 @@ function useData(id: string, params: PlotParams) {
       return;
     }
 
-    const clientPairs = R.toPairs(clients);
-    const clientsAndUpdates = clientPairs.map(([id, client]): [string, Client, ClientUpdate[]] => {
-      const { state: newBlocks, updates } = processBlocks(
-        blocks,
-        blockSubscriptions,
-        client.blocks,
-      );
-      const newClient = {
-        ...client,
-        blocks: newBlocks,
-      };
-      return [id, newClient, updates.map((update): ClientUpdate => ({ id, update }))];
-    });
-
-    const { updates, messages } = prepareUpdate(
-      clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates ?? []),
-      blocks,
+    const clientsAndUpdates = R.toPairs(clients).map(
+      ([id, client]): [id: string, client: Client, updates: ClientUpdate[]] => {
+        const { state: newBlocks, updates } = processBlocks(
+          blocks,
+          blockSubscriptions,
+          client.blocks,
+        );
+        const newClient = {
+          ...client,
+          blocks: newBlocks,
+        };
+        return [id, newClient, updates.map((update): ClientUpdate => ({ id, update }))];
+      },
     );
 
     clients = R.fromPairs(clientsAndUpdates.map(([id, client]) => [id, client]));
 
-    console.log(updates, messages);
-
-    //void service?.addBlock(
-    //R.pipe(
-    //R.map((topic: string): [string, MessageEvent[]] => [topic, []]),
-    //R.fromPairs,
-    //)(resetTopics),
-    //resetTopics,
-    //);
-
-    //for (const bundle of newData) {
-    //void service?.addBlock(bundle, []);
-    //}
+    void service?.addBlock(
+      prepareUpdate(
+        clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates ?? []),
+        blocks,
+      ),
+    );
   }, [blockSubscriptions, blocks]);
 }
 
