@@ -7,9 +7,9 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 
 import { Accumulated } from "./accumulate";
 import { Downsampled } from "./downsample";
+import { BlockUpdate } from "../blocks";
 import { PlotParams, MetadataEnums } from "../internalTypes";
 import { PlotData } from "../plotData";
-import { BlockUpdate } from "../blocks";
 
 export type Client = {
   id: string;
@@ -33,6 +33,7 @@ export type State = {
 export enum SideEffectType {
   Rebuild = "rebuild",
   Send = "send",
+  Clear = "clear",
 }
 
 export type RebuildEffect = {
@@ -46,7 +47,12 @@ export type DataEffect = {
   data: PlotData;
 };
 
-type SideEffect = RebuildEffect | DataEffect;
+export type ClearEffect = {
+  type: SideEffectType.Clear;
+  clientId: string;
+};
+
+type SideEffect = RebuildEffect | DataEffect | ClearEffect;
 
 export type SideEffects = readonly SideEffect[];
 

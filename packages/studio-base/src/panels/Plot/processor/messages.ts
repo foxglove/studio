@@ -20,9 +20,9 @@ import {
   mutateClient,
 } from "./state";
 import { State, StateAndEffects, Client, SideEffects } from "./types";
-import { isSingleMessage } from "../params";
 import { BlockUpdate, ClientUpdate } from "../blocks";
 import { Messages } from "../internalTypes";
+import { isSingleMessage } from "../params";
 
 export function receiveMetadata(
   topics: readonly Topic[],

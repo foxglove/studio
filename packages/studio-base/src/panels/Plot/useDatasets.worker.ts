@@ -14,6 +14,7 @@ import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import strPack from "@foxglove/studio-base/util/strPack";
 
+import { BlockUpdate } from "./blocks";
 import { PlotParams, TypedData } from "./internalTypes";
 import { isSingleMessage } from "./params";
 import { PlotData, StateHandler, getProvidedData } from "./plotData";
@@ -37,7 +38,6 @@ import {
   addBlock,
 } from "./processor";
 import { updateDownsample } from "./processor/downsample";
-import { BlockUpdate } from "./blocks";
 
 type Setter = ProviderStateSetter<TypedData[]>;
 
@@ -50,6 +50,7 @@ type Callbacks = {
 
 let state: State = initProcessor();
 let callbacks: Record<string, Callbacks> = {};
+let clearClient: ((id: string) => void) | undefined;
 
 // Throttle rebuilds to only occur at most every 100ms. This is slightly
 // different from the throttled/debounced functions we use elsewhere in our
@@ -141,6 +142,10 @@ function handleEffects([newState, effects]: StateAndEffects): void {
         clientCallbacks.queueRebuild();
         break;
       }
+      case SideEffectType.Clear: {
+        clearClient?.(effect.clientId);
+        break;
+      }
       case SideEffectType.Send: {
         sendPlotData(clientCallbacks, effect.data);
         break;
@@ -150,6 +155,9 @@ function handleEffects([newState, effects]: StateAndEffects): void {
 }
 
 export const service = {
+  setClearClient(callback: (id: string) => void) {
+    clearClient = callback;
+  },
   addBlock(update: BlockUpdate): void {
     handleEffects(addBlock(strPack(update), state));
   },

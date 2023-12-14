@@ -166,7 +166,7 @@ function calculateUpdate(
     return {
       topic,
       range: [currentCursor, haveChanged ? Math.min(newCursor, lastChanged + 1) : newCursor],
-      shouldReset: false,
+      shouldReset: currentCursor === 0,
     };
   }
   return {

@@ -158,6 +158,19 @@ function chooseClient() {
   clientList[0]?.setter(subscriptions);
 }
 
+function clearClient(id: string) {
+  clients = R.mapObjIndexed((client, clientId) => {
+    if (clientId !== id) {
+      return client;
+    }
+
+    return {
+      ...client,
+      blocks: initBlockState(),
+    };
+  }, clients);
+}
+
 // Subscribe to "current" messages (those near the seek head) and forward new
 // messages to the worker as they arrive.
 function useData(id: string, params: PlotParams) {
@@ -293,6 +306,7 @@ export default function useDatasets(params: PlotParams): {
         new URL("./useDatasets.worker", import.meta.url),
       );
       service = Comlink.wrap(worker);
+      void service.setClearClient(Comlink.proxy(clearClient));
       for (const other of pending) {
         other(service);
       }

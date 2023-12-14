@@ -9,6 +9,7 @@ import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/Me
 import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 
+import { initAccumulated } from "./accumulate";
 import { initDownsampled } from "./downsample";
 import { applyBlockUpdate } from "./messages";
 import {
@@ -17,10 +18,12 @@ import {
   mutateClient,
   mapClients,
   rebuildClient,
+  clearClient,
   concatEffects,
   initClient,
 } from "./state";
 import { StateAndEffects, SideEffects, State, Client } from "./types";
+import { BlockUpdate } from "../blocks";
 import { PlotParams } from "../internalTypes";
 import { getParamTopics, getParamPaths } from "../params";
 import {
@@ -29,7 +32,6 @@ import {
   reducePlotData,
   sortPlotDataByHeaderStamp,
 } from "../plotData";
-import { BlockUpdate } from "../blocks";
 
 /**
  * Merge block and current data. If block data contains any portion of current
@@ -57,14 +59,14 @@ export function refreshClient(client: Client): [Client, SideEffects] {
     return noEffects(client);
   }
 
-  // TODO(cfoust): 12/14/23 inform main thread to reset state
-  const topics = getParamTopics(params);
   return [
     {
       ...client,
-      topics,
+      topics: getParamTopics(params),
+      current: initAccumulated(),
+      blocks: initAccumulated(),
     },
-    [rebuildClient(id)],
+    [clearClient(id)],
   ];
 }
 

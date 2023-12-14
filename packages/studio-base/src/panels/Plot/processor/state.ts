@@ -9,6 +9,7 @@ import { initDownsampled } from "./downsample";
 import {
   Client,
   RebuildEffect,
+  ClearEffect,
   State,
   SideEffectType,
   DataEffect,
@@ -16,8 +17,8 @@ import {
   StateAndEffects,
 } from "./types";
 import { PlotParams } from "../internalTypes";
-import { PlotData } from "../plotData";
 import { getParamTopics } from "../params";
+import { PlotData } from "../plotData";
 
 export function initClient(id: string, params: PlotParams | undefined): Client {
   const topics = params != undefined ? getParamTopics(params) : [];
@@ -34,6 +35,11 @@ export function initClient(id: string, params: PlotParams | undefined): Client {
 
 export const rebuildClient = (id: string): RebuildEffect => ({
   type: SideEffectType.Rebuild,
+  clientId: id,
+});
+
+export const clearClient = (id: string): ClearEffect => ({
+  type: SideEffectType.Clear,
   clientId: id,
 });
 
