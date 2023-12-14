@@ -29,6 +29,7 @@ import {
   Subscription,
   Topic,
 } from "@foxglove/studio";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Stack from "@foxglove/studio-base/components/Stack";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
@@ -700,16 +701,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   return (
     <Stack ref={sizeRef} fullHeight fullWidth position="relative">
-      {!center && (
-        <Stack
-          alignItems="center"
-          justifyContent="center"
-          position="absolute"
-          style={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        >
-          Waiting for first GPS point...
-        </Stack>
-      )}
+      {!center && <EmptyState>Waiting for first GPS point…</EmptyState>}
       <Stack
         position="absolute"
         ref={mapContainerRef}
