@@ -81,6 +81,16 @@ function combineRanges(ranges: Range[]): Range | undefined {
   );
 }
 
+/**
+ * prepareUpdate aggregates a list of client updates and produces a
+ * `BlockUpdate` that contains the minimal set of data necessary to satisfy all
+ * of the clients' requests. It includes only the block data each client needs
+ * and rewrites the `range` field of each `Update` to reference parts of the
+ * consolidated message data.
+ *
+ * We use this to minimize the amount of data we send to the worker in any one
+ * step; if two clients need the same data, we do not send it twice.
+ */
 export function prepareUpdate(
   updates: ClientUpdate[],
   blocks: readonly MessageBlock[],

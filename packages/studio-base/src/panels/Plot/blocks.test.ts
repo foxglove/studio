@@ -6,7 +6,14 @@ import { fromSec } from "@foxglove/rostime";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksSubscriptions";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
 
-import { initBlockState, processBlocks, refreshBlockTopics } from "./blocks";
+import {
+  initBlockState,
+  processBlocks,
+  ClientUpdate,
+  Update,
+  prepareUpdate,
+  refreshBlockTopics,
+} from "./blocks";
 
 const FAKE_TOPIC = "/foo";
 const createSubscription = (topic: string): SubscribePayload => ({
@@ -197,5 +204,55 @@ describe("processBlocks", () => {
       expect(updates[0]?.shouldReset).toEqual(false);
       expect(updates[0]?.range).toEqual([2, 3]);
     }
+  });
+});
+
+describe("prepareUpdate", () => {
+  const block = createBlock(1);
+  const blocks = [block, block, block, block];
+  const makeUpdate =
+    (id: string) =>
+    (update: Update): ClientUpdate => ({
+      id,
+      update,
+    });
+
+  const makeA = makeUpdate("a");
+  const makeB = makeUpdate("b");
+
+  it("rewrites an update back to 0", () => {
+    const { updates, messages } = prepareUpdate(
+      [
+        makeA({
+          topic: FAKE_TOPIC,
+          shouldReset: false,
+          range: [2, 4],
+        }),
+      ],
+      blocks,
+    );
+    expect(updates[0]?.update.range).toEqual([0, 2]);
+    expect(messages[FAKE_TOPIC]?.length).toEqual(2);
+  });
+
+  it("rewrites range relative to other client", () => {
+    const { updates, messages } = prepareUpdate(
+      [
+        makeA({
+          topic: FAKE_TOPIC,
+          shouldReset: false,
+          range: [2, 4],
+        }),
+        makeB({
+          topic: FAKE_TOPIC,
+          shouldReset: false,
+          range: [1, 4],
+        }),
+      ],
+      blocks,
+    );
+    expect(updates[0]?.update.range).toEqual([1, 3]);
+    expect(updates[1]?.update.range).toEqual([0, 3]);
+    expect(messages[FAKE_TOPIC]?.length).toEqual(3);
   });
 });
