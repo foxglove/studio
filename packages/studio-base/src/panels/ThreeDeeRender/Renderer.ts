@@ -447,11 +447,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     {
       clearTransforms,
       resetAllFramesCursor,
-      clearImageMode,
+      clearImageMode = true,
     }: { clearTransforms?: boolean; resetAllFramesCursor?: boolean; clearImageMode?: boolean } = {
       clearTransforms: false,
       resetAllFramesCursor: false,
-      clearImageMode: true,
     },
   ): void {
     this.#clearSubscriptionQueues();
@@ -464,7 +463,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.settings.errors.clear();
 
     for (const extension of this.sceneExtensions.values()) {
-      if (clearImageMode !== true && extension instanceof ImageMode) {
+      if (!clearImageMode && extension === this.#imageModeExtension) {
         continue;
       }
       extension.removeAllRenderables();
