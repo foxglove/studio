@@ -34,8 +34,7 @@ export class McapIndexedIterableSource implements IIterableSource {
   >();
   #start?: Time;
   #end?: Time;
-  #messageSizeEstimates: Record<string, number> = {};
-  #slicedMessageSizeEstimate: Record<string, number> = {};
+  #messageSizeEstimates: Record<string /* subscription hash */, number> = {};
 
   public constructor(reader: McapIndexedReader) {
     this.#reader = reader;
@@ -140,9 +139,22 @@ export class McapIndexedIterableSource implements IIterableSource {
       return;
     }
 
+    // Determine the subscription hash which is used to lookup message size estimates.
+    // This is done here to avoid doing this repeatedly when iterating over messages.
+    const topicsWithSubscriptionHash = new Map(
+      Array.from(topics, ([topic, subscribePayload]) => [
+        topic,
+        {
+          ...subscribePayload,
+          // The subscription hash is the topic name appended by + seperated message slicing fields (if any).
+          subscriptionHash: subscribePayload.fields
+            ? topic + "+" + subscribePayload.fields.join("+")
+            : topic,
+        },
+      ]),
+    );
+
     const topicNames = Array.from(topics.keys());
-    // Clear the cache for existing size estimate of sliced topics such that these topics are re-evaluated again.
-    this.#slicedMessageSizeEstimate = {};
 
     for await (const message of this.#reader.readMessages({
       startTime: toNanoSec(start),
@@ -164,11 +176,10 @@ export class McapIndexedIterableSource implements IIterableSource {
       }
       try {
         const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
-        const spec = args.topics.get(channelInfo.channel.topic);
+        const spec = topicsWithSubscriptionHash.get(channelInfo.channel.topic);
         const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
         const estimatedMemorySize = this.#estimateMessageSize(
-          channelInfo.channel.topic,
-          spec?.fields == undefined ? "full" : "sliced",
+          spec?.subscriptionHash ?? channelInfo.channel.topic,
           payload,
         );
         const sizeInBytes =
@@ -225,7 +236,7 @@ export class McapIndexedIterableSource implements IIterableSource {
           const deserializedMessage = channelInfo.parsedChannel.deserialize(message.data);
           const sizeInBytes = Math.max(
             message.data.byteLength,
-            this.#estimateMessageSize(channelInfo.channel.topic, "full", deserializedMessage),
+            this.#estimateMessageSize(channelInfo.channel.topic, deserializedMessage),
           );
           messages.push({
             topic: channelInfo.channel.topic,
@@ -246,20 +257,14 @@ export class McapIndexedIterableSource implements IIterableSource {
     return messages;
   }
 
-  #estimateMessageSize(topic: string, type: "full" | "sliced", msg: unknown): number {
-    const cachedSize =
-      type === "full" ? this.#messageSizeEstimates[topic] : this.#slicedMessageSizeEstimate[topic];
+  #estimateMessageSize(subscriptionHash: string, msg: unknown): number {
+    const cachedSize = this.#messageSizeEstimates[subscriptionHash];
     if (cachedSize != undefined) {
       return cachedSize;
     }
 
     const sizeEstimate = estimateObjectSize(msg);
-    if (type === "full") {
-      this.#messageSizeEstimates[topic] = sizeEstimate;
-    } else {
-      this.#slicedMessageSizeEstimate[topic] = sizeEstimate;
-    }
-
+    this.#messageSizeEstimates[subscriptionHash] = sizeEstimate;
     return sizeEstimate;
   }
 }
