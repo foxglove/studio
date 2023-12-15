@@ -96,13 +96,12 @@ describe("processBlocks", () => {
     {
       const {
         state: { messages, cursors },
-        resetTopics,
-        newData,
+        updates,
       } = first;
       expect(messages[0]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(1);
-      expect(resetTopics).toEqual([]);
-      expect(newData).toEqual([block]);
+      expect(updates[0]?.shouldReset).toEqual(true);
+      expect(updates[0]?.range).toEqual([0, 1]);
     }
 
     // s|n -> ss|
@@ -110,13 +109,12 @@ describe("processBlocks", () => {
     {
       const {
         state: { messages, cursors },
-        resetTopics,
-        newData,
+        updates,
       } = second;
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
-      expect(resetTopics).toEqual([]);
-      expect(newData).toEqual([block]);
+      expect(updates[0]?.shouldReset).toEqual(false);
+      expect(updates[0]?.range).toEqual([1, 2]);
     }
   });
 
@@ -124,13 +122,12 @@ describe("processBlocks", () => {
     // |nene -> ses|e
     const {
       state: { messages, cursors },
-      resetTopics,
-      newData,
+      updates,
     } = processBlocks([block, {}, block, {}], subscriptions, initial);
     expect(messages[2]?.[FAKE_TOPIC]).toEqual(1);
     expect(cursors[FAKE_TOPIC]).toEqual(3);
-    expect(resetTopics).toEqual([]);
-    expect(newData).toEqual([block, block]);
+    expect(updates[0]?.shouldReset).toEqual(true);
+    expect(updates[0]?.range).toEqual([0, 3]);
   });
 
   it("should not send data beyond changed data", () => {
@@ -146,13 +143,12 @@ describe("processBlocks", () => {
     {
       const {
         state: { messages, cursors },
-        resetTopics,
-        newData,
+        updates,
       } = first;
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
-      expect(resetTopics).toEqual([FAKE_TOPIC]);
-      expect(newData).toEqual([newBlock, newBlock]);
+      expect(updates[0]?.shouldReset).toEqual(true);
+      expect(updates[0]?.range).toEqual([0, 2]);
     }
 
     // ss|c -> sss|
@@ -160,13 +156,12 @@ describe("processBlocks", () => {
     {
       const {
         state: { messages, cursors },
-        resetTopics,
-        newData,
+        updates,
       } = second;
       expect(messages[2]?.[FAKE_TOPIC]).toEqual(2);
       expect(cursors[FAKE_TOPIC]).toEqual(3);
-      expect(resetTopics).toEqual([]);
-      expect(newData).toEqual([newBlock]);
+      expect(updates[0]?.shouldReset).toEqual(false);
+      expect(updates[0]?.range).toEqual([2, 3]);
     }
   });
 
@@ -181,13 +176,12 @@ describe("processBlocks", () => {
     {
       const {
         state: { messages, cursors },
-        resetTopics,
-        newData,
+        updates,
       } = first;
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
-      expect(resetTopics).toEqual([FAKE_TOPIC]);
-      expect(newData).toEqual([block, newBlock]);
+      expect(updates[0]?.shouldReset).toEqual(true);
+      expect(updates[0]?.range).toEqual([0, 2]);
     }
 
     // if we get new blocks but there were no more changes, just send the rest
@@ -196,13 +190,12 @@ describe("processBlocks", () => {
     {
       const {
         state: { messages, cursors },
-        resetTopics,
-        newData,
+        updates,
       } = second;
       expect(messages[2]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(3);
-      expect(resetTopics).toEqual([]);
-      expect(newData).toEqual([block]);
+      expect(updates[0]?.shouldReset).toEqual(false);
+      expect(updates[0]?.range).toEqual([2, 3]);
     }
   });
 });
