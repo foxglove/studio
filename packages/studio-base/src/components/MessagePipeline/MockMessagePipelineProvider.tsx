@@ -215,17 +215,15 @@ export default function MockMessagePipelineProvider(
       const propsNoChildren = _.omit(props, "children");
       // mimic seek backfill behavior that happens after new subscribers are added.
       // note that for the mock use-case that this will only happen the first time subscribers are added, since we don't reset `hasSubscribers`
-      const messages = propsNoChildren.messages;
       if (props.noActiveData === true) {
         return propsNoChildren;
       }
       const activeData = {
         ...propsNoChildren.activeData,
       };
-      // don't backfill if there are no messages to backfill with
-      if (messages && messages.length !== 0) {
-        activeData.lastSeekTime = (activeData.lastSeekTime ?? 0) + 1;
-      }
+
+      activeData.lastSeekTime = (activeData.lastSeekTime ?? 0) + 1;
+
       return {
         ...propsNoChildren,
         activeData,
