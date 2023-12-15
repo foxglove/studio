@@ -11,7 +11,7 @@ import {
   processBlocks,
   ClientUpdate,
   Update,
-  prepareUpdate,
+  prepareBlockUpdate,
   refreshBlockTopics,
 } from "./blocks";
 
@@ -207,7 +207,7 @@ describe("processBlocks", () => {
   });
 });
 
-describe("prepareUpdate", () => {
+describe("prepareBlockUpdate", () => {
   const block = createBlock(1);
   const blocks = [block, block, block, block];
   const makeUpdate =
@@ -221,7 +221,7 @@ describe("prepareUpdate", () => {
   const makeB = makeUpdate("b");
 
   it("rewrites an update back to 0", () => {
-    const { updates, messages } = prepareUpdate(
+    const { updates, messages } = prepareBlockUpdate(
       [
         makeA({
           topic: FAKE_TOPIC,
@@ -236,7 +236,7 @@ describe("prepareUpdate", () => {
   });
 
   it("rewrites range relative to other client", () => {
-    const { updates, messages } = prepareUpdate(
+    const { updates, messages } = prepareBlockUpdate(
       [
         makeA({
           topic: FAKE_TOPIC,

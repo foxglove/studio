@@ -91,7 +91,7 @@ function combineRanges(ranges: Range[]): Range | undefined {
  * We use this to minimize the amount of data we send to the worker in any one
  * step; if two clients need the same data, we do not send it twice.
  */
-export function prepareUpdate(
+export function prepareBlockUpdate(
   updates: ClientUpdate[],
   blocks: readonly MessageBlock[],
 ): BlockUpdate {

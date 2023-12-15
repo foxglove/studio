@@ -29,7 +29,7 @@ import {
   initBlockState,
   refreshBlockTopics,
   processBlocks,
-  prepareUpdate,
+  prepareBlockUpdate,
   ClientUpdate,
   BlockState,
 } from "./blocks";
@@ -270,7 +270,7 @@ function useData(id: string, params: PlotParams) {
     clients = R.fromPairs(clientsAndUpdates.map(([clientId, client]) => [clientId, client]));
 
     void service?.addBlockData(
-      prepareUpdate(
+      prepareBlockUpdate(
         clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates),
         blocks,
       ),
