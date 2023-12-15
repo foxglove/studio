@@ -257,6 +257,13 @@ export class McapIndexedIterableSource implements IIterableSource {
     return messages;
   }
 
+  /**
+   * Returns the cached size estimate for the given {@link subscriptionHash}. Estimates the size
+   * of the given {@link msg} object and updates the cache if no such cache entry exists.
+   * @param subscriptionHash Subscription hash
+   * @param msg Deserialized message object
+   * @returns Size estimate in bytes
+   */
   #estimateMessageSize(subscriptionHash: string, msg: unknown): number {
     const cachedSize = this.#messageSizeEstimates[subscriptionHash];
     if (cachedSize != undefined) {
