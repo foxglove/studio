@@ -17,7 +17,12 @@ import {
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
-import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
+import {
+  PlayerProblem,
+  SubscribePayload,
+  Topic,
+  TopicStats,
+} from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const log = Logger.getLogger(__filename);
@@ -34,7 +39,7 @@ export class McapIndexedIterableSource implements IIterableSource {
   >();
   #start?: Time;
   #end?: Time;
-  #messageSizeEstimates: Record<string /* subscription hash */, number> = {};
+  #messageSizeEstimateByHash: Record<string /* subscription hash */, number> = {};
 
   public constructor(reader: McapIndexedReader) {
     this.#reader = reader;
@@ -146,10 +151,7 @@ export class McapIndexedIterableSource implements IIterableSource {
         topic,
         {
           ...subscribePayload,
-          // The subscription hash is the topic name appended by + seperated message slicing fields (if any).
-          subscriptionHash: subscribePayload.fields
-            ? topic + "+" + subscribePayload.fields.join("+")
-            : topic,
+          subscriptionHash: computeSubscriptionHash(topic, subscribePayload),
         },
       ]),
     );
@@ -265,13 +267,21 @@ export class McapIndexedIterableSource implements IIterableSource {
    * @returns Size estimate in bytes
    */
   #estimateMessageSize(subscriptionHash: string, msg: unknown): number {
-    const cachedSize = this.#messageSizeEstimates[subscriptionHash];
+    const cachedSize = this.#messageSizeEstimateByHash[subscriptionHash];
     if (cachedSize != undefined) {
       return cachedSize;
     }
 
     const sizeEstimate = estimateObjectSize(msg);
-    this.#messageSizeEstimates[subscriptionHash] = sizeEstimate;
+    this.#messageSizeEstimateByHash[subscriptionHash] = sizeEstimate;
     return sizeEstimate;
   }
+}
+
+// Computes the subscription hash for a given topic & subscription payload pair.
+// In the simplest case, when there are no message slicing fields, the subscription hash is just
+// the topic name. If there are slicing fields, the hash is computed as the topic name appended
+// by "+" seperated message slicing fields.
+function computeSubscriptionHash(topic: string, subscribePayload: SubscribePayload): string {
+  return subscribePayload.fields ? topic + "+" + subscribePayload.fields.join("+") : topic;
 }
