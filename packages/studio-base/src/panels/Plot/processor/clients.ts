@@ -124,11 +124,14 @@ export function updateParams(id: string, params: PlotParams, state: State): Stat
 
       // When we receive params for a client, we check to see whether any of
       // the pending data we have in the queue applies to them.
-      const clientIds = newState.clients.map(({ id }) => id);
+      const clientIds = newState.clients.map(({ id: clientId }) => clientId);
       const allUpdates = pending.map(
         (update: BlockUpdate): [next: BlockUpdate, applied: BlockUpdate] => {
           const { updates } = update;
-          const [used, unused] = R.partition(({ id }) => clientIds.includes(id), updates);
+          const [used, unused] = R.partition(
+            ({ id: clientId }) => clientIds.includes(clientId),
+            updates,
+          );
           return [
             { ...update, updates: unused },
             { ...update, updates: used },
@@ -166,7 +169,7 @@ export function updateView(id: string, view: PlotViewport, state: State): StateA
   return [mutateClient(state, id, { ...client, view }), [rebuildClient(id)]];
 }
 
-export function register(
+export function registerClient(
   id: string,
   params: PlotParams | undefined,
   state: State,
@@ -184,7 +187,7 @@ export function register(
   return updateParams(id, params, newState);
 }
 
-export function unregister(id: string, state: State): State {
+export function unregisterClient(id: string, state: State): State {
   return {
     ...state,
     clients: R.filter(({ id: clientId }: Client) => clientId !== id, state.clients),

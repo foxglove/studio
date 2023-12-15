@@ -12,6 +12,7 @@ import { RosDatatypes, OptionalMessageDefinition } from "@foxglove/studio-base/t
 import { initAccumulated } from "./accumulate";
 import { initProcessor, initClient } from "./state";
 import { Client, State } from "./types";
+import { BlockUpdate, Update } from "../blocks";
 import { datumToTyped } from "../datasets";
 import { PlotParams, PlotPath, Messages, TypedDataSet } from "../internalTypes";
 import { getParamTopics } from "../params";
@@ -53,6 +54,29 @@ export const createMessageEvents = (
 
 export const createMessages = (topic: string, schemaName: string, count: number): Messages => ({
   [topic]: createMessageEvents(topic, schemaName, count),
+});
+
+export const createBlockUpdate = (
+  clientId: string,
+  topic: string,
+  schemaName: string,
+  count: number,
+  update?: Partial<Update>,
+): BlockUpdate => ({
+  messages: {
+    [topic]: [createMessageEvents(topic, schemaName, count)],
+  },
+  updates: [
+    {
+      id: clientId,
+      update: {
+        range: [0, 1],
+        shouldReset: false,
+        topic,
+        ...update,
+      },
+    },
+  ],
 });
 
 export const createPath = (path: string): PlotPath => ({
@@ -140,8 +164,8 @@ export const createClient = (...paths: string[]): Client => {
     ...initClient(CLIENT_ID, undefined),
     params,
     topics,
-    blocks: initAccumulated(topics),
-    current: initAccumulated(topics),
+    blocks: initAccumulated(),
+    current: initAccumulated(),
   };
 };
 

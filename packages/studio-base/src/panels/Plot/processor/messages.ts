@@ -24,7 +24,7 @@ import { BlockUpdate, ClientUpdate } from "../blocks";
 import { Messages } from "../internalTypes";
 import { isSingleMessage } from "../params";
 
-export function receiveMetadata(
+export function updateMetadata(
   topics: readonly Topic[],
   datatypes: Immutable<RosDatatypes>,
   state: State,
@@ -56,18 +56,20 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
       stateAndEffects: StateAndEffects,
       [clientId, updates]: [string, ClientUpdate[] | undefined],
     ): StateAndEffects => {
-      return concatEffects((state: State): StateAndEffects => {
-        const client = state.clients.find(({ id }) => id === clientId);
+      return concatEffects((newState: State): StateAndEffects => {
+        const client = newState.clients.find(({ id }) => id === clientId);
         if (client == undefined || updates == undefined) {
-          return noEffects(state);
+          return noEffects(newState);
         }
 
         const { params } = client;
         if (params == undefined || isSingleMessage(params)) {
-          return noEffects(state);
+          return noEffects(newState);
         }
 
-        const shouldReset = updates.some(({ update: { shouldReset } }) => shouldReset);
+        const shouldReset = updates.some(
+          ({ update: { shouldReset: updateShouldReset } }) => updateShouldReset,
+        );
 
         // Build a consolidated set of messages by combining all of the updates
         // together
@@ -101,7 +103,7 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
         );
 
         return [
-          mutateClient(state, client.id, {
+          mutateClient(newState, client.id, {
             ...client,
             blocks: newBlockData,
           }),
@@ -114,7 +116,7 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
   );
 }
 
-export function addBlock(update: BlockUpdate, state: State): StateAndEffects {
+export function addBlockData(update: BlockUpdate, state: State): StateAndEffects {
   const { pending } = state;
   const { updates, messages } = update;
 
@@ -122,48 +124,43 @@ export function addBlock(update: BlockUpdate, state: State): StateAndEffects {
   // keep that data around and use it when they register
   const clientIds = state.clients.map(({ id }) => id);
   const unused = updates.filter(({ id }) => !clientIds.includes(id));
-
-  const newState = {
+  return applyBlockUpdate(update, {
     ...state,
     pending: [...pending, ...(unused.length > 0 ? [{ messages, updates: unused }] : [])],
-  };
-
-  return applyBlockUpdate(update, newState);
+  });
 }
 
-export function addCurrent(events: readonly MessageEvent[], state: State): StateAndEffects {
+export function addCurrentData(events: readonly MessageEvent[], state: State): StateAndEffects {
   const current: Messages = R.groupBy((v: MessageEvent) => v.topic, events) as Messages;
 
-  return R.pipe(
-    mapClients((client): [Client, SideEffects] => {
-      const { metadata, globalVariables } = state;
-      const { id, params } = client;
-      if (params == undefined) {
-        return noEffects(client);
-      }
+  return mapClients((client): [Client, SideEffects] => {
+    const { metadata, globalVariables } = state;
+    const { id, params } = client;
+    if (params == undefined) {
+      return noEffects(client);
+    }
 
-      if (isSingleMessage(params)) {
-        const plotData = buildPlot(
-          metadata,
-          globalVariables,
-          params,
-          R.map((messages) => (messages ?? []).slice(-1), current),
-        );
-        return [client, [sendData(id, plotData)]];
-      }
+    if (isSingleMessage(params)) {
+      const plotData = buildPlot(
+        metadata,
+        globalVariables,
+        params,
+        R.map((messages) => messages.slice(-1), current),
+      );
+      return [client, [sendData(id, plotData)]];
+    }
 
-      return [
-        {
-          ...client,
-          current: accumulate(metadata, globalVariables, client.current, params, current),
-        },
-        [rebuildClient(id)],
-      ];
-    }),
-  )(state);
+    return [
+      {
+        ...client,
+        current: accumulate(metadata, globalVariables, client.current, params, current),
+      },
+      [rebuildClient(id)],
+    ];
+  })(state);
 }
 
-export function clearCurrent(state: State): StateAndEffects {
+export function clearCurrentData(state: State): StateAndEffects {
   const newState = {
     ...state,
     current: {},

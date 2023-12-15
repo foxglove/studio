@@ -249,7 +249,7 @@ function useData(id: string, params: PlotParams) {
     }
 
     const clientsAndUpdates = R.toPairs(clients).map(
-      ([id, client]): [id: string, client: Client, updates: ClientUpdate[]] => {
+      ([clientId, client]): [id: string, client: Client, updates: ClientUpdate[]] => {
         const { state: newBlocks, updates } = processBlocks(
           blocks,
           blockSubscriptions,
@@ -259,15 +259,19 @@ function useData(id: string, params: PlotParams) {
           ...client,
           blocks: newBlocks,
         };
-        return [id, newClient, updates.map((update): ClientUpdate => ({ id, update }))];
+        return [
+          clientId,
+          newClient,
+          updates.map((update): ClientUpdate => ({ id: clientId, update })),
+        ];
       },
     );
 
-    clients = R.fromPairs(clientsAndUpdates.map(([id, client]) => [id, client]));
+    clients = R.fromPairs(clientsAndUpdates.map(([clientId, client]) => [clientId, client]));
 
-    void service?.addBlock(
+    void service?.addBlockData(
       prepareUpdate(
-        clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates ?? []),
+        clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates),
         blocks,
       ),
     );
@@ -328,7 +332,7 @@ export default function useDatasets(params: PlotParams): {
   const [state, setState] = React.useState<Immutable<PlotData> | undefined>();
   useEffect(() => {
     return () => {
-      void service?.unregister(id);
+      void service?.unregisterCleint(id);
     };
   }, [id]);
 

@@ -50,7 +50,7 @@ export function refreshBlockTopics(
 }
 
 type Range = [start: number, end: number];
-type Update = {
+export type Update = {
   topic: string;
   range: Range;
   shouldReset: boolean;

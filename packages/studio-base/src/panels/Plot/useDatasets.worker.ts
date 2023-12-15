@@ -22,20 +22,20 @@ import {
   SideEffectType,
   State,
   StateAndEffects,
-  addCurrent,
-  clearCurrent,
+  addCurrentData,
+  clearCurrentData,
   findClient,
   getClientData,
   initProcessor,
-  receiveMetadata,
+  updateMetadata,
   updateVariables,
-  register,
+  registerClient,
   setLive,
-  unregister,
+  unregisterClient,
   updateParams,
   updateView,
   mutateClient,
-  addBlock,
+  addBlockData,
 } from "./processor";
 import { updateDownsample } from "./processor/downsample";
 
@@ -155,17 +155,17 @@ function handleEffects([newState, effects]: StateAndEffects): void {
 }
 
 export const service = {
-  setClearClient(callback: (id: string) => void) {
+  setClearClient(callback: (id: string) => void): void {
     clearClient = callback;
   },
-  addBlock(update: BlockUpdate): void {
-    handleEffects(addBlock(strPack(update), state));
+  addBlockData(update: BlockUpdate): void {
+    handleEffects(addBlockData(strPack(update), state));
   },
-  addCurrent(events: readonly MessageEvent[]): void {
-    handleEffects(addCurrent(events, state));
+  addCurrentData(events: readonly MessageEvent[]): void {
+    handleEffects(addCurrentData(events, state));
   },
-  clearCurrent(): void {
-    handleEffects(clearCurrent(state));
+  clearCurrentData(): void {
+    handleEffects(clearCurrentData(state));
   },
   getFullData(id: string): PlotData | undefined {
     const client = findClient(state, id);
@@ -175,13 +175,13 @@ export const service = {
 
     return getClientData(client);
   },
-  receiveMetadata(topics: readonly Topic[], datatypes: Immutable<RosDatatypes>): void {
-    state = receiveMetadata(topics, strPack(datatypes), state);
+  updateMetadata(topics: readonly Topic[], datatypes: Immutable<RosDatatypes>): void {
+    state = updateMetadata(topics, strPack(datatypes), state);
   },
-  receiveVariables(variables: GlobalVariables): void {
+  updateVariables(variables: GlobalVariables): void {
     handleEffects(updateVariables(variables, state));
   },
-  register(
+  registerClient(
     id: string,
     setProvided: Setter,
     setPanel: StateHandler,
@@ -195,16 +195,16 @@ export const service = {
       queueRebuild: makeRebuilder(id),
     };
 
-    handleEffects(register(id, params, state));
+    handleEffects(registerClient(id, params, state));
   },
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setLive(value: boolean): void {
     state = setLive(value, state);
   },
-  unregister(id: string): void {
+  unregisterCleint(id: string): void {
     const { [id]: _client, ...newCallbacks } = callbacks;
     callbacks = newCallbacks;
-    state = unregister(id, state);
+    state = unregisterClient(id, state);
   },
   updateParams(id: string, params: PlotParams): void {
     handleEffects(updateParams(id, params, state));
