@@ -42,13 +42,23 @@ export function receiveMetadata(
 
 export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEffects {
   const { metadata, globalVariables } = state;
-  const { messages, updates } = update;
+  const { messages, updates: clientUpdates } = update;
 
+  // We aggregate all of the updates for each client and then apply them as a
+  // group. This is because we don't want the `shouldReset` field, which can
+  // reset the plot data, to throw away data we aggregated from an update we
+  // just applied.
+  const updatesByClient = R.toPairs(R.groupBy(({ id }) => id, clientUpdates));
+
+  // This reduce applies updates for each client, one at a time
   return R.reduce(
-    (stateAndEffects: StateAndEffects, clientUpdate: ClientUpdate): StateAndEffects => {
+    (
+      stateAndEffects: StateAndEffects,
+      [clientId, updates]: [string, ClientUpdate[] | undefined],
+    ): StateAndEffects => {
       return concatEffects((state: State): StateAndEffects => {
-        const client = state.clients.find(({ id }) => id === clientUpdate.id);
-        if (client == undefined) {
+        const client = state.clients.find(({ id }) => id === clientId);
+        if (client == undefined || updates == undefined) {
           return noEffects(state);
         }
 
@@ -57,24 +67,37 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
           return noEffects(state);
         }
 
-        const {
-          update: { range, topic, shouldReset },
-        } = clientUpdate;
+        const shouldReset = updates.some(({ update: { shouldReset } }) => shouldReset);
 
-        const [start, end] = range;
-        const topicMessages = messages[topic];
-        if (topicMessages == undefined) {
-          return noEffects(state);
-        }
+        // Build a consolidated set of messages by combining all of the updates
+        // together
+        const clientMessages = R.reduce(
+          (a: Messages, clientUpdate: ClientUpdate): Messages => {
+            const {
+              update: { range, topic },
+            } = clientUpdate;
+
+            const [start, end] = range;
+            const topicMessages = messages[topic];
+            if (topicMessages == undefined) {
+              return a;
+            }
+
+            return {
+              ...a,
+              [topic]: topicMessages.slice(start, end).flatMap((v) => v),
+            };
+          },
+          {},
+          updates,
+        );
 
         const newBlockData = accumulate(
           metadata,
           globalVariables,
           shouldReset ? initAccumulated() : client.blocks,
           params,
-          {
-            [topic]: topicMessages.slice(start, end).flatMap((v) => v),
-          },
+          clientMessages,
         );
 
         return [
@@ -87,7 +110,7 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
       })(stateAndEffects);
     },
     noEffects(state),
-    updates,
+    updatesByClient,
   );
 }
 
