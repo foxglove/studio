@@ -71,18 +71,6 @@ export function noEffects<T>(state: T): [T, SideEffects] {
 // eslint-disable-next-line @foxglove/no-boolean-parameters
 export const setLive = (isLive: boolean, state: State): State => ({ ...state, isLive });
 
-export const getAllTopics = (state: State): string[] =>
-  R.pipe(
-    R.chain(({ topics: clientTopics }: Client) => clientTopics),
-    R.uniq,
-  )(state.clients);
-
-export const keepEffects =
-  (mutator: (state: State) => State) =>
-  ([state, effects]: StateAndEffects): StateAndEffects => {
-    return [mutator(state), effects];
-  };
-
 export const concatEffects =
   (mutator: (state: State) => StateAndEffects) =>
   ([state, effects]: StateAndEffects): StateAndEffects => {

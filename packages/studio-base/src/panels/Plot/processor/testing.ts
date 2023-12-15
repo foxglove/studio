@@ -14,7 +14,7 @@ import { initProcessor, initClient } from "./state";
 import { Client, State } from "./types";
 import { BlockUpdate, Update } from "../blocks";
 import { datumToTyped } from "../datasets";
-import { PlotParams, PlotPath, Messages, TypedDataSet } from "../internalTypes";
+import { PlotParams, PlotPath, TypedDataSet } from "../internalTypes";
 import { getParamTopics } from "../params";
 import { PlotData } from "../plotData";
 
@@ -51,10 +51,6 @@ export const createMessageEvents = (
       sizeInBytes: 0,
     }),
   );
-
-export const createMessages = (topic: string, schemaName: string, count: number): Messages => ({
-  [topic]: createMessageEvents(topic, schemaName, count),
-});
 
 export const createBlockUpdate = (
   clientId: string,
