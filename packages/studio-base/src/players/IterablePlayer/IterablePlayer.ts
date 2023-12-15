@@ -26,6 +26,7 @@ import {
   AdvertiseOptions,
   Player,
   PlayerCapabilities,
+  PlayerMemoryInfo,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
   PlayerState,
@@ -147,6 +148,7 @@ export class IterablePlayer implements Player {
   #publishedTopics = new Map<string, Set<string>>();
   #seekTarget?: Time;
   #presence = PlayerPresence.INITIALIZING;
+  #memoryInfo?: PlayerMemoryInfo;
 
   // To keep reference equality for downstream user memoization cache the currentTime provided in the last activeData update
   // See additional comments below where _currentTime is set
@@ -803,6 +805,7 @@ export class IterablePlayer implements Player {
         sourceId: this.#sourceId,
         parameters: this.#urlParams,
       },
+      memoryInfo: this.#memoryInfo,
     };
 
     await this.#listener(data);
@@ -984,6 +987,10 @@ export class IterablePlayer implements Player {
         fullyLoadedFractionRanges: this.#bufferedSource.loadedRanges(),
         messageCache: this.#progress.messageCache,
       };
+      this.#memoryInfo = {
+        ...this.#memoryInfo,
+        bufferedMsgsSize: this.#bufferedSource.getBufferedAmount(),
+      };
       this.#queueEmitState();
     };
 
@@ -1035,6 +1042,11 @@ export class IterablePlayer implements Player {
           fullyLoadedFractionRanges: this.#bufferedSource.loadedRanges(),
           messageCache: this.#progress.messageCache,
         };
+        // Update the player's memory info
+        this.#memoryInfo = {
+          ...this.#memoryInfo,
+          bufferedMsgsSize: this.#bufferedSource.getBufferedAmount(),
+        };
 
         // If subscriptions changed, update to the new subscriptions
         if (this.#allTopics !== allTopics) {
@@ -1075,12 +1087,15 @@ export class IterablePlayer implements Player {
 
   async #startBlockLoading() {
     await this.#blockLoader?.startLoading({
-      progress: async (progress) => {
+      progress: async (progress, cacheSize) => {
         this.#progress = {
           fullyLoadedFractionRanges: this.#progress.fullyLoadedFractionRanges,
           messageCache: progress.messageCache,
         };
-
+        this.#memoryInfo = {
+          ...this.#memoryInfo,
+          preloadedMsgsSize: cacheSize,
+        };
         // If we are in playback, we will let playback queue state updates
         if (this.#state === "play") {
           return;

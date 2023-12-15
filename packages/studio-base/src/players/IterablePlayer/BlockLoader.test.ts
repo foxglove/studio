@@ -53,7 +53,7 @@ describe("BlockLoader", () => {
     });
 
     await loader.startLoading({
-      progress: async (progress) => {
+      progress: async (progress, cacheSize) => {
         expect(progress).toEqual({
           fullyLoadedFractionRanges: [],
           messageCache: {
@@ -61,11 +61,12 @@ describe("BlockLoader", () => {
             startTime: { sec: 0, nsec: 0 },
           },
         });
+        expect(cacheSize).toEqual(0);
         await loader.stopLoading();
       },
     });
 
-    expect.assertions(1);
+    expect.assertions(2);
   });
 
   it("should load the source into blocks", async () => {
@@ -106,7 +107,7 @@ describe("BlockLoader", () => {
     loader.setTopics(mockTopicSelection("a"));
     let count = 0;
     await loader.startLoading({
-      progress: async (progress) => {
+      progress: async (progress, cacheSize) => {
         if (++count < 5) {
           return;
         }
@@ -159,12 +160,13 @@ describe("BlockLoader", () => {
             startTime: { sec: 0, nsec: 0 },
           },
         });
+        expect(cacheSize).toEqual(4);
 
         await loader.stopLoading();
       },
     });
 
-    expect.assertions(1);
+    expect.assertions(2);
   });
 
   it("should not load messages past max cache size", async () => {

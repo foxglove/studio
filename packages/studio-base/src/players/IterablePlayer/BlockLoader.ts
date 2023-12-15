@@ -42,7 +42,7 @@ type CacheBlock = MessageBlock & {
 type Blocks = (CacheBlock | undefined)[];
 
 type LoadArgs = {
-  progress: (progress: Progress) => void;
+  progress: (progress: Progress, cacheSize: number) => void;
 };
 
 /**
@@ -185,7 +185,7 @@ export class BlockLoader {
 
     // Ignore changing the blocks if the topic list is empty
     if (topics.size === 0) {
-      args.progress(this.#calculateProgress(topics));
+      args.progress(this.#calculateProgress(topics), this.#cacheSize());
       return;
     }
 
@@ -334,7 +334,7 @@ export class BlockLoader {
             });
             // We need to emit progress here so the player will emit a new state
             // containing the problem.
-            progress(this.#calculateProgress(topics));
+            progress(this.#calculateProgress(topics), totalBlockSizeBytes);
             return;
           }
         }
@@ -367,7 +367,7 @@ export class BlockLoader {
         // (The size of new messages is already added above).
         totalBlockSizeBytes -= overridenBlockMessagesSize;
 
-        progress(this.#calculateProgress(topics));
+        progress(this.#calculateProgress(topics), totalBlockSizeBytes);
       }
 
       await cursor.end();
