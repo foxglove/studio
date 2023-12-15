@@ -229,13 +229,13 @@ function useData(id: string, params: PlotParams) {
     topics: currentSubscriptions,
     restore: React.useCallback((state: number | undefined): number => {
       if (state == undefined) {
-        void service?.clearCurrent();
+        void service?.clearCurrentData();
       }
       return 0;
     }, []),
     addMessages: React.useCallback(
       (_: number | undefined, messages: readonly MessageEvent[]): number => {
-        void service?.addCurrent(messages);
+        void service?.addCurrentData(messages);
         return 1;
       },
       [],
@@ -282,12 +282,12 @@ function useData(id: string, params: PlotParams) {
 function useMetadata() {
   const { topics, datatypes } = useDataSourceInfo();
   useEffect(() => {
-    void service?.receiveMetadata(topics, datatypes);
+    void service?.updateMetadata(topics, datatypes);
   }, [topics, datatypes]);
 
   const { globalVariables } = useGlobalVariables();
   useEffect(() => {
-    void service?.receiveVariables(globalVariables);
+    void service?.updateVariables(globalVariables);
   }, [globalVariables]);
 }
 
@@ -353,7 +353,7 @@ export default function useDatasets(params: PlotParams): {
       register: (setter, setPartial) => {
         void (async () => {
           const s = await waitService();
-          void s.register(
+          void s.registerClient(
             id,
             Comlink.proxy(setter),
             Comlink.proxy(setState),
