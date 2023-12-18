@@ -53,8 +53,7 @@ async function waitService(): Promise<Service> {
 
 const getIsLive = (ctx: MessagePipelineContext) => ctx.seekPlayback == undefined;
 
-// Calculate the list of unique topics that _all_ of the plots need and
-// nominate one panel to subscribe to the topics on behalf of the rest.
+// Nominate one panel to subscribe to the topics on behalf of the rest.
 function chooseClient() {
   if (R.isEmpty(datasetsState.clients)) {
     return;
