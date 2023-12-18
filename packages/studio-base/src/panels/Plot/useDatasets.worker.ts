@@ -159,7 +159,7 @@ export const service = {
     clearClient = callback;
   },
   addBlockData(update: BlockUpdate): void {
-    handleEffects(addBlockData(strPack(update), state));
+    handleEffects(addBlockData(update, state));
   },
   addCurrentData(events: readonly MessageEvent[]): void {
     handleEffects(addCurrentData(events, state));

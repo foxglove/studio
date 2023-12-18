@@ -6,7 +6,7 @@ import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/par
 
 import { pathToPayload } from "./useDatasets";
 
-describe("getPayload", () => {
+describe("pathToPayload", () => {
   const call = (path: string) => {
     const parsed = parseRosPath(path);
     if (parsed == undefined) {
