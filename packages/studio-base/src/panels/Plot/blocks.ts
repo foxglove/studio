@@ -50,20 +50,39 @@ export function refreshBlockTopics(
 }
 
 type Range = [start: number, end: number];
+
+/**
+ * An Update describes the set of data that should be ingested by a client in
+ * the plot worker.
+ */
 export type Update = {
   topic: string;
+  // The range of blocks that should be ingested in the form [start index, end
+  // index).
   range: Range;
+  // Whether the plot data the client already has should be thrown out. This
+  // happens when either the plot's parameters change or the underlying data
+  // does.
   shouldReset: boolean;
 };
 
+/**
+ * An Update for a specific client.
+ */
 export type ClientUpdate = {
   id: string;
   update: Update;
 };
 
+/**
+ * A BlockUpdate describes the "work to be done" for new block data in the
+ * worker.
+ */
 export type BlockUpdate = {
-  messages: Record<string, (readonly MessageEvent[])[]>;
+  // Contains all of the data ingestion "jobs".
   updates: ClientUpdate[];
+  // Contains the data used to fulfill those jobs.
+  messages: Record<string, (readonly MessageEvent[])[]>;
 };
 
 /**

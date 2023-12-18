@@ -25,7 +25,7 @@ import {
   registerClient,
   unregisterClient,
   updateParams,
-  getSubscriptions,
+  getAllSubscriptions,
   updateBlocks,
   resetClientBlocks,
   splitSubscriptions,
@@ -60,7 +60,7 @@ function chooseClient() {
   }
 
   const clientList = Object.values(callbacks);
-  clientList[0]?.(getSubscriptions(datasetsState));
+  clientList[0]?.(getAllSubscriptions(datasetsState));
 }
 
 function clearClient(id: string) {

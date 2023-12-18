@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { fromSec } from "@foxglove/rostime";
-import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksSubscriptions";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
 
 import {
@@ -14,22 +12,11 @@ import {
   prepareBlockUpdate,
   refreshBlockTopics,
 } from "./blocks";
+import { createBlock } from "./testing";
+import { FAKE_TOPIC } from "./processor/testing";
 
-const FAKE_TOPIC = "/foo";
 const createSubscription = (topic: string): SubscribePayload => ({
   topic,
-});
-
-const createBlock = (value: unknown): MessageBlock => ({
-  [FAKE_TOPIC]: [
-    {
-      topic: FAKE_TOPIC,
-      schemaName: "",
-      sizeInBytes: 0,
-      message: value,
-      receiveTime: fromSec(0),
-    },
-  ],
 });
 
 describe("refreshBlockTopics", () => {

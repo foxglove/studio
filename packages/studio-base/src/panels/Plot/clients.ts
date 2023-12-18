@@ -27,7 +27,7 @@ import { getPaths } from "./params";
 
 export type Client = {
   params: PlotParams | undefined;
-  blocks: BlockState;
+  blockState: BlockState;
 };
 
 export type DatasetsState = {
@@ -80,6 +80,9 @@ export function pathToPayload(path: RosPath): SubscribePayload | undefined {
   };
 }
 
+/**
+ * Turn a list of ROS paths into SubscribePayloads.
+ */
 function getPayloadsFromPaths(paths: readonly string[]): SubscribePayload[] {
   return R.pipe(
     R.chain((path: string): SubscribePayload[] => {
@@ -100,6 +103,9 @@ function getPayloadsFromPaths(paths: readonly string[]): SubscribePayload[] {
   )(paths);
 }
 
+/**
+ * Get all of the SubscribePayloads necessary to fulfill a client's requests.
+ */
 function getPayloadsFromClient(client: Client): SubscribePayload[] {
   const { params } = client;
   if (params == undefined) {
@@ -124,13 +130,11 @@ function getPayloadsFromClient(client: Client): SubscribePayload[] {
   )(getPaths(yAxisPaths, xAxisPath));
 }
 
-export function splitSubscriptions(
-  subscriptions: SubscribePayload[],
-): [blocks: SubscribePayload[], current: SubscribePayload[]] {
-  return R.partition((v) => v.preloadType === "full", subscriptions);
-}
-
-export function getSubscriptions(state: DatasetsState): SubscribePayload[] {
+/**
+ * Get the minimal, merged list of all SubscribePayloads necessary to satisfy
+ * the requests for all of the clients contained in DatasetsState.
+ */
+export function getAllSubscriptions(state: DatasetsState): SubscribePayload[] {
   const { clients } = state;
   return R.pipe(
     R.values,
@@ -139,22 +143,35 @@ export function getSubscriptions(state: DatasetsState): SubscribePayload[] {
   )(clients);
 }
 
+/**
+ * Partition a list of SubscribePayload into full and partial subscriptions.
+ */
+export function splitSubscriptions(
+  subscriptions: SubscribePayload[],
+): [blocks: SubscribePayload[], current: SubscribePayload[]] {
+  return R.partition((v) => v.preloadType === "full", subscriptions);
+}
+
+/**
+ * Update the state of every client given a new set of blocks and produce a
+ * BlockUpdate that can be passed to the worker.
+ */
 export function updateBlocks(
   blocks: readonly MessageBlock[],
   state: DatasetsState,
 ): [DatasetsState, BlockUpdate] {
   const { clients } = state;
-  const [blockSubscriptions] = splitSubscriptions(getSubscriptions(state));
+  const [blockSubscriptions] = splitSubscriptions(getAllSubscriptions(state));
   const clientsAndUpdates = R.toPairs(clients).map(
     ([clientId, client]): [id: string, client: Client, updates: ClientUpdate[]] => {
       const { state: newBlocks, updates } = processBlocks(
         blocks,
         blockSubscriptions,
-        client.blocks,
+        client.blockState,
       );
-      const newClient = {
+      const newClient: Client = {
         ...client,
-        blocks: newBlocks,
+        blockState: newBlocks,
       };
       return [
         clientId,
@@ -166,18 +183,17 @@ export function updateBlocks(
 
   const newClients = R.fromPairs(clientsAndUpdates.map(([clientId, client]) => [clientId, client]));
 
-  return [
-    {
-      ...state,
-      clients: newClients,
-    },
-    prepareBlockUpdate(
-      clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates),
-      blocks,
-    ),
-  ];
+  const update = prepareBlockUpdate(
+    clientsAndUpdates.flatMap(([, , updates]): ClientUpdate[] => updates),
+    blocks,
+  );
+
+  return [{ ...state, blocks, clients: newClients }, update];
 }
 
+/**
+ * Register a new client and initialize its state.
+ */
 export function registerClient(id: string, state: DatasetsState): DatasetsState {
   const { clients } = state;
   return {
@@ -186,12 +202,15 @@ export function registerClient(id: string, state: DatasetsState): DatasetsState 
       ...clients,
       [id]: {
         params: undefined,
-        blocks: initBlockState(),
+        blockState: initBlockState(),
       },
     },
   };
 }
 
+/**
+ * Unregister a client.
+ */
 export function unregisterClient(id: string, state: DatasetsState): DatasetsState {
   const { clients } = state;
   const { [id]: _client, ...rest } = clients;
@@ -202,6 +221,10 @@ export function unregisterClient(id: string, state: DatasetsState): DatasetsStat
   };
 }
 
+/**
+ * Update a client's plot settings and remove any topics from its state that
+ * are no longer used.
+ */
 export function updateParams(id: string, params: PlotParams, state: DatasetsState): DatasetsState {
   const { clients } = state;
   const { [id]: client } = clients;
@@ -209,20 +232,28 @@ export function updateParams(id: string, params: PlotParams, state: DatasetsStat
     return state;
   }
 
-  const { blocks } = client;
+  const newClient = {
+    ...client,
+    params,
+  };
+
+  const { blockState } = client;
   return {
     ...state,
     clients: {
       ...clients,
       [id]: {
-        ...client,
-        blocks: refreshBlockTopics(getPayloadsFromClient(client), blocks),
-        params,
+        ...newClient,
+        blockState: refreshBlockTopics(getPayloadsFromClient(newClient), blockState),
       },
     },
   };
 }
 
+/**
+ * Reset a client's BlockState and recalculate it from scratch, producing a
+ * BlockUpdate for the worker.
+ */
 export function resetClientBlocks(id: string, state: DatasetsState): [DatasetsState, BlockUpdate] {
   const { clients, blocks } = state;
 
@@ -233,7 +264,7 @@ export function resetClientBlocks(id: string, state: DatasetsState): [DatasetsSt
 
     return {
       ...client,
-      blocks: initBlockState(),
+      blockState: initBlockState(),
     };
   }, clients);
 
