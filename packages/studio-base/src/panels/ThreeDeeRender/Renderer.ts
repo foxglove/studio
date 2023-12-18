@@ -30,12 +30,14 @@ import {
   DraggedMessagePath,
   MessagePathDropStatus,
 } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { HUDItemManager } from "@foxglove/studio-base/panels/ThreeDeeRender/HUDItemManager";
 import { LayerErrors } from "@foxglove/studio-base/panels/ThreeDeeRender/LayerErrors";
 import { ICameraHandler } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ICameraHandler";
 import IAnalytics from "@foxglove/studio-base/services/IAnalytics";
 import { palette, fontMonospace } from "@foxglove/theme";
 import { LabelMaterial, LabelPool } from "@foxglove/three-text";
 
+import { HUDItem } from "./HUDItemManager";
 import {
   IRenderer,
   InstancedLineMaterial,
@@ -107,6 +109,7 @@ const NO_FRAME_SELECTED = "NO_FRAME_SELECTED";
 const TF_OVERFLOW = "TF_OVERFLOW";
 const CYCLE_DETECTED = "CYCLE_DETECTED";
 const FOLLOW_FRAME_NOT_FOUND = "FOLLOW_FRAME_NOT_FOUND";
+const ADD_TRANSFORM_ERROR = "ADD_TRANSFORM_ERROR";
 
 // An extensionId for creating the top-level settings nodes such as "Topics" and
 // "Custom Layers"
@@ -161,6 +164,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public schemaSubscriptions = new Map<string, RendererSubscription[]>();
   // topicName -> RendererSubscription[]
   public topicSubscriptions = new Map<string, RendererSubscription[]>();
+
+  /** HUD manager instance */
+  public hud;
+  /** Items to display in the HUD */
+  public hudItems: HUDItem[] = [];
   // layerId -> { action, handler }
   #customLayerActions = new Map<string, CustomLayerAction>();
   #scene: THREE.Scene;
@@ -231,6 +239,8 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.#fetchAsset = args.fetchAsset;
     this.testOptions = args.testOptions;
     this.debugPicking = args.testOptions.debugPicking ?? false;
+
+    this.hud = new HUDItemManager(this.#onHUDItemsChange);
 
     this.settings = new SettingsManager(baseSettingsTree(this.interfaceMode));
     this.settings.on("update", () => this.emit("settingsTreeChange", this));
@@ -363,6 +373,11 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.animationFrame();
   }
 
+  #onHUDItemsChange = () => {
+    this.hudItems = this.hud.getHUDItems();
+    this.emit("hudItemsChanged", this);
+  };
+
   #onDevicePixelRatioChange = () => {
     log.debug(`devicePixelRatio changed to ${window.devicePixelRatio}`);
     this.#resizeHandler(this.input.canvasSize);
@@ -467,6 +482,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       this.#resetAllFramesCursor();
     }
     this.settings.errors.clear();
+    this.hud.clear();
 
     for (const extension of this.sceneExtensions.values()) {
       if (!clearImageModeExtension && extension === this.#imageModeExtension) {
@@ -981,21 +997,37 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #addFrameTransform(transform: FrameTransform): void {
     const parentId = transform.parent_frame_id;
     const childId = transform.child_frame_id;
-    const stamp = toNanoSec(transform.timestamp);
-    const t = transform.translation;
-    const q = transform.rotation;
+    try {
+      const stamp = toNanoSec(transform.timestamp);
+      const t = transform.translation;
+      const q = transform.rotation;
 
-    this.addTransform(parentId, childId, stamp, t, q);
+      this.addTransform(parentId, childId, stamp, t, q);
+    } catch (err) {
+      this.settings.errors.add(
+        ["transforms"],
+        ADD_TRANSFORM_ERROR,
+        `Error adding transform for frame ${childId}: ${err.message}`,
+      );
+    }
   }
 
   #addTransformMessage(tf: TransformStamped): void {
     const normalizedParentId = this.normalizeFrameId(tf.header.frame_id);
     const normalizedChildId = this.normalizeFrameId(tf.child_frame_id);
-    const stamp = toNanoSec(tf.header.stamp);
-    const t = tf.transform.translation;
-    const q = tf.transform.rotation;
+    try {
+      const stamp = toNanoSec(tf.header.stamp);
+      const t = tf.transform.translation;
+      const q = tf.transform.rotation;
 
-    this.addTransform(normalizedParentId, normalizedChildId, stamp, t, q);
+      this.addTransform(normalizedParentId, normalizedChildId, stamp, t, q);
+    } catch (err) {
+      this.settings.errors.add(
+        ["transforms"],
+        ADD_TRANSFORM_ERROR,
+        `Error adding transform for frame ${normalizedChildId}: ${err.message}`,
+      );
+    }
   }
 
   // Create a new transform and add it to the renderer's TransformTree
@@ -1074,7 +1106,10 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     this.followFrameId = frameId;
   }
 
-  public async fetchAsset(uri: string, options?: { signal: AbortSignal }): Promise<Asset> {
+  public async fetchAsset(
+    uri: string,
+    options?: { signal?: AbortSignal; baseUrl?: string },
+  ): Promise<Asset> {
     return await this.#fetchAsset(uri, options);
   }
 

@@ -152,7 +152,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const [enableDebugMode = false] = useAppConfigurationValue<boolean>(AppSetting.SHOW_DEBUG_PANELS);
 
-  const { workspaceExtensions } = useAppContext();
+  const { workspaceExtensions = [] } = useAppContext();
 
   // When a player is activated, hide the open dialog.
   useLayoutEffect(() => {
@@ -371,7 +371,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
       return;
     }
 
-    // Apply any available datasource args
+    // Apply any available data source args
     if (unappliedSourceArgs.ds) {
       log.debug("Initialising source from url", unappliedSourceArgs);
       selectSource(unappliedSourceArgs.ds, {
@@ -468,7 +468,8 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
           </div>
         )}
       </div>
-      {workspaceExtensions}
+      {/* Splat to avoid requiring unique a `key` on each item in workspaceExtensions */}
+      {...workspaceExtensions}
       <WorkspaceDialogs />
     </PanelStateContextProvider>
   );
