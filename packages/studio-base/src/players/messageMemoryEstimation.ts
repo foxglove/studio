@@ -196,6 +196,11 @@ export function estimateMessageFieldSizes(
  * @returns Estimated size in bytes
  */
 export function estimateObjectSize(obj: unknown): number {
+  // catches null and undefined
+  // typeof null == "object"
+  if (obj == undefined) {
+    return SMALL_INTEGER_SIZE;
+  }
   switch (typeof obj) {
     case "undefined":
     case "boolean": {
@@ -238,7 +243,7 @@ export function estimateObjectSize(obj: unknown): number {
       }
 
       let propertiesSize = 0;
-      const numProps = Object.keys(obj!).length;
+      const numProps = Object.keys(obj).length;
       if (numProps > MAX_NUM_FAST_PROPERTIES) {
         // If there are too many properties, V8 stores Objects in dictionary mode (slow properties)
         // with each object having a self-contained dictionary. This dictionary contains the key, value
@@ -251,7 +256,10 @@ export function estimateObjectSize(obj: unknown): number {
         propertiesSize = propertiesDictSize - numProps * COMPRESSED_POINTER_SIZE;
       }
 
-      const valuesSize = Object.values(obj!).reduce((acc, val) => acc + estimateObjectSize(val), 0);
+      const valuesSize: number = Object.values(obj).reduce(
+        (acc, val) => acc + estimateObjectSize(val),
+        0,
+      );
       return OBJECT_BASE_SIZE + propertiesSize + valuesSize;
     }
     case "symbol":
@@ -259,4 +267,6 @@ export function estimateObjectSize(obj: unknown): number {
       throw new Error(`Can't estimate size of type '${typeof obj}'`);
     }
   }
+  // Should never happen
+  return 0;
 }
