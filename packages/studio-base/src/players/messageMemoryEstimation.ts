@@ -2,8 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import Log from "@foxglove/log";
 import { MessageDefinitionMap } from "@foxglove/mcap-support/src/types";
 
+const log = Log.getLogger(__filename);
 /**
  * Values of the contants below are a (more or less) informed guesses and not guaranteed to be accurate.
  */
@@ -264,6 +266,6 @@ export function estimateObjectSize(obj: unknown): number {
       throw new Error(`Can't estimate size of type '${typeof obj}'`);
     }
   }
-  // Should never happen
-  return 0;
+  log.error(`Can't estimate size of type '${typeof obj}'`);
+  return SMALL_INTEGER_SIZE;
 }
