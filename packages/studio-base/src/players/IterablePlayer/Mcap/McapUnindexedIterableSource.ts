@@ -25,7 +25,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -66,19 +66,11 @@ export class McapUnindexedIterableSource implements IIterableSource {
         channel: McapTypes.Channel;
         parsedChannel: ParsedChannel;
         schemaName: string | undefined;
+        // Guesstimate of the memory size in bytes of a deserialized message object
+        approxDeserializedMsgSize: number;
       }
     >();
-    const messageSizeEstimateByTopic: Record<string, number> = {};
-    const estimateMessageSize = (topic: string, msg: unknown): number => {
-      const cachedSize = messageSizeEstimateByTopic[topic];
-      if (cachedSize != undefined) {
-        return cachedSize;
-      }
-
-      const sizeEstimate = estimateObjectSize(msg);
-      messageSizeEstimateByTopic[topic] = sizeEstimate;
-      return sizeEstimate;
-    };
+    const estimatedObjectSizeByType = new Map<string, number>();
 
     let startTime: Time | undefined;
     let endTime: Time | undefined;
@@ -124,10 +116,19 @@ export class McapUnindexedIterableSource implements IIterableSource {
 
           try {
             const parsedChannel = parseChannel({ messageEncoding: record.messageEncoding, schema });
+            const approxDeserializedMsgSize =
+              schema?.name != undefined
+                ? estimateMessageObjectSize(
+                    parsedChannel.datatypes,
+                    schema.name,
+                    estimatedObjectSizeByType,
+                  )
+                : 0;
             channelInfoById.set(record.id, {
               channel: record,
               parsedChannel,
               schemaName: schema?.name,
+              approxDeserializedMsgSize,
             });
             messagesByChannel.set(record.id, []);
           } catch (error) {
@@ -159,17 +160,13 @@ export class McapUnindexedIterableSource implements IIterableSource {
           if (!endTime || isGreaterThan(receiveTime, endTime)) {
             endTime = receiveTime;
           }
-          const deserializedMessage = channelInfo.parsedChannel.deserialize(record.data);
-          const estimatedMemorySize = estimateMessageSize(
-            channelInfo.channel.topic,
-            deserializedMessage,
-          );
+
           messages.push({
             topic: channelInfo.channel.topic,
             receiveTime,
             publishTime: fromNanoSec(record.publishTime),
-            message: deserializedMessage,
-            sizeInBytes: Math.max(record.data.byteLength, estimatedMemorySize),
+            message: channelInfo.parsedChannel.deserialize(record.data),
+            sizeInBytes: Math.max(record.data.byteLength, channelInfo.approxDeserializedMsgSize),
             schemaName: channelInfo.schemaName ?? "",
           });
           break;

@@ -6,7 +6,7 @@ import { ROS2_TO_DEFINITIONS, Rosbag2, SqliteSqljs } from "@foxglove/rosbag2-web
 import { stringify } from "@foxglove/rosmsg";
 import { Time, add as addTime } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
-import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import {
   MessageDefinitionsByTopic,
   ParsedMessageDefinitionsByTopic,
@@ -30,7 +30,7 @@ export class RosDb3IterableSource implements IIterableSource {
   #bag?: Rosbag2;
   #start: Time = { sec: 0, nsec: 0 };
   #end: Time = { sec: 0, nsec: 0 };
-  #messageSizeEstimateByTopic: Record<string, number> = {};
+  #approxDeserializedMsgSizeByType = new Map<string, number>();
 
   public constructor(files: File[]) {
     this.#files = files;
@@ -70,6 +70,7 @@ export class RosDb3IterableSource implements IIterableSource {
     const datatypes: RosDatatypes = new Map([...ROS2_TO_DEFINITIONS, ...basicDatatypes]);
     const messageDefinitionsByTopic: MessageDefinitionsByTopic = {};
     const parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
+    const estimatedObjectSizeByType = new Map<string, number>();
 
     for (const topicDef of topicDefs) {
       const numMessages = messageCounts.get(topicDef.name);
@@ -94,6 +95,10 @@ export class RosDb3IterableSource implements IIterableSource {
       datatypes.set(topicDef.type, { name: topicDef.type, definitions: parsedMsgdef.definitions });
       messageDefinitionsByTopic[topicDef.name] = messageDefinition;
       parsedMessageDefinitionsByTopic[topicDef.name] = fullParsedMessageDefinitions;
+      this.#approxDeserializedMsgSizeByType.set(
+        topicDef.type,
+        estimateMessageObjectSize(datatypes, topicDef.type, estimatedObjectSizeByType),
+      );
     }
 
     this.#start = start;
@@ -135,20 +140,14 @@ export class RosDb3IterableSource implements IIterableSource {
       topics: Array.from(topics.keys()),
     });
     for await (const msg of msgIterator) {
-      // Lookup the size estimate for this topic or compute it if not found in the cache.
-      let msgSizeEstimate = this.#messageSizeEstimateByTopic[msg.topic.name];
-      if (msgSizeEstimate == undefined) {
-        msgSizeEstimate = estimateObjectSize(msg.value);
-        this.#messageSizeEstimateByTopic[msg.topic.name] = msgSizeEstimate;
-      }
-
+      const approxDeserializedMsgSize = this.#approxDeserializedMsgSizeByType.get(msg.topic.type);
       yield {
         type: "message-event",
         msgEvent: {
           topic: msg.topic.name,
           receiveTime: msg.timestamp,
           message: msg.value,
-          sizeInBytes: Math.max(msg.data.byteLength, msgSizeEstimate),
+          sizeInBytes: Math.max(msg.data.byteLength, approxDeserializedMsgSize ?? 0),
           schemaName: msg.topic.type,
         },
       };

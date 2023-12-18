@@ -17,7 +17,7 @@ import { fromMillis, fromNanoSec, isGreaterThan, isLessThan, Time } from "@foxgl
 import { ParameterValue } from "@foxglove/studio";
 import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
-import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { estimateMessageObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import {
   AdvertiseOptions,
   MessageEvent,
@@ -73,6 +73,7 @@ const SUPPORTED_SERVICE_ENCODINGS = ["json", ...ROS_ENCODINGS];
 type ResolvedChannel = {
   channel: Channel;
   parsedChannel: ParsedChannel;
+  approxDeserializedMsgSize: number;
 };
 type Publication = ClientChannel & { messageWriter?: Ros1MessageWriter | Ros2MessageWriter };
 type ResolvedService = {
@@ -154,7 +155,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   #fetchAssetRequests = new Map<number, (response: FetchAssetResponse) => void>();
   #fetchedAssets = new Map<string, Promise<Asset>>();
   #parameterTypeByName = new Map<string, Parameter["type"]>();
-  #messageSizeEstimateByTopic: Record<string, number> = {};
+  #estimatedObjectSizeByType = new Map<string, number>();
 
   public constructor({
     url,
@@ -405,6 +406,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this.#client.on("advertise", (newChannels) => {
       for (const channel of newChannels) {
         let parsedChannel;
+        let approxDeserializedMsgSize;
         try {
           let schemaEncoding;
           let schemaData;
@@ -455,6 +457,11 @@ export default class FoxgloveWebSocketPlayer implements Player {
             messageEncoding: channel.encoding,
             schema: { name: channel.schemaName, encoding: schemaEncoding, data: schemaData },
           });
+          approxDeserializedMsgSize = estimateMessageObjectSize(
+            parsedChannel.datatypes,
+            channel.schemaName,
+            this.#estimatedObjectSizeByType,
+          );
         } catch (error) {
           this.#unsupportedChannelIds.add(channel.id);
           this.#problems.addProblem(`schema:${channel.topic}`, {
@@ -474,7 +481,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           this.#emitState();
           continue;
         }
-        const resolvedChannel = { channel, parsedChannel };
+        const resolvedChannel = { channel, parsedChannel, approxDeserializedMsgSize };
         this.#channelsById.set(channel.id, resolvedChannel);
         this.#channelsByTopic.set(channel.topic, resolvedChannel);
       }
@@ -533,20 +540,11 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this.#receivedBytes += data.byteLength;
         const receiveTime = this.#getCurrentTime();
         const topic = chanInfo.channel.topic;
-        const deserializedMessage = chanInfo.parsedChannel.deserialize(data);
-
-        // Lookup the size estimate for this topic or compute it if not found in the cache.
-        let msgSizeEstimate = this.#messageSizeEstimateByTopic[topic];
-        if (msgSizeEstimate == undefined) {
-          msgSizeEstimate = estimateObjectSize(deserializedMessage);
-          this.#messageSizeEstimateByTopic[topic] = msgSizeEstimate;
-        }
-
-        const sizeInBytes = Math.max(data.byteLength, msgSizeEstimate);
+        const sizeInBytes = Math.max(data.byteLength, chanInfo.approxDeserializedMsgSize);
         this.#parsedMessages.push({
           topic,
           receiveTime,
-          message: deserializedMessage,
+          message: chanInfo.parsedChannel.deserialize(data),
           sizeInBytes,
           schemaName: chanInfo.channel.schemaName,
         });
@@ -1312,7 +1310,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
     this.#fetchAssetRequests.clear();
     this.#parameterTypeByName.clear();
-    this.#messageSizeEstimateByTopic = {};
   }
 
   #updateDataTypes(datatypes: MessageDefinitionMap): void {
