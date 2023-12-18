@@ -15,7 +15,6 @@ import {
 import { FAKE_TOPIC, FAKE_PATH, CLIENT_ID, createParams } from "./processor/testing";
 import { createBlock } from "./testing";
 
-
 describe("pathToPayload", () => {
   const call = (path: string) => {
     const parsed = parseRosPath(path);

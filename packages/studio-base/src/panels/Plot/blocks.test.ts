@@ -12,8 +12,8 @@ import {
   prepareBlockUpdate,
   refreshBlockTopics,
 } from "./blocks";
-import { createBlock } from "./testing";
 import { FAKE_TOPIC } from "./processor/testing";
+import { createBlock } from "./testing";
 
 const createSubscription = (topic: string): SubscribePayload => ({
   topic,
