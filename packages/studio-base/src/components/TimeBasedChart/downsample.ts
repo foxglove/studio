@@ -2,13 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { ChartDataset } from "chart.js";
-
 import { Point } from "@foxglove/studio-base/components/Chart/datasets";
 
 import type { PlotViewport } from "./types";
-
-type Dataset<T> = ChartDataset<"scatter", T>;
 
 // This is the desired number of data points for each plot across all signals
 // and data sources. Beyond this threshold, ChartJS can no longer render at
@@ -42,25 +38,44 @@ export type DownsampleState = {
 };
 
 /**
- * Initialize a stateful downsampling operation with a fixed viewport and
- * maximum number of points.
+ * Calculate the size of the intervals the downsampling operation should use,
+ * expressed as a ratio of pixels to units in the coordinate frame of the plot.
  */
-export function initDownsample(view: PlotViewport, maxPoints?: number): DownsampleState {
+export function calculateIntervals(
+  view: PlotViewport,
+  pointsPerInterval: number,
+  maxPoints?: number,
+): {
+  pixelPerXValue: number;
+  pixelPerYValue: number;
+} {
   const { bounds, width, height } = view;
-
   const numPixelIntervals = Math.trunc(width / MINIMUM_PIXEL_DISTANCE);
   // When maxPoints is provided, we should take either that constant or
   // the number of pixel-defined intervals, whichever is fewer
   const numPoints = Math.min(
-    maxPoints ?? numPixelIntervals * POINTS_PER_INTERVAL,
-    numPixelIntervals * POINTS_PER_INTERVAL,
+    maxPoints ?? numPixelIntervals * pointsPerInterval,
+    numPixelIntervals * pointsPerInterval,
   );
-
   // We then calculate the number of intervals based on the number of points we
   // decided on
-  const numIntervals = Math.trunc(numPoints / POINTS_PER_INTERVAL);
-  const pixelPerXValue = numIntervals / (bounds.x.max - bounds.x.min);
-  const pixelPerYValue = height / (bounds.y.max - bounds.y.min);
+  const numIntervals = Math.trunc(numPoints / pointsPerInterval);
+  return {
+    pixelPerXValue: numIntervals / (bounds.x.max - bounds.x.min),
+    pixelPerYValue: height / (bounds.y.max - bounds.y.min),
+  };
+}
+
+/**
+ * Initialize a stateful downsampling operation with a fixed viewport and
+ * maximum number of points.
+ */
+export function initDownsample(view: PlotViewport, maxPoints?: number): DownsampleState {
+  const { pixelPerXValue, pixelPerYValue } = calculateIntervals(
+    view,
+    POINTS_PER_INTERVAL,
+    maxPoints,
+  );
 
   return {
     pixelPerXValue,
@@ -96,7 +111,8 @@ export function finishDownsample(state: DownsampleState): number[] {
     indices.push(intLast.index);
   }
 
-  return indices;
+  // Ensure that the indices are in the same order they appeared in the dataset
+  return indices.sort((a, b) => a - b);
 }
 
 /**
@@ -129,22 +145,25 @@ export function continueDownsample(
     // create a new interval when encountering a new label to preserve the transition from one label to another
     if (intFirst?.xPixel !== x || (intLast?.label != undefined && intLast.label !== datum.label)) {
       // add the min value from previous interval if it doesn't match the first or last of that interval
+      const newPoints: number[] = [];
       if (intMin && intMin.yPixel !== intFirst?.yPixel && intMin.yPixel !== intLast?.yPixel) {
-        indices.push(intMin.index);
+        newPoints.push(intMin.index);
       }
 
       // add the max value from previous interval if it doesn't match the first or last of that interval
       if (intMax && intMax.yPixel !== intFirst?.yPixel && intMax.yPixel !== intLast?.yPixel) {
-        indices.push(intMax.index);
+        newPoints.push(intMax.index);
       }
 
       // add the last value if it doesn't match the first
       if (intLast && intFirst?.yPixel !== intLast.yPixel) {
-        indices.push(intLast.index);
+        newPoints.push(intLast.index);
       }
 
       // always add the first datum of an new interval
-      indices.push(index);
+      newPoints.push(index);
+
+      indices.push(...newPoints.sort((a, b) => a - b));
 
       intFirst = { xPixel: x, yPixel: y, index, label };
       intLast = { xPixel: x, yPixel: y, index, label };
@@ -254,19 +273,4 @@ export function downsampleScatter(points: Iterable<Point>, view: PlotViewport): 
   }
 
   return indices;
-}
-
-/**
- * Given a dataset and a viewport, `downsample` chooses a list of
- * representative points that, when plotted, resemble the full dataset.
- */
-export function downsample<T>(
-  dataset: Dataset<T>,
-  points: Iterable<Point>,
-  view: PlotViewport,
-  numPoints?: number,
-): number[] {
-  return dataset.showLine !== true
-    ? downsampleScatter(points, view)
-    : downsampleTimeseries(points, view, numPoints);
 }
