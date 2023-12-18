@@ -256,10 +256,7 @@ export function estimateObjectSize(obj: unknown): number {
         propertiesSize = propertiesDictSize - numProps * COMPRESSED_POINTER_SIZE;
       }
 
-      const valuesSize: number = Object.values(obj).reduce(
-        (acc, val) => acc + estimateObjectSize(val),
-        0,
-      );
+      const valuesSize = Object.values(obj).reduce((acc, val) => acc + estimateObjectSize(val), 0);
       return OBJECT_BASE_SIZE + propertiesSize + valuesSize;
     }
     case "symbol":
