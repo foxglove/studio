@@ -94,14 +94,6 @@ export type PlayerURLState = Immutable<{
   parameters?: Record<string, string>;
 }>;
 
-// Contains details about a Player's memory usage
-export type PlayerMemoryInfo = Readonly<{
-  // Size in bytes of all buffered messages.
-  bufferedMsgsSize?: number;
-  // Size in bytes of all preloaded messages.
-  preloadedMsgsSize?: number;
-}>;
-
 export type PlayerState = {
   // Information about the player's presence or connection status, for the UI to show a loading indicator.
   presence: PlayerPresence;
@@ -138,9 +130,6 @@ export type PlayerState = {
 
   /** State to serialize into the active URL. */
   urlState?: PlayerURLState;
-
-  // Memory stats holding detailed information about the player's current memory usage
-  memoryInfo?: PlayerMemoryInfo;
 };
 
 export type PlayerStateActiveData = {
@@ -285,6 +274,9 @@ export type Progress = Readonly<{
   // A raw view into the cached binary data stored by the MemoryCacheDataProvider. Only present when
   // using the RandomAccessPlayer.
   readonly messageCache?: BlockCache;
+
+  /** Memory usage information, e.g. the memory size occupied by preloaded or buffered messages. */
+  readonly memoryInfo?: Record<string, number>;
 }>;
 
 export type SubscriptionPreloadType =

@@ -6,7 +6,7 @@ import { MessageEvent } from "@foxglove/studio";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import { mockTopicSelection } from "@foxglove/studio-base/test/mocks/mockTopicSelection";
 
-import { BlockLoader } from "./BlockLoader";
+import { BlockLoader, MEMORY_INFO_PRELOADED_MSGS } from "./BlockLoader";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -53,20 +53,22 @@ describe("BlockLoader", () => {
     });
 
     await loader.startLoading({
-      progress: async (progress, cacheSize) => {
+      progress: async (progress) => {
         expect(progress).toEqual({
           fullyLoadedFractionRanges: [],
           messageCache: {
             blocks: [undefined, undefined, undefined, undefined],
             startTime: { sec: 0, nsec: 0 },
           },
+          memoryInfo: {
+            [MEMORY_INFO_PRELOADED_MSGS]: 0,
+          },
         });
-        expect(cacheSize).toEqual(0);
         await loader.stopLoading();
       },
     });
 
-    expect.assertions(2);
+    expect.assertions(1);
   });
 
   it("should load the source into blocks", async () => {
@@ -107,7 +109,7 @@ describe("BlockLoader", () => {
     loader.setTopics(mockTopicSelection("a"));
     let count = 0;
     await loader.startLoading({
-      progress: async (progress, cacheSize) => {
+      progress: async (progress) => {
         if (++count < 5) {
           return;
         }
@@ -159,14 +161,16 @@ describe("BlockLoader", () => {
             ],
             startTime: { sec: 0, nsec: 0 },
           },
+          memoryInfo: {
+            [MEMORY_INFO_PRELOADED_MSGS]: 4,
+          },
         });
-        expect(cacheSize).toEqual(4);
 
         await loader.stopLoading();
       },
     });
 
-    expect.assertions(2);
+    expect.assertions(1);
   });
 
   it("should not load messages past max cache size", async () => {
@@ -207,7 +211,7 @@ describe("BlockLoader", () => {
     loader.setTopics(mockTopicSelection("a"));
     await loader.startLoading({
       progress: async (progress) => {
-        expect(progress).toEqual({
+        expect(progress).toMatchObject({
           fullyLoadedFractionRanges: [
             {
               start: 0,
@@ -314,6 +318,9 @@ describe("BlockLoader", () => {
               ],
               startTime: { sec: 0, nsec: 0 },
             },
+            memoryInfo: {
+              [MEMORY_INFO_PRELOADED_MSGS]: 4,
+            },
           });
           await loader.stopLoading();
         }
@@ -354,6 +361,9 @@ describe("BlockLoader", () => {
                 },
               ],
               startTime: { sec: 0, nsec: 0 },
+            },
+            memoryInfo: {
+              [MEMORY_INFO_PRELOADED_MSGS]: 4,
             },
           });
           await loader.stopLoading();
@@ -435,6 +445,9 @@ describe("BlockLoader", () => {
               ],
               startTime: { sec: 0, nsec: 0 },
             },
+            memoryInfo: {
+              [MEMORY_INFO_PRELOADED_MSGS]: 0,
+            },
           });
 
           // eslint-disable-next-line require-yield
@@ -493,7 +506,7 @@ describe("BlockLoader", () => {
     loader.setTopics(mockTopicSelection("a"));
     await loader.startLoading({
       progress: async (progress) => {
-        expect(progress).toEqual({
+        expect(progress).toMatchObject({
           fullyLoadedFractionRanges: [
             {
               start: 0,
@@ -558,6 +571,9 @@ describe("BlockLoader", () => {
                 },
               ],
               startTime: { sec: 0, nsec: 0 },
+            },
+            memoryInfo: {
+              [MEMORY_INFO_PRELOADED_MSGS]: 10,
             },
           });
 

@@ -218,7 +218,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
     return this.#source.loadedRanges();
   }
 
-  public getBufferedAmount(): number {
+  public getCacheSize(): number {
     return this.#source.getCacheSize();
   }
 
