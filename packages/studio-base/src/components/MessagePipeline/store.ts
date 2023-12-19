@@ -266,7 +266,6 @@ function updateSubscriberAction(
     }
   }
 
-  const messagesBySubscriberId = new Map<string, MessageEvent[]>();
   const lastMessageEventByTopic = new Map(prevState.lastMessageEventByTopic);
 
   for (const topic of prevTopics) {
@@ -278,16 +277,24 @@ function updateSubscriberAction(
       lastMessageEventByTopic.delete(topic);
     }
   }
-  // Inject the last message on a topic to all new subscribers of the topic
 
+  // Inject the last message on new topics for this subscriber
+  const messagesForSubscriber = [];
   for (const topic of newTopicsForId) {
     const msgEvent = lastMessageEventByTopic.get(topic);
     if (msgEvent) {
-      const subscriberMessageEvents = messagesBySubscriberId.get(action.id) ?? [];
-      // the injected message is older than any new messages
-      subscriberMessageEvents.unshift(msgEvent);
-      messagesBySubscriberId.set(action.id, subscriberMessageEvents);
+      messagesForSubscriber.push(msgEvent);
     }
+  }
+
+  let newMessagesBySubscriberId;
+
+  if (messagesForSubscriber.length > 0) {
+    newMessagesBySubscriberId = new Map<string, readonly MessageEvent[]>(
+      prevState.public.messageEventsBySubscriberId,
+    );
+    // This should update only the panel that subscribed to the new topic
+    newMessagesBySubscriberId.set(action.id, messagesForSubscriber);
   }
 
   const subscriptions = mergeSubscriptions(Array.from(subscriptionsById.values()).flat());
@@ -295,7 +302,8 @@ function updateSubscriberAction(
   const newPublicState = {
     ...prevState.public,
     subscriptions,
-    messageEventsBySubscriberId: messagesBySubscriberId,
+    messageEventsBySubscriberId:
+      newMessagesBySubscriberId ?? prevState.public.messageEventsBySubscriberId,
   };
 
   return {
