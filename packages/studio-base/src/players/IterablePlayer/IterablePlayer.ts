@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
+import { parseChannel } from "@foxglove/mcap-support";
 import {
   Time,
   add,
@@ -175,6 +176,8 @@ export class IterablePlayer implements Player {
   readonly #sourceId: string;
 
   #untilTime?: Time;
+
+  #deserializersByTopic: Record<string, (data: ArrayBufferView) => unknown> = {};
 
   /** Promise that resolves when the player is closed. Only used for testing currently */
   public readonly isClosed: Promise<void>;
@@ -504,6 +507,18 @@ export class IterablePlayer implements Player {
         }
 
         uniqueTopics.set(topic.name, topic);
+
+        if (topic.messageEncoding && topic.schemaData && topic.schemaEncoding && topic.schemaName) {
+          const { deserialize } = parseChannel({
+            messageEncoding: topic.messageEncoding,
+            schema: {
+              data: topic.schemaData,
+              encoding: topic.schemaEncoding,
+              name: topic.schemaName,
+            },
+          });
+          this.#deserializersByTopic[topic.name] = deserialize;
+        }
       }
 
       this.#providerTopics = Array.from(uniqueTopics.values());
@@ -663,9 +678,24 @@ export class IterablePlayer implements Player {
         }
 
         if (iterResult.type === "message-event") {
+          let msgEvent = iterResult.msgEvent;
+          if (iterResult.msgEvent.raw === true) {
+            const deserializer = this.#deserializersByTopic[iterResult.msgEvent.topic];
+            if (deserializer == undefined) {
+              throw new Error(
+                `Invariant. Deserializer for raw message on topic ${iterResult.msgEvent.topic} not found`,
+              );
+            }
+            msgEvent = {
+              ...iterResult.msgEvent,
+              message: deserializer(iterResult.msgEvent.message as Uint8Array),
+              raw: false,
+            };
+          }
+
           // The message is past the tick end time, we need to save it for next tick
-          if (compare(iterResult.msgEvent.receiveTime, stopTime) > 0) {
-            this.#lastMessageEvent = iterResult.msgEvent;
+          if (compare(msgEvent.receiveTime, stopTime) > 0) {
+            this.#lastMessageEvent = msgEvent;
             break;
           }
 
@@ -934,13 +964,28 @@ export class IterablePlayer implements Player {
         }
 
         if (iterResult.type === "message-event") {
+          let msgEvent = iterResult.msgEvent;
+          if (iterResult.msgEvent.raw === true) {
+            const deserializer = this.#deserializersByTopic[iterResult.msgEvent.topic];
+            if (deserializer == undefined) {
+              throw new Error(
+                `Invariant. Deserializer for raw message on topic ${iterResult.msgEvent.topic} not found`,
+              );
+            }
+            msgEvent = {
+              ...iterResult.msgEvent,
+              message: deserializer(iterResult.msgEvent.message as Uint8Array),
+              raw: false,
+            };
+          }
+
           // The message is past the tick end time, we need to save it for next tick
-          if (compare(iterResult.msgEvent.receiveTime, end) > 0) {
-            this.#lastMessageEvent = iterResult.msgEvent;
+          if (compare(msgEvent.receiveTime, end) > 0) {
+            this.#lastMessageEvent = msgEvent;
             break;
           }
 
-          msgEvents.push(iterResult.msgEvent);
+          msgEvents.push(msgEvent);
         }
       }
     } finally {

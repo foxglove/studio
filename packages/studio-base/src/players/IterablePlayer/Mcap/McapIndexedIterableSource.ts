@@ -92,7 +92,13 @@ export class McapIndexedIterableSource implements IIterableSource {
 
       let topic = topicsByName.get(channel.topic);
       if (!topic) {
-        topic = { name: channel.topic, schemaName: schema?.name };
+        topic = {
+          name: channel.topic,
+          schemaName: schema?.name,
+          schemaData: schema?.data,
+          schemaEncoding: schema?.encoding,
+          messageEncoding: channel.messageEncoding,
+        };
         topicsByName.set(channel.topic, topic);
 
         const numMessages = this.#reader.statistics?.channelMessageCounts.get(channel.id);
@@ -139,6 +145,7 @@ export class McapIndexedIterableSource implements IIterableSource {
     const topics = args.topics;
     const start = args.start ?? this.#start;
     const end = args.end ?? this.#end;
+    const deserializeMessages = args.deserializeMessages ?? true;
 
     if (topics.size === 0 || !start || !end) {
       return;
@@ -177,6 +184,22 @@ export class McapIndexedIterableSource implements IIterableSource {
         continue;
       }
       try {
+        if (!deserializeMessages) {
+          yield {
+            type: "message-event",
+            msgEvent: {
+              topic: channelInfo.channel.topic,
+              receiveTime: fromNanoSec(message.logTime),
+              publishTime: fromNanoSec(message.publishTime),
+              message: message.data,
+              sizeInBytes: message.data.byteLength,
+              schemaName: channelInfo.schemaName ?? "",
+              raw: true,
+            },
+          };
+          continue;
+        }
+
         const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
         const spec = topicsWithSubscriptionHash.get(channelInfo.channel.topic);
         const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;

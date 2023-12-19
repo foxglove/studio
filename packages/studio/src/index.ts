@@ -125,6 +125,8 @@ export type MessageEvent<T = unknown> = {
    * un-converted message event.
    */
   originalMessageEvent?: MessageEvent;
+
+  raw?: boolean;
 };
 
 export interface LayoutActions {

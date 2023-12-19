@@ -244,6 +244,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
         start: sourceReadStart,
         end: sourceReadEnd,
         consumptionType: args.consumptionType,
+        deserializeMessages: false,
       });
 
       // The cache is indexed on time, but iterator results that are problems might not have a time.

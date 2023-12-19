@@ -57,6 +57,8 @@ export type MessageIteratorArgs = {
    * `partial` indicates that the caller plans to read the iterator but may not read all the messages
    */
   consumptionType?: "full" | "partial";
+
+  deserializeMessages?: boolean;
 };
 
 /**
