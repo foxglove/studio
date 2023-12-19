@@ -40,6 +40,9 @@ export function updateMetadata(
   };
 }
 
+/**
+ * Consolidate block data updates for each client and build new plots.
+ */
 export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEffects {
   const { metadata, globalVariables } = state;
   const { messages, updates: clientUpdates } = update;
@@ -116,6 +119,9 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
   );
 }
 
+/**
+ * Distribute new block data to all clients.
+ */
 export function addBlockData(update: BlockUpdate, state: State): StateAndEffects {
   const { pending } = state;
   const { updates, messages } = update;
@@ -130,6 +136,9 @@ export function addBlockData(update: BlockUpdate, state: State): StateAndEffects
   });
 }
 
+/**
+ * Distribute new current data to all clients.
+ */
 export function addCurrentData(events: readonly MessageEvent[], state: State): StateAndEffects {
   const current: Messages = R.groupBy((v: MessageEvent) => v.topic, events) as Messages;
 
@@ -160,6 +169,9 @@ export function addCurrentData(events: readonly MessageEvent[], state: State): S
   })(state);
 }
 
+/**
+ * Clear out the current data for all clients.
+ */
 export function clearCurrentData(state: State): StateAndEffects {
   const newState = {
     ...state,
