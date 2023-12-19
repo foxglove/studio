@@ -221,8 +221,7 @@ export function createMessagePipelineStore({
     },
   }));
 }
-// Update state with a subscriber. Any new topics for the subscriber are tracked in newTopicsBySubscriberId
-// to receive the last message on their newly subscribed topics.
+/** Update subscriptions. New topics that have already emit messages previously we emit the last message on the topic to the subscriber */
 function updateSubscriberAction(
   prevState: MessagePipelineInternalState,
   action: UpdateSubscriberAction,
