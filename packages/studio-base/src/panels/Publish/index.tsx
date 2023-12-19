@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Button, inputBaseClasses, TextField, Tooltip, Typography } from "@mui/material";
+import { Immutable } from "immer";
 import { useEffect, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
@@ -122,7 +123,10 @@ function Publish(props: Props) {
     }
 
     // dataSourceDatatypes is added after commonTypes to take precedence (override) any commonTypes of the same name
-    return new Map([...Object.entries(commonTypes), ...dataSourceDatatypes]);
+    return new Map<string, Immutable<MessageDefinition>>([
+      ...Object.entries(commonTypes),
+      ...dataSourceDatatypes,
+    ]);
   }, [dataSourceProfile, dataSourceDatatypes]);
 
   const publish = usePublisher({
