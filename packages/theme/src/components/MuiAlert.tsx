@@ -8,8 +8,7 @@ import {
   CheckmarkCircle20Regular,
   Warning20Regular,
 } from "@fluentui/react-icons";
-import { alertClasses, PaletteOptions } from "@mui/material";
-import { darken, lighten } from "@mui/system";
+import { alertClasses, PaletteOptions, darken, lighten } from "@mui/material";
 
 import { OverrideComponentReturn } from "../types";
 
