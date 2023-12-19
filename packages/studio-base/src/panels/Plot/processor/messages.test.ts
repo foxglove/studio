@@ -94,7 +94,7 @@ describe("addCurrentData", () => {
       ...initProcessor(),
       clients: [createClient()],
     };
-    const [after, effects] = addCurrentData([], before);
+    const [after, effects] = addCurrentData([], undefined, before);
     expect(after.clients[0]).toEqual(before.clients[0]);
     expect(effects.length).toEqual(0);
   });
@@ -113,6 +113,7 @@ describe("addCurrentData", () => {
     };
     const [after, effects] = addCurrentData(
       createMessageEvents(FAKE_TOPIC, FAKE_SCHEMA, 1),
+      undefined,
       before,
     );
     expect(after.clients[0]).toEqual(before.clients[0]);
@@ -123,6 +124,7 @@ describe("addCurrentData", () => {
     const before: State = updateMetadata(FAKE_TOPICS, FAKE_DATATYPES, createState(FAKE_PATH));
     const [after, effects] = addCurrentData(
       createMessageEvents(FAKE_TOPIC, FAKE_SCHEMA, 1),
+      undefined,
       before,
     );
     expect(effects).toEqual([rebuildClient(CLIENT_ID)]);
@@ -134,6 +136,7 @@ describe("clearCurrentData", () => {
   it("clears existing client state", () => {
     const [before] = addCurrentData(
       createMessageEvents(FAKE_TOPIC, FAKE_SCHEMA, 1),
+      undefined,
       updateMetadata(FAKE_TOPICS, FAKE_DATATYPES, createState(FAKE_PATH)),
     );
     const [after, effects] = clearCurrentData(before);
