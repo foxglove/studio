@@ -101,7 +101,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
     super();
 
     this.#source = source;
-    this.#maxTotalSizeBytes = opt?.maxTotalSize ?? 1073741824; // 1GB
+    this.#maxTotalSizeBytes = opt?.maxTotalSize ?? 629145600; // 600MB (was 1GB, reduced to mitigate OOM issues)
     this.#maxBlockSizeBytes = opt?.maxBlockSize ?? 52428800; // 50MB
   }
 
@@ -117,6 +117,10 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
   public loadedRanges(): Range[] {
     return this.#loadedRangesCache;
+  }
+
+  public getCacheSize(): number {
+    return this.#totalSizeBytes;
   }
 
   public async *messageIterator(
