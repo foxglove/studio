@@ -29,6 +29,8 @@ import {
   updateBlocks,
   resetClientBlocks,
   splitSubscriptions,
+  updateCurrent,
+  resetCurrent,
 } from "./clients";
 import { PlotParams } from "./internalTypes";
 import { PlotData } from "./plotData";
@@ -65,8 +67,10 @@ function chooseClient() {
 
 function clearClient(id: string) {
   const [newState, update] = resetClientBlocks(id, datasetsState);
+  const { current } = newState;
   datasetsState = newState;
   void service?.addBlockData(update);
+  void service?.addCurrentData(current, id);
 }
 
 // Subscribe to all of the data all plots require and forward it to the worker.
@@ -108,12 +112,14 @@ function useData(id: string, params: PlotParams) {
     topics: currentSubscriptions,
     restore: React.useCallback((state: number | undefined): number => {
       if (state == undefined) {
+        datasetsState = resetCurrent(datasetsState);
         void service?.clearCurrentData();
       }
       return 0;
     }, []),
     addMessages: React.useCallback(
       (_: number | undefined, messages: readonly MessageEvent[]): number => {
+        datasetsState = updateCurrent(messages, datasetsState);
         void service?.addCurrentData(messages);
         return 1;
       },

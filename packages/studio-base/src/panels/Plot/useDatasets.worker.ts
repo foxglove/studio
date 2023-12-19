@@ -161,8 +161,8 @@ export const service = {
   addBlockData(update: BlockUpdate): void {
     handleEffects(addBlockData(update, state));
   },
-  addCurrentData(events: readonly MessageEvent[]): void {
-    handleEffects(addCurrentData(events, state));
+  addCurrentData(events: readonly MessageEvent[], clientId?: string): void {
+    handleEffects(addCurrentData(events, clientId, state));
   },
   clearCurrentData(): void {
     handleEffects(clearCurrentData(state));

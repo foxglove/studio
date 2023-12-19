@@ -11,7 +11,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { mergeSubscriptions } from "@foxglove/studio-base/components/MessagePipeline/subscriptions";
-import { SubscribePayload } from "@foxglove/studio-base/players/types";
+import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
 
 import {
   ClientUpdate,
@@ -33,12 +33,14 @@ export type Client = {
 export type DatasetsState = {
   clients: Record<string, Client>;
   blocks: readonly MessageBlock[];
+  current: MessageEvent[];
 };
 
 export function initDatasets(): DatasetsState {
   return {
     clients: {},
     blocks: [],
+    current: [],
   };
 }
 
@@ -189,6 +191,24 @@ export function updateBlocks(
   );
 
   return [{ ...state, blocks, clients: newClients }, update];
+}
+
+export function updateCurrent(
+  events: readonly MessageEvent[],
+  state: DatasetsState,
+): DatasetsState {
+  const { current: oldCurrent } = state;
+  return {
+    ...state,
+    current: oldCurrent.concat(events),
+  };
+}
+
+export function resetCurrent(state: DatasetsState): DatasetsState {
+  return {
+    ...state,
+    current: [],
+  };
 }
 
 /**

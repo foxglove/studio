@@ -137,14 +137,24 @@ export function addBlockData(update: BlockUpdate, state: State): StateAndEffects
 }
 
 /**
- * Distribute new current data to all clients.
+ * Distribute new current data to all clients, or (optionally) just a single
+ * client specified by `clientId`.
  */
-export function addCurrentData(events: readonly MessageEvent[], state: State): StateAndEffects {
+export function addCurrentData(
+  events: readonly MessageEvent[],
+  clientId: string | undefined,
+  state: State,
+): StateAndEffects {
   const current: Messages = R.groupBy((v: MessageEvent) => v.topic, events) as Messages;
 
   return mapClients((client): [Client, SideEffects] => {
     const { metadata, globalVariables } = state;
     const { id, params } = client;
+
+    if (clientId != undefined && id !== clientId) {
+      return noEffects(client);
+    }
+
     if (params == undefined) {
       return noEffects(client);
     }
@@ -162,7 +172,13 @@ export function addCurrentData(events: readonly MessageEvent[], state: State): S
     return [
       {
         ...client,
-        current: accumulate(metadata, globalVariables, client.current, params, current),
+        current: accumulate(
+          metadata,
+          globalVariables,
+          clientId != undefined ? initAccumulated() : client.current,
+          params,
+          current,
+        ),
       },
       [rebuildClient(id)],
     ];
