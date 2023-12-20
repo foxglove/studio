@@ -21,16 +21,17 @@ import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/ty
 
 import {
   DatasetsState,
+  getAllSubscriptions,
+  getClientPayloads,
   initDatasets,
   registerClient,
-  unregisterClient,
-  updateParams,
-  getAllSubscriptions,
-  updateBlocks,
   resetClientBlocks,
-  splitSubscriptions,
-  updateCurrent,
   resetCurrent,
+  splitSubscriptions,
+  unregisterClient,
+  updateBlocks,
+  updateCurrent,
+  updateParams,
 } from "./clients";
 import { PlotParams } from "./internalTypes";
 import { PlotData } from "./plotData";
@@ -70,7 +71,21 @@ function clearClient(id: string) {
   const { current } = newState;
   datasetsState = newState;
   void service?.addBlockData(update);
-  void service?.addCurrentData(current, id);
+
+  const {
+    clients: { [id]: client },
+  } = newState;
+  if (client == undefined) {
+    return;
+  }
+
+  // Only send the current events that the client can actually use. This also
+  // saves us from having to `structuredClone` unused data
+  const topics = new Set(R.uniq(getClientPayloads(client).map(({ topic }) => topic)));
+  void service?.addCurrentData(
+    current.filter(({ topic }) => topics.has(topic)),
+    id,
+  );
 }
 
 // Subscribe to all of the data all plots require and forward it to the worker.

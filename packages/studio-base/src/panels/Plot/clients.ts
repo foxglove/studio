@@ -25,11 +25,19 @@ import {
 import { PlotParams } from "./internalTypes";
 import { getPaths } from "./params";
 
+/**
+ * A Client corresponds to a single plot panel.
+ */
 export type Client = {
   params: PlotParams | undefined;
+  // This keeps track of the data we've sent to the worker for this client.
   blockState: BlockState;
 };
 
+/**
+ * Contains state that describes the configuration of all of the plot panels
+ * and the data we've sent to them.
+ */
 export type DatasetsState = {
   clients: Record<string, Client>;
   blocks: readonly MessageBlock[];
@@ -108,7 +116,7 @@ function getPayloadsFromPaths(paths: readonly string[]): SubscribePayload[] {
 /**
  * Get all of the SubscribePayloads necessary to fulfill a client's requests.
  */
-function getPayloadsFromClient(client: Client): SubscribePayload[] {
+export function getClientPayloads(client: Client): SubscribePayload[] {
   const { params } = client;
   if (params == undefined) {
     return [];
@@ -140,7 +148,7 @@ export function getAllSubscriptions(state: DatasetsState): SubscribePayload[] {
   const { clients } = state;
   return R.pipe(
     R.values,
-    R.chain(getPayloadsFromClient),
+    R.chain(getClientPayloads),
     (v) => mergeSubscriptions(v) as SubscribePayload[],
   )(clients);
 }
@@ -193,6 +201,9 @@ export function updateBlocks(
   return [{ ...state, blocks, clients: newClients }, update];
 }
 
+/**
+ * Accumulate some current data.
+ */
 export function updateCurrent(
   events: readonly MessageEvent[],
   state: DatasetsState,
@@ -204,6 +215,9 @@ export function updateCurrent(
   };
 }
 
+/**
+ * Clear all existing current data.
+ */
 export function resetCurrent(state: DatasetsState): DatasetsState {
   return {
     ...state,
@@ -264,7 +278,7 @@ export function updateParams(id: string, params: PlotParams, state: DatasetsStat
       ...clients,
       [id]: {
         ...newClient,
-        blockState: refreshBlockTopics(getPayloadsFromClient(newClient), blockState),
+        blockState: refreshBlockTopics(getClientPayloads(newClient), blockState),
       },
     },
   };
