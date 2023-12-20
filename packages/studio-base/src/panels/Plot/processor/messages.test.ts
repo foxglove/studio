@@ -130,6 +130,28 @@ describe("addCurrentData", () => {
     expect(effects).toEqual([rebuildClient(CLIENT_ID)]);
     expect(after.clients[0]?.current).not.toEqual(before.clients[0]?.current);
   });
+  it("builds plot data for single client if id provided", () => {
+    const state = createState(FAKE_PATH);
+    const twoClients = {
+      ...state,
+      clients: [
+        ...state.clients,
+        {
+          ...createClient(FAKE_PATH),
+          id: "other-id",
+        },
+      ],
+    };
+    const before: State = updateMetadata(FAKE_TOPICS, FAKE_DATATYPES, twoClients);
+    const [after, effects] = addCurrentData(
+      createMessageEvents(FAKE_TOPIC, FAKE_SCHEMA, 1),
+      // Only send to one client
+      CLIENT_ID,
+      before,
+    );
+    expect(effects).toEqual([rebuildClient(CLIENT_ID)]);
+    expect(after.clients[1]?.current).toEqual(before.clients[1]?.current);
+  });
 });
 
 describe("clearCurrentData", () => {
