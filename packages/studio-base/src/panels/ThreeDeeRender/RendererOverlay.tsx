@@ -11,6 +11,7 @@ import {
   Menu,
   MenuItem,
   Paper,
+  Tooltip,
   useTheme,
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -216,30 +217,34 @@ export function RendererOverlay(props: Props): JSX.Element {
     props.interfaceMode === "3d" && props.canPublish && renderer?.fixedFrameId != undefined;
   const publishControls = showPublishControl && (
     <>
-      <IconButton
-        {...longPressPublishEvent}
-        className={classes.iconButton}
-        size="small"
-        color={props.publishActive ? "info" : "inherit"}
+      <Tooltip
+        placement="left"
         title={props.publishActive ? "Click to cancel" : "Click to publish"}
-        ref={publickClickButtonRef}
-        onClick={props.onClickPublish}
-        data-testid="publish-button"
       >
-        {selectedPublishClickIcon}
-        <div
-          style={{
-            borderBottom: "6px solid currentColor",
-            borderRight: "6px solid transparent",
-            bottom: 0,
-            left: 0,
-            height: 0,
-            width: 0,
-            margin: theme.spacing(0.25),
-            position: "absolute",
-          }}
-        />
-      </IconButton>
+        <IconButton
+          {...longPressPublishEvent}
+          className={classes.iconButton}
+          size="small"
+          color={props.publishActive ? "info" : "inherit"}
+          ref={publickClickButtonRef}
+          onClick={props.onClickPublish}
+          data-testid="publish-button"
+        >
+          {selectedPublishClickIcon}
+          <div
+            style={{
+              borderBottom: "6px solid currentColor",
+              borderRight: "6px solid transparent",
+              bottom: 0,
+              left: 0,
+              height: 0,
+              width: 0,
+              margin: theme.spacing(0.25),
+              position: "absolute",
+            }}
+          />
+        </IconButton>
+      </Tooltip>
       <Menu
         id="publish-menu"
         anchorEl={publickClickButtonRef.current}
@@ -323,27 +328,35 @@ export function RendererOverlay(props: Props): JSX.Element {
         }
         {props.interfaceMode === "3d" && (
           <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
-            <IconButton
-              className={classes.iconButton}
-              size="small"
-              color={props.perspective ? "info" : "inherit"}
+            <Tooltip
+              placement="left"
               title={props.perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
-              onClick={props.onTogglePerspective}
             >
-              <span className={classes.threeDeeButton}>3D</span>
-            </IconButton>
-            <IconButton
-              data-testid="measure-button"
-              className={classes.iconButton}
-              size="small"
-              color={props.measureActive ? "info" : "inherit"}
+              <IconButton
+                className={classes.iconButton}
+                size="small"
+                color={props.perspective ? "info" : "inherit"}
+                onClick={props.onTogglePerspective}
+              >
+                <span className={classes.threeDeeButton}>3D</span>
+              </IconButton>
+            </Tooltip>
+            <Tooltip
+              placement="left"
               title={props.measureActive ? "Cancel measuring" : "Measure distance"}
-              onClick={props.onClickMeasure}
             >
-              <div className={classes.rulerIcon}>
-                {props.measureActive ? <Ruler20Filled /> : <Ruler20Regular />}
-              </div>
-            </IconButton>
+              <IconButton
+                data-testid="measure-button"
+                className={classes.iconButton}
+                size="small"
+                color={props.measureActive ? "info" : "inherit"}
+                onClick={props.onClickMeasure}
+              >
+                <div className={classes.rulerIcon}>
+                  {props.measureActive ? <Ruler20Filled /> : <Ruler20Regular />}
+                </div>
+              </IconButton>
+            </Tooltip>
 
             {publishControls}
           </Paper>
