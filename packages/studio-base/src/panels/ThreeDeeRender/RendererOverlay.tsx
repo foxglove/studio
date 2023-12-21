@@ -17,6 +17,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLongPress } from "react-use";
+import tc from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { LayoutActions } from "@foxglove/studio";
@@ -80,6 +81,14 @@ const useStyles = makeStyles()((theme) => ({
     right: 0,
     marginBottom: theme.spacing(1),
     marginRight: theme.spacing(1),
+  },
+  kbd: {
+    fontFamily: theme.typography.fontMonospace,
+    background: tc(theme.palette.common.white).darken(45).toString(),
+    padding: theme.spacing(0, 0.5),
+    aspectRatio: 1,
+    borderRadius: theme.shape.borderRadius,
+    marginLeft: theme.spacing(1),
   },
 }));
 
@@ -330,7 +339,12 @@ export function RendererOverlay(props: Props): JSX.Element {
           <Paper square={false} elevation={4} style={{ display: "flex", flexDirection: "column" }}>
             <Tooltip
               placement="left"
-              title={props.perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
+              title={
+                <>
+                  {`Switch to ${props.perspective ? "2" : "3"}D camera `}
+                  <kbd className={classes.kbd}>3</kbd>
+                </>
+              }
             >
               <IconButton
                 className={classes.iconButton}
