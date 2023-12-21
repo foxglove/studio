@@ -208,7 +208,7 @@ export default function useDatasets(params: PlotParams): {
   const [state, setState] = React.useState<Immutable<PlotData> | undefined>();
   useEffect(() => {
     return () => {
-      void service?.unregisterCleint(id);
+      void service?.unregisterClient(id);
     };
   }, [id]);
 

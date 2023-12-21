@@ -201,7 +201,7 @@ export const service = {
   setLive(value: boolean): void {
     state = setLive(value, state);
   },
-  unregisterCleint(id: string): void {
+  unregisterClient(id: string): void {
     const { [id]: _client, ...newCallbacks } = callbacks;
     callbacks = newCallbacks;
     state = unregisterClient(id, state);
