@@ -41,6 +41,35 @@ export function updateMetadata(
 }
 
 /**
+ * Resolve a set of ClientUpdates into the messages that they refer to.
+ */
+function resolveUpdates(
+  messages: Record<string, (readonly MessageEvent[])[]>,
+  updates: ClientUpdate[],
+): Messages {
+  return R.reduce(
+    (a: Messages, clientUpdate: ClientUpdate): Messages => {
+      const {
+        update: { blockRange, topic },
+      } = clientUpdate;
+
+      const [start, end] = blockRange;
+      const topicMessages = messages[topic];
+      if (topicMessages == undefined) {
+        return a;
+      }
+
+      return {
+        ...a,
+        [topic]: topicMessages.slice(start, end).flat(),
+      };
+    },
+    {},
+    updates,
+  );
+}
+
+/**
  * Consolidate block data updates for each client and build new plots.
  */
 export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEffects {
@@ -74,35 +103,12 @@ export function applyBlockUpdate(update: BlockUpdate, state: State): StateAndEff
           ({ update: { shouldReset: updateShouldReset } }) => updateShouldReset,
         );
 
-        // Build a consolidated set of messages by combining all of the updates
-        // together
-        const clientMessages = R.reduce(
-          (a: Messages, clientUpdate: ClientUpdate): Messages => {
-            const {
-              update: { range, topic },
-            } = clientUpdate;
-
-            const [start, end] = range;
-            const topicMessages = messages[topic];
-            if (topicMessages == undefined) {
-              return a;
-            }
-
-            return {
-              ...a,
-              [topic]: topicMessages.slice(start, end).flatMap((v) => v),
-            };
-          },
-          {},
-          updates,
-        );
-
         const newBlockData = accumulate(
           metadata,
           globalVariables,
           shouldReset ? initAccumulated() : client.blocks,
           params,
-          clientMessages,
+          resolveUpdates(messages, updates),
         );
 
         return [

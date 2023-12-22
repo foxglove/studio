@@ -95,7 +95,7 @@ describe("processBlocks", () => {
       expect(messages[0]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(1);
       expect(updates[0]?.shouldReset).toEqual(true);
-      expect(updates[0]?.range).toEqual([0, 1]);
+      expect(updates[0]?.blockRange).toEqual([0, 1]);
     }
 
     // s|n -> ss|
@@ -108,7 +108,7 @@ describe("processBlocks", () => {
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
       expect(updates[0]?.shouldReset).toEqual(false);
-      expect(updates[0]?.range).toEqual([1, 2]);
+      expect(updates[0]?.blockRange).toEqual([1, 2]);
     }
   });
 
@@ -121,7 +121,7 @@ describe("processBlocks", () => {
     expect(messages[2]?.[FAKE_TOPIC]).toEqual(1);
     expect(cursors[FAKE_TOPIC]).toEqual(3);
     expect(updates[0]?.shouldReset).toEqual(true);
-    expect(updates[0]?.range).toEqual([0, 3]);
+    expect(updates[0]?.blockRange).toEqual([0, 3]);
   });
 
   it("should not send data beyond changed data", () => {
@@ -142,7 +142,7 @@ describe("processBlocks", () => {
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
       expect(updates[0]?.shouldReset).toEqual(true);
-      expect(updates[0]?.range).toEqual([0, 2]);
+      expect(updates[0]?.blockRange).toEqual([0, 2]);
     }
 
     // ss|c -> sss|
@@ -155,7 +155,7 @@ describe("processBlocks", () => {
       expect(messages[2]?.[FAKE_TOPIC]).toEqual(2);
       expect(cursors[FAKE_TOPIC]).toEqual(3);
       expect(updates[0]?.shouldReset).toEqual(false);
-      expect(updates[0]?.range).toEqual([2, 3]);
+      expect(updates[0]?.blockRange).toEqual([2, 3]);
     }
   });
 
@@ -175,7 +175,7 @@ describe("processBlocks", () => {
       expect(messages[1]?.[FAKE_TOPIC]).toEqual(2);
       expect(cursors[FAKE_TOPIC]).toEqual(2);
       expect(updates[0]?.shouldReset).toEqual(true);
-      expect(updates[0]?.range).toEqual([0, 2]);
+      expect(updates[0]?.blockRange).toEqual([0, 2]);
     }
 
     // if we get new blocks but there were no more changes, just send the rest
@@ -189,7 +189,7 @@ describe("processBlocks", () => {
       expect(messages[2]?.[FAKE_TOPIC]).toEqual(1);
       expect(cursors[FAKE_TOPIC]).toEqual(3);
       expect(updates[0]?.shouldReset).toEqual(false);
-      expect(updates[0]?.range).toEqual([2, 3]);
+      expect(updates[0]?.blockRange).toEqual([2, 3]);
     }
   });
 });
@@ -213,12 +213,12 @@ describe("prepareBlockUpdate", () => {
         makeA({
           topic: FAKE_TOPIC,
           shouldReset: false,
-          range: [2, 4],
+          blockRange: [2, 4],
         }),
       ],
       blocks,
     );
-    expect(updates[0]?.update.range).toEqual([0, 2]);
+    expect(updates[0]?.update.blockRange).toEqual([0, 2]);
     expect(messages[FAKE_TOPIC]?.length).toEqual(2);
   });
 
@@ -228,18 +228,18 @@ describe("prepareBlockUpdate", () => {
         makeA({
           topic: FAKE_TOPIC,
           shouldReset: false,
-          range: [2, 4],
+          blockRange: [2, 4],
         }),
         makeB({
           topic: FAKE_TOPIC,
           shouldReset: false,
-          range: [1, 4],
+          blockRange: [1, 4],
         }),
       ],
       blocks,
     );
-    expect(updates[0]?.update.range).toEqual([1, 3]);
-    expect(updates[1]?.update.range).toEqual([0, 3]);
+    expect(updates[0]?.update.blockRange).toEqual([1, 3]);
+    expect(updates[1]?.update.blockRange).toEqual([0, 3]);
     expect(messages[FAKE_TOPIC]?.length).toEqual(3);
   });
 });

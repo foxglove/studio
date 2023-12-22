@@ -33,16 +33,30 @@ export function initClient(id: string, params: PlotParams | undefined): Client {
   };
 }
 
+/**
+ * A side effect that triggers a rebuild, which (after a debounce) will
+ * downsample and send the resulting plot dataset to the main thread.
+ */
 export const rebuildClient = (id: string): RebuildEffect => ({
   type: SideEffectType.Rebuild,
   clientId: id,
 });
 
+/**
+ * A side effect that tells the main thread to reset this client's block data
+ * (there is no per-client state for current data in the main thread) and
+ * resend all relevant raw messages.
+ */
 export const clearClient = (id: string): ClearEffect => ({
   type: SideEffectType.Clear,
   clientId: id,
 });
 
+/**
+ * A side effect that sends some plot data to the main thread for rendering
+ * immediately (without downsampling.) This is only used for single-message
+ * plots.
+ */
 export const sendData = (id: string, data: PlotData): DataEffect => ({
   type: SideEffectType.Send,
   clientId: id,

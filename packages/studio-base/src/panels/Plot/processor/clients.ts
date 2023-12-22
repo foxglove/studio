@@ -53,7 +53,11 @@ function mergeAllData(blockData: PlotData, currentData: PlotData): PlotData {
   return reducePlotData(datasets);
 }
 
-export function refreshClient(client: Client): [Client, SideEffects] {
+/**
+ * Reset all accumulated plot data for the client and tell the main thread that
+ * it should resend any message data that it has.
+ */
+export function resetPlotData(client: Client): [Client, SideEffects] {
   const { id, params } = client;
   if (params == undefined) {
     return noEffects(client);
@@ -100,7 +104,7 @@ export function updateVariables(variables: GlobalVariables, state: State): State
       return noEffects(client);
     }
 
-    return refreshClient(client);
+    return resetPlotData(client);
   })(newState);
 }
 
@@ -112,7 +116,7 @@ export function updateParams(id: string, params: PlotParams, state: State): Stat
         return noEffects(client);
       }
 
-      return refreshClient({
+      return resetPlotData({
         ...client,
         params,
         topics: getParamTopics(params),

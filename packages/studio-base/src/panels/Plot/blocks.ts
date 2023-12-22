@@ -59,7 +59,7 @@ export type Update = {
   topic: string;
   // The range of blocks that should be ingested in the form [start index, end
   // index).
-  range: Range;
+  blockRange: Range;
   // Whether the plot data the client already has should be thrown out. This
   // happens when either the plot's parameters change or the underlying data
   // does.
@@ -119,7 +119,8 @@ export function prepareBlockUpdate(
 
   // Calculate the minimum block range we need to satisfy all requests for each topic
   const rangeByTopic = R.map(
-    (topicUpdates) => combineRanges((topicUpdates ?? []).map(({ update: { range } }) => range)),
+    (topicUpdates) =>
+      combineRanges((topicUpdates ?? []).map(({ update: { blockRange } }) => blockRange)),
     updatesByTopic,
   );
 
@@ -137,7 +138,7 @@ export function prepareBlockUpdate(
   const newUpdates = updates.map((clientUpdate: ClientUpdate): ClientUpdate => {
     const {
       update,
-      update: { topic, range },
+      update: { topic, blockRange },
     } = clientUpdate;
 
     const newRange = rangeByTopic[topic];
@@ -146,13 +147,13 @@ export function prepareBlockUpdate(
     }
 
     const [newMin] = newRange;
-    const [oldMin, oldMax] = range;
+    const [oldMin, oldMax] = blockRange;
 
     return {
       ...clientUpdate,
       update: {
         ...update,
-        range: [oldMin - newMin, oldMax - newMin],
+        blockRange: [oldMin - newMin, oldMax - newMin],
       },
     };
   });
@@ -194,13 +195,13 @@ function calculateUpdate(
   if (!haveChanged || lastChanged >= currentCursor) {
     return {
       topic,
-      range: [currentCursor, haveChanged ? Math.min(newCursor, lastChanged + 1) : newCursor],
+      blockRange: [currentCursor, haveChanged ? Math.min(newCursor, lastChanged + 1) : newCursor],
       shouldReset: currentCursor === 0,
     };
   }
   return {
     topic,
-    range: [0, lastChanged + 1],
+    blockRange: [0, lastChanged + 1],
     shouldReset: true,
   };
 }
@@ -224,11 +225,11 @@ export function processBlocks(
   const updates: Update[] = R.pipe(
     R.map((v: SubscribePayload): Update => calculateUpdate(v, cursors, blocks, blocksWithStatuses)),
     // filter out any topics that neither changed nor had new data
-    R.filter(({ shouldReset, range: [start, end] }: Update) => shouldReset || start !== end),
+    R.filter(({ shouldReset, blockRange: [start, end] }: Update) => shouldReset || start !== end),
   )(subscriptions);
 
   const newMessages = R.reduce(
-    (a: FirstMessages[], { topic, range: [start, end] }: Update) => {
+    (a: FirstMessages[], { topic, blockRange: [start, end] }: Update) => {
       return R.pipe(
         (v: FirstMessages[]): [MessageBlock, FirstMessages][] => R.zip(blocks.slice(start, end), v),
         R.map(
@@ -247,7 +248,7 @@ export function processBlocks(
   );
 
   const newCursors = R.reduce(
-    (a: Cursors, { topic, range: [, end] }: Update): Cursors => ({
+    (a: Cursors, { topic, blockRange: [, end] }: Update): Cursors => ({
       ...a,
       [topic]: end,
     }),

@@ -7,7 +7,7 @@ import { PlotViewport } from "@foxglove/studio-base/components/TimeBasedChart/ty
 import {
   unregisterClient,
   registerClient,
-  refreshClient,
+  resetPlotData,
   updateVariables,
   updateParams,
   updateView,
@@ -32,7 +32,7 @@ import { DatasetsByPath, PlotPath, TypedDataSet } from "../internalTypes";
 describe("refreshClient", () => {
   it("ignores client without params", () => {
     const client = initClient(CLIENT_ID, undefined);
-    const [newClient, effects] = refreshClient(client);
+    const [newClient, effects] = resetPlotData(client);
     expect(newClient).toEqual(client);
     expect(effects).toEqual([]);
   });
@@ -45,7 +45,7 @@ describe("refreshClient", () => {
     if (client == undefined) {
       throw new Error("client missing somehow");
     }
-    const [newClient, effects] = refreshClient(client);
+    const [newClient, effects] = resetPlotData(client);
     expect(effects).toEqual([clearClient(client.id)]);
     // we aren't testing accumulate(); just check whether the reference changed
     expect(newClient.blocks).not.toBe(client.blocks);

@@ -66,7 +66,7 @@ export const createBlockUpdate = (
     {
       id: clientId,
       update: {
-        range: [0, 1],
+        blockRange: [0, 1],
         shouldReset: false,
         topic,
         ...update,
