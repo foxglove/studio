@@ -12,9 +12,6 @@ import { alertClasses, PaletteOptions, darken, lighten } from "@mui/material";
 
 import { OverrideComponentReturn } from "../types";
 
-/**
- * Add types for `primary` color variant.
- */
 declare module "@mui/material/Alert" {
   interface AlertPropsColorOverrides {
     primary: true;
@@ -26,10 +23,9 @@ declare module "@mui/material/Alert" {
   }
 }
 
-/**
- * Attempt to replicate MUI theme color variations
- * https://github.com/mui/material-ui/tree/master/packages/mui-material/src/Alert/Alert.js#L45-L46
- */
+// Attempt to replicate MUI theme color variations
+// https://github.com/mui/material-ui/tree/master/packages/mui-material/src/Alert/Alert.js#L45-L46
+
 function getColor(mode: PaletteOptions["mode"], color: string, opacity: number) {
   return mode === "light" ? darken(color, opacity) : lighten(color, opacity);
 }
