@@ -67,7 +67,7 @@ describe("updateBlocks", () => {
     expect(update.updates[0]).toEqual({
       id: CLIENT_ID,
       update: {
-        range: [0, 1],
+        blockRange: [0, 1],
         topic: FAKE_TOPIC,
         shouldReset: true,
       },
@@ -103,7 +103,7 @@ describe("resetClientBlocks", () => {
     expect(update.updates[0]).toEqual({
       id: CLIENT_ID,
       update: {
-        range: [0, 1],
+        blockRange: [0, 1],
         topic: FAKE_TOPIC,
         shouldReset: true,
       },
