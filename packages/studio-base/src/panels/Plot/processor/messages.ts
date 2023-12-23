@@ -5,6 +5,7 @@
 import * as R from "ramda";
 
 import { Immutable } from "@foxglove/studio";
+import { getTypedLength } from "@foxglove/studio-base/components/Chart/datasets";
 import { messagePathStructures } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -23,6 +24,9 @@ import { State, StateAndEffects, Client, SideEffects } from "./types";
 import { BlockUpdate, ClientUpdate } from "../blocks";
 import { Messages } from "../internalTypes";
 import { isSingleMessage } from "../params";
+
+// Maximum number of accumulated current messages before triggering a cull
+const ACCUMULATED_CURRENT_MESSAGE_CULL_THRESHOLD = 50_000;
 
 export function updateMetadata(
   topics: readonly Topic[],
@@ -151,7 +155,7 @@ export function addCurrentData(
   clientId: string | undefined,
   state: State,
 ): StateAndEffects {
-  const current: Messages = R.groupBy((v: MessageEvent) => v.topic, events) as Messages;
+  const current = R.groupBy((v: MessageEvent) => v.topic, events) as Messages;
 
   return mapClients((client): [Client, SideEffects] => {
     const { metadata, globalVariables } = state;
@@ -175,16 +179,61 @@ export function addCurrentData(
       return [client, [sendData(id, plotData)]];
     }
 
+    const accumulatedCurrent = accumulate(
+      metadata,
+      globalVariables,
+      clientId != undefined ? initAccumulated() : client.current,
+      params,
+      current,
+    );
+
+    // prune the accumulation of current data so it does not grow indefinitely during live playback
+    for (const dataset of accumulatedCurrent.data.datasets) {
+      const typedDataSet = dataset[1];
+
+      const typedData = typedDataSet.data;
+      if (getTypedLength(typedData) <= ACCUMULATED_CURRENT_MESSAGE_CULL_THRESHOLD) {
+        continue;
+      }
+
+      // We cull down to less than the threshold so we don't have to cull with every new addCurrentData call
+      let remainingCapacity = ACCUMULATED_CURRENT_MESSAGE_CULL_THRESHOLD - 5_000;
+
+      // The latest accumulated data is added to the end of the typed dataset so we loop backwards
+      // reducing the remaining capacity and slicing downy the arrays to meet the remaining capacity
+      //
+      // The sliced arrays are added to newData
+      const newData = [];
+      for (let i = typedData.length - 1; i >= 0; --i) {
+        if (remainingCapacity <= 0) {
+          continue;
+        }
+
+        const item = typedData[i]!;
+        const valuesLength = item.x.length;
+        if (valuesLength > remainingCapacity) {
+          const sliceIdx = valuesLength - remainingCapacity;
+          item.x = item.x.slice(sliceIdx);
+          item.y = item.y.slice(sliceIdx);
+          item.constantName = item.constantName?.slice(sliceIdx);
+          item.headerStamp = item.headerStamp?.slice(sliceIdx);
+          item.receiveTime = item.receiveTime.splice(sliceIdx);
+          item.value = item.value.slice(sliceIdx);
+        }
+
+        remainingCapacity -= item.x.length;
+        newData.push(typedData[i]!);
+      }
+
+      // Reverse newData because we looped backwards over the typedData arrays to keep newest data
+      // but the dataset needs to be oldest data first
+      typedDataSet.data = newData.reverse();
+    }
+
     return [
       {
         ...client,
-        current: accumulate(
-          metadata,
-          globalVariables,
-          clientId != undefined ? initAccumulated() : client.current,
-          params,
-          current,
-        ),
+        current: accumulatedCurrent,
       },
       [rebuildClient(id)],
     ];
