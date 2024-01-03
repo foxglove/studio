@@ -41,9 +41,13 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-type ColorPickerInputProps = {
+type ColorPickerProps = {
+  value: undefined | string;
   alphaType: "none" | "alpha";
   onChange: (value: string) => void;
+};
+
+type ColorPickerInputProps = {
   onEnterKey?: () => void;
   swatchColor: string;
   updatePrefixedColor: (newValue: string) => void;
@@ -51,7 +55,7 @@ type ColorPickerInputProps = {
   editedValue: string;
   updateEditedValue: (newValue: string) => void;
   onInputBlur: () => void;
-};
+} & Omit<ColorPickerProps, "value">;
 
 export function ColorPickerControl(props: ColorPickerInputProps): JSX.Element {
   const {
@@ -123,11 +127,7 @@ function isValidHexColor(color: string, alphaType: "none" | "alpha") {
 // hook is considered "internal" and we are ok inferring the return type
 //
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function useColorPickerControl(props: {
-  alphaType: "none" | "alpha";
-  value: undefined | string;
-  onChange: (value: string) => void;
-}) {
+export function useColorPickerControl(props: ColorPickerProps) {
   const { alphaType, onChange, value } = props;
 
   const parsedValue = useMemo(() => (value ? tinycolor(value) : undefined), [value]);
