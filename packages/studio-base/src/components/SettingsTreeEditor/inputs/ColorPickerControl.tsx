@@ -176,6 +176,7 @@ export function useColorPickerControl(props: ColorPickerProps) {
   }, [hex]);
 
   return {
+    alphaType,
     swatchColor,
     displayValue,
     updatePrefixedColor,
@@ -183,5 +184,6 @@ export function useColorPickerControl(props: ColorPickerProps) {
     editedValue,
     updateEditedValue,
     onInputBlur,
+    onChange,
   };
 }
