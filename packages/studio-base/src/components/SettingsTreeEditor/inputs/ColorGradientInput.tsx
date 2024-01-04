@@ -61,20 +61,20 @@ export function ColorGradientInput({
 
   const theme = useTheme();
 
-  const rightSwatch = useColorPickerControl({
+  const leftSwatch = useColorPickerControl({
     alphaType: "alpha",
     onChange: (newValue) => {
       onChange([newValue, rightColor]);
     },
-    value: rightColor,
+    value: leftColor,
   });
 
-  const leftSwatch = useColorPickerControl({
+  const rightSwatch = useColorPickerControl({
     alphaType: "alpha",
     onChange: (newValue) => {
-      onChange([newValue, leftColor]);
+      onChange([leftColor, newValue]);
     },
-    value: leftColor,
+    value: rightColor,
   });
 
   return (
