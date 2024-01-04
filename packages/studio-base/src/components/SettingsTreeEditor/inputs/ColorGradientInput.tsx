@@ -19,7 +19,7 @@ export function ColorGradientInput({
 }: {
   colors: undefined | readonly [string, string];
   disabled?: boolean;
-  onChange: (colors: [string, string]) => void;
+  onChange: (colors: [left: string, right: string]) => void;
   readOnly?: boolean;
 }): JSX.Element {
   const [leftAnchor, setLeftAnchor] = useState<undefined | HTMLDivElement>(undefined);
