@@ -228,7 +228,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     ];
   }
 
-  #debouncedUpdateSettingsTree = _.throttle(() => {
+  #throttledUpdateSettingsTree = _.throttle(() => {
     this.updateSettingsTree();
   }, 500);
 
@@ -242,7 +242,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     // Update all the transforms settings nodes each frame since they contain
     // fields that change when currentTime changes
-    this.#debouncedUpdateSettingsTree();
+    this.#throttledUpdateSettingsTree();
 
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
 
