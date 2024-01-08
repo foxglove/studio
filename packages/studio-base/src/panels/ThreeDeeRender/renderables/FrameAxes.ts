@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { t } from "i18next";
+import * as _ from "lodash-es";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
@@ -227,6 +228,10 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     ];
   }
 
+  #debouncedUpdateSettingsTree = _.throttle(() => {
+    this.updateSettingsTree();
+  }, 500);
+
   public override startFrame(
     currentTime: bigint,
     renderFrameId: string,
@@ -237,7 +242,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     // Update all the transforms settings nodes each frame since they contain
     // fields that change when currentTime changes
-    this.updateSettingsTree();
+    this.#debouncedUpdateSettingsTree();
 
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
 
