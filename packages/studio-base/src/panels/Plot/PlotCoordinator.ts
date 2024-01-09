@@ -8,7 +8,6 @@ import EventEmitter from "eventemitter3";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
-import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -30,6 +29,9 @@ import type { PlotConfig } from "./types";
 
 type EventTypes = {
   timeseriesBounds(bounds: Immutable<Bounds1D>): void;
+
+  /** X scale changed. Call `getXScale()` to get the latest scale. */
+  xScaleChanged(): void;
 };
 
 // If the datasets builder is garbage collected we also need to cleanup the worker
@@ -59,10 +61,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   #interactionBounds?: Bounds;
 
   #updateAction: UpdateAction = { type: "update" };
-
-  #isTimeseriesPlot: boolean = false;
-  #currentSeconds?: number;
-  #hoverSeconds?: number;
 
   #viewport: Viewport = {
     size: { width: 0, height: 0 },
@@ -101,11 +99,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       return;
     }
 
-    if (this.#isTimeseriesPlot) {
-      const secondsSinceStart = toSec(subtractTime(activeData.currentTime, activeData.startTime));
-      this.#currentSeconds = secondsSinceStart;
-    }
-
     const datasetsRange = this.#datasetsBuilder.handlePlayerState(state);
 
     this.#datasetRange = datasetsRange;
@@ -113,11 +106,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   }
 
   public handleConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void {
-    this.#isTimeseriesPlot = config.xAxisVal === "timestamp";
-    if (!this.#isTimeseriesPlot) {
-      this.#currentSeconds = undefined;
-    }
-
     this.#configBounds = {
       x: {
         max: config.maxXValue,
@@ -189,9 +177,8 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#queueDispatchRender();
   }
 
-  public setHoverValue(seconds?: number): void {
-    this.#hoverSeconds = seconds;
-    this.#queueDispatchRender();
+  public getXScale(): Scale | undefined {
+    return this.#latestXScale;
   }
 
   /** Get the plot x value at the canvas pixel x location */
@@ -248,8 +235,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       min: yMin,
       max: yMax,
     };
-    this.#updateAction.hoverSeconds = this.#hoverSeconds;
-    this.#updateAction.currentSeconds = this.#currentSeconds;
 
     const haveInteractionEvents = (this.#updateAction.interactionEvents?.length ?? 0) > 0;
 
@@ -291,6 +276,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     const datasets = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
     const renderer = await this.#rendererInstance();
     this.#latestXScale = await renderer.updateDatasets(datasets);
+    this.emit("xScaleChanged");
   }
 
   async #rendererInstance(): Promise<Comlink.RemoteObject<ChartRenderer>> {

@@ -41,12 +41,12 @@ import {
   useTimelineInteractionState,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { VerticalBars } from "@foxglove/studio-base/panels/Plot/VerticalBars";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
-import { HoverValue } from "./HoverValue";
 import { PlotCoordinator } from "./PlotCoordinator";
 import { PlotLegend } from "./PlotLegend";
 import { CurrentCustomDatasetsBuilder } from "./builders/CurrentCustomDatasetsBuilder";
@@ -403,11 +403,6 @@ export function Plot(props: Props): JSX.Element {
   // because react re-uses the SyntheticEvent objects.
   const onMouseMove = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      // When dragging do not fetch tooltips
-      if (draggingRef.current) {
-        return;
-      }
-
       mousePresentRef.current = true;
       const boundingRect = event.currentTarget.getBoundingClientRect();
       buildTooltip?.({
@@ -417,8 +412,7 @@ export function Plot(props: Props): JSX.Element {
         canvasY: event.clientY - boundingRect.top,
       });
 
-      // Only timestamp plots support setting the global hover value
-      if (xAxisVal !== "timestamp" || !coordinator) {
+      if (!coordinator) {
         return;
       }
 
@@ -429,7 +423,7 @@ export function Plot(props: Props): JSX.Element {
       setHoverValue({
         componentId: subscriberId,
         value: seconds,
-        type: "PLAYBACK_SECONDS",
+        type: xAxisVal === "timestamp" ? "PLAYBACK_SECONDS" : "OTHER",
       });
     },
     [buildTooltip, coordinator, setHoverValue, subscriberId, xAxisVal],
@@ -508,7 +502,6 @@ export function Plot(props: Props): JSX.Element {
     });
 
     hammerManager.on("panend", (event) => {
-      draggingRef.current = false;
       setShowReset(true);
       const boundingRect = event.target.getBoundingClientRect();
       coordinator.addInteractionEvent({
@@ -518,6 +511,12 @@ export function Plot(props: Props): JSX.Element {
         deltaX: event.deltaX,
         boundingClientRect: boundingRect.toJSON(),
       });
+
+      // We need to do this a little bit later so that the onClick handler still sees
+      // draggingRef.current===true and can skip the seek.
+      setTimeout(() => {
+        draggingRef.current = false;
+      }, 0);
     });
 
     return () => {
@@ -707,7 +706,11 @@ export function Plot(props: Props): JSX.Element {
         </Tooltip>
         <PanelContextMenu getItems={getPanelContextMenuItems} />
       </Stack>
-      <HoverValue coordinator={coordinator} enabled={xAxisVal === "timestamp"} />
+      <VerticalBars
+        coordinator={coordinator}
+        hoverComponentId={subscriberId}
+        xAxisIsPlaybackTime={xAxisVal === "timestamp"}
+      />
       <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
     </Stack>
   );

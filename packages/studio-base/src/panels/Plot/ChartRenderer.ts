@@ -66,8 +66,6 @@ export type UpdateAction = {
   size?: { width: number; height: number };
   showXAxisLabels?: boolean;
   showYAxisLabels?: boolean;
-  hoverSeconds?: number;
-  currentSeconds?: number;
   range?: Partial<Bounds1D>;
   domain?: Partial<Bounds1D>;
   zoomMode?: "x" | "y" | "xy";
@@ -121,9 +119,6 @@ export class ChartRenderer {
   #chartInstance: ChartType;
   #fakeNodeEvents = new EventEmitter();
   #fakeDocumentEvents = new EventEmitter();
-
-  #hoverValue?: number;
-  #currentValue?: number;
 
   public constructor(args: {
     canvas: OffscreenCanvas;
@@ -217,26 +212,6 @@ export class ChartRenderer {
             threshold: 10,
           },
         },
-        annotation: {
-          annotations: [
-            {
-              type: "line",
-              drawTime: "beforeDatasetsDraw",
-              xMin: () => this.#hoverValue ?? Number.MIN_SAFE_INTEGER,
-              xMax: () => this.#hoverValue ?? Number.MIN_SAFE_INTEGER,
-              borderColor: "rgb(0 , 99, 132)",
-              borderWidth: 1,
-            },
-            {
-              type: "line",
-              drawTime: "beforeDatasetsDraw",
-              xMin: () => this.#currentValue ?? Number.MIN_SAFE_INTEGER,
-              xMax: () => this.#currentValue ?? Number.MIN_SAFE_INTEGER,
-              borderColor: "rgb(255 , 99, 132)",
-              borderWidth: 1,
-            },
-          ],
-        },
       },
     };
 
@@ -264,9 +239,6 @@ export class ChartRenderer {
       this.#chartInstance.canvas.height = action.size.height;
       this.#chartInstance.resize();
     }
-
-    this.#hoverValue = action.hoverSeconds;
-    this.#currentValue = action.currentSeconds;
 
     if (action.domain) {
       const scaleOption = this.#chartInstance.options.scales?.y;
@@ -330,26 +302,6 @@ export class ChartRenderer {
           borderWidth: 1,
           value: config.value,
         };
-      });
-
-      newAnnotations.push({
-        type: "line",
-        drawTime: "beforeDatasetsDraw",
-        display: () => this.#hoverValue != undefined,
-        xMin: () => this.#hoverValue ?? Number.MIN_SAFE_INTEGER,
-        xMax: () => this.#hoverValue ?? Number.MIN_SAFE_INTEGER,
-        borderColor: "rgb(0 , 99, 132)",
-        borderWidth: 1,
-      });
-
-      newAnnotations.push({
-        type: "line",
-        drawTime: "beforeDatasetsDraw",
-        display: () => this.#currentValue != undefined,
-        xMin: () => this.#currentValue ?? Number.MIN_SAFE_INTEGER,
-        xMax: () => this.#currentValue ?? Number.MIN_SAFE_INTEGER,
-        borderColor: "rgb(255 , 99, 132)",
-        borderWidth: 1,
       });
 
       annotation.annotations = newAnnotations;
