@@ -88,8 +88,8 @@ export const VerticalBars = React.memo(function VerticalBars({
     if (!coordinator) {
       return;
     }
-    const handler = () => {
-      setXScale(coordinator.getXScale());
+    const handler = (scale: Scale | undefined) => {
+      setXScale(scale);
     };
     coordinator.on("xScaleChanged", handler);
     return () => {

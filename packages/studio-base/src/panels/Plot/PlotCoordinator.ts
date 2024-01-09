@@ -30,8 +30,8 @@ import type { PlotConfig } from "./types";
 type EventTypes = {
   timeseriesBounds(bounds: Immutable<Bounds1D>): void;
 
-  /** X scale changed. Call `getXScale()` to get the latest scale. */
-  xScaleChanged(): void;
+  /** X scale changed. */
+  xScaleChanged(scale: Scale | undefined): void;
 };
 
 // If the datasets builder is garbage collected we also need to cleanup the worker
@@ -177,10 +177,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#queueDispatchRender();
   }
 
-  public getXScale(): Scale | undefined {
-    return this.#latestXScale;
-  }
-
   /** Get the plot x value at the canvas pixel x location */
   public getXValueAtPixel(pixelX: number): number {
     if (!this.#latestXScale) {
@@ -276,7 +272,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     const datasets = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
     const renderer = await this.#rendererInstance();
     this.#latestXScale = await renderer.updateDatasets(datasets);
-    this.emit("xScaleChanged");
+    this.emit("xScaleChanged", this.#latestXScale);
   }
 
   async #rendererInstance(): Promise<Comlink.RemoteObject<ChartRenderer>> {
