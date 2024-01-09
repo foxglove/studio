@@ -39,10 +39,12 @@ export class WorkerImageDecoder {
     options: Partial<RawImageOptions>,
   ): Promise<ImageData> {
     return await new Promise((resolve, reject) => {
+      // abort previous request
+      if (this.#abort) {
+        this.#abort();
+      }
       this.#abort = reject;
-      void this.#remote.decode(image, options).then((decodedImage) => {
-        resolve(decodedImage);
-      });
+      void this.#remote.decode(image, options).then(resolve).catch(reject);
     });
   }
 
