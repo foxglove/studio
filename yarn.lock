@@ -2210,14 +2210,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/cdr@npm:^3.0.0":
-  version: 3.2.0
-  resolution: "@foxglove/cdr@npm:3.2.0"
-  checksum: 1c8497debd32714bbe26724df1dbde783fddd6e8ef2e126df87f10221691419c1d8f1fdfb6dd9fd066408638aaa325d41aa6ccc9d1291c3d3774f2b844c9e546
-  languageName: node
-  linkType: hard
-
-"@foxglove/cdr@npm:^3.2.1":
+"@foxglove/cdr@npm:^3.0.0, @foxglove/cdr@npm:^3.2.1":
   version: 3.2.1
   resolution: "@foxglove/cdr@npm:3.2.1"
   checksum: a3412f7ef6aedd2e983d7698d9b9146e27bc19f5d3204e6a19951100d8cc48a056b364e9f1daf7bd28b253a3fd4327bd6658078487eda3a369174f749ed40bec
