@@ -39,7 +39,7 @@ type EventTypes = {
   xScaleChanged(scale: Scale | undefined): void;
 
   /** Current values changed (for displaying in the legend) */
-  currentValuesChanged(values: unknown[]): void;
+  currentValuesChanged(values: readonly unknown[]): void;
 };
 
 // If the datasets builder is garbage collected we also need to cleanup the worker
@@ -152,7 +152,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       }
     });
 
-    this.emit("currentValuesChanged", [...this.#currentValues]);
+    this.emit("currentValuesChanged", this.#currentValues);
 
     this.#datasetRange = datasetsRange;
     this.#queueDispatchRender();
@@ -208,7 +208,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       return fillInGlobalVariablesInPath(parsed, globalVariables);
     });
     this.#currentValues = [];
-    this.emit("currentValuesChanged", [...this.#currentValues]);
+    this.emit("currentValuesChanged", this.#currentValues);
 
     this.#updateAction.showXAxisLabels = config.showXAxisLabels;
     this.#updateAction.showYAxisLabels = config.showYAxisLabels;

@@ -220,8 +220,8 @@ function PlotLegendComponent(props: Props): JSX.Element {
     if (!coordinator || !showValues) {
       return;
     }
-    const handler = (values: unknown[]) => {
-      setCurrentValuesBySeriesIndex(values);
+    const handler = (values: readonly unknown[]) => {
+      setCurrentValuesBySeriesIndex([...values]);
     };
     coordinator.on("currentValuesChanged", handler);
     return () => {
