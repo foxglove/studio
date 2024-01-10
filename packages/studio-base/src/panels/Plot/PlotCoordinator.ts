@@ -207,7 +207,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
       return fillInGlobalVariablesInPath(parsed, globalVariables);
     });
-    this.#currentValues = []; // fixme - keep previous values?
+    this.#currentValues = [];
     this.emit("currentValuesChanged", [...this.#currentValues]);
 
     this.#updateAction.showXAxisLabels = config.showXAxisLabels;
