@@ -12,13 +12,14 @@ import {
 } from "@fluentui/react-icons";
 import { IconButton } from "@mui/material";
 import * as _ from "lodash-es";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
 import { Immutable } from "@foxglove/studio";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
+import type { PlotCoordinator } from "./PlotCoordinator";
 import { PlotLegendRow, ROW_HEIGHT } from "./PlotLegendRow";
 import { PlotPath } from "./internalTypes";
 import { DEFAULT_PATH } from "./settings";
@@ -28,6 +29,7 @@ const minLegendWidth = 25;
 const maxLegendWidth = 800;
 
 type Props = Immutable<{
+  coordinator: PlotCoordinator | undefined;
   legendDisplay: "floating" | "top" | "left";
   onClickPath: (index: number) => void;
   paths: PlotPath[];
@@ -35,8 +37,8 @@ type Props = Immutable<{
   saveConfig: SaveConfig<PlotConfig>;
   showLegend: boolean;
   sidebarDimension: number;
-  valuesBySeriesIndex?: string[];
-  valueSource: "hover" | "current";
+  showValues: boolean;
+  hoveredValuesBySeriesIndex?: string[];
 }>;
 
 const useStyles = makeStyles<void, "grid" | "toggleButton" | "toggleButtonFloating">()(
@@ -143,6 +145,7 @@ const useStyles = makeStyles<void, "grid" | "toggleButton" | "toggleButtonFloati
 
 function PlotLegendComponent(props: Props): JSX.Element {
   const {
+    coordinator,
     legendDisplay,
     onClickPath,
     paths,
@@ -150,8 +153,8 @@ function PlotLegendComponent(props: Props): JSX.Element {
     saveConfig,
     showLegend,
     sidebarDimension,
-    valuesBySeriesIndex,
-    valueSource,
+    showValues,
+    hoveredValuesBySeriesIndex,
   } = props;
   const { classes, cx } = useStyles();
 
@@ -209,6 +212,26 @@ function PlotLegendComponent(props: Props): JSX.Element {
     },
     [saveConfig],
   );
+
+  const [currentValuesBySeriesIndex, setCurrentValuesBySeriesIndex] = useState<
+    unknown[] | undefined
+  >();
+  useEffect(() => {
+    if (!coordinator || !showValues) {
+      return;
+    }
+    const handler = (values: unknown[]) => {
+      setCurrentValuesBySeriesIndex(values);
+    };
+    coordinator.on("currentValuesChanged", handler);
+    return () => {
+      coordinator.off("currentValuesChanged", handler);
+      setCurrentValuesBySeriesIndex(undefined);
+    };
+  }, [coordinator, showValues]);
+
+  const valuesBySeriesIndex = hoveredValuesBySeriesIndex ?? currentValuesBySeriesIndex;
+  const valueSource = hoveredValuesBySeriesIndex ? "hover" : "current";
 
   return (
     <div

@@ -30,7 +30,7 @@ type PlotLegendRowProps = Immutable<{
   onClickPath: () => void;
   path: PlotPath;
   paths: PlotPath[];
-  value?: string;
+  value?: unknown;
   valueSource: "hover" | "current";
   savePaths: (paths: PlotPath[]) => void;
 }>;
