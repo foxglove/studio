@@ -236,7 +236,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
      * is a bigger issue here than responsiveness. The longer time between updates also gives users
      * a chance read the numbers more clearly, though I don't think that's a big use case here.
      */
-  }, 500);
+  }, 50);
 
   public override startFrame(
     currentTime: bigint,
@@ -249,6 +249,7 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
     // Update all the transforms settings nodes each frame since they contain
     // fields that change when currentTime changes
     this.#throttledUpdateSettingsTree();
+    // this.updateSettingsTree();
 
     super.startFrame(currentTime, renderFrameId, fixedFrameId);
 
