@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
+import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
 import { toSec, subtract as subtractTime, isTime } from "@foxglove/rostime";
@@ -23,6 +24,7 @@ import type {
   DataItem,
   TimeseriesDatasetsBuilderImpl,
   UpdateDataAction,
+  SeriesConfigKey,
 } from "./TimeseriesDatasetsBuilderImpl";
 import { Dataset } from "../ChartRenderer";
 import { isReferenceLinePlotPathType } from "../internalTypes";
@@ -30,7 +32,7 @@ import { MathFunction, mathFunctions } from "../mathFunctions";
 import { PlotConfig } from "../types";
 
 type SeriesItem = {
-  key: string;
+  key: SeriesConfigKey;
   messagePath: string;
   parsed: RosPath;
   color: string;
@@ -147,44 +149,47 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
   }
 
   public setConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void {
-    this.#seriesConfigs = filterMap(config.paths, (path, idx) => {
-      if (isReferenceLinePlotPathType(path)) {
-        return;
-      }
+    this.#seriesConfigs = filterMap(
+      config.paths,
+      (path, idx): Immutable<SeriesItem> | undefined => {
+        if (isReferenceLinePlotPathType(path)) {
+          return;
+        }
 
-      const parsed = parseRosPath(path.value);
-      if (!parsed) {
-        return;
-      }
+        const parsed = parseRosPath(path.value);
+        if (!parsed) {
+          return;
+        }
 
-      const filledParsed = fillInGlobalVariablesInPath(parsed, globalVariables);
+        const filledParsed = fillInGlobalVariablesInPath(parsed, globalVariables);
 
-      // When global variables change the path.value is still the original value with the variable
-      // names But we need to consider this as a new series (new block cursor) so we compute new
-      // values when variables cause the resolved path value to update.
-      //
-      // We also want to re-compute values when the timestamp method changes. So we use a _key_ that
-      // is the filled path and the timestamp method. If either change, we consider this a new
-      // series.
-      const key = (JSON.stringify(filledParsed) as unknown as string) + path.timestampMethod;
+        // When global variables change the path.value is still the original value with the variable
+        // names But we need to consider this as a new series (new block cursor) so we compute new
+        // values when variables cause the resolved path value to update.
+        //
+        // We also want to re-compute values when the timestamp method changes. So we use a _key_ that
+        // is the filled path and the timestamp method. If either change, we consider this a new
+        // series.
+        const key: SeriesConfigKey = { path: filledParsed, timestampMethod: path.timestampMethod };
 
-      // It is important to keep the existing block cursor for the same series to avoid re-processing
-      // the blocks again when the series remains.
-      const existing = this.#seriesConfigs.find((item) => item.key === key);
+        // It is important to keep the existing block cursor for the same series to avoid re-processing
+        // the blocks again when the series remains.
+        const existing = this.#seriesConfigs.find((item) => _.isEqual(item.key, key));
 
-      return {
-        key,
-        messagePath: path.value,
-        parsed: filledParsed,
-        color: getLineColor(path.color, idx),
-        lineSize: path.lineSize ?? 1.0,
-        timestampMethod: path.timestampMethod,
-        showLine: path.showLine ?? true,
-        enabled: path.enabled,
-        derivative: filledParsed.modifier === "derivative",
-        blockCursor: existing?.blockCursor ?? new BlockTopicCursor(parsed.topicName),
-      };
-    });
+        return {
+          key,
+          messagePath: path.value,
+          parsed: filledParsed,
+          color: getLineColor(path.color, idx),
+          lineSize: path.lineSize ?? 1.0,
+          timestampMethod: path.timestampMethod,
+          showLine: path.showLine ?? true,
+          enabled: path.enabled,
+          derivative: filledParsed.modifier === "derivative",
+          blockCursor: existing?.blockCursor ?? new BlockTopicCursor(parsed.topicName),
+        };
+      },
+    );
 
     void this.#datasetsBuilderRemote.setConfig(this.#seriesConfigs);
   }

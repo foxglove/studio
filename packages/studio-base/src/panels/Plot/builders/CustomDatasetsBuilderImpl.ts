@@ -2,10 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as _ from "lodash-es";
+
 import { compare } from "@foxglove/rostime";
 import { Immutable, Time } from "@foxglove/studio";
+import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { downsampleScatter } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { CsvDataset, Viewport } from "./IDatasetsBuilder";
 import type { Dataset, Datum } from "../ChartRenderer";
@@ -15,8 +19,17 @@ export type ValueItem = {
   receiveTime: Time;
 };
 
+/**
+ * Identifier used to determine whether previous data can be reused when the config changes.
+ * Compare with deep equality.
+ */
+export type SeriesConfigKey = {
+  path: Immutable<RosPath>;
+  timestampMethod: TimestampMethod;
+};
+
 export type SeriesConfig = {
-  key: string;
+  key: SeriesConfigKey;
   messagePath: string;
   color: string;
   showLine: boolean;
@@ -104,7 +117,7 @@ export class CustomDatasetsBuilderImpl {
 
     for (const config of seriesConfig) {
       let existingSeries = this.#seriesByMessagePath.get(config.messagePath);
-      if (!existingSeries || existingSeries.config.key !== config.key) {
+      if (!existingSeries || !_.isEqual(existingSeries.config.key, config.key)) {
         existingSeries = {
           config,
           current: [],

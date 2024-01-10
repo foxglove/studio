@@ -2,7 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as _ from "lodash-es";
+
 import { Immutable, Time } from "@foxglove/studio";
+import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import {
   MAX_POINTS,
   downsampleScatter,
@@ -20,8 +23,17 @@ export type DataItem = Datum & {
   headerStamp?: Time;
 };
 
+/**
+ * Identifier used to determine whether previous data can be reused when the config changes.
+ * Compare with deep equality.
+ */
+export type SeriesConfigKey = {
+  path: Immutable<RosPath>;
+  timestampMethod: TimestampMethod;
+};
+
 export type SeriesConfig = {
-  key: string;
+  key: SeriesConfigKey;
   messagePath: string;
   color: string;
   timestampMethod: TimestampMethod;
@@ -91,7 +103,7 @@ export class TimeseriesDatasetsBuilderImpl {
 
     for (const config of seriesConfig) {
       let existingSeries = this.#seriesByMessagePath.get(config.messagePath);
-      if (!existingSeries || existingSeries.config.key !== config.key) {
+      if (!existingSeries || !_.isEqual(existingSeries.config.key, config.key)) {
         existingSeries = {
           config,
           current: [],
