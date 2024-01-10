@@ -230,6 +230,12 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
   #throttledUpdateSettingsTree = _.throttle(() => {
     this.updateSettingsTree();
+    /**
+     * Chose .5s because it gives better performance than .1s and doesn't feel sluggish.
+     * This doesn't conform to our principles around response times but I believe performance
+     * is a bigger issue here than responsiveness. The longer time between updates also gives users
+     * a chance read the numbers more clearly, though I don't think that's a big use case here.
+     */
   }, 500);
 
   public override startFrame(
