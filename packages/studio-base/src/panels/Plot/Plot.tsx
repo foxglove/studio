@@ -598,13 +598,28 @@ export function Plot(props: Props): JSX.Element {
     }
   }, [coordinator, setGlobalBounds, shouldSync]);
 
+  const [currentValuesBySeriesIndex, setCurrentValuesBySeriesIndex] = useState<unknown[]>([]);
+  useEffect(() => {
+    if (!coordinator || !config.showPlotValuesInLegend) {
+      return;
+    }
+    const handler = (values: unknown[]) => {
+      setCurrentValuesBySeriesIndex(values);
+    };
+    coordinator.on("currentValuesChanged", handler);
+    return () => {
+      coordinator.off("currentValuesChanged", handler);
+      setCurrentValuesBySeriesIndex([]);
+    };
+  }, [coordinator, config.showPlotValuesInLegend]);
+
   const valuesBySeriesIndex = useMemo(() => {
     if (!config.showPlotValuesInLegend) {
       return;
     }
 
     if (!activeTooltip?.data) {
-      return;
+      return currentValuesBySeriesIndex;
     }
 
     const values = new Array(config.paths.length).fill(undefined);
@@ -613,7 +628,12 @@ export function Plot(props: Props): JSX.Element {
     }
 
     return values;
-  }, [activeTooltip, config.paths.length, config.showPlotValuesInLegend]);
+  }, [
+    activeTooltip,
+    config.paths.length,
+    config.showPlotValuesInLegend,
+    currentValuesBySeriesIndex,
+  ]);
 
   const { keyDownHandlers, keyUphandlers } = useMemo(() => {
     return {
@@ -667,6 +687,7 @@ export function Plot(props: Props): JSX.Element {
             showLegend={showLegend}
             sidebarDimension={sidebarDimension}
             valuesBySeriesIndex={valuesBySeriesIndex}
+            valueSource={activeTooltip?.data ? "hover" : "current"}
           />
         )}
         {showResetViewButton && (

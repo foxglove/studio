@@ -14,6 +14,7 @@ import { MouseEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
+import { isTime, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -30,6 +31,7 @@ type PlotLegendRowProps = Immutable<{
   path: PlotPath;
   paths: PlotPath[];
   value?: string;
+  valueSource: "hover" | "current";
   savePaths: (paths: PlotPath[]) => void;
 }>;
 
@@ -125,6 +127,24 @@ const useStyles = makeStyles<void, "plotName" | "actionButton">()((theme, _param
   },
 }));
 
+function renderValue(value: unknown): string | number | undefined {
+  switch (typeof value) {
+    case "bigint":
+    case "boolean":
+      return value.toString();
+    case "number":
+    case "string":
+      return value;
+    case "object":
+      if (isTime(value)) {
+        return toSec(value);
+      }
+      return undefined;
+    default:
+      return undefined;
+  }
+}
+
 export function PlotLegendRow({
   hasMismatchedDataLength,
   index,
@@ -133,6 +153,7 @@ export function PlotLegendRow({
   paths,
   savePaths,
   value,
+  valueSource,
 }: PlotLegendRowProps): JSX.Element {
   const { openPanelSettings } = useWorkspaceActions();
   const { id: panelId } = usePanelContext();
@@ -216,8 +237,12 @@ export function PlotLegendRow({
       </div>
       {showPlotValuesInLegend && (
         <div className={classes.plotValue}>
-          <Typography variant="body2" align="right">
-            {value}
+          <Typography
+            variant="body2"
+            align="right"
+            color={valueSource === "hover" ? "warning.main" : "text.secondary"}
+          >
+            {renderValue(value)}
           </Typography>
         </div>
       )}

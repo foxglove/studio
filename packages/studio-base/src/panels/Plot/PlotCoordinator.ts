@@ -10,6 +10,10 @@ import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
+import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
+import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState } from "@foxglove/studio-base/players/types";
@@ -33,6 +37,9 @@ type EventTypes = {
 
   /** X scale changed. */
   xScaleChanged(scale: Scale | undefined): void;
+
+  /** Current values changed (for displaying in the legend) */
+  currentValuesChanged(values: unknown[]): void;
 };
 
 // If the datasets builder is garbage collected we also need to cleanup the worker
@@ -61,6 +68,13 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   #datasetRange?: Bounds1D;
   #followRange?: number;
   #interactionBounds?: Bounds;
+
+  #lastSeekTime = NaN;
+
+  /** Current value for each series to show in the legend */
+  #currentValues: unknown[] = [];
+  /** Path with variables filled in for each series */
+  #seriesPaths: (RosPath | undefined)[] = [];
 
   /** Flag indicating that new Y bounds should be sent to the renderer because the bounds have been reset */
   #shouldResetY = false;
@@ -107,12 +121,38 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       return;
     }
 
+    const { messages, lastSeekTime, currentTime, startTime } = activeData;
+
     if (this.#isTimeseriesPlot) {
-      const secondsSinceStart = toSec(subtractTime(activeData.currentTime, activeData.startTime));
+      const secondsSinceStart = toSec(subtractTime(currentTime, startTime));
       this.#currentSeconds = secondsSinceStart;
     }
 
     const datasetsRange = this.#datasetsBuilder.handlePlayerState(state);
+
+    if (lastSeekTime !== this.#lastSeekTime) {
+      this.#currentValues = [];
+      this.#lastSeekTime = lastSeekTime;
+    }
+
+    this.#seriesPaths.forEach((path, idx) => {
+      if (!path) {
+        return;
+      }
+      for (let i = messages.length - 1; i >= 0; --i) {
+        const msgEvent = messages[i]!;
+        if (msgEvent.topic !== path.topicName) {
+          continue;
+        }
+        const items = simpleGetMessagePathDataItems(msgEvent, path);
+        if (items.length > 0) {
+          this.#currentValues[idx] = items[items.length - 1];
+          break;
+        }
+      }
+    });
+
+    this.emit("currentValuesChanged", [...this.#currentValues]);
 
     this.#datasetRange = datasetsRange;
     this.#queueDispatchRender();
@@ -151,6 +191,20 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
         value,
       };
     });
+
+    this.#seriesPaths = config.paths.map((path) => {
+      if (isReferenceLinePlotPathType(path)) {
+        return undefined;
+      }
+      const parsed = parseRosPath(path.value);
+      if (!parsed) {
+        return undefined;
+      }
+
+      return fillInGlobalVariablesInPath(parsed, globalVariables);
+    });
+    this.#currentValues = []; // fixme - keep previous values?
+    this.emit("currentValuesChanged", [...this.#currentValues]);
 
     this.#updateAction.showXAxisLabels = config.showXAxisLabels;
     this.#updateAction.showYAxisLabels = config.showYAxisLabels;

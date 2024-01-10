@@ -36,6 +36,7 @@ type Props = Immutable<{
   showLegend: boolean;
   sidebarDimension: number;
   valuesBySeriesIndex?: string[];
+  valueSource: "hover" | "current";
 }>;
 
 const useStyles = makeStyles<void, "grid" | "toggleButton" | "toggleButtonFloating">()(
@@ -150,6 +151,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
     showLegend,
     sidebarDimension,
     valuesBySeriesIndex,
+    valueSource,
   } = props;
   const { classes, cx } = useStyles();
 
@@ -245,6 +247,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
               paths={paths}
               savePaths={savePaths}
               value={valuesBySeriesIndex?.[index]}
+              valueSource={valueSource}
             />
           ))}
         </div>
