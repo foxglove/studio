@@ -193,6 +193,10 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     });
 
     this.#seriesPaths = config.paths.map((path) => {
+      if (path.timestampMethod === "headerStamp") {
+        // We currently do not support showing current values in the legend for header.stamp mode
+        return undefined;
+      }
       if (isReferenceLinePlotPathType(path)) {
         return undefined;
       }
