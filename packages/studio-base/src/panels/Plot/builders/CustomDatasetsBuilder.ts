@@ -124,15 +124,16 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
     const blocks = state.progress.messageCache?.blocks;
     if (blocks) {
-      for (const seriesConfig of this.#seriesConfigs) {
-        if (this.#xValuesCursor && this.#parsedPath) {
-          if (this.#xValuesCursor.nextWillReset(blocks)) {
-            this.#pendingDataDispatch.push({
-              type: "reset-full-x",
-            });
-          }
+      if (this.#xValuesCursor && this.#parsedPath) {
+        if (this.#xValuesCursor.nextWillReset(blocks)) {
+          this.#pendingDataDispatch.push({
+            type: "reset-full-x",
+          });
+        }
 
-          const pathItems = readMessagePathItems(msgEvents, this.#parsedPath);
+        let messageEvents = undefined;
+        while ((messageEvents = this.#xValuesCursor.next(blocks)) != undefined) {
+          const pathItems = readMessagePathItems(messageEvents, this.#parsedPath);
 
           this.#pendingDataDispatch.push({
             type: "append-full-x",
@@ -143,7 +144,9 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
             this.#xFullBounds = computeBounds(this.#xFullBounds, pathItems);
           }
         }
+      }
 
+      for (const seriesConfig of this.#seriesConfigs) {
         if (seriesConfig.blockCursor.nextWillReset(blocks)) {
           this.#pendingDataDispatch.push({
             type: "reset-full",

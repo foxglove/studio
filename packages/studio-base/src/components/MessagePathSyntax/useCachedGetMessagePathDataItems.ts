@@ -135,25 +135,14 @@ export function useCachedGetMessagePathDataItems(
         throw new Error(`path (${path}) was not in the list of cached paths`);
       }
       const filledInPath = memoizedFilledInPaths[path];
-      if (!filledInPath || message.topic !== filledInPath.topicName) {
+      if (!filledInPath) {
         return;
       }
-
-      const topic = topicsByName[message.topic];
-      if (!topic) {
-        return;
-      }
-
-      const structure: MessagePathStructureItemMessage | undefined =
-        // If the topic has no schema, we can at least allow accessing the root message
-        topic.schemaName == undefined
-          ? { structureType: "message", datatype: "", nextByName: {} }
-          : structures[topic.schemaName];
-
       const messagePathDataItems = getMessagePathDataItems(
         message,
         filledInPath,
-        structure,
+        topicsByName,
+        structures,
         enumValues,
       );
       return messagePathDataItems;
@@ -203,9 +192,17 @@ export function fillInGlobalVariablesInPath(
 export function getMessagePathDataItems(
   message: MessageEvent,
   filledInPath: RosPath,
-  structure: MessagePathStructureItemMessage | undefined,
+  topicsByName: Record<string, Topic>,
+  structures: Record<string, MessagePathStructureItemMessage>,
   enumValues: ReturnType<typeof enumValuesByDatatypeAndField>,
 ): MessagePathDataItem[] | undefined {
+  const topic = topicsByName[filledInPath.topicName];
+
+  // We don't care about messages that don't match the topic we're looking for.
+  if (!topic || message.topic !== filledInPath.topicName) {
+    return;
+  }
+
   // Apply top-level filters first. If a message matches all top-level filters, then this function
   // will *always* return a history item, so this is our only chance to return nothing.
   for (const item of filledInPath.messagePath) {
@@ -312,7 +309,11 @@ export function getMessagePathDataItems(
       );
     }
   }
-
+  const structure: MessagePathStructureItemMessage | undefined =
+    // If the topic has no schema, we can at least allow accessing the root message
+    topic.schemaName == undefined
+      ? { structureType: "message", datatype: "", nextByName: {} }
+      : structures[topic.schemaName];
   if (structure) {
     traverse(message.message, 0, quoteTopicNameIfNeeded(filledInPath.topicName), structure);
   }

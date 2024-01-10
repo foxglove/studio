@@ -16,7 +16,7 @@ function getCSVRow(label: string, data: CsvDataset["data"][0]) {
   return [x, receiveTimeFloat, stampTime, label, y];
 }
 
-const getCVSColName = (xAxisVal: PlotXAxisVal): string => {
+const getCSVColName = (xAxisVal: PlotXAxisVal): string => {
   switch (xAxisVal) {
     case "custom":
     case "currentCustom":
@@ -30,7 +30,7 @@ const getCVSColName = (xAxisVal: PlotXAxisVal): string => {
 };
 
 function generateCSV(datasets: Immutable<CsvDataset[]>, xAxisVal: PlotXAxisVal): string {
-  const headLine = [getCVSColName(xAxisVal), "receive time", "header.stamp", "topic", "value"];
+  const headLine = [getCSVColName(xAxisVal), "receive time", "header.stamp", "topic", "value"];
   const combinedLines: unknown[][] = [headLine];
   for (const dataset of datasets) {
     for (const datum of dataset.data) {

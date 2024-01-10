@@ -19,8 +19,8 @@ import { TimestampMethod, getTimestampForMessage } from "@foxglove/studio-base/u
 
 import { BlockTopicCursor } from "./BlockTopicCursor";
 import { CsvDataset, IDatasetsBuilder, Viewport } from "./IDatasetsBuilder";
-import type { DataItem } from "./TimeseriesDatasetsBuilderImpl";
 import type {
+  DataItem,
   TimeseriesDatasetsBuilderImpl,
   UpdateDataAction,
 } from "./TimeseriesDatasetsBuilderImpl";

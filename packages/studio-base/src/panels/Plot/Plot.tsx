@@ -538,9 +538,6 @@ export function Plot(props: Props): JSX.Element {
         return;
       }
 
-      // fixme - a path like /mcnasty/position. resulted in a subscription with an "" empty field name
-      // in fact this path should be invalid
-
       return pathToPayload(fillInGlobalVariablesInPath(parsed, globalVariables));
     });
 
@@ -682,7 +679,7 @@ export function Plot(props: Props): JSX.Element {
             legendDisplay={legendDisplay}
             onClickPath={onClickPath}
             paths={series}
-            pathsWithMismatchedDataLengths={EmptyPaths /* fixme */}
+            pathsWithMismatchedDataLengths={EmptyPaths}
             saveConfig={saveConfig}
             showLegend={showLegend}
             sidebarDimension={sidebarDimension}

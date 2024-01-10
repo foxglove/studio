@@ -2,12 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Immutable } from "@foxglove/studio";
-import { MessageEvent } from "@foxglove/studio";
+import { Immutable, MessageEvent } from "@foxglove/studio";
 import { MessageBlock } from "@foxglove/studio-base/players/types";
 
 /**
- * BlockCursor tracks the last seen block messages for a given topic and can produce the next
+ * BlockTopicCursor tracks the last seen block messages for a given topic and can produce the next
  * block that has not yet been processed.
  *
  * When block topic data changes, it re-starts _next_.
