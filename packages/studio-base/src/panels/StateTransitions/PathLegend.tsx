@@ -50,9 +50,10 @@ const useStyles = makeStyles()((theme) => ({
         backgroundImage: `linear-gradient(to right, ${theme.palette.action.hover}, ${theme.palette.action.hover})`,
       },
     },
-    [`.${buttonClasses.startIcon}`]: {
+    [`.${buttonClasses.endIcon}`]: {
       opacity: 0.8,
-      marginRight: theme.spacing(0.5),
+      marginLeft: theme.spacing(0.5),
+      marginRight: theme.spacing(-0.75),
     },
   },
 }));
@@ -98,7 +99,7 @@ export const PathLegend = React.memo(function PathLegend(props: {
           >
             <Button
               data-testid="edit-topic-button"
-              startIcon={paths.length === 0 && <Add16Regular />}
+              endIcon={paths.length === 0 && <Add16Regular />}
               onClick={() => {
                 setSelectedPanelIds([panelId]);
                 openPanelSettings();
