@@ -587,6 +587,10 @@ export function Plot(props: Props): JSX.Element {
     }
 
     setSubscriptions(subscriberId, subscriptions);
+
+    return () => {
+      setSubscriptions(subscriberId, []);
+    };
   }, [series, setSubscriptions, subscriberId, globalVariables, xAxisVal, xAxisPath]);
 
   const globalBounds = useTimelineInteractionState(selectGlobalBounds);

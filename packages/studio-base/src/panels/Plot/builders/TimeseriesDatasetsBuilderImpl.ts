@@ -87,7 +87,9 @@ export type UpdateDataAction =
   | UpdateSeriesCurrentAction
   | UpdateSeriesFullAction;
 
-const MAX_CURRENT_DATUMS = 50_000;
+// When accumulating datums into the current buffer we cap each series to this number of datums so
+// we do not grow the memory for accumulated current data indefinitely
+const MAX_CURRENT_DATUMS_PER_SERIES = 50_000;
 
 const compareDatum = (a: Datum, b: Datum) => a.x - b.x;
 
@@ -319,7 +321,7 @@ export class TimeseriesDatasetsBuilderImpl {
         // Limit the total current datums for any series so they do not grow indefinitely
         const cullSize = Math.max(
           0,
-          series.current.length + action.items.length - MAX_CURRENT_DATUMS,
+          series.current.length + action.items.length - MAX_CURRENT_DATUMS_PER_SERIES,
         );
         series.current.splice(0, cullSize);
 
