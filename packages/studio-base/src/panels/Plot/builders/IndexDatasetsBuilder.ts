@@ -15,7 +15,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { PlayerState } from "@foxglove/studio-base/players/types";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
-import { CsvDataset, IDatasetsBuilder } from "./IDatasetsBuilder";
+import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
 import { Datum, isReferenceLinePlotPathType } from "../internalTypes";
 import { PlotConfig } from "../types";
@@ -30,6 +30,8 @@ type SeriesItem = {
   parsed: RosPath;
   dataset: ChartDataset<"scatter", DatumWithReceiveTime[]>;
 };
+
+const emptyPaths = new Set<string>();
 
 export class IndexDatasetsBuilder implements IDatasetsBuilder {
   #seriesByMessagePath = new Map<string, SeriesItem>();
@@ -126,7 +128,7 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
     this.#seriesByMessagePath = newSeries;
   }
 
-  public async getViewportDatasets(): Promise<Dataset[]> {
+  public async getViewportDatasets(): Promise<GetViewportDatasetsResult> {
     const datasets: Dataset[] = [];
     for (const series of this.#seriesByMessagePath.values()) {
       if (!series.enabled) {
@@ -136,7 +138,7 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
       datasets.push(series.dataset);
     }
 
-    return datasets;
+    return { datasets, pathsWithMismatchedDataLengths: emptyPaths };
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {

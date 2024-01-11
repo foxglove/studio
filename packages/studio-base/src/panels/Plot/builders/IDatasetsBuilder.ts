@@ -34,12 +34,17 @@ export type CsvDataset = {
   data: CsvDatum[];
 };
 
+export type GetViewportDatasetsResult = {
+  datasets: Dataset[];
+  pathsWithMismatchedDataLengths: ReadonlySet<string>;
+};
+
 interface IDatasetsBuilder {
   handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
 
   setConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void;
 
-  getViewportDatasets(viewport: Immutable<Viewport>): Promise<Dataset[]>;
+  getViewportDatasets(viewport: Immutable<Viewport>): Promise<GetViewportDatasetsResult>;
 
   getCsvData(): Promise<CsvDataset[]>;
 

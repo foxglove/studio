@@ -19,14 +19,18 @@ import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { TimestampMethod, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { BlockTopicCursor } from "./BlockTopicCursor";
-import { CsvDataset, IDatasetsBuilder, Viewport } from "./IDatasetsBuilder";
+import {
+  CsvDataset,
+  GetViewportDatasetsResult,
+  IDatasetsBuilder,
+  Viewport,
+} from "./IDatasetsBuilder";
 import type {
   DataItem,
   TimeseriesDatasetsBuilderImpl,
   UpdateDataAction,
   SeriesConfigKey,
 } from "./TimeseriesDatasetsBuilderImpl";
-import { Dataset } from "../ChartRenderer";
 import { isReferenceLinePlotPathType } from "../internalTypes";
 import { MathFunction, mathFunctions } from "../mathFunctions";
 import { PlotConfig } from "../types";
@@ -49,6 +53,8 @@ type SeriesItem = {
 const registry = new FinalizationRegistry<Worker>((worker) => {
   worker.terminate();
 });
+
+const emptyPaths = new Set<string>();
 
 export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
   #datasetsBuilderWorker: Worker;
@@ -194,14 +200,17 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
     void this.#datasetsBuilderRemote.setConfig(this.#seriesConfigs);
   }
 
-  public async getViewportDatasets(viewport: Immutable<Viewport>): Promise<Dataset[]> {
+  public async getViewportDatasets(
+    viewport: Immutable<Viewport>,
+  ): Promise<GetViewportDatasetsResult> {
     const dispatch = this.#pendingDataDispatch;
     if (dispatch.length > 0) {
       this.#pendingDataDispatch = [];
       await this.#datasetsBuilderRemote.updateData(dispatch);
     }
 
-    return await this.#datasetsBuilderRemote.getViewportDatasets(viewport);
+    const datasets = await this.#datasetsBuilderRemote.getViewportDatasets(viewport);
+    return { datasets, pathsWithMismatchedDataLengths: emptyPaths };
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {

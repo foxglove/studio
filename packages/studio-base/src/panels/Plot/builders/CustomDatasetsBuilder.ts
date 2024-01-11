@@ -26,8 +26,12 @@ import {
   ValueItem,
   SeriesConfigKey,
 } from "./CustomDatasetsBuilderImpl";
-import { CsvDataset, IDatasetsBuilder, Viewport } from "./IDatasetsBuilder";
-import { Dataset } from "../ChartRenderer";
+import {
+  CsvDataset,
+  GetViewportDatasetsResult,
+  IDatasetsBuilder,
+  Viewport,
+} from "./IDatasetsBuilder";
 import { isReferenceLinePlotPathType } from "../internalTypes";
 import { PlotConfig } from "../types";
 
@@ -246,7 +250,9 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     void this.#datasetsBuilderRemote.setConfig(this.#seriesConfigs);
   }
 
-  public async getViewportDatasets(viewport: Immutable<Viewport>): Promise<Dataset[]> {
+  public async getViewportDatasets(
+    viewport: Immutable<Viewport>,
+  ): Promise<GetViewportDatasetsResult> {
     const dispatch = this.#pendingDataDispatch;
     if (dispatch.length > 0) {
       this.#pendingDataDispatch = [];

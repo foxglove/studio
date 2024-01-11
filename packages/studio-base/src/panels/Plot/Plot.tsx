@@ -62,8 +62,6 @@ import { PlotConfig } from "./types";
 
 export const defaultSidebarDimension = 240;
 
-const EmptyPaths: string[] = [];
-
 const useStyles = makeStyles()((theme) => ({
   tooltip: {
     maxWidth: "none",
@@ -678,7 +676,6 @@ export function Plot(props: Props): JSX.Element {
             legendDisplay={legendDisplay}
             onClickPath={onClickPath}
             paths={series}
-            pathsWithMismatchedDataLengths={EmptyPaths}
             saveConfig={saveConfig}
             showLegend={showLegend}
             sidebarDimension={sidebarDimension}

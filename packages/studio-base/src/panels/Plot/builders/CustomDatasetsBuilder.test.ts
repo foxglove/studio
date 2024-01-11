@@ -141,6 +141,11 @@ describe("CustomDatasetsBuilder", () => {
             timestampMethod: "receiveTime",
             value: "/bar.val",
           },
+          {
+            enabled: true,
+            timestampMethod: "receiveTime",
+            value: "/baz.val",
+          },
         ],
       }),
       {},
@@ -210,27 +215,42 @@ describe("CustomDatasetsBuilder", () => {
               val: 2,
             },
           },
+          {
+            topic: "/baz",
+            schemaName: "baz",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 4,
+            },
+          },
         ],
       }),
     );
 
-    const datasets = await builder.getViewportDatasets({
+    const result = await builder.getViewportDatasets({
       size: { width: 1_000, height: 1_000 },
       bounds: {},
     });
 
-    expect(datasets).toMatchObject([
-      {
-        data: [
-          { x: 0, y: 0 },
-          { x: 1, y: 1 },
-          { x: 2, y: 2 },
-        ],
-        showLine: true,
-        pointRadius: 1.2,
-        fill: false,
-      },
-    ]);
+    expect(result).toEqual({
+      pathsWithMismatchedDataLengths: new Set(["/baz.val"]),
+      datasets: [
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 0 },
+            { x: 1, y: 1 },
+            { x: 2, y: 2 },
+          ],
+          showLine: true,
+          pointRadius: 1.2,
+          fill: false,
+        }),
+        expect.objectContaining({
+          data: [{ x: 0, y: 4 }],
+        }),
+      ],
+    });
   });
 
   it("should build updates from blocks", async () => {
@@ -244,6 +264,12 @@ describe("CustomDatasetsBuilder", () => {
             enabled: true,
             timestampMethod: "receiveTime",
             value: "/bar.val",
+            lineSize: 1.0,
+          },
+          {
+            enabled: true,
+            timestampMethod: "receiveTime",
+            value: "/baz.val",
             lineSize: 1.0,
           },
         ],
@@ -314,28 +340,171 @@ describe("CustomDatasetsBuilder", () => {
             val: 2,
           },
         },
+        {
+          topic: "/baz",
+          schemaName: "baz",
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 0,
+          message: {
+            val: 4,
+          },
+        },
       ]),
     };
 
     builder.handlePlayerState(buildPlayerState({}, [block0]));
     builder.handlePlayerState(buildPlayerState({}, [block0, block1]));
 
-    const datasets = await builder.getViewportDatasets({
+    const result = await builder.getViewportDatasets({
       size: { width: 1_000, height: 1_000 },
       bounds: {},
     });
 
-    expect(datasets).toMatchObject([
-      {
-        data: [
-          { x: 0, y: 0 },
-          { x: 1, y: 1 },
-          { x: 2, y: 2 },
+    expect(result).toEqual({
+      pathsWithMismatchedDataLengths: new Set(["/baz.val"]),
+      datasets: [
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 0 },
+            { x: 1, y: 1 },
+            { x: 2, y: 2 },
+          ],
+          showLine: true,
+          pointRadius: 1.2,
+          fill: false,
+        }),
+        expect.objectContaining({
+          data: [{ x: 0, y: 4 }],
+          showLine: true,
+          pointRadius: 1.2,
+          fill: false,
+        }),
+      ],
+    });
+  });
+
+  it.each(["current", "blocks"] as const)("combines all values from arrays (%s)", async (type) => {
+    const builder = new CustomDatasetsBuilder();
+
+    builder.setXPath(parseRosPath("/foo.values[:].val"));
+    builder.setConfig(
+      buildPlotConfig({
+        paths: [
+          {
+            enabled: true,
+            timestampMethod: "receiveTime",
+            value: "/bar.values[:].val",
+          },
+          {
+            enabled: true,
+            timestampMethod: "receiveTime",
+            value: "/baz.values[:].val",
+          },
         ],
-        showLine: true,
-        pointRadius: 1.2,
-        fill: false,
+      }),
+      {},
+    );
+
+    let latestBlocks: MessageBlock[] = [];
+    const sendMessages = (messages: MessageEvent[]) => {
+      if (type === "current") {
+        builder.handlePlayerState(buildPlayerState({ messages }));
+      } else {
+        latestBlocks = [
+          ...latestBlocks,
+          { sizeInBytes: 0, messagesByTopic: groupByTopic(messages) },
+        ];
+        builder.handlePlayerState(buildPlayerState({}, latestBlocks));
+      }
+    };
+
+    sendMessages([
+      {
+        topic: "/foo",
+        schemaName: "foo",
+        receiveTime: { sec: 0, nsec: 0 },
+        sizeInBytes: 0,
+        message: {
+          values: [{ val: 0 }, { val: 1 }, { val: 2 }],
+        },
+      },
+      {
+        topic: "/foo",
+        schemaName: "foo",
+        receiveTime: { sec: 0, nsec: 0 },
+        sizeInBytes: 0,
+        message: {
+          values: [{ val: 3 }],
+        },
+      },
+      {
+        topic: "/bar",
+        schemaName: "bar",
+        receiveTime: { sec: 0, nsec: 0 },
+        sizeInBytes: 0,
+        message: {
+          values: [{ val: 10 }, { val: 11 }],
+        },
       },
     ]);
+
+    sendMessages([
+      {
+        topic: "/foo",
+        schemaName: "foo",
+        receiveTime: { sec: 0, nsec: 0 },
+        sizeInBytes: 0,
+        message: {
+          values: [{ val: 4 }],
+        },
+      },
+      {
+        topic: "/bar",
+        schemaName: "bar",
+        receiveTime: { sec: 0, nsec: 0 },
+        sizeInBytes: 0,
+        message: {
+          values: [{ val: 12 }, { val: 13 }, { val: 14 }],
+        },
+      },
+      {
+        topic: "/baz",
+        schemaName: "baz",
+        receiveTime: { sec: 0, nsec: 0 },
+        sizeInBytes: 0,
+        message: {
+          values: [{ val: 20 }, { val: 21 }],
+        },
+      },
+    ]);
+
+    const result = await builder.getViewportDatasets({
+      size: { width: 1_000, height: 1_000 },
+      bounds: {},
+    });
+
+    expect(result).toEqual({
+      pathsWithMismatchedDataLengths: new Set(["/baz.values[:].val"]),
+      datasets: [
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 10 },
+            { x: 1, y: 11 },
+            { x: 2, y: 12 },
+            { x: 3, y: 13 },
+            { x: 4, y: 14 },
+          ],
+          showLine: true,
+          pointRadius: 1.2,
+          fill: false,
+        }),
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 20 },
+            { x: 1, y: 21 },
+          ],
+        }),
+      ],
+    });
   });
 });
