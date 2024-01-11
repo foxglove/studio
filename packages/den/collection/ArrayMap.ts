@@ -32,7 +32,7 @@ export class ArrayMap<K, V> {
   /**
    * Store a key/value tuple in the sorted list. If the key already exists, the
    * previous entry is overwritten.
-   * Returns previous value if one already exists at that time.
+   * Returns replaced value if it exists.
    */
   public set(key: K, value: V): V | undefined {
     const index = this.binarySearch(key);
