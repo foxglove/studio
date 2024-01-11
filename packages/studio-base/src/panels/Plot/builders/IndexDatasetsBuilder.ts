@@ -119,7 +119,7 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
       existingSeries.dataset = {
         ...existingSeries.dataset,
         borderColor: color,
-        showLine: path.showLine,
+        showLine: path.showLine ?? true,
         fill: false,
         borderWidth: lineSize,
         pointRadius: lineSize * 1.2,
