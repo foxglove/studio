@@ -351,6 +351,17 @@ export class ChartRenderer {
 
     const out: HoverElement[] = [];
 
+    // sort elements by proximity to the cursor so the closer items are earlier in the list
+    elements.sort((a, b) => {
+      const dxA = pixel.x - a.element.x;
+      const dyA = pixel.y - a.element.y;
+      const dxB = pixel.x - b.element.x;
+      const dyB = pixel.y - b.element.y;
+      const distSquaredA = dxA * dxA + dyA * dyA;
+      const distSquaredB = dxB * dxB + dyB * dyB;
+      return distSquaredA - distSquaredB;
+    });
+
     for (const element of elements) {
       const data = this.#chartInstance.data.datasets[element.datasetIndex]?.data[element.index];
       if (data == undefined || typeof data === "number") {
