@@ -78,7 +78,7 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
         break;
       }
 
-      range.max = Math.max(range.max, series.dataset.data.length);
+      range.max = Math.max(range.max, series.dataset.data.length - 1);
     }
 
     return range;

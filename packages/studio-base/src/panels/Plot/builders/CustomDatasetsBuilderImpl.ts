@@ -203,21 +203,6 @@ export class CustomDatasetsBuilderImpl {
         yBounds = unionBounds1D(yBounds, { min: yValue.value, max: yValue.value });
       }
 
-      const downsampleViewport = {
-        width: viewport.size.width,
-        height: viewport.size.height,
-        bounds: {
-          x: {
-            min: viewport.bounds.x?.min ?? xBounds.min,
-            max: viewport.bounds.x?.max ?? xBounds.max,
-          },
-          y: {
-            min: viewport.bounds.y?.min ?? yBounds.min,
-            max: viewport.bounds.y?.max ?? yBounds.max,
-          },
-        },
-      };
-
       // Downsample scatter is designed for scatter plots without points since it culls values
       // outside of the viewport and these are needed when connecting the points with lines.
       if (dataset.showLine === true) {
@@ -229,6 +214,21 @@ export class CustomDatasetsBuilderImpl {
           });
         }
       } else {
+        const downsampleViewport = {
+          width: viewport.size.width,
+          height: viewport.size.height,
+          bounds: {
+            x: {
+              min: viewport.bounds.x?.min ?? xBounds.min,
+              max: viewport.bounds.x?.max ?? xBounds.max,
+            },
+            y: {
+              min: viewport.bounds.y?.min ?? yBounds.min,
+              max: viewport.bounds.y?.max ?? yBounds.max,
+            },
+          },
+        };
+
         const downsampledIndicies = downsampleScatter(allData, downsampleViewport);
 
         for (const index of downsampledIndicies) {

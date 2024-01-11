@@ -150,18 +150,6 @@ export const LineGraphWithXRange: StoryObj = {
   name: "line graph with x range",
 };
 
-export const LineGraphWithNoTitle: StoryObj = {
-  render: function Story() {
-    return <PlotWrapper config={{ ...exampleConfig, title: undefined }} />;
-  },
-
-  name: "line graph with no title",
-
-  parameters: {
-    colorScheme: "light",
-  },
-};
-
 export const LineGraphWithSettings: StoryObj = {
   render: function Story() {
     return (
@@ -271,6 +259,18 @@ export const InALineGraphWithMultiplePlotsXAxesAreSynced: StoryObj = {
   parameters: {
     colorScheme: "light",
   },
+
+  play: async () => {
+    await delay(100);
+
+    const canvasEl = document.querySelector("canvas");
+    // Zoom is a continuous event, so we need to simulate wheel multiple times
+    if (canvasEl) {
+      for (let i = 0; i < 5; i++) {
+        triggerWheel(canvasEl.parentElement!, 1);
+      }
+    }
+  },
 };
 
 export const LineGraphAfterZoom: StoryObj = {
@@ -343,36 +343,6 @@ export const LongPath: StoryObj = {
   },
 
   name: "long path",
-
-  parameters: {
-    colorScheme: "light",
-  },
-};
-
-export const DisabledPath: StoryObj = {
-  render: function Story() {
-    return (
-      <PlotWrapper
-        config={{
-          ...exampleConfig,
-          paths: [
-            {
-              value: "/some_topic/location.pose.velocity",
-              enabled: false,
-              timestampMethod: "receiveTime",
-            },
-            {
-              value: "/some_topic/location.pose.acceleration",
-              enabled: true,
-              timestampMethod: "receiveTime",
-            },
-          ],
-        }}
-      />
-    );
-  },
-
-  name: "disabled path",
 
   parameters: {
     colorScheme: "light",
@@ -620,37 +590,6 @@ export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
   },
 
   name: "with just max Y value less than minimum value",
-
-  parameters: {
-    colorScheme: "light",
-  },
-};
-
-export const ScatterPlotPlusLineGraphPlusReferenceLine: StoryObj = {
-  render: function Story() {
-    return (
-      <PlotWrapper
-        config={{
-          ...exampleConfig,
-          paths: [
-            {
-              value: "/some_topic/state.items[:].speed",
-              enabled: true,
-              timestampMethod: "receiveTime",
-            },
-            {
-              value: "/some_topic/location.pose.velocity",
-              enabled: true,
-              timestampMethod: "receiveTime",
-            },
-            { value: "3", enabled: true, timestampMethod: "receiveTime" },
-          ],
-        }}
-      />
-    );
-  },
-
-  name: "scatter plot plus line graph plus reference line",
 
   parameters: {
     colorScheme: "light",

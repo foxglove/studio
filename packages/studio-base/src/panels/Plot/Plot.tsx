@@ -109,7 +109,6 @@ const selectSetGlobalBounds = (store: TimelineInteractionStateStore) => store.se
 export function Plot(props: Props): JSX.Element {
   const { saveConfig, config } = props;
   const {
-    title: legacyTitle,
     paths: series,
     showLegend,
     xAxisVal,
@@ -148,17 +147,6 @@ export function Plot(props: Props): JSX.Element {
       },
     });
   }, [saveConfig, setMessagePathDropConfig]);
-
-  // Migrate legacy Plot-specific title setting to new global title setting
-  // https://github.com/foxglove/studio/pull/5225
-  useEffect(() => {
-    if (legacyTitle && (customTitle == undefined || customTitle === "")) {
-      saveConfig({
-        title: undefined,
-        [PANEL_TITLE_CONFIG_KEY]: legacyTitle,
-      } as Partial<PlotConfig>);
-    }
-  }, [customTitle, legacyTitle, saveConfig]);
 
   const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
   const [subscriberId] = useState(() => uuidv4());
