@@ -575,11 +575,15 @@ export function Plot(props: Props): JSX.Element {
     }
 
     setSubscriptions(subscriberId, subscriptions);
+  }, [series, setSubscriptions, subscriberId, globalVariables, xAxisVal, xAxisPath]);
 
+  // Only unsubscribe on unmount so that when the above subscriber effect dependencies change we
+  // don't transition to unsubscribing all to then re-subscribe.
+  useEffect(() => {
     return () => {
       setSubscriptions(subscriberId, []);
     };
-  }, [series, setSubscriptions, subscriberId, globalVariables, xAxisVal, xAxisPath]);
+  }, [subscriberId, setSubscriptions]);
 
   const globalBounds = useTimelineInteractionState(selectGlobalBounds);
   const setGlobalBounds = useTimelineInteractionState(selectSetGlobalBounds);

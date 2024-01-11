@@ -991,11 +991,17 @@ export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
         config={{
           ...exampleConfig,
           paths: [
-            { value: "/preloaded_topic.data", enabled: true, timestampMethod: "receiveTime" },
+            {
+              value: "/preloaded_topic.data",
+              enabled: true,
+              timestampMethod: "receiveTime",
+              lineSize: 2,
+            },
             {
               value: "/preloaded_topic.data.@abs",
               enabled: true,
               timestampMethod: "receiveTime",
+              lineSize: 4,
             },
           ],
         }}
@@ -1004,38 +1010,6 @@ export const PreloadedDataAndItsAbsoluteValue: StoryObj = {
   },
 
   name: "preloaded data and its absolute value",
-
-  parameters: {
-    colorScheme: "light",
-  },
-};
-
-export const DifferentLineSizes: StoryObj = {
-  render: function Story() {
-    return (
-      <PlotWrapper
-        config={{
-          ...exampleConfig,
-          paths: [
-            {
-              value: "/some_topic/location.pose.velocity",
-              enabled: true,
-              timestampMethod: "receiveTime",
-              lineSize: 2.5,
-            },
-            {
-              value: "/some_topic/location.pose.acceleration",
-              enabled: true,
-              showLine: true,
-              timestampMethod: "receiveTime",
-            },
-          ],
-        }}
-      />
-    );
-  },
-
-  name: "different line sizes",
 
   parameters: {
     colorScheme: "light",

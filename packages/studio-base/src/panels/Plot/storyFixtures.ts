@@ -5,7 +5,7 @@
 import * as _ from "lodash-es";
 
 import { fromSec, toSec } from "@foxglove/rostime";
-import { BlockCache, MessageEvent } from "@foxglove/studio-base/players/types";
+import { BlockCache, MessageBlock, MessageEvent } from "@foxglove/studio-base/players/types";
 import { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -190,17 +190,21 @@ const datatypes: RosDatatypes = new Map(
   }),
 );
 
-const getPreloadedMessage = (seconds: number) => ({
+const getPreloadedMessage = (seconds: number): MessageEvent => ({
   topic: "/preloaded_topic",
   receiveTime: fromSec(seconds),
   message: {
     data: Math.pow(seconds, 2),
     header: { stamp: fromSec(seconds - 0.5), frame_id: "", seq: 0 },
   },
+  schemaName: "foo",
+  sizeInBytes: 0,
 });
 
-const emptyBlock = {
-  messagesByTopic: {},
+const emptyBlock: MessageBlock = {
+  messagesByTopic: {
+    "/preloaded_topic": [],
+  },
   sizeInBytes: 0,
   needTopics: new Map(),
 };
