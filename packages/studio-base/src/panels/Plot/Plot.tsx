@@ -253,12 +253,16 @@ export function Plot(props: Props): JSX.Element {
   // the latest player state and can properly initialize if the player state already contains the
   // data for display.
   useEffect(() => {
+    if (!coordinator) {
+      return;
+    }
+
     const unsub = subscribeMessasagePipeline((state) => {
-      coordinator?.handlePlayerState(state.playerState);
+      coordinator.handlePlayerState(state.playerState);
     });
 
     // Subscribing only gets us _new_ updates, so we feed the latest state into the chart
-    coordinator?.handlePlayerState(getMessagePipelineState().playerState);
+    coordinator.handlePlayerState(getMessagePipelineState().playerState);
     return unsub;
   }, [coordinator, getMessagePipelineState, subscribeMessasagePipeline]);
 
@@ -330,8 +334,15 @@ export function Plot(props: Props): JSX.Element {
       return;
     }
 
+    const contentRect = canvasDiv.getBoundingClientRect();
+
     const plotCoordinator = new PlotCoordinator(renderer, datasetsBuilder);
     setCoordinator(plotCoordinator);
+
+    plotCoordinator.setSize({
+      width: contentRect.width,
+      height: contentRect.height,
+    });
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -349,7 +360,6 @@ export function Plot(props: Props): JSX.Element {
 
     return () => {
       resizeObserver.disconnect();
-      plotCoordinator.destroy();
     };
   }, [canvasDiv, datasetsBuilder, renderer]);
 
