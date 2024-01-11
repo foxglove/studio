@@ -9,6 +9,7 @@ import { Immutable, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { downsampleScatter } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
+import { unionBounds1D } from "@foxglove/studio-base/types/Bounds";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { CsvDataset, GetViewportDatasetsResult, Viewport } from "./IDatasetsBuilder";
@@ -157,8 +158,8 @@ export class CustomDatasetsBuilderImpl {
 
       const allData: FullDatum[] = [];
 
-      const xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
-      const yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
+      let xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
+      let yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
 
       for (let idx = 0; idx < series.full.length && idx < this.#xValues.full.length; ++idx) {
         const xValue = this.#xValues.full[idx];
@@ -175,10 +176,8 @@ export class CustomDatasetsBuilderImpl {
           value: yValue.originalValue,
         });
 
-        xBounds.min = Math.min(xBounds.min, xValue.value);
-        xBounds.max = Math.max(xBounds.max, xValue.value);
-        yBounds.min = Math.min(yBounds.min, yValue.value);
-        yBounds.max = Math.max(yBounds.max, yValue.value);
+        xBounds = unionBounds1D(xBounds, { min: xValue.value, max: xValue.value });
+        yBounds = unionBounds1D(yBounds, { min: yValue.value, max: yValue.value });
       }
 
       const fullLength = allData.length;
@@ -197,10 +196,8 @@ export class CustomDatasetsBuilderImpl {
           value: yValue.originalValue,
         });
 
-        xBounds.min = Math.min(xBounds.min, xValue.value);
-        xBounds.max = Math.max(xBounds.max, xValue.value);
-        yBounds.min = Math.min(yBounds.min, yValue.value);
-        yBounds.max = Math.max(yBounds.max, yValue.value);
+        xBounds = unionBounds1D(xBounds, { min: xValue.value, max: xValue.value });
+        yBounds = unionBounds1D(yBounds, { min: yValue.value, max: yValue.value });
       }
 
       const downsampleViewport = {
@@ -218,26 +215,31 @@ export class CustomDatasetsBuilderImpl {
         },
       };
 
-      const downsampledIndicies = downsampleScatter(allData, downsampleViewport);
-
-      // When a series is downsampled the points are disabled as a visual indicator that
-      // data is downsampled.
-      //
-      // If show line is false then we must show points otherwise nothing will be displayed
-      if (downsampledIndicies.length < allData.length && dataset.showLine === true) {
-        dataset.pointRadius = 0;
-      }
-
-      for (const index of downsampledIndicies) {
-        const item = allData[index];
-        if (!item) {
-          continue;
+      // Downsample scatter is designed for scatter plots without points since it culls values
+      // outside of the viewport and these are needed when connecting the points with lines.
+      if (dataset.showLine === true) {
+        for (const item of allData) {
+          dataset.data.push({
+            x: item.x,
+            y: item.y,
+            value: item.value,
+          });
         }
+      } else {
+        const downsampledIndicies = downsampleScatter(allData, downsampleViewport);
 
-        dataset.data.push({
-          x: item.x,
-          y: item.y,
-        });
+        for (const index of downsampledIndicies) {
+          const item = allData[index];
+          if (!item) {
+            continue;
+          }
+
+          dataset.data.push({
+            x: item.x,
+            y: item.y,
+            value: item.value,
+          });
+        }
       }
 
       datasets.push(dataset);
@@ -334,13 +336,10 @@ export class CustomDatasetsBuilderImpl {
         break;
       }
       case "append-current-x": {
-        const lastFullReceiveTime = this.#xValues.full[this.#xValues.full.length]?.receiveTime;
+        const lastFullReceiveTime = this.#xValues.full[this.#xValues.full.length - 1]?.receiveTime;
 
         for (const item of action.items) {
-          if (
-            lastFullReceiveTime != undefined &&
-            compare(item.receiveTime, lastFullReceiveTime) <= 0
-          ) {
+          if (lastFullReceiveTime && compare(item.receiveTime, lastFullReceiveTime) <= 0) {
             continue;
           }
 
@@ -352,8 +351,8 @@ export class CustomDatasetsBuilderImpl {
         this.#xValues.full.push(...action.items);
 
         // trim current data to remove values present in the full data
-        const lastFullReceiveTime = this.#xValues.full[this.#xValues.full.length]?.receiveTime;
-        if (lastFullReceiveTime != undefined) {
+        const lastFullReceiveTime = this.#xValues.full[this.#xValues.full.length - 1]?.receiveTime;
+        if (lastFullReceiveTime) {
           let idx = 0;
           for (const item of this.#xValues.current) {
             if (compare(item.receiveTime, lastFullReceiveTime) > 0) {
@@ -374,13 +373,9 @@ export class CustomDatasetsBuilderImpl {
           return;
         }
 
-        const lastFullReceiveTime = series.full[series.full.length]?.receiveTime;
-
+        const lastFullReceiveTime = series.full[series.full.length - 1]?.receiveTime;
         for (const item of action.items) {
-          if (
-            lastFullReceiveTime != undefined &&
-            compare(item.receiveTime, lastFullReceiveTime) <= 0
-          ) {
+          if (lastFullReceiveTime && compare(item.receiveTime, lastFullReceiveTime) <= 0) {
             continue;
           }
 
@@ -399,7 +394,7 @@ export class CustomDatasetsBuilderImpl {
 
         // trim current data to remove values present in the full data
         const lastFullReceiveTime = series.full[series.full.length - 1]?.receiveTime;
-        if (lastFullReceiveTime != undefined) {
+        if (lastFullReceiveTime) {
           let idx = 0;
           for (const item of series.current) {
             if (compare(item.receiveTime, lastFullReceiveTime) > 0) {
