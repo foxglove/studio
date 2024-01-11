@@ -15,7 +15,7 @@ import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/Me
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState } from "@foxglove/studio-base/players/types";
-import { getLineColor } from "@foxglove/studio-base/util/plotColors";
+import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { TimestampMethod, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { BlockTopicCursor } from "./BlockTopicCursor";
@@ -40,6 +40,8 @@ type SeriesItem = {
   messagePath: string;
   parsed: RosPath;
   color: string;
+  /** Used for points when lines are also shown to provide extra contrast */
+  contrastColor: string;
   timestampMethod: TimestampMethod;
   showLine: boolean;
   lineSize: number;
@@ -154,7 +156,11 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
     return { min, max };
   }
 
-  public setConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void {
+  public setConfig(
+    config: Immutable<PlotConfig>,
+    colorScheme: "light" | "dark",
+    globalVariables: GlobalVariables,
+  ): void {
     this.#seriesConfigs = filterMap(
       config.paths,
       (path, idx): Immutable<SeriesItem> | undefined => {
@@ -181,12 +187,13 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
         // It is important to keep the existing block cursor for the same series to avoid re-processing
         // the blocks again when the series remains.
         const existing = this.#seriesConfigs.find((item) => _.isEqual(item.key, key));
-
+        const color = getLineColor(path.color, idx);
         return {
           key,
           messagePath: path.value,
           parsed: filledParsed,
-          color: getLineColor(path.color, idx),
+          color,
+          contrastColor: getContrastColor(colorScheme, color),
           lineSize: path.lineSize ?? 1.0,
           timestampMethod: path.timestampMethod,
           showLine: path.showLine ?? true,

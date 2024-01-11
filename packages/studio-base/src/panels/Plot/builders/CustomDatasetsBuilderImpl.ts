@@ -35,6 +35,8 @@ export type SeriesConfig = {
   key: SeriesConfigKey;
   messagePath: string;
   color: string;
+  /** Used for points when lines are also shown to provide extra contrast */
+  contrastColor: string;
   showLine: boolean;
   lineSize: number;
   enabled: boolean;
@@ -141,14 +143,15 @@ export class CustomDatasetsBuilderImpl {
         continue;
       }
 
+      const { showLine, color, contrastColor } = series.config;
       const dataset: Dataset = {
-        borderColor: series.config.color,
-        showLine: series.config.showLine,
+        borderColor: color,
+        showLine,
         fill: false,
         borderWidth: series.config.lineSize,
         pointRadius: series.config.lineSize * 1.2,
         pointHoverRadius: 3,
-        pointBackgroundColor: series.config.color,
+        pointBackgroundColor: showLine ? contrastColor : color,
         pointBorderColor: "transparent",
         data: [],
       };

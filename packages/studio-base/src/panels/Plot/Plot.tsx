@@ -83,6 +83,12 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   canvasDiv: { width: "100%", height: "100%", overflow: "hidden", cursor: "crosshair" },
+  verticalBarWrapper: {
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    position: "relative",
+  },
 }));
 
 type Props = {
@@ -240,8 +246,8 @@ export function Plot(props: Props): JSX.Element {
   const { globalVariables } = useGlobalVariables();
 
   useEffect(() => {
-    coordinator?.handleConfig(config, globalVariables);
-  }, [coordinator, config, globalVariables]);
+    coordinator?.handleConfig(config, theme.palette.mode, globalVariables);
+  }, [coordinator, config, globalVariables, theme.palette.mode]);
 
   // This effect must come after the one above it so the coordinator gets the latest config before
   // the latest player state and can properly initialize if the player state already contains the
@@ -686,6 +692,33 @@ export function Plot(props: Props): JSX.Element {
             hoveredValuesBySeriesIndex={hoveredValuesBySeriesIndex}
           />
         )}
+        <Tooltip
+          arrow={false}
+          classes={{ tooltip: classes.tooltip }}
+          open={tooltipContent != undefined}
+          placement="right"
+          title={tooltipContent ?? <></>}
+          disableInteractive
+          followCursor
+          TransitionComponent={Fade}
+          TransitionProps={{ timeout: 0 }}
+        >
+          <div className={classes.verticalBarWrapper}>
+            <div
+              className={classes.canvasDiv}
+              ref={setCanvasDiv}
+              onWheel={onWheel}
+              onMouseMove={onMouseMove}
+              onMouseOut={onMouseOut}
+              onClick={onClick}
+            />
+            <VerticalBars
+              coordinator={coordinator}
+              hoverComponentId={subscriberId}
+              xAxisIsPlaybackTime={xAxisVal === "timestamp"}
+            />
+          </div>
+        </Tooltip>
         {showResetViewButton && (
           <div className={classes.resetZoomButton}>
             <Button
@@ -698,33 +731,8 @@ export function Plot(props: Props): JSX.Element {
             </Button>
           </div>
         )}
-        <Tooltip
-          arrow={false}
-          classes={{ tooltip: classes.tooltip }}
-          open={tooltipContent != undefined}
-          placement="right"
-          title={tooltipContent ?? <></>}
-          disableInteractive
-          followCursor
-          TransitionComponent={Fade}
-          TransitionProps={{ timeout: 0 }}
-        >
-          <div
-            className={classes.canvasDiv}
-            ref={setCanvasDiv}
-            onWheel={onWheel}
-            onMouseMove={onMouseMove}
-            onMouseOut={onMouseOut}
-            onClick={onClick}
-          />
-        </Tooltip>
         <PanelContextMenu getItems={getPanelContextMenuItems} />
       </Stack>
-      <VerticalBars
-        coordinator={coordinator}
-        hoverComponentId={subscriberId}
-        xAxisIsPlaybackTime={xAxisVal === "timestamp"}
-      />
       <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
     </Stack>
   );

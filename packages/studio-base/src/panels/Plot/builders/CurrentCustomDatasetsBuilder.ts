@@ -14,7 +14,7 @@ import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/Me
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState } from "@foxglove/studio-base/players/types";
-import { getLineColor } from "@foxglove/studio-base/util/plotColors";
+import { getLineColor, getContrastColor } from "@foxglove/studio-base/util/plotColors";
 
 import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
@@ -137,7 +137,11 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     this.#pathsWithMismatchedDataLengths.clear();
   }
 
-  public setConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void {
+  public setConfig(
+    config: Immutable<PlotConfig>,
+    colorScheme: "light" | "dark",
+    globalVariables: GlobalVariables,
+  ): void {
     // Make a new map so we drop series which are no longer present
     const newSeries = new Map();
 
@@ -168,16 +172,17 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
 
       const color = getLineColor(path.color, idx);
       const lineSize = path.lineSize ?? 1.0;
+      const showLine = path.showLine ?? true;
 
       existingSeries.dataset = {
         ...existingSeries.dataset,
         borderColor: color,
-        showLine: path.showLine ?? true,
+        showLine,
         fill: false,
         borderWidth: lineSize,
         pointRadius: lineSize * 1.2,
         pointHoverRadius: 3,
-        pointBackgroundColor: color,
+        pointBackgroundColor: showLine ? getContrastColor(colorScheme, color) : color,
         pointBorderColor: "transparent",
       };
 

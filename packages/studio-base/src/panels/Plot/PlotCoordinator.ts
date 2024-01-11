@@ -135,7 +135,11 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#queueDispatchRender();
   }
 
-  public handleConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void {
+  public handleConfig(
+    config: Immutable<PlotConfig>,
+    colorScheme: "light" | "dark",
+    globalVariables: GlobalVariables,
+  ): void {
     this.#isTimeseriesPlot = config.xAxisVal === "timestamp";
     if (!this.#isTimeseriesPlot) {
       this.#currentSeconds = undefined;
@@ -194,7 +198,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     // Config changes to yBounds always takes precedence over user interaction changes like pan/zoom
     this.#updateAction.yBounds = this.#configBounds.y;
 
-    this.#datasetsBuilder.setConfig(config, globalVariables);
+    this.#datasetsBuilder.setConfig(config, colorScheme, globalVariables);
     this.#queueDispatchRender();
   }
 
