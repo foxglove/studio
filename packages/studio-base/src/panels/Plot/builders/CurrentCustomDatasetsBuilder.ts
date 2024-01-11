@@ -16,7 +16,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { PlayerState } from "@foxglove/studio-base/players/types";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
-import { CsvDataset, IDatasetsBuilder } from "./IDatasetsBuilder";
+import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
 import { OriginalValue, Datum, isReferenceLinePlotPathType } from "../internalTypes";
 import { PlotConfig } from "../types";
@@ -38,6 +38,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   #xValues: number[] = [];
 
   #seriesByMessagePath = new Map<string, SeriesItem>();
+  #pathsWithMismatchedDataLengths = new Set<string>();
 
   #range: Bounds1D = { min: 0, max: 0 };
 
@@ -79,10 +80,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       break;
     }
 
-    if (this.#xValues.length === 0) {
-      return;
-    }
-
     const range: Bounds1D = { min: 0, max: 0 };
     for (const series of this.#seriesByMessagePath.values()) {
       // loop over the events backwards and once we find our first matching topic
@@ -110,6 +107,12 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
           };
         });
 
+        if (pathItems.length === this.#xValues.length) {
+          this.#pathsWithMismatchedDataLengths.delete(series.messagePath);
+        } else {
+          this.#pathsWithMismatchedDataLengths.add(series.messagePath);
+        }
+
         series.dataset.data = pathItems;
 
         break;
@@ -131,6 +134,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     for (const series of this.#seriesByMessagePath.values()) {
       series.dataset.data = [];
     }
+    this.#pathsWithMismatchedDataLengths.clear();
   }
 
   public setConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void {
@@ -183,7 +187,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     this.#seriesByMessagePath = newSeries;
   }
 
-  public async getViewportDatasets(): Promise<Dataset[]> {
+  public async getViewportDatasets(): Promise<GetViewportDatasetsResult> {
     const datasets: Dataset[] = [];
     for (const series of this.#seriesByMessagePath.values()) {
       if (!series.enabled) {
@@ -193,7 +197,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       datasets.push(series.dataset);
     }
 
-    return datasets;
+    return { datasets, pathsWithMismatchedDataLengths: this.#pathsWithMismatchedDataLengths };
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {

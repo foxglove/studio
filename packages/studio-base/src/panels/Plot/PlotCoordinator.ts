@@ -32,6 +32,9 @@ type EventTypes = {
 
   /** Current values changed (for displaying in the legend) */
   currentValuesChanged(values: readonly unknown[]): void;
+
+  /** Paths with mismatched data lengths were detected */
+  pathsWithMismatchedDataLengthsChanged(pathsWithMismatchedDataLengths: string[]): void;
 };
 
 /**
@@ -321,8 +324,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#viewport.bounds.x = this.#getXBounds();
     this.#viewport.bounds.y = this.#interactionBounds?.y ?? this.#configBounds.y;
 
-    const datasets = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
-    this.#latestXScale = await this.#renderer.updateDatasets(datasets);
+    const result = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
+    this.#latestXScale = await this.#renderer.updateDatasets(result.datasets);
     this.emit("xScaleChanged", this.#latestXScale);
+    this.emit("pathsWithMismatchedDataLengthsChanged", result.pathsWithMismatchedDataLengths);
   }
 }

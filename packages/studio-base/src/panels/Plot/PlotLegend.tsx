@@ -33,7 +33,6 @@ type Props = Immutable<{
   legendDisplay: "floating" | "top" | "left";
   onClickPath: (index: number) => void;
   paths: PlotPath[];
-  pathsWithMismatchedDataLengths: string[];
   saveConfig: SaveConfig<PlotConfig>;
   showLegend: boolean;
   sidebarDimension: number;
@@ -143,13 +142,14 @@ const useStyles = makeStyles<void, "grid" | "toggleButton" | "toggleButtonFloati
   }),
 );
 
+const emptyPaths: string[] = [];
+
 function PlotLegendComponent(props: Props): JSX.Element {
   const {
     coordinator,
     legendDisplay,
     onClickPath,
     paths,
-    pathsWithMismatchedDataLengths,
     saveConfig,
     showLegend,
     sidebarDimension,
@@ -212,6 +212,22 @@ function PlotLegendComponent(props: Props): JSX.Element {
     },
     [saveConfig],
   );
+
+  const [pathsWithMismatchedDataLengths, setPathsWithMismatchedDataLengths] =
+    useState<string[]>(emptyPaths);
+  useEffect(() => {
+    if (!coordinator) {
+      return;
+    }
+    const handler = (newPaths: readonly string[]) => {
+      setPathsWithMismatchedDataLengths([...newPaths]);
+    };
+    coordinator.on("pathsWithMismatchedDataLengthsChanged", handler);
+    return () => {
+      coordinator.off("pathsWithMismatchedDataLengthsChanged", handler);
+      setPathsWithMismatchedDataLengths(emptyPaths);
+    };
+  }, [coordinator]);
 
   const [currentValuesBySeriesIndex, setCurrentValuesBySeriesIndex] = useState<
     unknown[] | undefined

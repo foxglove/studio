@@ -11,7 +11,7 @@ import { downsampleScatter } from "@foxglove/studio-base/components/TimeBasedCha
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
-import { CsvDataset, Viewport } from "./IDatasetsBuilder";
+import { CsvDataset, GetViewportDatasetsResult, Viewport } from "./IDatasetsBuilder";
 import type { Dataset } from "../ChartRenderer";
 import { Datum, OriginalValue } from "../internalTypes";
 
@@ -132,8 +132,9 @@ export class CustomDatasetsBuilderImpl {
     this.#seriesByMessagePath = newSeries;
   }
 
-  public getViewportDatasets(viewport: Immutable<Viewport>): Dataset[] {
+  public getViewportDatasets(viewport: Immutable<Viewport>): GetViewportDatasetsResult {
     const datasets: Dataset[] = [];
+    const pathsWithMismatchedDataLengths = new Set<string>();
     for (const series of this.#seriesByMessagePath.values()) {
       if (!series.config.enabled) {
         continue;
@@ -240,9 +241,16 @@ export class CustomDatasetsBuilderImpl {
       }
 
       datasets.push(dataset);
+
+      if (
+        this.#xValues.full.length !== series.full.length ||
+        this.#xValues.current.length !== series.current.length
+      ) {
+        pathsWithMismatchedDataLengths.add(series.config.messagePath);
+      }
     }
 
-    return datasets;
+    return { datasets, pathsWithMismatchedDataLengths };
   }
 
   public getCsvData(): CsvDataset[] {
