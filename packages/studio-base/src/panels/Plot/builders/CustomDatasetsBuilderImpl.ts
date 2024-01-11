@@ -12,10 +12,12 @@ import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types"
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { CsvDataset, GetViewportDatasetsResult, Viewport } from "./IDatasetsBuilder";
-import type { Dataset, Datum } from "../ChartRenderer";
+import type { Dataset } from "../ChartRenderer";
+import { Datum, OriginalValue } from "../internalTypes";
 
 export type ValueItem = {
   value: number;
+  originalValue: OriginalValue;
   receiveTime: Time;
 };
 
@@ -170,6 +172,7 @@ export class CustomDatasetsBuilderImpl {
           y: yValue.value,
           index: idx,
           receiveTime: xValue.receiveTime,
+          value: yValue.originalValue,
         });
 
         xBounds.min = Math.min(xBounds.min, xValue.value);
@@ -191,6 +194,7 @@ export class CustomDatasetsBuilderImpl {
           y: yValue.value,
           index: idx + fullLength,
           receiveTime: xValue.receiveTime,
+          value: yValue.originalValue,
         });
 
         xBounds.min = Math.min(xBounds.min, xValue.value);
@@ -270,6 +274,7 @@ export class CustomDatasetsBuilderImpl {
           y: yValue.value,
           index: idx,
           receiveTime: xValue.receiveTime,
+          value: yValue.originalValue,
         });
       }
 
@@ -286,6 +291,7 @@ export class CustomDatasetsBuilderImpl {
           y: yValue.value,
           index: idx + fullLength,
           receiveTime: xValue.receiveTime,
+          value: yValue.originalValue,
         });
       }
 

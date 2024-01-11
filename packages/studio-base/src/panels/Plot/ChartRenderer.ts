@@ -13,6 +13,8 @@ import { Bounds, Bounds1D } from "@foxglove/studio-base/types/Bounds";
 import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 import { fontMonospace } from "@foxglove/theme";
 
+import { OriginalValue } from "./internalTypes";
+
 export type Scale = {
   min: number;
   max: number;
@@ -46,7 +48,7 @@ export type InteractionEvent =
   | PanMoveInteractionEvent
   | PanEndInteractionEvent;
 
-export type Datum = ScatterDataPoint;
+export type Datum = ScatterDataPoint & { value?: OriginalValue };
 export type Dataset = ChartDataset<"scatter", Datum[]>;
 
 type ChartType = Chart<"scatter", Datum[]>;

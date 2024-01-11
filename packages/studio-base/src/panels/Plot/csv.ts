@@ -10,10 +10,10 @@ import { CsvDataset } from "./builders/IDatasetsBuilder";
 import { PlotXAxisVal } from "./internalTypes";
 
 function getCSVRow(label: string, data: CsvDataset["data"][0]) {
-  const { x, y, receiveTime, headerStamp } = data;
+  const { x, receiveTime, headerStamp, value } = data;
   const receiveTimeFloat = formatTimeRaw(receiveTime);
   const stampTime = headerStamp ? formatTimeRaw(headerStamp) : "";
-  return [x, receiveTimeFloat, stampTime, label, y];
+  return [x, receiveTimeFloat, stampTime, label, value];
 }
 
 const getCSVColName = (xAxisVal: PlotXAxisVal): string => {

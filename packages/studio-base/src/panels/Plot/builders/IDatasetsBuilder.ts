@@ -8,6 +8,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import type { PlayerState } from "@foxglove/studio-base/players/types";
 
 import type { Dataset } from "../ChartRenderer";
+import { OriginalValue } from "../internalTypes";
 import { PlotConfig } from "../types";
 
 type CsvDatum = {
@@ -15,6 +16,7 @@ type CsvDatum = {
   y: number;
   receiveTime: Time;
   headerStamp?: Time;
+  value: OriginalValue;
 };
 
 type Size = { width: number; height: number };

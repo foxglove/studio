@@ -16,7 +16,8 @@ import { unionBounds1D } from "@foxglove/studio-base/types/Bounds";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { CsvDataset, Viewport } from "./IDatasetsBuilder";
-import type { Dataset, Datum } from "../ChartRenderer";
+import type { Dataset } from "../ChartRenderer";
+import { Datum } from "../internalTypes";
 
 export type DataItem = Datum & {
   receiveTime: Time;
@@ -148,6 +149,7 @@ export class TimeseriesDatasetsBuilderImpl {
           y: NaN,
           index: 0,
           receiveTime: { sec: 0, nsec: 0 },
+          value: NaN,
         });
         allData.push(...series.current);
       }
@@ -250,6 +252,7 @@ export class TimeseriesDatasetsBuilderImpl {
         dataset.data.push({
           x: item.x,
           y: item.y,
+          value: item.value,
         });
       }
 
@@ -334,6 +337,7 @@ export class TimeseriesDatasetsBuilderImpl {
             y: item.y,
             receiveTime: item.receiveTime,
             headerStamp: item.headerStamp,
+            value: item.value,
           });
         }
 
@@ -356,6 +360,7 @@ export class TimeseriesDatasetsBuilderImpl {
             y: item.y,
             receiveTime: item.receiveTime,
             headerStamp: item.headerStamp,
+            value: item.value,
           });
         }
 

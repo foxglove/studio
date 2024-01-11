@@ -4,6 +4,7 @@
 
 import { ChartDataset } from "chart.js";
 
+import { filterMap } from "@foxglove/den/collection";
 import { toSec, isTime } from "@foxglove/rostime";
 import { Immutable, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
@@ -17,7 +18,7 @@ import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
 import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
-import { Datum, isReferenceLinePlotPathType } from "../internalTypes";
+import { OriginalValue, Datum, isReferenceLinePlotPathType } from "../internalTypes";
 import { PlotConfig } from "../types";
 
 type DatumWithReceiveTime = Datum & {
@@ -62,6 +63,10 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
 
       this.#xValues = [];
       for (const item of items) {
+        if (!isChartValue(item)) {
+          continue;
+        }
+
         const chartValue = getChartValue(item);
         if (chartValue == undefined) {
           continue;
@@ -86,13 +91,19 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
         }
 
         const items = simpleGetMessagePathDataItems(msgEvent, series.parsed);
-        const pathItems = items.map((item, idx) => {
+
+        const pathItems = filterMap(items, (item, idx) => {
+          if (!isChartValue(item)) {
+            return;
+          }
+
           const chartValue = getChartValue(item);
 
           return {
             x: this.#xValues[idx] ?? NaN,
             y: chartValue ?? NaN,
             receiveTime: msgEvent.receiveTime,
+            value: item,
           };
         });
 
@@ -210,7 +221,25 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   }
 }
 
-function getChartValue(value: unknown): number | undefined {
+function isChartValue(value: unknown): value is OriginalValue {
+  switch (typeof value) {
+    case "bigint":
+    case "boolean":
+    case "number":
+    case "string":
+      return true;
+    case "object":
+      if (isTime(value)) {
+        return true;
+      }
+      return false;
+    default:
+      return false;
+  }
+  return false;
+}
+
+function getChartValue(value: OriginalValue): number | undefined {
   switch (typeof value) {
     case "bigint":
       return Number(value);

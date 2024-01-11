@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
-import { add as addTimes, fromSec } from "@foxglove/rostime";
+import { add as addTimes, fromSec, isTime, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
@@ -389,9 +389,12 @@ export function Plot(props: Props): JSX.Element {
       const tooltipItems: TimeBasedChartTooltipData[] = [];
 
       for (const element of elements) {
+        const value = element.data.value ?? element.data.y;
+        const tooltipValue = typeof value === "object" && isTime(value) ? toSec(value) : value;
+
         tooltipItems.push({
           datasetIndex: element.datasetIndex,
-          value: element.data.y,
+          value: tooltipValue,
         });
       }
 
@@ -474,7 +477,7 @@ export function Plot(props: Props): JSX.Element {
     return activeTooltip ? (
       <TimeBasedChartTooltipContent
         content={activeTooltip.data}
-        multiDataset={numSeries > 0}
+        multiDataset={numSeries > 1}
         colorsByDatasetIndex={colorsByDatasetIndex}
         labelsByDatasetIndex={labelsByDatasetIndex}
       />
