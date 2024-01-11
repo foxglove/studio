@@ -18,27 +18,6 @@ export type Bounds = {
 };
 
 /**
- * Creates inverted bounds with values set to extremes to simplify calculating the union
- * with a series of other bounds.
- */
-export function makeInvertedBounds(): Bounds {
-  return {
-    x: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },
-    y: { min: Number.MAX_SAFE_INTEGER, max: Number.MIN_SAFE_INTEGER },
-  };
-}
-
-/**
- * Finds the union of two rectangular bounds.
- */
-export function unionBounds(a: Immutable<Bounds>, b: Immutable<Bounds>): Bounds {
-  return {
-    x: unionBounds1D(a.x, b.x),
-    y: unionBounds1D(a.y, b.y),
-  };
-}
-
-/**
  * Find the union of two 1D bounds.
  */
 export function unionBounds1D(a: Immutable<Bounds1D>, b: Immutable<Bounds1D>): Bounds1D {
