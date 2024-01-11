@@ -4,7 +4,7 @@
 
 import * as _ from "lodash-es";
 
-import { fromSec } from "@foxglove/rostime";
+import { fromSec, toSec } from "@foxglove/rostime";
 import { BlockCache, MessageEvent } from "@foxglove/studio-base/players/types";
 import { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -238,7 +238,10 @@ export const fixture: Fixture = {
   activeData: {
     startTime: { sec: 0, nsec: 202050 },
     endTime: { sec: 24, nsec: 999997069 },
-    currentTime: { sec: 0, nsec: 750000000 },
+    // In a real player, currentTime should be >= all the message receiveTimes in the latest frame
+    currentTime: _.maxBy([...locationMessages, ...otherStateMessages], (msg) =>
+      toSec(msg.header.stamp),
+    )?.header.stamp,
     isPlaying: false,
     speed: 0.2,
   },
