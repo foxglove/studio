@@ -327,6 +327,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     const result = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
     this.#latestXScale = await this.#renderer.updateDatasets(result.datasets);
     this.emit("xScaleChanged", this.#latestXScale);
-    this.emit("pathsWithMismatchedDataLengthsChanged", result.pathsWithMismatchedDataLengths);
+    this.emit("pathsWithMismatchedDataLengthsChanged", [...result.pathsWithMismatchedDataLengths]);
   }
 }
