@@ -168,4 +168,11 @@ describe("ArrayMap", () => {
       i++;
     }
   });
+
+  it("does not return referentially the same object from set when replacing", () => {
+    const list = new ArrayMap<number, { a: number }>();
+    list.set(1, { a: 1 });
+    const prev = list.set(1, { a: 2 });
+    expect(prev).not.toBe(list.at(list.binarySearch(1)));
+  });
 });

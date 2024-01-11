@@ -7,13 +7,6 @@ import { mat4, vec3, quat, ReadonlyMat4, ReadonlyVec3, ReadonlyQuat } from "gl-m
 import { Pose, getRotationNoScaling, mat4Identity, quatIdentity, vec3Identity } from "./geometry";
 
 /**
- * temp variables declared here to avoid unnecessary allocations and
- * subsequent garbage collection in high frequency operations
- */
-const tempVec3: vec3 = [0, 0, 0];
-const tempQuat: quat = [0, 0, 0, 0];
-
-/**
  * Transform represents a position and rotation in 3D space. It can be set and
  * accessed using either Vec3/Quat or Mat4, and these different representations
  * are automatically kept in sync.
@@ -63,30 +56,10 @@ export class Transform {
     return this;
   }
 
-  /**
-   * Used to update the position without needing to allocate another array.
-   */
-  public updatePosition(x: number, y: number, z: number): this {
-    tempVec3[0] = x;
-    tempVec3[1] = y;
-    tempVec3[2] = z;
-    return this.setPosition(tempVec3);
-  }
-
   public setRotation(rotation: ReadonlyQuat): this {
     quat.normalize(this.#rotation, rotation);
     mat4.fromRotationTranslation(this.#matrix, this.#rotation, this.#position);
     return this;
-  }
-  /**
-   * Used to update the rotation without needing to allocate another array.
-   */
-  public updateRotation(x: number, y: number, z: number, w: number): this {
-    tempQuat[0] = x;
-    tempQuat[1] = y;
-    tempQuat[2] = z;
-    tempQuat[3] = w;
-    return this.setRotation(tempQuat);
   }
 
   /**
@@ -94,7 +67,7 @@ export class Transform {
    * calling setPosition and setRotation separately, since we only need to
    * update the matrix once
    */
-  public setPositionRotation(position: ReadonlyVec3, rotation: ReadonlyQuat): this {
+  public setPositionRotation(position: vec3, rotation: quat): this {
     vec3.copy(this.#position, position);
     quat.normalize(this.#rotation, rotation);
     mat4.fromRotationTranslation(this.#matrix, this.#rotation, this.#position);
@@ -152,6 +125,10 @@ export class Transform {
     return new Transform(vec3Identity(), quatIdentity());
   }
 
+  public static Empty(): Transform {
+    return new Transform();
+  }
+
   /**
    * Interpolate between two rigid body transforms using linear interpolation on
    * the translation vector and spherical linear interpolation on the rotation
@@ -169,8 +146,4 @@ export class Transform {
     out.setPositionRotation(out.#position, out.#rotation);
     return out;
   }
-}
-
-export function initTransform(): Transform {
-  return new Transform();
 }

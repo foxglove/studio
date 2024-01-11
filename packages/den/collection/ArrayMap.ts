@@ -36,13 +36,13 @@ export class ArrayMap<K, V> {
    */
   public set(key: K, value: V): [K, V] | undefined {
     const index = this.binarySearch(key);
+    const newEntry: [K, V] = [key, value];
     if (index >= 0) {
       const existingEntry = this.#list[index];
-      this.#list[index]![1] = value;
+      this.#list[index] = newEntry;
       return existingEntry;
     } else {
       const greaterThanIndex = ~index;
-      const newEntry: [K, V] = [key, value];
       if (greaterThanIndex >= this.#list.length) {
         this.#list.push(newEntry);
       } else {

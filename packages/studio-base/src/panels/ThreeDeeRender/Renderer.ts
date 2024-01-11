@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import { quat, vec3 } from "gl-matrix";
 import i18next from "i18next";
 import { produce } from "immer";
 import * as THREE from "three";
@@ -87,7 +88,7 @@ import {
   CoordinateFrame,
   DEFAULT_MAX_CAPACITY_PER_FRAME,
   TransformTree,
-  initTransform,
+  Transform,
 } from "./transforms";
 import { InterfaceMode } from "./types";
 
@@ -121,9 +122,15 @@ const ADD_TRANSFORM_ERROR = "ADD_TRANSFORM_ERROR";
 // An extensionId for creating the top-level settings nodes such as "Topics" and
 // "Custom Layers"
 const RENDERER_ID = "foxglove.Renderer";
-
+/**
+ * temp variables declared here to avoid unnecessary allocations and
+ * subsequent garbage collection in high frequency operations
+ */
 const tempColor = new THREE.Color();
 const tempVec2 = new THREE.Vector2();
+// for transforms
+const tempVec3: vec3 = [0, 0, 0];
+const tempQuat: quat = [0, 0, 0, 1];
 
 // We use a patched version of THREE.js where the internal WebGLShaderCache class has been
 // modified to allow caching based on `vertexShaderKey` and/or `fragmentShaderKey` instead of
@@ -205,12 +212,12 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   public modelCache: ModelCache;
 
   /**
-   * Max capacity should be chosen to be at least a several multiples of
-   * the CoordinateFrame transform max capacity. So that it can store a
+   * Max capacity should be chosen to be at least several multiples of
+   * the CoordinateFrame transform max capacity. So that it can store
    * several coordinate frames being emptied.
-   * It's mostly just important to not let this grow unbounded.
+   * It's mostly important to not let this grow unbounded.
    */
-  #transformPool = new ObjectPool(initTransform, {
+  #transformPool = new ObjectPool(Transform.Empty, {
     maxCapacity: 5 * DEFAULT_MAX_CAPACITY_PER_FRAME,
   });
   public transformTree = new TransformTree(this.#transformPool);
@@ -1061,9 +1068,17 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     const t = translation;
     const q = rotation;
 
+    tempVec3[0] = t.x;
+    tempVec3[1] = t.y;
+    tempVec3[2] = t.z;
+
+    tempQuat[0] = q.x;
+    tempQuat[1] = q.y;
+    tempQuat[2] = q.z;
+    tempQuat[3] = q.w;
+
     const transform = this.#transformPool.acquire();
-    transform.updatePosition(t.x, t.y, t.z);
-    transform.updateRotation(q.x, q.y, q.z, q.w);
+    transform.setPositionRotation(tempVec3, tempQuat);
     const status = this.transformTree.addTransform(childFrameId, parentFrameId, stamp, transform);
 
     if (status === AddTransformResult.UPDATED) {
