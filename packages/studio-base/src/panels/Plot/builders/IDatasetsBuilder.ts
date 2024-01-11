@@ -44,7 +44,11 @@ export type GetViewportDatasetsResult = {
 interface IDatasetsBuilder {
   handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
 
-  setConfig(config: Immutable<PlotConfig>, globalVariables: GlobalVariables): void;
+  setConfig(
+    config: Immutable<PlotConfig>,
+    colorScheme: "light" | "dark",
+    globalVariables: GlobalVariables,
+  ): void;
 
   getViewportDatasets(viewport: Immutable<Viewport>): Promise<GetViewportDatasetsResult>;
 

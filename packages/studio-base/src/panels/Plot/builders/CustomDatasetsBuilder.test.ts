@@ -148,6 +148,7 @@ describe("CustomDatasetsBuilder", () => {
           },
         ],
       }),
+      "light",
       {},
     );
 
@@ -238,16 +239,16 @@ describe("CustomDatasetsBuilder", () => {
       datasets: [
         expect.objectContaining({
           data: [
-            { x: 0, y: 0 },
-            { x: 1, y: 1 },
-            { x: 2, y: 2 },
+            { x: 0, y: 0, value: 0 },
+            { x: 1, y: 1, value: 1 },
+            { x: 2, y: 2, value: 2 },
           ],
           showLine: true,
           pointRadius: 1.2,
           fill: false,
         }),
         expect.objectContaining({
-          data: [{ x: 0, y: 4 }],
+          data: [{ x: 0, y: 4, value: 4 }],
         }),
       ],
     });
@@ -274,6 +275,7 @@ describe("CustomDatasetsBuilder", () => {
           },
         ],
       }),
+      "light",
       {},
     );
 
@@ -365,16 +367,16 @@ describe("CustomDatasetsBuilder", () => {
       datasets: [
         expect.objectContaining({
           data: [
-            { x: 0, y: 0 },
-            { x: 1, y: 1 },
-            { x: 2, y: 2 },
+            { x: 0, y: 0, value: 0 },
+            { x: 1, y: 1, value: 1 },
+            { x: 2, y: 2, value: 2 },
           ],
           showLine: true,
           pointRadius: 1.2,
           fill: false,
         }),
         expect.objectContaining({
-          data: [{ x: 0, y: 4 }],
+          data: [{ x: 0, y: 4, value: 4 }],
           showLine: true,
           pointRadius: 1.2,
           fill: false,
@@ -402,6 +404,7 @@ describe("CustomDatasetsBuilder", () => {
           },
         ],
       }),
+      "light",
       {},
     );
 
@@ -488,11 +491,11 @@ describe("CustomDatasetsBuilder", () => {
       datasets: [
         expect.objectContaining({
           data: [
-            { x: 0, y: 10 },
-            { x: 1, y: 11 },
-            { x: 2, y: 12 },
-            { x: 3, y: 13 },
-            { x: 4, y: 14 },
+            { x: 0, y: 10, value: 10 },
+            { x: 1, y: 11, value: 11 },
+            { x: 2, y: 12, value: 12 },
+            { x: 3, y: 13, value: 13 },
+            { x: 4, y: 14, value: 14 },
           ],
           showLine: true,
           pointRadius: 1.2,
@@ -500,8 +503,8 @@ describe("CustomDatasetsBuilder", () => {
         }),
         expect.objectContaining({
           data: [
-            { x: 0, y: 20 },
-            { x: 1, y: 21 },
+            { x: 0, y: 20, value: 20 },
+            { x: 1, y: 21, value: 21 },
           ],
         }),
       ],
