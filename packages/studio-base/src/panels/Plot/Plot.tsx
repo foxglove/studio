@@ -721,6 +721,7 @@ export function Plot(props: Props): JSX.Element {
               onMouseMove={onMouseMove}
               onMouseOut={onMouseOut}
               onClick={onClick}
+              onDoubleClick={onResetView}
             />
             <VerticalBars
               coordinator={coordinator}
