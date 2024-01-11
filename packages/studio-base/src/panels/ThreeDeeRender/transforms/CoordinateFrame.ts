@@ -154,8 +154,8 @@ export class CoordinateFrame<ID extends AnyFrameId = UserFrameId> {
    */
   public addTransform(time: Time, transform: Transform): void {
     const oldTf = this.#transforms.set(time, transform);
-    if (oldTf?.[1]) {
-      this.#transformPool.release(oldTf[1]);
+    if (oldTf) {
+      this.#transformPool.release(oldTf);
     }
 
     // Remove transforms that are too old
