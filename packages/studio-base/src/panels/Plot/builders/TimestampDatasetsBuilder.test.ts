@@ -14,8 +14,8 @@ import {
   PlayerStateActiveData,
 } from "@foxglove/studio-base/players/types";
 
-import { TimeseriesDatasetsBuilder } from "./TimeseriesDatasetsBuilder";
-import { TimeseriesDatasetsBuilderImpl } from "./TimeseriesDatasetsBuilderImpl";
+import { TimestampDatasetsBuilder } from "./TimestampDatasetsBuilder";
+import { TimestampDatasetsBuilderImpl } from "./TimestampDatasetsBuilderImpl";
 import { PlotConfig } from "../config";
 
 class WorkerEndpoint extends EventEmitter {
@@ -48,7 +48,7 @@ class Worker extends EventEmitter {
     super();
 
     this.#server = new WorkerEndpoint(this);
-    Comlink.expose(new TimeseriesDatasetsBuilderImpl(), this.#server);
+    Comlink.expose(new TimestampDatasetsBuilderImpl(), this.#server);
   }
 
   public postMessage(msg: unknown): void {
@@ -127,9 +127,9 @@ function buildPlayerState(
   };
 }
 
-describe("TimeseriesDatasetsBuilder", () => {
+describe("TimestampDatasetsBuilder", () => {
   it("should process current messages into a dataset", async () => {
-    const builder = new TimeseriesDatasetsBuilder();
+    const builder = new TimestampDatasetsBuilder();
 
     builder.setConfig(
       buildPlotConfig({
@@ -209,7 +209,7 @@ describe("TimeseriesDatasetsBuilder", () => {
   });
 
   it("should create a discontinuity between current and full", async () => {
-    const builder = new TimeseriesDatasetsBuilder();
+    const builder = new TimestampDatasetsBuilder();
 
     builder.setConfig(
       buildPlotConfig({
@@ -299,7 +299,7 @@ describe("TimeseriesDatasetsBuilder", () => {
   });
 
   it("computes derivative inside and outside of viewport", async () => {
-    const builder = new TimeseriesDatasetsBuilder();
+    const builder = new TimestampDatasetsBuilder();
 
     builder.setConfig(
       buildPlotConfig({

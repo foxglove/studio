@@ -47,7 +47,7 @@ export type GetViewportDatasetsResult = {
 /**
  * IDatasetBuilder defines methods for updating the building a dataset.
  *
- * Dataset updates (via new player state, and config) are syncronous and the callers do not expect
+ * Dataset updates (via new player state, and config) are synchronous and the callers do not expect
  * to wait on any promise. While getting the viewport datasets and csv data are async to allow them
  * to happen on a worker.
  */

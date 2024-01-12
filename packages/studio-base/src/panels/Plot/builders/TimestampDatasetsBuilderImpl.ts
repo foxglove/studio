@@ -89,7 +89,7 @@ const MAX_CURRENT_DATUMS_PER_SERIES = 50_000;
 
 const compareDatum = (a: Datum, b: Datum) => a.x - b.x;
 
-export class TimeseriesDatasetsBuilderImpl {
+export class TimestampDatasetsBuilderImpl {
   #seriesByKey = new Map<SeriesConfigKey, Series>();
 
   public updateData(actions: Immutable<UpdateDataAction[]>): void {

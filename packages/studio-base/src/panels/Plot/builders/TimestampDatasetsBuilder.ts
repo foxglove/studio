@@ -27,10 +27,10 @@ import {
 } from "./IDatasetsBuilder";
 import type {
   DataItem,
-  TimeseriesDatasetsBuilderImpl,
+  TimestampDatasetsBuilderImpl,
   UpdateDataAction,
   SeriesConfigKey,
-} from "./TimeseriesDatasetsBuilderImpl";
+} from "./TimestampDatasetsBuilderImpl";
 import { isReferenceLinePlotPathType, PlotConfig } from "../config";
 import { getChartValue, isChartValue } from "../datum";
 import { MathFunction, mathFunctions } from "../mathFunctions";
@@ -58,9 +58,9 @@ const registry = new FinalizationRegistry<Worker>((worker) => {
 
 const emptyPaths = new Set<string>();
 
-export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
+export class TimestampDatasetsBuilder implements IDatasetsBuilder {
   #datasetsBuilderWorker: Worker;
-  #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<TimeseriesDatasetsBuilderImpl>>;
+  #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>;
 
   #pendingDataDispatch: Immutable<UpdateDataAction>[] = [];
 
@@ -71,7 +71,7 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
   public constructor() {
     this.#datasetsBuilderWorker = new Worker(
       // foxglove-depcheck-used: babel-plugin-transform-import-meta
-      new URL("./TimeseriesDatasetsBuilderImpl.worker", import.meta.url),
+      new URL("./TimestampDatasetsBuilderImpl.worker", import.meta.url),
     );
     this.#datasetsBuilderRemote = Comlink.wrap(this.#datasetsBuilderWorker);
 

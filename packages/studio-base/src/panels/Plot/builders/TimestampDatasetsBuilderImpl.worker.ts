@@ -4,6 +4,6 @@
 
 import * as Comlink from "comlink";
 
-import { TimeseriesDatasetsBuilderImpl } from "./TimeseriesDatasetsBuilderImpl";
+import { TimestampDatasetsBuilderImpl } from "./TimestampDatasetsBuilderImpl";
 
-Comlink.expose(new TimeseriesDatasetsBuilderImpl());
+Comlink.expose(new TimestampDatasetsBuilderImpl());

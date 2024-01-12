@@ -54,7 +54,7 @@ import { PlotLegend } from "./PlotLegend";
 import { CurrentCustomDatasetsBuilder } from "./builders/CurrentCustomDatasetsBuilder";
 import { CustomDatasetsBuilder } from "./builders/CustomDatasetsBuilder";
 import { IndexDatasetsBuilder } from "./builders/IndexDatasetsBuilder";
-import { TimeseriesDatasetsBuilder } from "./builders/TimeseriesDatasetsBuilder";
+import { TimestampDatasetsBuilder } from "./builders/TimestampDatasetsBuilder";
 import { isReferenceLinePlotPathType, PlotConfig } from "./config";
 import { downloadCSV } from "./csv";
 import { usePlotPanelSettings } from "./settings";
@@ -257,7 +257,7 @@ export function Plot(props: Props): JSX.Element {
   const datasetsBuilder = useMemo(() => {
     switch (xAxisMode) {
       case "timestamp":
-        return new TimeseriesDatasetsBuilder();
+        return new TimestampDatasetsBuilder();
       case "index":
         return new IndexDatasetsBuilder();
       case "custom":

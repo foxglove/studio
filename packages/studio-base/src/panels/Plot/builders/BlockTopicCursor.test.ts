@@ -94,7 +94,7 @@ describe("BlockTopicCursor", () => {
     expect(cursor.next([block0, block1])).toEqual(undefined);
   });
 
-  it("should restart if either the first or last block of the topic change", () => {
+  it("should restart if either the first or last iterated block of the topic change", () => {
     // When using per-field subscriptions, a particular topic might be populated across all blocks
     // because a field was needed. A cursor will think it has processed all the blocks but a new
     // subscription update will start to update blocks with the new field. We need to properly
