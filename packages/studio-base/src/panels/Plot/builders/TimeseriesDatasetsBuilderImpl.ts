@@ -2,10 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as _ from "lodash-es";
+import { Opaque } from "ts-essentials";
 
 import { Immutable, Time } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import {
   MAX_POINTS,
   downsampleScatter,
@@ -28,10 +27,7 @@ export type DataItem = Datum & {
  * Identifier used to determine whether previous data can be reused when the config changes.
  * Compare with deep equality.
  */
-export type SeriesConfigKey = {
-  path: Immutable<RosPath>;
-  timestampMethod: TimestampMethod;
-};
+export type SeriesConfigKey = Opaque<string, "series-config-key">;
 
 export type SeriesConfig = {
   key: SeriesConfigKey;
@@ -61,23 +57,23 @@ type Series = {
 
 type ResetSeriesFullAction = {
   type: "reset-full";
-  series: string;
+  series: SeriesConfigKey;
 };
 
 type ResetSeriesCurrentAction = {
   type: "reset-current";
-  series: string;
+  series: SeriesConfigKey;
 };
 
 type UpdateSeriesCurrentAction = {
   type: "append-current";
-  series: string;
+  series: SeriesConfigKey;
   items: DataItem[];
 };
 
 type UpdateSeriesFullAction = {
   type: "append-full";
-  series: string;
+  series: SeriesConfigKey;
   items: DataItem[];
 };
 
@@ -94,7 +90,7 @@ const MAX_CURRENT_DATUMS_PER_SERIES = 50_000;
 const compareDatum = (a: Datum, b: Datum) => a.x - b.x;
 
 export class TimeseriesDatasetsBuilderImpl {
-  #seriesByMessagePath = new Map<string, Series>();
+  #seriesByKey = new Map<SeriesConfigKey, Series>();
 
   public updateData(actions: Immutable<UpdateDataAction[]>): void {
     for (const action of actions) {
@@ -107,24 +103,24 @@ export class TimeseriesDatasetsBuilderImpl {
     const newSeries = new Map();
 
     for (const config of seriesConfig) {
-      let existingSeries = this.#seriesByMessagePath.get(config.messagePath);
-      if (!existingSeries || !_.isEqual(existingSeries.config.key, config.key)) {
+      let existingSeries = this.#seriesByKey.get(config.key);
+      if (!existingSeries || existingSeries.config.key !== config.key) {
         existingSeries = {
           config,
           current: [],
           full: [],
         };
       }
-      newSeries.set(config.messagePath, existingSeries);
+      newSeries.set(config.key, existingSeries);
       existingSeries.config = config;
     }
-    this.#seriesByMessagePath = newSeries;
+    this.#seriesByKey = newSeries;
   }
 
   public getViewportDatasets(viewport: Immutable<Viewport>): Dataset[] {
     const datasets: Dataset[] = [];
-    const numSeries = this.#seriesByMessagePath.size;
-    for (const series of this.#seriesByMessagePath.values()) {
+    const numSeries = this.#seriesByKey.size;
+    for (const series of this.#seriesByKey.values()) {
       if (!series.config.enabled) {
         continue;
       }
@@ -273,7 +269,7 @@ export class TimeseriesDatasetsBuilderImpl {
 
   public getCsvData(): CsvDataset[] {
     const datasets: CsvDataset[] = [];
-    for (const series of this.#seriesByMessagePath.values()) {
+    for (const series of this.#seriesByKey.values()) {
       if (!series.config.enabled) {
         continue;
       }
@@ -295,7 +291,7 @@ export class TimeseriesDatasetsBuilderImpl {
   #applyAction(action: Immutable<UpdateDataAction>): void {
     switch (action.type) {
       case "reset-current": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }
@@ -305,7 +301,7 @@ export class TimeseriesDatasetsBuilderImpl {
         break;
       }
       case "reset-full": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }
@@ -314,7 +310,7 @@ export class TimeseriesDatasetsBuilderImpl {
         break;
       }
       case "append-current": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }
@@ -356,7 +352,7 @@ export class TimeseriesDatasetsBuilderImpl {
         break;
       }
       case "append-full": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }
