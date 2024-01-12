@@ -21,9 +21,8 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import type { PlotCoordinator } from "./PlotCoordinator";
 import { PlotLegendRow, ROW_HEIGHT } from "./PlotLegendRow";
-import { PlotPath } from "./internalTypes";
+import { PlotPath, PlotConfig } from "./config";
 import { DEFAULT_PATH } from "./settings";
-import { PlotConfig } from "./types";
 
 const minLegendWidth = 25;
 const maxLegendWidth = 800;

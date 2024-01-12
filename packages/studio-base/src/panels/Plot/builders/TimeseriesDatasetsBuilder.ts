@@ -3,14 +3,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
-import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
-import { toSec, subtract as subtractTime, isTime } from "@foxglove/rostime";
+import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
+import { stringifyRosPath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -31,9 +31,9 @@ import type {
   UpdateDataAction,
   SeriesConfigKey,
 } from "./TimeseriesDatasetsBuilderImpl";
-import { OriginalValue, isReferenceLinePlotPathType } from "../internalTypes";
+import { isReferenceLinePlotPathType, PlotConfig } from "../config";
+import { getChartValue, isChartValue } from "../datum";
 import { MathFunction, mathFunctions } from "../mathFunctions";
-import { PlotConfig } from "../types";
 
 type SeriesItem = {
   key: SeriesConfigKey;
@@ -97,7 +97,7 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
         if (didSeek) {
           this.#pendingDataDispatch.push({
             type: "reset-current",
-            series: seriesConfig.messagePath,
+            series: seriesConfig.key,
           });
         }
 
@@ -111,7 +111,7 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
 
         this.#pendingDataDispatch.push({
           type: "append-current",
-          series: seriesConfig.messagePath,
+          series: seriesConfig.key,
           items: pathItems,
         });
       }
@@ -127,7 +127,7 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
         if (seriesConfig.blockCursor.nextWillReset(blocks)) {
           this.#pendingDataDispatch.push({
             type: "reset-full",
-            series: seriesConfig.messagePath,
+            series: seriesConfig.key,
           });
         }
 
@@ -143,7 +143,7 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
 
           this.#pendingDataDispatch.push({
             type: "append-full",
-            series: seriesConfig.messagePath,
+            series: seriesConfig.key,
             items: pathItems,
           });
         }
@@ -182,11 +182,14 @@ export class TimeseriesDatasetsBuilder implements IDatasetsBuilder {
         // We also want to re-compute values when the timestamp method changes. So we use a _key_ that
         // is the filled path and the timestamp method. If either change, we consider this a new
         // series.
-        const key: SeriesConfigKey = { path: filledParsed, timestampMethod: path.timestampMethod };
+        //
+        // This key lets us treat series with the same name but different timestamp methods as distinct
+        // using a key instead of the path index lets us preserve loaded data when a path is removed
+        const key = `${path.timestampMethod}:${stringifyRosPath(filledParsed)}` as SeriesConfigKey;
 
         // It is important to keep the existing block cursor for the same series to avoid re-processing
         // the blocks again when the series remains.
-        const existing = this.#seriesConfigs.find((item) => _.isEqual(item.key, key));
+        const existing = this.#seriesConfigs.find((item) => item.key === key);
         const color = getLineColor(path.color, idx);
         return {
           key,
@@ -271,42 +274,4 @@ function readMessagePathItems(
   }
 
   return out;
-}
-
-function isChartValue(value: unknown): value is OriginalValue {
-  switch (typeof value) {
-    case "bigint":
-    case "boolean":
-    case "number":
-    case "string":
-      return true;
-    case "object":
-      if (isTime(value)) {
-        return true;
-      }
-      return false;
-    default:
-      return false;
-  }
-  return false;
-}
-
-function getChartValue(value: unknown): number | undefined {
-  switch (typeof value) {
-    case "bigint":
-      return Number(value);
-    case "boolean":
-      return Number(value);
-    case "number":
-      return value;
-    case "object":
-      if (isTime(value)) {
-        return toSec(value);
-      }
-      return undefined;
-    case "string":
-      return +value;
-    default:
-      return undefined;
-  }
 }

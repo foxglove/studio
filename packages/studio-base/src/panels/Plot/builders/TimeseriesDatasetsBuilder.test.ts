@@ -7,7 +7,6 @@ import EventEmitter from "eventemitter3";
 import * as _ from "lodash-es";
 
 import { MessageEvent } from "@foxglove/studio";
-import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import {
   MessageBlock,
   PlayerPresence,
@@ -17,6 +16,7 @@ import {
 
 import { TimeseriesDatasetsBuilder } from "./TimeseriesDatasetsBuilder";
 import { TimeseriesDatasetsBuilderImpl } from "./TimeseriesDatasetsBuilderImpl";
+import { PlotConfig } from "../config";
 
 class WorkerEndpoint extends EventEmitter {
   #client: Worker;

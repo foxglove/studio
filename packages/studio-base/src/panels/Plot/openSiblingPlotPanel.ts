@@ -6,7 +6,7 @@ import * as _ from "lodash-es";
 
 import type { OpenSiblingPanel, PanelConfig } from "@foxglove/studio-base/types/panels";
 
-import type { PlotConfig } from "./types";
+import type { PlotConfig } from "./config";
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({

@@ -6,8 +6,7 @@ import { ChartDataset } from "chart.js";
 import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
-import { toSec, isTime } from "@foxglove/rostime";
-import { Immutable, Time } from "@foxglove/studio";
+import { Immutable, Time, MessageEvent } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
@@ -19,9 +18,9 @@ import { getLineColor, getContrastColor } from "@foxglove/studio-base/util/plotC
 
 import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
-import { OriginalValue, Datum, isReferenceLinePlotPathType } from "../internalTypes";
+import { isReferenceLinePlotPathType, PlotConfig } from "../config";
+import { getChartValue, isChartValue, Datum } from "../datum";
 import { mathFunctions } from "../mathFunctions";
-import { PlotConfig } from "../types";
 
 type DatumWithReceiveTime = Datum & {
   receiveTime: Time;
@@ -53,74 +52,65 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       return;
     }
 
-    const xAxisMathFn =
-      (this.#xParsedPath.modifier ? mathFunctions[this.#xParsedPath.modifier] : undefined) ??
-      _.identity<number>;
+    {
+      const xAxisMathFn =
+        (this.#xParsedPath.modifier ? mathFunctions[this.#xParsedPath.modifier] : undefined) ??
+        _.identity<number>;
 
-    for (let i = msgEvents.length - 1; i >= 0; --i) {
-      const msgEvent = msgEvents[i]!;
-      if (msgEvent.topic !== this.#xParsedPath.topicName) {
-        continue;
-      }
+      const msgEvent = lastMatchingTopic(msgEvents, this.#xParsedPath.topicName);
+      if (msgEvent) {
+        const items = simpleGetMessagePathDataItems(msgEvent, this.#xParsedPath);
 
-      const items = simpleGetMessagePathDataItems(msgEvent, this.#xParsedPath);
+        this.#xValues = [];
+        for (const item of items) {
+          if (!isChartValue(item)) {
+            continue;
+          }
 
-      this.#xValues = [];
-      for (const item of items) {
-        if (!isChartValue(item)) {
-          continue;
+          const chartValue = getChartValue(item);
+          if (chartValue == undefined) {
+            continue;
+          }
+
+          this.#xValues.push(xAxisMathFn(chartValue));
         }
-
-        const chartValue = getChartValue(item);
-        if (chartValue == undefined) {
-          continue;
-        }
-
-        this.#xValues.push(xAxisMathFn(chartValue));
       }
-
-      break;
     }
 
     for (const series of this.#seriesByMessagePath.values()) {
       const mathFn = series.parsed.modifier ? mathFunctions[series.parsed.modifier] : undefined;
 
-      // loop over the events backwards and once we find our first matching topic
-      // read that for the path items
-      for (let i = msgEvents.length - 1; i >= 0; --i) {
-        const msgEvent = msgEvents[i]!;
-        if (msgEvent.topic !== series.parsed.topicName) {
-          continue;
-        }
-
-        const items = simpleGetMessagePathDataItems(msgEvent, series.parsed);
-
-        const pathItems = filterMap(items, (item, idx) => {
-          if (!isChartValue(item)) {
-            return;
-          }
-
-          const chartValue = getChartValue(item);
-          const mathModifiedValue =
-            mathFn && chartValue != undefined ? mathFn(chartValue) : undefined;
-
-          return {
-            x: this.#xValues[idx] ?? NaN,
-            y: chartValue == undefined ? NaN : mathModifiedValue ?? chartValue,
-            receiveTime: msgEvent.receiveTime,
-            value: mathModifiedValue ?? item,
-          };
-        });
-
-        if (pathItems.length === this.#xValues.length) {
-          this.#pathsWithMismatchedDataLengths.delete(series.messagePath);
-        } else {
-          this.#pathsWithMismatchedDataLengths.add(series.messagePath);
-        }
-
-        series.dataset.data = pathItems;
-        break;
+      const msgEvent = lastMatchingTopic(msgEvents, series.parsed.topicName);
+      if (!msgEvent) {
+        continue;
       }
+
+      const items = simpleGetMessagePathDataItems(msgEvent, series.parsed);
+
+      const pathItems = filterMap(items, (item, idx) => {
+        if (!isChartValue(item)) {
+          return;
+        }
+
+        const chartValue = getChartValue(item);
+        const mathModifiedValue =
+          mathFn && chartValue != undefined ? mathFn(chartValue) : undefined;
+
+        return {
+          x: this.#xValues[idx] ?? NaN,
+          y: chartValue == undefined ? NaN : mathModifiedValue ?? chartValue,
+          receiveTime: msgEvent.receiveTime,
+          value: mathModifiedValue ?? item,
+        };
+      });
+
+      if (pathItems.length === this.#xValues.length) {
+        this.#pathsWithMismatchedDataLengths.delete(series.messagePath);
+      } else {
+        this.#pathsWithMismatchedDataLengths.add(series.messagePath);
+      }
+
+      series.dataset.data = pathItems;
     }
 
     // Returning undefined means we allow the chart to determine the bounds and don't need to
@@ -230,40 +220,13 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   }
 }
 
-function isChartValue(value: unknown): value is OriginalValue {
-  switch (typeof value) {
-    case "bigint":
-    case "boolean":
-    case "number":
-    case "string":
-      return true;
-    case "object":
-      if (isTime(value)) {
-        return true;
-      }
-      return false;
-    default:
-      return false;
+function lastMatchingTopic(msgEvents: Immutable<MessageEvent[]>, topic: string) {
+  for (let i = msgEvents.length - 1; i >= 0; --i) {
+    const msgEvent = msgEvents[i]!;
+    if (msgEvent.topic === topic) {
+      return msgEvent;
+    }
   }
-  return false;
-}
 
-function getChartValue(value: OriginalValue): number | undefined {
-  switch (typeof value) {
-    case "bigint":
-      return Number(value);
-    case "boolean":
-      return Number(value);
-    case "number":
-      return value;
-    case "object":
-      if (isTime(value)) {
-        return toSec(value);
-      }
-      return undefined;
-    case "string":
-      return +value;
-    default:
-      return undefined;
-  }
+  return undefined;
 }

@@ -8,7 +8,6 @@ import * as _ from "lodash-es";
 
 import { MessageEvent } from "@foxglove/studio";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import {
   MessageBlock,
   PlayerPresence,
@@ -18,6 +17,7 @@ import {
 
 import { CustomDatasetsBuilder } from "./CustomDatasetsBuilder";
 import { CustomDatasetsBuilderImpl } from "./CustomDatasetsBuilderImpl";
+import { PlotConfig } from "../config";
 
 class WorkerEndpoint extends EventEmitter {
   #client: Worker;

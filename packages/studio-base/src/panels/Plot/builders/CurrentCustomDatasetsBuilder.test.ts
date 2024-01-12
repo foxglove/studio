@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
-import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import {
   MessageBlock,
   PlayerPresence,
@@ -12,6 +11,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 
 import { CurrentCustomDatasetsBuilder } from "./CurrentCustomDatasetsBuilder";
+import { PlotConfig } from "../config";
 
 function buildPlotConfig(override: Partial<PlotConfig>): PlotConfig {
   return {

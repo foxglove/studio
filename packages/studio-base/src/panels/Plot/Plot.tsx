@@ -4,6 +4,7 @@
 
 import { Button, Tooltip, Fade, buttonClasses, useTheme } from "@mui/material";
 import Hammer from "hammerjs";
+import * as _ from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
@@ -54,11 +55,10 @@ import { CurrentCustomDatasetsBuilder } from "./builders/CurrentCustomDatasetsBu
 import { CustomDatasetsBuilder } from "./builders/CustomDatasetsBuilder";
 import { IndexDatasetsBuilder } from "./builders/IndexDatasetsBuilder";
 import { TimeseriesDatasetsBuilder } from "./builders/TimeseriesDatasetsBuilder";
+import { isReferenceLinePlotPathType, PlotConfig } from "./config";
 import { downloadCSV } from "./csv";
-import { isReferenceLinePlotPathType } from "./internalTypes";
 import { usePlotPanelSettings } from "./settings";
 import { pathToSubscribePayload } from "./subscription";
-import { PlotConfig } from "./types";
 
 export const defaultSidebarDimension = 240;
 
@@ -111,7 +111,7 @@ export function Plot(props: Props): JSX.Element {
   const {
     paths: series,
     showLegend,
-    xAxisVal,
+    xAxisVal: xAxisMode,
     xAxisPath,
     legendDisplay = config.showSidebar === true ? "left" : "floating",
     sidebarDimension = config.sidebarWidth ?? defaultSidebarDimension,
@@ -179,7 +179,7 @@ export function Plot(props: Props): JSX.Element {
       }
 
       // Only timestamp plots support click-to-seek
-      if (xAxisVal !== "timestamp" || !coordinator) {
+      if (xAxisMode !== "timestamp" || !coordinator) {
         return;
       }
 
@@ -201,7 +201,7 @@ export function Plot(props: Props): JSX.Element {
         seekPlayback(addTimes(start, fromSec(seekSeconds)));
       }
     },
-    [coordinator, getMessagePipelineState, xAxisVal],
+    [coordinator, getMessagePipelineState, xAxisMode],
   );
 
   const getPanelContextMenuItems = useCallback(() => {
@@ -215,12 +215,12 @@ export function Plot(props: Props): JSX.Element {
             return;
           }
 
-          downloadCSV(customTitle ?? "plot_data", data, xAxisVal);
+          downloadCSV(customTitle ?? "plot_data", data, xAxisMode);
         },
       },
     ];
     return items;
-  }, [coordinator, customTitle, xAxisVal]);
+  }, [coordinator, customTitle, xAxisMode]);
 
   const setSubscriptions = useMessagePipeline(
     useCallback(
@@ -255,7 +255,7 @@ export function Plot(props: Props): JSX.Element {
   }, [coordinator, getMessagePipelineState, subscribeMessasagePipeline]);
 
   const datasetsBuilder = useMemo(() => {
-    switch (xAxisVal) {
+    switch (xAxisMode) {
       case "timestamp":
         return new TimeseriesDatasetsBuilder();
       case "index":
@@ -265,11 +265,11 @@ export function Plot(props: Props): JSX.Element {
       case "currentCustom":
         return new CurrentCustomDatasetsBuilder();
       default:
-        throw new Error(`unsupported mode: ${xAxisVal}`);
+        throw new Error(`unsupported mode: ${xAxisMode}`);
     }
 
     return undefined;
-  }, [xAxisVal]);
+  }, [xAxisMode]);
 
   useEffect(() => {
     if (
@@ -301,13 +301,11 @@ export function Plot(props: Props): JSX.Element {
     const canvas = document.createElement("canvas");
     canvas.style.width = "100%";
     canvas.style.height = "100%";
+    // So the canvas does not affect the size of the parent
+    canvas.style.position = "absolute";
     canvas.width = clientRect.width;
     canvas.height = clientRect.height;
     canvasDiv.appendChild(canvas);
-
-    if (typeof canvas.transferControlToOffscreen !== "function") {
-      throw new Error("Offscreen rendering is not supported");
-    }
 
     const offscreenCanvas = canvas.transferControlToOffscreen();
     setRenderer(new OffscreenCanvasRenderer(offscreenCanvas, theme));
@@ -332,12 +330,10 @@ export function Plot(props: Props): JSX.Element {
       height: contentRect.height,
     });
 
+    const isCanvasTarget = (entry: Immutable<ResizeObserverEntry>) => entry.target === canvasDiv;
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.target !== canvasDiv) {
-          continue;
-        }
-
+      const entry = _.findLast(entries, isCanvasTarget);
+      if (entry) {
         plotCoordinator.setSize({
           width: entry.contentRect.width,
           height: entry.contentRect.height,
@@ -385,6 +381,8 @@ export function Plot(props: Props): JSX.Element {
         y: args.canvasY,
       });
 
+      // Looking up a tooltip is an async operation so the mouse might leave the component while
+      // that is happening and we need to avoid showing a tooltip.
       if (!elements || elements.length === 0 || !mousePresentRef.current) {
         setActiveTooltip(undefined);
         return;
@@ -446,14 +444,12 @@ export function Plot(props: Props): JSX.Element {
       setHoverValue({
         componentId: subscriberId,
         value: seconds,
-        type: xAxisVal === "timestamp" ? "PLAYBACK_SECONDS" : "OTHER",
+        type: xAxisMode === "timestamp" ? "PLAYBACK_SECONDS" : "OTHER",
       });
     },
-    [buildTooltip, coordinator, setHoverValue, subscriberId, xAxisVal],
+    [buildTooltip, coordinator, setHoverValue, subscriberId, xAxisMode],
   );
 
-  // Looking up a tooltip is an async operation so the mouse might leave while the component while
-  // that is happening and we need to avoid showing a tooltip.
   const onMouseOut = useCallback(() => {
     mousePresentRef.current = false;
     setActiveTooltip(undefined);
@@ -488,6 +484,7 @@ export function Plot(props: Props): JSX.Element {
     ) : undefined;
   }, [activeTooltip, colorsByDatasetIndex, labelsByDatasetIndex, numSeries]);
 
+  // panning
   useEffect(() => {
     if (!canvasDiv || !coordinator) {
       return;
@@ -564,7 +561,7 @@ export function Plot(props: Props): JSX.Element {
       return pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
     });
 
-    if ((xAxisVal === "custom" || xAxisVal === "currentCustom") && xAxisPath) {
+    if ((xAxisMode === "custom" || xAxisMode === "currentCustom") && xAxisPath) {
       const parsed = parseRosPath(xAxisPath.value);
       if (parsed) {
         const sub = pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
@@ -575,7 +572,7 @@ export function Plot(props: Props): JSX.Element {
     }
 
     setSubscriptions(subscriberId, subscriptions);
-  }, [series, setSubscriptions, subscriberId, globalVariables, xAxisVal, xAxisPath]);
+  }, [series, setSubscriptions, subscriberId, globalVariables, xAxisMode, xAxisPath]);
 
   // Only unsubscribe on unmount so that when the above subscriber effect dependencies change we
   // don't transition to unsubscribing all to then re-subscribe.
@@ -722,7 +719,7 @@ export function Plot(props: Props): JSX.Element {
             <VerticalBars
               coordinator={coordinator}
               hoverComponentId={subscriberId}
-              xAxisIsPlaybackTime={xAxisVal === "timestamp"}
+              xAxisIsPlaybackTime={xAxisMode === "timestamp"}
             />
           </div>
         </Tooltip>

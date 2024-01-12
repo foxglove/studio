@@ -14,8 +14,8 @@ import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/Pane
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
-import { PlotPath } from "./internalTypes";
-import { plotableRosTypes, PlotConfig, plotPathDisplayName } from "./types";
+import { PlotPath, PlotConfig, plotPathDisplayName } from "./config";
+import { plotableRosTypes } from "./plotableRosTypes";
 
 export const DEFAULT_PATH: PlotPath = Object.freeze({
   timestampMethod: "receiveTime",
