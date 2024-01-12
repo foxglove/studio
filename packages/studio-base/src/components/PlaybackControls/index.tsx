@@ -187,13 +187,14 @@ export default function PlaybackControls(props: {
         <Stack direction="row" alignItems="center" flex={1} gap={1} overflowX="auto">
           <Stack direction="row" alignItems="center" flex={1} gap={0.5}>
             {currentUserType !== "unauthenticated" && eventsSupported && (
-              <HoverableIconButton
-                size="small"
-                title="Create event"
-                icon={<EventOutlinedIcon />}
-                activeIcon={<EventIcon />}
-                onClick={toggleCreateEventDialog}
-              />
+              <Tooltip title="Create event">
+                <HoverableIconButton
+                  size="small"
+                  icon={<EventOutlinedIcon />}
+                  activeIcon={<EventIcon />}
+                  onClick={toggleCreateEventDialog}
+                />
+              </Tooltip>
             )}
             <Tooltip
               // A desired workflow is the ability to copy data source info text (start, end, duration)
@@ -231,7 +232,6 @@ export default function PlaybackControls(props: {
               <HoverableIconButton
                 disabled={disableControls}
                 size="small"
-                title="Seek backward"
                 icon={<Previous20Regular />}
                 activeIcon={<Previous20Filled />}
                 onClick={() => {
@@ -264,7 +264,6 @@ export default function PlaybackControls(props: {
               <HoverableIconButton
                 disabled={disableControls}
                 size="small"
-                title="Seek forward"
                 icon={<Next20Regular />}
                 activeIcon={<Next20Filled />}
                 onClick={() => {
