@@ -421,7 +421,7 @@ describe("BufferedIterableSource", () => {
         start: { sec: 0, nsec: 0 },
         end: { sec: 10, nsec: 0 },
         consumptionType: "partial",
-        deserializeMessages: false,
+        skipMessageDeserialization: true,
       });
       messageIteratorCount += 1;
 
@@ -486,7 +486,7 @@ describe("BufferedIterableSource", () => {
         start: { sec: 0, nsec: 0 },
         end: { sec: 10, nsec: 0 },
         consumptionType: "partial",
-        deserializeMessages: false,
+        skipMessageDeserialization: true,
       });
       messageIteratorCount += 1;
 
@@ -602,7 +602,7 @@ describe("BufferedIterableSource", () => {
         start: { sec: 0, nsec: 0 },
         end: { sec: 10, nsec: 0 },
         consumptionType: "partial",
-        deserializeMessages: false,
+        skipMessageDeserialization: true,
       });
       messageIteratorCount += 1;
 
@@ -660,7 +660,7 @@ describe("BufferedIterableSource", () => {
         start: { sec: 0, nsec: 0 },
         end: { sec: 10, nsec: 0 },
         consumptionType: "partial",
-        deserializeMessages: false,
+        skipMessageDeserialization: true,
       });
       messageIteratorCount += 1;
 

@@ -58,7 +58,10 @@ export type MessageIteratorArgs = {
    */
   consumptionType?: "full" | "partial";
 
-  deserializeMessages?: boolean;
+  /**
+   * Skip message deserialization and yield raw messages. Defaults to false.
+   */
+  skipMessageDeserialization?: boolean;
 };
 
 /**

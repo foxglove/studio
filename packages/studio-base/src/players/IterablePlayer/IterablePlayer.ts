@@ -177,7 +177,7 @@ export class IterablePlayer implements Player {
 
   #untilTime?: Time;
 
-  #deserializersByTopic: Record<string, (data: ArrayBufferView) => unknown> = {};
+  #deserializersBySchema: Record<string, (data: ArrayBufferView) => unknown> = {};
 
   /** Promise that resolves when the player is closed. Only used for testing currently */
   public readonly isClosed: Promise<void>;
@@ -508,7 +508,13 @@ export class IterablePlayer implements Player {
 
         uniqueTopics.set(topic.name, topic);
 
-        if (topic.messageEncoding && topic.schemaData && topic.schemaEncoding && topic.schemaName) {
+        if (
+          topic.messageEncoding != undefined &&
+          topic.schemaData != undefined &&
+          topic.schemaEncoding != undefined &&
+          topic.schemaName != undefined &&
+          this.#deserializersBySchema[topic.schemaName] == undefined
+        ) {
           const { deserialize } = parseChannel({
             messageEncoding: topic.messageEncoding,
             schema: {
@@ -517,7 +523,7 @@ export class IterablePlayer implements Player {
               name: topic.schemaName,
             },
           });
-          this.#deserializersByTopic[topic.name] = deserialize;
+          this.#deserializersBySchema[topic.schemaName] = deserialize;
         }
       }
 
@@ -679,17 +685,14 @@ export class IterablePlayer implements Player {
 
         if (iterResult.type === "message-event") {
           let msgEvent = iterResult.msgEvent;
-          if (iterResult.msgEvent.raw === true) {
-            const deserializer = this.#deserializersByTopic[iterResult.msgEvent.topic];
-            if (deserializer == undefined) {
-              throw new Error(
-                `Invariant. Deserializer for raw message on topic ${iterResult.msgEvent.topic} not found`,
-              );
-            }
+          if (iterResult.msgEvent.rawBytes === true) {
             msgEvent = {
               ...iterResult.msgEvent,
-              message: deserializer(iterResult.msgEvent.message as Uint8Array),
-              raw: false,
+              message: this.#deserializeMessage(
+                iterResult.msgEvent.schemaName,
+                iterResult.msgEvent.message as Uint8Array,
+              ),
+              rawBytes: false,
             };
           }
 
@@ -748,6 +751,16 @@ export class IterablePlayer implements Player {
         time: targetTime,
         abortSignal: this.#abort.signal,
       });
+
+      for (const messageEvent of messages) {
+        if (messageEvent.rawBytes === true) {
+          messageEvent.message = this.#deserializeMessage(
+            messageEvent.schemaName,
+            messageEvent.message as Uint8Array,
+          );
+          messageEvent.rawBytes = false;
+        }
+      }
 
       // We've successfully loaded the messages and will emit those, no longer need the ackTimeout
       clearTimeout(seekAckTimeout);
@@ -965,17 +978,14 @@ export class IterablePlayer implements Player {
 
         if (iterResult.type === "message-event") {
           let msgEvent = iterResult.msgEvent;
-          if (iterResult.msgEvent.raw === true) {
-            const deserializer = this.#deserializersByTopic[iterResult.msgEvent.topic];
-            if (deserializer == undefined) {
-              throw new Error(
-                `Invariant. Deserializer for raw message on topic ${iterResult.msgEvent.topic} not found`,
-              );
-            }
+          if (iterResult.msgEvent.rawBytes === true) {
             msgEvent = {
               ...iterResult.msgEvent,
-              message: deserializer(iterResult.msgEvent.message as Uint8Array),
-              raw: false,
+              message: this.#deserializeMessage(
+                iterResult.msgEvent.schemaName,
+                iterResult.msgEvent.message as Uint8Array,
+              ),
+              rawBytes: false,
             };
           }
 
@@ -1153,5 +1163,13 @@ export class IterablePlayer implements Player {
         this.#queueEmitState();
       },
     });
+  }
+
+  #deserializeMessage(schemaName: string, message: Uint8Array): unknown {
+    const deserialize = this.#deserializersBySchema[schemaName];
+    if (deserialize == undefined) {
+      throw new Error(`Invariant. Deserializer for schema ${schemaName} not found`);
+    }
+    return deserialize(message);
   }
 }

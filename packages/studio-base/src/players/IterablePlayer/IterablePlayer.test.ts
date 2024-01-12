@@ -786,7 +786,7 @@ describe("IterablePlayer", () => {
           end: { sec: 1, nsec: 0 },
           topics: mockTopicSelection("foo"),
           consumptionType: "partial",
-          deserializeMessages: false,
+          skipMessageDeserialization: true,
         },
       ],
       [
@@ -795,7 +795,7 @@ describe("IterablePlayer", () => {
           end: { sec: 1, nsec: 0 },
           topics: mockTopicSelection("bar", "foo"),
           consumptionType: "partial",
-          deserializeMessages: false,
+          skipMessageDeserialization: true,
         },
       ],
     ]);
@@ -833,7 +833,7 @@ describe("IterablePlayer", () => {
           end: { sec: 1, nsec: 0 },
           topics: mockTopicSelection("foo"),
           consumptionType: "partial",
-          deserializeMessages: false,
+          skipMessageDeserialization: true,
         },
       ],
     ]);

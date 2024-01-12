@@ -145,7 +145,7 @@ export class McapIndexedIterableSource implements IIterableSource {
     const topics = args.topics;
     const start = args.start ?? this.#start;
     const end = args.end ?? this.#end;
-    const deserializeMessages = args.deserializeMessages ?? true;
+    const skipDeserialization = args.skipMessageDeserialization ?? false;
 
     if (topics.size === 0 || !start || !end) {
       return;
@@ -184,7 +184,7 @@ export class McapIndexedIterableSource implements IIterableSource {
         continue;
       }
       try {
-        if (!deserializeMessages) {
+        if (skipDeserialization) {
           yield {
             type: "message-event",
             msgEvent: {
@@ -194,7 +194,7 @@ export class McapIndexedIterableSource implements IIterableSource {
               message: message.data,
               sizeInBytes: message.data.byteLength,
               schemaName: channelInfo.schemaName ?? "",
-              raw: true,
+              rawBytes: true,
             },
           };
           continue;

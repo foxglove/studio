@@ -126,7 +126,10 @@ export type MessageEvent<T = unknown> = {
    */
   originalMessageEvent?: MessageEvent;
 
-  raw?: boolean;
+  /**
+   * Message is not deserialized and contains the raw bytes.
+   */
+  rawBytes?: boolean;
 };
 
 export interface LayoutActions {
