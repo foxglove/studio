@@ -19,6 +19,7 @@ import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotC
 import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
 import { Datum, OriginalValue, isReferenceLinePlotPathType } from "../internalTypes";
+import { mathFunctions } from "../mathFunctions";
 import { PlotConfig } from "../types";
 
 type DatumWithReceiveTime = Datum & {
@@ -50,6 +51,8 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
 
     const range: Bounds1D = { min: 0, max: 0 };
     for (const series of this.#seriesByMessagePath.values()) {
+      const mathFn = series.parsed.modifier ? mathFunctions[series.parsed.modifier] : undefined;
+
       // loop over the events backwards and once we find our first matching topic
       // read that for the path items
       for (let i = msgEvents.length - 1; i >= 0; --i) {
@@ -65,11 +68,13 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
           }
 
           const chartValue = getChartValue(item);
+          const mathModifiedValue =
+            mathFn && chartValue != undefined ? mathFn(chartValue) : undefined;
           return {
             x: idx,
-            y: chartValue ?? NaN,
+            y: chartValue == undefined ? NaN : mathModifiedValue ?? chartValue,
             receiveTime: msgEvent.receiveTime,
-            value: item,
+            value: mathModifiedValue ?? item,
           };
         });
 
