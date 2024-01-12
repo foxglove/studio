@@ -103,6 +103,10 @@ export type UpdateDataAction =
   | UpdateSeriesCurrentAction
   | UpdateSeriesFullAction;
 
+// When accumulating datums into the current buffer we cap each series to this number of datums so
+// we do not grow the memory for accumulated current data indefinitely
+const MAX_CURRENT_DATUMS_PER_SERIES = 50_000;
+
 export class CustomDatasetsBuilderImpl {
   #xValues: { current: ValueItem[]; full: ValueItem[] } = {
     current: [],
@@ -341,6 +345,13 @@ export class CustomDatasetsBuilderImpl {
       case "append-current-x": {
         const lastFullReceiveTime = this.#xValues.full[this.#xValues.full.length - 1]?.receiveTime;
 
+        // Limit the total current datums so they do not grow indefinitely
+        const cullSize = Math.max(
+          0,
+          this.#xValues.current.length + action.items.length - MAX_CURRENT_DATUMS_PER_SERIES,
+        );
+        this.#xValues.current.splice(0, cullSize);
+
         for (const item of action.items) {
           if (lastFullReceiveTime && compare(item.receiveTime, lastFullReceiveTime) <= 0) {
             continue;
@@ -375,6 +386,13 @@ export class CustomDatasetsBuilderImpl {
         if (!series) {
           return;
         }
+
+        // Limit the total current datums so they do not grow indefinitely
+        const cullSize = Math.max(
+          0,
+          series.current.length + action.items.length - MAX_CURRENT_DATUMS_PER_SERIES,
+        );
+        series.current.splice(0, cullSize);
 
         const lastFullReceiveTime = series.full[series.full.length - 1]?.receiveTime;
         for (const item of action.items) {
