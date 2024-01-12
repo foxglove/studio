@@ -12,7 +12,7 @@ import {
   downsampleTimeseries,
 } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { unionBounds1D } from "@foxglove/studio-base/types/Bounds";
+import { extendBounds1D } from "@foxglove/studio-base/types/Bounds";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { CsvDataset, Viewport } from "./IDatasetsBuilder";
@@ -151,8 +151,8 @@ export class TimeseriesDatasetsBuilderImpl {
       let startIdx = 0;
       let endIdx = allData.length;
 
-      let xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
-      let yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
+      const xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
+      const yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
 
       // Keep previous original values for computing derivative
       let prevX = NaN;
@@ -192,11 +192,11 @@ export class TimeseriesDatasetsBuilderImpl {
         }
 
         if (!isNaN(item.x)) {
-          xBounds = unionBounds1D(xBounds, { min: item.x, max: item.x });
+          extendBounds1D(xBounds, item.x);
         }
 
         if (!isNaN(item.y)) {
-          yBounds = unionBounds1D(yBounds, { min: item.y, max: item.y });
+          extendBounds1D(yBounds, item.y);
         }
 
         if (viewport.bounds.x?.max != undefined && item.x > viewport.bounds.x.max) {

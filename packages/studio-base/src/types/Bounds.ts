@@ -18,8 +18,17 @@ export type Bounds = {
 };
 
 /**
- * Find the union of two 1D bounds.
+ * Return the union of two 1D bounds
  */
 export function unionBounds1D(a: Immutable<Bounds1D>, b: Immutable<Bounds1D>): Bounds1D {
   return { min: Math.min(a.min, b.min), max: Math.max(a.max, b.max) };
+}
+
+/**
+ * Update the bounds to include the value. The bounds are updated in-place. Returns the same bounds
+ * object.
+ */
+export function extendBounds1D(bounds: Bounds1D, value: number): void {
+  bounds.min = Math.min(bounds.min, value);
+  bounds.max = Math.max(bounds.max, value);
 }

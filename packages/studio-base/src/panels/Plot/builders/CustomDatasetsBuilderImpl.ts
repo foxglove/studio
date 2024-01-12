@@ -9,7 +9,7 @@ import { Immutable, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { downsampleScatter } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { unionBounds1D } from "@foxglove/studio-base/types/Bounds";
+import { extendBounds1D } from "@foxglove/studio-base/types/Bounds";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { CsvDataset, GetViewportDatasetsResult, Viewport } from "./IDatasetsBuilder";
@@ -165,8 +165,8 @@ export class CustomDatasetsBuilderImpl {
 
       const allData: FullDatum[] = [];
 
-      let xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
-      let yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
+      const xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
+      const yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
 
       for (let idx = 0; idx < series.full.length && idx < this.#xValues.full.length; ++idx) {
         const xValue = this.#xValues.full[idx];
@@ -183,8 +183,8 @@ export class CustomDatasetsBuilderImpl {
           value: yValue.originalValue,
         });
 
-        xBounds = unionBounds1D(xBounds, { min: xValue.value, max: xValue.value });
-        yBounds = unionBounds1D(yBounds, { min: yValue.value, max: yValue.value });
+        extendBounds1D(xBounds, xValue.value);
+        extendBounds1D(yBounds, yValue.value);
       }
 
       const fullLength = allData.length;
@@ -203,8 +203,8 @@ export class CustomDatasetsBuilderImpl {
           value: yValue.originalValue,
         });
 
-        xBounds = unionBounds1D(xBounds, { min: xValue.value, max: xValue.value });
-        yBounds = unionBounds1D(yBounds, { min: yValue.value, max: yValue.value });
+        extendBounds1D(xBounds, xValue.value);
+        extendBounds1D(yBounds, yValue.value);
       }
 
       // Downsample scatter is designed for scatter plots without points since it culls values
