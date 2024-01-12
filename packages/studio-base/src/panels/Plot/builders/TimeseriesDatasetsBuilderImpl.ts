@@ -165,8 +165,10 @@ export class TimeseriesDatasetsBuilderImpl {
       let xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
       let yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
 
-      let prevX: number = 0;
-      let prevY: number = 0;
+      // Keep previous original values for computing derivative
+      let prevX = NaN;
+      let prevY = NaN;
+      let computedPrevDerivative = false;
 
       const derivative = series.config.derivative;
 
@@ -177,30 +179,44 @@ export class TimeseriesDatasetsBuilderImpl {
         item.index = i;
 
         if (derivative && i === 0) {
-          prevX = item.x;
-          prevY = item.y;
-
           // When we compute the derivative we will remove the first datum since we cannot compute its derivative
           startIdx = 1;
+          prevX = item.x;
+          prevY = item.y;
           continue;
         }
 
         if (viewport.bounds.x?.min != undefined && item.x < viewport.bounds.x.min) {
           startIdx = i;
+          prevX = item.x;
+          prevY = item.y;
           continue;
         }
 
+        // Make sure we compute one derivative point before the viewport begins
+        if (derivative && !computedPrevDerivative && i - 2 >= 0) {
+          const prevItem = allData[i - 1]!;
+          const prevPrevItem = allData[i - 2]!;
+          const dx = prevItem.x - prevPrevItem.x;
+          const newY = dx === 0 ? NaN : (prevItem.y - prevPrevItem.y) / dx;
+          allData[i - 1] = {
+            ...prevItem,
+            y: newY,
+            value: newY,
+          };
+        }
         if (derivative) {
           // calculate derivative and replace existing datum
-          const rangeDiff = item.x - prevX;
-          const newY = rangeDiff === 0 ? 0 : (item.y - prevY) / rangeDiff;
+          const dx = item.x - prevX;
+          const newY = dx === 0 ? NaN : (item.y - prevY) / dx;
           allData[i] = {
             ...item,
             y: newY,
+            value: newY,
           };
-
           prevX = item.x;
           prevY = item.y;
+          computedPrevDerivative = true;
         }
 
         if (!isNaN(item.x)) {
