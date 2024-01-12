@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ChartDataset } from "chart.js";
+import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
 import { toSec, isTime } from "@foxglove/rostime";
@@ -19,6 +20,7 @@ import { getLineColor, getContrastColor } from "@foxglove/studio-base/util/plotC
 import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
 import { OriginalValue, Datum, isReferenceLinePlotPathType } from "../internalTypes";
+import { mathFunctions } from "../mathFunctions";
 import { PlotConfig } from "../types";
 
 type DatumWithReceiveTime = Datum & {
@@ -51,6 +53,10 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       return;
     }
 
+    const xAxisMathFn =
+      (this.#parsedPath.modifier ? mathFunctions[this.#parsedPath.modifier] : undefined) ??
+      _.identity<number>;
+
     for (let i = msgEvents.length - 1; i >= 0; --i) {
       const msgEvent = msgEvents[i]!;
       if (msgEvent.topic !== this.#parsedPath.topicName) {
@@ -70,13 +76,15 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
           continue;
         }
 
-        this.#xValues.push(chartValue);
+        this.#xValues.push(xAxisMathFn(chartValue));
       }
 
       break;
     }
 
     for (const series of this.#seriesByMessagePath.values()) {
+      const mathFn = series.parsed.modifier ? mathFunctions[series.parsed.modifier] : undefined;
+
       // loop over the events backwards and once we find our first matching topic
       // read that for the path items
       for (let i = msgEvents.length - 1; i >= 0; --i) {
@@ -93,12 +101,14 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
           }
 
           const chartValue = getChartValue(item);
+          const mathModifiedValue =
+            mathFn && chartValue != undefined ? mathFn(chartValue) : undefined;
 
           return {
             x: this.#xValues[idx] ?? NaN,
-            y: chartValue ?? NaN,
+            y: chartValue == undefined ? NaN : mathModifiedValue ?? chartValue,
             receiveTime: msgEvent.receiveTime,
-            value: item,
+            value: mathModifiedValue ?? item,
           };
         });
 
