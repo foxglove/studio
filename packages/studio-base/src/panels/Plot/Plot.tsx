@@ -110,7 +110,7 @@ export function Plot(props: Props): JSX.Element {
   const {
     paths: series,
     showLegend,
-    xAxisVal,
+    xAxisVal: xAxisMode,
     xAxisPath,
     legendDisplay = config.showSidebar === true ? "left" : "floating",
     sidebarDimension = config.sidebarWidth ?? defaultSidebarDimension,
@@ -178,7 +178,7 @@ export function Plot(props: Props): JSX.Element {
       }
 
       // Only timestamp plots support click-to-seek
-      if (xAxisVal !== "timestamp" || !coordinator) {
+      if (xAxisMode !== "timestamp" || !coordinator) {
         return;
       }
 
@@ -200,7 +200,7 @@ export function Plot(props: Props): JSX.Element {
         seekPlayback(addTimes(start, fromSec(seekSeconds)));
       }
     },
-    [coordinator, getMessagePipelineState, xAxisVal],
+    [coordinator, getMessagePipelineState, xAxisMode],
   );
 
   const getPanelContextMenuItems = useCallback(() => {
@@ -214,12 +214,12 @@ export function Plot(props: Props): JSX.Element {
             return;
           }
 
-          downloadCSV(customTitle ?? "plot_data", data, xAxisVal);
+          downloadCSV(customTitle ?? "plot_data", data, xAxisMode);
         },
       },
     ];
     return items;
-  }, [coordinator, customTitle, xAxisVal]);
+  }, [coordinator, customTitle, xAxisMode]);
 
   const setSubscriptions = useMessagePipeline(
     useCallback(
@@ -254,7 +254,7 @@ export function Plot(props: Props): JSX.Element {
   }, [coordinator, getMessagePipelineState, subscribeMessasagePipeline]);
 
   const datasetsBuilder = useMemo(() => {
-    switch (xAxisVal) {
+    switch (xAxisMode) {
       case "timestamp":
         return new TimeseriesDatasetsBuilder();
       case "index":
@@ -264,11 +264,11 @@ export function Plot(props: Props): JSX.Element {
       case "currentCustom":
         return new CurrentCustomDatasetsBuilder();
       default:
-        throw new Error(`unsupported mode: ${xAxisVal}`);
+        throw new Error(`unsupported mode: ${xAxisMode}`);
     }
 
     return undefined;
-  }, [xAxisVal]);
+  }, [xAxisMode]);
 
   useEffect(() => {
     if (
@@ -445,10 +445,10 @@ export function Plot(props: Props): JSX.Element {
       setHoverValue({
         componentId: subscriberId,
         value: seconds,
-        type: xAxisVal === "timestamp" ? "PLAYBACK_SECONDS" : "OTHER",
+        type: xAxisMode === "timestamp" ? "PLAYBACK_SECONDS" : "OTHER",
       });
     },
-    [buildTooltip, coordinator, setHoverValue, subscriberId, xAxisVal],
+    [buildTooltip, coordinator, setHoverValue, subscriberId, xAxisMode],
   );
 
   // Looking up a tooltip is an async operation so the mouse might leave while the component while
@@ -563,7 +563,7 @@ export function Plot(props: Props): JSX.Element {
       return pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
     });
 
-    if ((xAxisVal === "custom" || xAxisVal === "currentCustom") && xAxisPath) {
+    if ((xAxisMode === "custom" || xAxisMode === "currentCustom") && xAxisPath) {
       const parsed = parseRosPath(xAxisPath.value);
       if (parsed) {
         const sub = pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
@@ -574,7 +574,7 @@ export function Plot(props: Props): JSX.Element {
     }
 
     setSubscriptions(subscriberId, subscriptions);
-  }, [series, setSubscriptions, subscriberId, globalVariables, xAxisVal, xAxisPath]);
+  }, [series, setSubscriptions, subscriberId, globalVariables, xAxisMode, xAxisPath]);
 
   // Only unsubscribe on unmount so that when the above subscriber effect dependencies change we
   // don't transition to unsubscribing all to then re-subscribe.
@@ -721,7 +721,7 @@ export function Plot(props: Props): JSX.Element {
             <VerticalBars
               coordinator={coordinator}
               hoverComponentId={subscriberId}
-              xAxisIsPlaybackTime={xAxisVal === "timestamp"}
+              xAxisIsPlaybackTime={xAxisMode === "timestamp"}
             />
           </div>
         </Tooltip>
