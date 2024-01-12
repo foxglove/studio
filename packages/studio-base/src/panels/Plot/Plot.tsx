@@ -229,7 +229,7 @@ export function Plot(props: Props): JSX.Element {
       [],
     ),
   );
-  const subscribeMessasagePipeline = useMessagePipelineSubscribe();
+  const subscribeMessagePipeline = useMessagePipelineSubscribe();
 
   const { globalVariables } = useGlobalVariables();
 
@@ -245,14 +245,14 @@ export function Plot(props: Props): JSX.Element {
       return;
     }
 
-    const unsub = subscribeMessasagePipeline((state) => {
+    const unsub = subscribeMessagePipeline((state) => {
       coordinator.handlePlayerState(state.playerState);
     });
 
     // Subscribing only gets us _new_ updates, so we feed the latest state into the chart
     coordinator.handlePlayerState(getMessagePipelineState().playerState);
     return unsub;
-  }, [coordinator, getMessagePipelineState, subscribeMessasagePipeline]);
+  }, [coordinator, getMessagePipelineState, subscribeMessagePipeline]);
 
   const datasetsBuilder = useMemo(() => {
     switch (xAxisMode) {
