@@ -18,10 +18,9 @@ import { getLineColor, getContrastColor } from "@foxglove/studio-base/util/plotC
 
 import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
+import { isReferenceLinePlotPathType, PlotConfig } from "../config";
 import { getChartValue, isChartValue, Datum } from "../datum";
-import { isReferenceLinePlotPathType } from "../internalTypes";
 import { mathFunctions } from "../mathFunctions";
-import { PlotConfig } from "../types";
 
 type DatumWithReceiveTime = Datum & {
   receiveTime: Time;

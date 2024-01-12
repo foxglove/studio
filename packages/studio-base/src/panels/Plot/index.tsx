@@ -14,7 +14,7 @@
 import Panel from "@foxglove/studio-base/components/Panel";
 
 import { Plot, defaultSidebarDimension } from "./Plot";
-import { PlotConfig } from "./types";
+import { PlotConfig } from "./config";
 
 const defaultConfig: PlotConfig = {
   paths: [],

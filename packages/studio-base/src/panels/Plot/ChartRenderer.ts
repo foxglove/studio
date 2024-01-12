@@ -13,7 +13,7 @@ import { Bounds, Bounds1D } from "@foxglove/studio-base/types/Bounds";
 import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 import { fontMonospace } from "@foxglove/theme";
 
-import { OriginalValue } from "./internalTypes";
+import { OriginalValue } from "./datum";
 
 export type Scale = {
   min: number;

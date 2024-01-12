@@ -1,20 +1,12 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2018-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
 
 import { Time } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { PANEL_TITLE_CONFIG_KEY } from "@foxglove/studio-base/util/layout";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 export type Messages = Record<string, MessageEvent[]>;
@@ -31,7 +23,6 @@ export type PlotPath = BasePlotPath & {
   showLine?: boolean;
   lineSize?: number;
 };
-export type PlotDataByPath = Map<PlotPath, PlotDataItem[]>;
 
 export type PlotXAxisVal =
   // x-axis is either receive time since start or header stamp since start
@@ -53,19 +44,6 @@ export type PlotDataItem = {
   headerStamp?: Time;
 };
 
-export type PlotParams = {
-  startTime: Time;
-  paths: readonly PlotPath[];
-  invertedTheme?: boolean;
-  xAxisPath?: BasePlotPath;
-  xAxisVal: PlotXAxisVal;
-  followingViewWidth: number | undefined;
-  minXValue: number | undefined;
-  maxXValue: number | undefined;
-  minYValue: string | number | undefined;
-  maxYValue: string | number | undefined;
-};
-
 /**
  * A "reference line" plot path is a numeric value. It creates a horizontal line on the plot at the
  * specified value.
@@ -74,3 +52,41 @@ export type PlotParams = {
 export function isReferenceLinePlotPathType(path: Immutable<PlotPath>): boolean {
   return !isNaN(Number.parseFloat(path.value));
 }
+
+/**
+ * Coalesces null, undefined and empty string to undefined.
+ */
+function presence<T>(value: undefined | T): undefined | T {
+  if (value === "") {
+    return undefined;
+  }
+
+  return value ?? undefined;
+}
+
+export function plotPathDisplayName(path: Readonly<PlotPath>, index: number): string {
+  return presence(path.label) ?? presence(path.value) ?? `Series ${index + 1}`;
+}
+type DeprecatedPlotConfig = {
+  showSidebar?: boolean;
+  sidebarWidth?: number;
+};
+
+export type PlotConfig = DeprecatedPlotConfig & {
+  paths: PlotPath[];
+  minXValue?: number;
+  maxXValue?: number;
+  minYValue?: string | number;
+  maxYValue?: string | number;
+  showLegend: boolean;
+  legendDisplay: "floating" | "top" | "left" | "none";
+  showPlotValuesInLegend: boolean;
+  showXAxisLabels: boolean;
+  showYAxisLabels: boolean;
+  isSynced: boolean;
+  xAxisVal: PlotXAxisVal;
+  xAxisPath?: BasePlotPath;
+  followingViewWidth?: number;
+  sidebarDimension: number;
+  [PANEL_TITLE_CONFIG_KEY]?: string;
+};

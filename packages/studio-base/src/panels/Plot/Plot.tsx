@@ -54,11 +54,10 @@ import { CurrentCustomDatasetsBuilder } from "./builders/CurrentCustomDatasetsBu
 import { CustomDatasetsBuilder } from "./builders/CustomDatasetsBuilder";
 import { IndexDatasetsBuilder } from "./builders/IndexDatasetsBuilder";
 import { TimeseriesDatasetsBuilder } from "./builders/TimeseriesDatasetsBuilder";
+import { isReferenceLinePlotPathType, PlotConfig } from "./config";
 import { downloadCSV } from "./csv";
-import { isReferenceLinePlotPathType } from "./internalTypes";
 import { usePlotPanelSettings } from "./settings";
 import { pathToSubscribePayload } from "./subscription";
-import { PlotConfig } from "./types";
 
 export const defaultSidebarDimension = 240;
 

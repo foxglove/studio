@@ -21,8 +21,7 @@ import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { InteractionEvent, Scale, UpdateAction } from "./ChartRenderer";
 import { OffscreenCanvasRenderer } from "./OffscreenCanvasRenderer";
 import { CsvDataset, IDatasetsBuilder, Viewport } from "./builders/IDatasetsBuilder";
-import { isReferenceLinePlotPathType } from "./internalTypes";
-import type { PlotConfig } from "./types";
+import { isReferenceLinePlotPathType, PlotConfig } from "./config";
 
 type EventTypes = {
   timeseriesBounds(bounds: Immutable<Bounds1D>): void;

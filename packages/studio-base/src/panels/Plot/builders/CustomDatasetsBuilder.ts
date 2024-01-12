@@ -31,10 +31,9 @@ import {
   IDatasetsBuilder,
   Viewport,
 } from "./IDatasetsBuilder";
+import { isReferenceLinePlotPathType, PlotConfig } from "../config";
 import { getChartValue, isChartValue } from "../datum";
-import { isReferenceLinePlotPathType } from "../internalTypes";
 import { MathFunction, mathFunctions } from "../mathFunctions";
-import { PlotConfig } from "../types";
 
 type SeriesItem = {
   key: SeriesConfigKey;

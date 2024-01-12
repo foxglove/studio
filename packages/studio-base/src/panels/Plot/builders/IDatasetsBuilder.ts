@@ -8,8 +8,8 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import type { PlayerState } from "@foxglove/studio-base/players/types";
 
 import type { Dataset } from "../ChartRenderer";
+import { PlotConfig } from "../config";
 import { OriginalValue } from "../datum";
-import { PlotConfig } from "../types";
 
 type CsvDatum = {
   x: number;

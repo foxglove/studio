@@ -21,8 +21,7 @@ import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutCo
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { getLineColor } from "@foxglove/studio-base/util/plotColors";
 
-import { PlotPath } from "./internalTypes";
-import { plotPathDisplayName } from "./types";
+import { PlotPath, plotPathDisplayName } from "./config";
 
 type PlotLegendRowProps = Immutable<{
   hasMismatchedDataLength: boolean;
