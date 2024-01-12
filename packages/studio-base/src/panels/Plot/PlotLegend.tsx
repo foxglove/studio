@@ -219,7 +219,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
       return;
     }
     const handler = (newPaths: readonly string[]) => {
-      setPathsWithMismatchedDataLengths([...newPaths]);
+      setPathsWithMismatchedDataLengths(newPaths.slice());
     };
     coordinator.on("pathsWithMismatchedDataLengthsChanged", handler);
     return () => {
@@ -236,7 +236,7 @@ function PlotLegendComponent(props: Props): JSX.Element {
       return;
     }
     const handler = (values: readonly unknown[]) => {
-      setCurrentValuesBySeriesIndex([...values]);
+      setCurrentValuesBySeriesIndex(values.slice());
     };
     coordinator.on("currentValuesChanged", handler);
     return () => {
