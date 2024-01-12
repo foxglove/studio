@@ -35,7 +35,7 @@ type SeriesItem = {
 };
 
 export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
-  #parsedPath?: Immutable<RosPath>;
+  #xParsedPath?: Immutable<RosPath>;
 
   #xValues: number[] = [];
 
@@ -44,7 +44,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
 
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
     const activeData = state.activeData;
-    if (!activeData || !this.#parsedPath) {
+    if (!activeData || !this.#xParsedPath) {
       return;
     }
 
@@ -54,16 +54,16 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     }
 
     const xAxisMathFn =
-      (this.#parsedPath.modifier ? mathFunctions[this.#parsedPath.modifier] : undefined) ??
+      (this.#xParsedPath.modifier ? mathFunctions[this.#xParsedPath.modifier] : undefined) ??
       _.identity<number>;
 
     for (let i = msgEvents.length - 1; i >= 0; --i) {
       const msgEvent = msgEvents[i]!;
-      if (msgEvent.topic !== this.#parsedPath.topicName) {
+      if (msgEvent.topic !== this.#xParsedPath.topicName) {
         continue;
       }
 
-      const items = simpleGetMessagePathDataItems(msgEvent, this.#parsedPath);
+      const items = simpleGetMessagePathDataItems(msgEvent, this.#xParsedPath);
 
       this.#xValues = [];
       for (const item of items) {
@@ -129,12 +129,12 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   }
 
   public setXPath(path: Immutable<RosPath> | undefined): void {
-    if (JSON.stringify(path) === JSON.stringify(this.#parsedPath)) {
+    if (JSON.stringify(path) === JSON.stringify(this.#xParsedPath)) {
       return;
     }
 
     // When the x-path changes we clear any existing data from the datasets
-    this.#parsedPath = path;
+    this.#xParsedPath = path;
     for (const series of this.#seriesByMessagePath.values()) {
       series.dataset.data = [];
     }

@@ -4,7 +4,7 @@
 
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 
-import { pathToPayload } from "./subscription";
+import { pathToSubscribePayload } from "./subscription";
 
 describe("subscription", () => {
   describe("pathToPayload", () => {
@@ -14,7 +14,7 @@ describe("subscription", () => {
         throw new Error(`invalid path: ${path}`);
       }
 
-      return pathToPayload(parsed);
+      return pathToSubscribePayload(parsed);
     };
 
     it("ignores path without a property", () => {

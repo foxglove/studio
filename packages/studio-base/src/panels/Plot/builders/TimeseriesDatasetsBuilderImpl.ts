@@ -143,7 +143,7 @@ export class TimeseriesDatasetsBuilderImpl {
       };
 
       // Copy so we can set the .index property for downsampling
-      // If downsampling aglos change to not need the .index then we can get rid of some copies
+      // If downsampling algos change to not need the .index then we can get rid of some copies
       const allData = series.full.slice();
 
       allData.push(...series.current);

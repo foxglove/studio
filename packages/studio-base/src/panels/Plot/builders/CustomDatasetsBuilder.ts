@@ -57,7 +57,7 @@ const registry = new FinalizationRegistry<Worker>((worker) => {
 });
 
 export class CustomDatasetsBuilder implements IDatasetsBuilder {
-  #parsedPath?: Immutable<RosPath>;
+  #xParsedPath?: Immutable<RosPath>;
   #xValuesCursor?: BlockTopicCursor;
 
   #datasetsBuilderWorker: Worker;
@@ -101,11 +101,11 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       }
 
       // Read the x-axis values
-      if (this.#parsedPath) {
-        const mathFn = this.#parsedPath.modifier
-          ? mathFunctions[this.#parsedPath.modifier]
+      if (this.#xParsedPath) {
+        const mathFn = this.#xParsedPath.modifier
+          ? mathFunctions[this.#xParsedPath.modifier]
           : undefined;
-        const pathItems = readMessagePathItems(msgEvents, this.#parsedPath, mathFn);
+        const pathItems = readMessagePathItems(msgEvents, this.#xParsedPath, mathFn);
 
         this.#pendingDataDispatch.push({
           type: "append-current-x",
@@ -139,9 +139,9 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
     const blocks = state.progress.messageCache?.blocks;
     if (blocks) {
-      if (this.#xValuesCursor && this.#parsedPath) {
-        const mathFn = this.#parsedPath.modifier
-          ? mathFunctions[this.#parsedPath.modifier]
+      if (this.#xValuesCursor && this.#xParsedPath) {
+        const mathFn = this.#xParsedPath.modifier
+          ? mathFunctions[this.#xParsedPath.modifier]
           : undefined;
 
         if (this.#xValuesCursor.nextWillReset(blocks)) {
@@ -152,7 +152,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
         let messageEvents = undefined;
         while ((messageEvents = this.#xValuesCursor.next(blocks)) != undefined) {
-          const pathItems = readMessagePathItems(messageEvents, this.#parsedPath, mathFn);
+          const pathItems = readMessagePathItems(messageEvents, this.#xParsedPath, mathFn);
 
           this.#pendingDataDispatch.push({
             type: "append-full-x",
@@ -202,13 +202,13 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
   }
 
   public setXPath(path: Immutable<RosPath> | undefined): void {
-    if (JSON.stringify(path) === JSON.stringify(this.#parsedPath)) {
+    if (JSON.stringify(path) === JSON.stringify(this.#xParsedPath)) {
       return;
     }
 
-    this.#parsedPath = path;
-    if (this.#parsedPath) {
-      this.#xValuesCursor = new BlockTopicCursor(this.#parsedPath.topicName);
+    this.#xParsedPath = path;
+    if (this.#xParsedPath) {
+      this.#xValuesCursor = new BlockTopicCursor(this.#xParsedPath.topicName);
     } else {
       this.#xValuesCursor = undefined;
     }

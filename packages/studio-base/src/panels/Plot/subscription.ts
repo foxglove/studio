@@ -11,7 +11,7 @@ import type { SubscribePayload } from "@foxglove/studio-base/players/types";
 
 const typeIsName = (part: Immutable<MessagePathPart>) => part.type === "name";
 
-export function pathToPayload(path: Immutable<RosPath>): SubscribePayload | undefined {
+export function pathToSubscribePayload(path: Immutable<RosPath>): SubscribePayload | undefined {
   const { messagePath: parts, topicName: topic } = path;
 
   const firstField = parts.find(typeIsName);

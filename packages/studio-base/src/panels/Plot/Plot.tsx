@@ -57,7 +57,7 @@ import { TimeseriesDatasetsBuilder } from "./builders/TimeseriesDatasetsBuilder"
 import { downloadCSV } from "./csv";
 import { isReferenceLinePlotPathType } from "./internalTypes";
 import { usePlotPanelSettings } from "./settings";
-import { pathToPayload } from "./subscription";
+import { pathToSubscribePayload } from "./subscription";
 import { PlotConfig } from "./types";
 
 export const defaultSidebarDimension = 240;
@@ -561,13 +561,13 @@ export function Plot(props: Props): JSX.Element {
         return;
       }
 
-      return pathToPayload(fillInGlobalVariablesInPath(parsed, globalVariables));
+      return pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
     });
 
     if ((xAxisVal === "custom" || xAxisVal === "currentCustom") && xAxisPath) {
       const parsed = parseRosPath(xAxisPath.value);
       if (parsed) {
-        const sub = pathToPayload(fillInGlobalVariablesInPath(parsed, globalVariables));
+        const sub = pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
         if (sub) {
           subscriptions.push(sub);
         }
