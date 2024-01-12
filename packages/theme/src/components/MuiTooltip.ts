@@ -11,6 +11,7 @@ export const MuiTooltip: OverrideComponentReturn<"MuiTooltip"> = {
   defaultProps: {
     arrow: true,
     TransitionComponent: Fade,
+    enterDelay: 500,
   },
   styleOverrides: {
     arrow: ({ theme }) => ({
