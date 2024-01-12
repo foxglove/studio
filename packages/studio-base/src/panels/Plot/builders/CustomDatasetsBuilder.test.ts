@@ -144,7 +144,7 @@ describe("CustomDatasetsBuilder", () => {
           {
             enabled: true,
             timestampMethod: "receiveTime",
-            value: "/baz.val",
+            value: "/baz.val.@negative",
           },
         ],
       }),
@@ -235,7 +235,7 @@ describe("CustomDatasetsBuilder", () => {
     });
 
     expect(result).toEqual({
-      pathsWithMismatchedDataLengths: new Set(["/baz.val"]),
+      pathsWithMismatchedDataLengths: new Set(["/baz.val.@negative"]),
       datasets: [
         expect.objectContaining({
           data: [
@@ -248,7 +248,7 @@ describe("CustomDatasetsBuilder", () => {
           fill: false,
         }),
         expect.objectContaining({
-          data: [{ x: 0, y: 4, value: 4 }],
+          data: [{ x: 0, y: -4, value: -4 }],
         }),
       ],
     });
@@ -270,7 +270,7 @@ describe("CustomDatasetsBuilder", () => {
           {
             enabled: true,
             timestampMethod: "receiveTime",
-            value: "/baz.val",
+            value: "/baz.val.@negative",
             lineSize: 1.0,
           },
         ],
@@ -363,7 +363,7 @@ describe("CustomDatasetsBuilder", () => {
     });
 
     expect(result).toEqual({
-      pathsWithMismatchedDataLengths: new Set(["/baz.val"]),
+      pathsWithMismatchedDataLengths: new Set(["/baz.val.@negative"]),
       datasets: [
         expect.objectContaining({
           data: [
@@ -376,7 +376,7 @@ describe("CustomDatasetsBuilder", () => {
           fill: false,
         }),
         expect.objectContaining({
-          data: [{ x: 0, y: 4, value: 4 }],
+          data: [{ x: 0, y: -4, value: -4 }],
           showLine: true,
           pointRadius: 1.2,
           fill: false,

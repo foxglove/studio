@@ -259,12 +259,13 @@ function readMessagePathItems(
       }
 
       const xValue = toSec(subtractTime(timestamp, startTime));
+      const mathModified = mathFunction ? mathFunction(chartValue) : chartValue;
       out.push({
         x: xValue,
-        y: mathFunction ? mathFunction(chartValue) : chartValue,
+        y: mathModified,
         receiveTime: event.receiveTime,
         headerStamp,
-        value: item,
+        value: mathFunction ? mathModified : item,
       });
     }
   }

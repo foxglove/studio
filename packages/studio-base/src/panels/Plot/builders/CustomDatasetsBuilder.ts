@@ -33,6 +33,7 @@ import {
   Viewport,
 } from "./IDatasetsBuilder";
 import { OriginalValue, isReferenceLinePlotPathType } from "../internalTypes";
+import { MathFunction, mathFunctions } from "../mathFunctions";
 import { PlotConfig } from "../types";
 
 type SeriesItem = {
@@ -101,7 +102,10 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
       // Read the x-axis values
       if (this.#parsedPath) {
-        const pathItems = readMessagePathItems(msgEvents, this.#parsedPath);
+        const mathFn = this.#parsedPath.modifier
+          ? mathFunctions[this.#parsedPath.modifier]
+          : undefined;
+        const pathItems = readMessagePathItems(msgEvents, this.#parsedPath, mathFn);
 
         this.#pendingDataDispatch.push({
           type: "append-current-x",
@@ -114,6 +118,9 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       }
 
       for (const seriesConfig of this.#seriesConfigs) {
+        const mathFn = seriesConfig.parsed.modifier
+          ? mathFunctions[seriesConfig.parsed.modifier]
+          : undefined;
         if (didSeek) {
           this.#pendingDataDispatch.push({
             type: "reset-current",
@@ -121,7 +128,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           });
         }
 
-        const pathItems = readMessagePathItems(msgEvents, seriesConfig.parsed);
+        const pathItems = readMessagePathItems(msgEvents, seriesConfig.parsed, mathFn);
         this.#pendingDataDispatch.push({
           type: "append-current",
           series: seriesConfig.messagePath,
@@ -133,6 +140,10 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     const blocks = state.progress.messageCache?.blocks;
     if (blocks) {
       if (this.#xValuesCursor && this.#parsedPath) {
+        const mathFn = this.#parsedPath.modifier
+          ? mathFunctions[this.#parsedPath.modifier]
+          : undefined;
+
         if (this.#xValuesCursor.nextWillReset(blocks)) {
           this.#pendingDataDispatch.push({
             type: "reset-full-x",
@@ -141,7 +152,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
         let messageEvents = undefined;
         while ((messageEvents = this.#xValuesCursor.next(blocks)) != undefined) {
-          const pathItems = readMessagePathItems(messageEvents, this.#parsedPath);
+          const pathItems = readMessagePathItems(messageEvents, this.#parsedPath, mathFn);
 
           this.#pendingDataDispatch.push({
             type: "append-full-x",
@@ -155,6 +166,10 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       }
 
       for (const seriesConfig of this.#seriesConfigs) {
+        const mathFn = seriesConfig.parsed.modifier
+          ? mathFunctions[seriesConfig.parsed.modifier]
+          : undefined;
+
         if (seriesConfig.blockCursor.nextWillReset(blocks)) {
           this.#pendingDataDispatch.push({
             type: "reset-full",
@@ -164,7 +179,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
         let messageEvents = undefined;
         while ((messageEvents = seriesConfig.blockCursor.next(blocks)) != undefined) {
-          const pathItems = readMessagePathItems(messageEvents, seriesConfig.parsed);
+          const pathItems = readMessagePathItems(messageEvents, seriesConfig.parsed, mathFn);
 
           this.#pendingDataDispatch.push({
             type: "append-full",
@@ -281,6 +296,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 function readMessagePathItems(
   events: Immutable<MessageEvent[]>,
   path: Immutable<RosPath>,
+  mathFunction?: MathFunction,
 ): ValueItem[] {
   const out = [];
   for (const event of events) {
@@ -298,9 +314,10 @@ function readMessagePathItems(
         continue;
       }
 
+      const mathModified = mathFunction ? mathFunction(chartValue) : chartValue;
       out.push({
-        value: chartValue,
-        originalValue: item,
+        value: mathModified,
+        originalValue: mathFunction ? mathModified : item,
         receiveTime: event.receiveTime,
       });
     }
