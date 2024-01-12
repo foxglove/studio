@@ -368,14 +368,10 @@ export function Plot(props: Props): JSX.Element {
     [coordinator],
   );
 
-  const [buildTooltip, setBuildTooltip] = useState<
-    ((args: ElementAtPixelArgs) => void) | undefined
-  >(undefined);
-
   const mousePresentRef = useRef(false);
 
-  useEffect(() => {
-    const moveHandler = debouncePromise(async (args: ElementAtPixelArgs) => {
+  const buildTooltip = useMemo(() => {
+    return debouncePromise(async (args: ElementAtPixelArgs) => {
       const elements = await renderer?.getElementsAtPixel({
         x: args.canvasX,
         y: args.canvasY,
@@ -411,13 +407,6 @@ export function Plot(props: Props): JSX.Element {
         data: tooltipItems,
       });
     });
-
-    setBuildTooltip(() => {
-      return moveHandler;
-    });
-    return () => {
-      setBuildTooltip(undefined);
-    };
   }, [renderer]);
 
   // Extract the bounding client rect from currentTarget before calling the debounced function
@@ -426,7 +415,7 @@ export function Plot(props: Props): JSX.Element {
     (event: React.MouseEvent<HTMLElement>) => {
       mousePresentRef.current = true;
       const boundingRect = event.currentTarget.getBoundingClientRect();
-      buildTooltip?.({
+      buildTooltip({
         clientX: event.clientX,
         clientY: event.clientY,
         canvasX: event.clientX - boundingRect.left,
