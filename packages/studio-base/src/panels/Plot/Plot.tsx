@@ -4,6 +4,7 @@
 
 import { Button, Tooltip, Fade, buttonClasses, useTheme } from "@mui/material";
 import Hammer from "hammerjs";
+import * as _ from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
@@ -300,13 +301,11 @@ export function Plot(props: Props): JSX.Element {
     const canvas = document.createElement("canvas");
     canvas.style.width = "100%";
     canvas.style.height = "100%";
+    // So the canvas does not affect the size of the parent
+    canvas.style.position = "absolute";
     canvas.width = clientRect.width;
     canvas.height = clientRect.height;
     canvasDiv.appendChild(canvas);
-
-    if (typeof canvas.transferControlToOffscreen !== "function") {
-      throw new Error("Offscreen rendering is not supported");
-    }
 
     const offscreenCanvas = canvas.transferControlToOffscreen();
     setRenderer(new OffscreenCanvasRenderer(offscreenCanvas, theme));
@@ -331,12 +330,10 @@ export function Plot(props: Props): JSX.Element {
       height: contentRect.height,
     });
 
+    const isCanvasTarget = (entry: Immutable<ResizeObserverEntry>) => entry.target === canvasDiv;
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.target !== canvasDiv) {
-          continue;
-        }
-
+      const entry = _.findLast(entries, isCanvasTarget);
+      if (entry) {
         plotCoordinator.setSize({
           width: entry.contentRect.width,
           height: entry.contentRect.height,
@@ -384,6 +381,8 @@ export function Plot(props: Props): JSX.Element {
         y: args.canvasY,
       });
 
+      // Looking up a tooltip is an async operation so the mouse might leave the component while
+      // that is happening and we need to avoid showing a tooltip.
       if (!elements || elements.length === 0 || !mousePresentRef.current) {
         setActiveTooltip(undefined);
         return;
@@ -451,8 +450,6 @@ export function Plot(props: Props): JSX.Element {
     [buildTooltip, coordinator, setHoverValue, subscriberId, xAxisMode],
   );
 
-  // Looking up a tooltip is an async operation so the mouse might leave while the component while
-  // that is happening and we need to avoid showing a tooltip.
   const onMouseOut = useCallback(() => {
     mousePresentRef.current = false;
     setActiveTooltip(undefined);
@@ -487,6 +484,7 @@ export function Plot(props: Props): JSX.Element {
     ) : undefined;
   }, [activeTooltip, colorsByDatasetIndex, labelsByDatasetIndex, numSeries]);
 
+  // panning
   useEffect(() => {
     if (!canvasDiv || !coordinator) {
       return;
