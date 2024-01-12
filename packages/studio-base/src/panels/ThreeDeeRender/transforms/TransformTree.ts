@@ -2,12 +2,37 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { ObjectPool } from "@foxglove/den/collection";
+
 import { CoordinateFrame, MAX_DURATION, FallbackFrameId, AnyFrameId } from "./CoordinateFrame";
 import { Transform } from "./Transform";
 import { Pose } from "./geometry";
 import { Duration, Time } from "./time";
 
-const DEFAULT_MAX_CAPACITY_PER_FRAME = 50_000;
+/**
+ * Defines the maximum number of transforms across time stored in a single
+ * `CoordinateFrame`.
+ * We store a history of transforms received so that Markers and other 3D elements
+ * can reference the state of a CoordinateFrame transform at a particular time rather than
+ * only storing the most recent frame.
+ * Considerations for the setting of this value are:
+ *  - the larger the value, the more memory is used per panel
+ *  - the larger the value, the longer it can take to set transforms within the history
+ *  - the larger the value, the more likely it is that objects will be able to reference transforms at older times.
+ *    Note that this is highly dependent on the frequency transforms for a given frame are published.
+ *    For example, for 50Hz transforms for a single frame and a value of 5,000 max capacity. The transform
+ *    history will contain 100 seconds of history for this frame.
+ *    For 1kHz transforms for a single frame and a value of 5,000 max capacity. The transform history would
+ *    only store 5 seconds of history for this frame.
+ *    If the object references a transform at a time older than the history, it will simply use the oldest transform for that frame
+ *    which is not guaranteed to be accurate.
+ *
+ * We generally want to keep this higher to allow for larger transform histories, but
+ * also want to be mindful to memory and performance concerns when doing so
+ *
+ * This number is mentioned in the docs. If changed docs must be updated.
+ */
+export const DEFAULT_MAX_CAPACITY_PER_FRAME = 10_000;
 
 export enum AddTransformResult {
   NOT_UPDATED,
@@ -26,12 +51,16 @@ export class TransformTree {
   #frames = new Map<string, CoordinateFrame>();
   #maxStorageTime: Duration;
   #maxCapacityPerFrame: number;
+  #transformPool: ObjectPool<Transform>;
+
   public defaultRootFrame: CoordinateFrame<FallbackFrameId>;
 
   public constructor(
+    transformPool: ObjectPool<Transform>,
     maxStorageTime = MAX_DURATION,
     maxCapacityPerFrame = DEFAULT_MAX_CAPACITY_PER_FRAME,
   ) {
+    this.#transformPool = transformPool;
     this.#maxStorageTime = maxStorageTime;
     this.#maxCapacityPerFrame = maxCapacityPerFrame;
     this.defaultRootFrame = new CoordinateFrame(
@@ -39,6 +68,7 @@ export class TransformTree {
       undefined,
       this.#maxStorageTime,
       this.#maxCapacityPerFrame,
+      this.#transformPool,
     );
     this.defaultRootFrame.addTransform(0n, Transform.Identity());
   }
@@ -66,6 +96,7 @@ export class TransformTree {
     if (!cycleDetected) {
       frame.addTransform(time, transform);
     }
+
     return cycleDetected
       ? AddTransformResult.CYCLE_DETECTED
       : updated
@@ -172,7 +203,13 @@ export class TransformTree {
   public getOrCreateFrame(id: string): CoordinateFrame {
     let frame = this.#frames.get(id);
     if (!frame) {
-      frame = new CoordinateFrame(id, undefined, this.#maxStorageTime, this.#maxCapacityPerFrame);
+      frame = new CoordinateFrame(
+        id,
+        undefined,
+        this.#maxStorageTime,
+        this.#maxCapacityPerFrame,
+        this.#transformPool,
+      );
       this.#frames.set(id, frame);
     }
     return frame;
@@ -293,7 +330,11 @@ export class TransformTree {
   }
 
   public static Clone(tree: TransformTree): TransformTree {
-    const newTree = new TransformTree(tree.#maxStorageTime, tree.#maxCapacityPerFrame);
+    const newTree = new TransformTree(
+      tree.#transformPool,
+      tree.#maxStorageTime,
+      tree.#maxCapacityPerFrame,
+    );
     newTree.#frames = tree.#frames;
     return newTree;
   }
