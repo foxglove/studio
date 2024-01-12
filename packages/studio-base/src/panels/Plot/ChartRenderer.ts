@@ -161,10 +161,9 @@ export class ChartRenderer {
       // responsive mode does not work properly with offscreen canvases and retina device pixel ratios
       // it results in a run-away canvas that keeps doubling in size!
       responsive: false,
-      // https://www.chartjs.org/docs/latest/general/data-structures.html#dataset-configuration
-      parsing: false,
       scales: {
         x: {
+          type: "linear",
           display: true,
           grid: { color: args.gridColor },
           ticks: {
@@ -177,6 +176,7 @@ export class ChartRenderer {
           },
         },
         y: {
+          type: "linear",
           display: true,
           grid: { color: args.gridColor },
           ticks: {
