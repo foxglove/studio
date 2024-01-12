@@ -40,8 +40,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   #seriesByMessagePath = new Map<string, SeriesItem>();
   #pathsWithMismatchedDataLengths = new Set<string>();
 
-  #range: Bounds1D = { min: 0, max: 0 };
-
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
     const activeData = state.activeData;
     if (!activeData || !this.#parsedPath) {
@@ -72,15 +70,12 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
           continue;
         }
 
-        this.#range.min = Math.min(chartValue, this.#range.min);
-        this.#range.max = Math.max(chartValue, this.#range.max);
         this.#xValues.push(chartValue);
       }
 
       break;
     }
 
-    const range: Bounds1D = { min: 0, max: 0 };
     for (const series of this.#seriesByMessagePath.values()) {
       // loop over the events backwards and once we find our first matching topic
       // read that for the path items
@@ -114,14 +109,13 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
         }
 
         series.dataset.data = pathItems;
-
         break;
       }
-
-      range.max = Math.max(range.max, series.dataset.data.length);
     }
 
-    return range;
+    // Returning undefined means we allow the chart to determine the bounds and don't need to
+    // provide the dataset bounds.
+    return undefined;
   }
 
   public setXPath(path: Immutable<RosPath> | undefined): void {
