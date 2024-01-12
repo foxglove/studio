@@ -145,19 +145,8 @@ export class TimeseriesDatasetsBuilderImpl {
       // Copy so we can set the .index property for downsampling
       // If downsampling aglos change to not need the .index then we can get rid of some copies
       const allData = series.full.slice();
-      if (series.current.length > 0) {
-        // Add a NaN entry to create a discontinuity between the full data and the current data and
-        // avoid the "long interpolated line" during preloading if the current playback head is
-        // later in the data
-        allData.push({
-          x: NaN,
-          y: NaN,
-          index: 0,
-          receiveTime: { sec: 0, nsec: 0 },
-          value: NaN,
-        });
-        allData.push(...series.current);
-      }
+
+      allData.push(...series.current);
 
       let startIdx = 0;
       let endIdx = allData.length;
@@ -165,8 +154,9 @@ export class TimeseriesDatasetsBuilderImpl {
       let xBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
       let yBounds: Bounds1D = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
 
-      let prevX: number = 0;
-      let prevY: number = 0;
+      // Keep previous original values for computing derivative
+      let prevX = NaN;
+      let prevY = NaN;
 
       const derivative = series.config.derivative;
 
@@ -176,31 +166,29 @@ export class TimeseriesDatasetsBuilderImpl {
         const item = allData[i]!;
         item.index = i;
 
-        if (derivative && i === 0) {
+        if (derivative) {
+          if (i === 0) {
+            // When we compute the derivative we will remove the first datum since we cannot compute its derivative
+            startIdx = 1;
+            prevX = item.x;
+            prevY = item.y;
+            continue;
+          }
+          // calculate derivative and replace existing datum
+          const dx = item.x - prevX;
+          const newY = dx === 0 ? NaN : (item.y - prevY) / dx;
+          allData[i] = {
+            ...item,
+            y: newY,
+            value: newY,
+          };
           prevX = item.x;
           prevY = item.y;
-
-          // When we compute the derivative we will remove the first datum since we cannot compute its derivative
-          startIdx = 1;
-          continue;
         }
 
         if (viewport.bounds.x?.min != undefined && item.x < viewport.bounds.x.min) {
           startIdx = i;
           continue;
-        }
-
-        if (derivative) {
-          // calculate derivative and replace existing datum
-          const rangeDiff = item.x - prevX;
-          const newY = rangeDiff === 0 ? 0 : (item.y - prevY) / rangeDiff;
-          allData[i] = {
-            ...item,
-            y: newY,
-          };
-
-          prevX = item.x;
-          prevY = item.y;
         }
 
         if (!isNaN(item.x)) {
@@ -248,10 +236,26 @@ export class TimeseriesDatasetsBuilderImpl {
         dataset.pointRadius = 0;
       }
 
+      // We only need to add the NaN entry if using lines and there is both full and current data
+      // to create a discontinuity after the full data.
+      let shouldAddNan = dataset.showLine === true && series.full.length > 0;
+
       for (const index of downsampledIndicies) {
         const item = allData[index];
         if (!item) {
           continue;
+        }
+
+        // Add a NaN entry to create a discontinuity between the full data and the current data and
+        // avoid the "long interpolated line" during preloading if the current playback head is
+        // later in the data
+        if (shouldAddNan && index >= series.full.length) {
+          shouldAddNan = false;
+          dataset.data.push({
+            x: NaN,
+            y: NaN,
+            value: NaN,
+          });
         }
 
         dataset.data.push({
