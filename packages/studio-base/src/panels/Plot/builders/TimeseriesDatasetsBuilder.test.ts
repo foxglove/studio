@@ -4,7 +4,9 @@
 
 import * as Comlink from "comlink";
 import EventEmitter from "eventemitter3";
+import * as _ from "lodash-es";
 
+import { MessageEvent } from "@foxglove/studio";
 import { PlotConfig } from "@foxglove/studio-base/panels/Plot/types";
 import {
   MessageBlock,
@@ -73,6 +75,10 @@ Object.defineProperty(global, "Worker", {
   value: Worker,
 });
 
+function groupByTopic(events: MessageEvent[]): Record<string, MessageEvent[]> {
+  return _.groupBy(events, (item) => item.topic);
+}
+
 function buildPlotConfig(override: Partial<PlotConfig>): PlotConfig {
   return {
     isSynced: true,
@@ -122,6 +128,176 @@ function buildPlayerState(
 }
 
 describe("TimeseriesDatasetsBuilder", () => {
+  it("should process current messages into a dataset", async () => {
+    const builder = new TimeseriesDatasetsBuilder();
+
+    builder.setConfig(
+      buildPlotConfig({
+        paths: [
+          {
+            enabled: true,
+            timestampMethod: "receiveTime",
+            value: "/foo.val",
+          },
+        ],
+      }),
+      "light",
+      {},
+    );
+
+    builder.handlePlayerState(
+      buildPlayerState({
+        messages: [
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 0,
+            },
+          },
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 0.5, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 1,
+            },
+          },
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 1, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 1.5,
+            },
+          },
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 2, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 2.5,
+            },
+          },
+        ],
+      }),
+    );
+
+    await expect(
+      builder.getViewportDatasets({
+        size: { width: 1_000, height: 1_000 },
+        bounds: {},
+      }),
+    ).resolves.toEqual({
+      pathsWithMismatchedDataLengths: new Set(),
+      datasets: [
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 0, value: 0 },
+            { x: 0.5, y: 1, value: 1 },
+            { x: 1, y: 1.5, value: 1.5 },
+            { x: 2, y: 2.5, value: 2.5 },
+          ],
+        }),
+      ],
+    });
+  });
+
+  it("should create a discontinuity between current and full", async () => {
+    const builder = new TimeseriesDatasetsBuilder();
+
+    builder.setConfig(
+      buildPlotConfig({
+        paths: [
+          {
+            enabled: true,
+            timestampMethod: "receiveTime",
+            value: "/foo.val",
+          },
+        ],
+      }),
+      "light",
+      {},
+    );
+
+    const block = {
+      sizeInBytes: 0,
+      messagesByTopic: groupByTopic([
+        {
+          topic: "/foo",
+          schemaName: "foo",
+          receiveTime: { sec: 0, nsec: 0 },
+          sizeInBytes: 0,
+          message: {
+            val: 0,
+          },
+        },
+        {
+          topic: "/foo",
+          schemaName: "foo",
+          receiveTime: { sec: 0.5, nsec: 0 },
+          sizeInBytes: 0,
+          message: {
+            val: 1,
+          },
+        },
+      ]),
+    };
+
+    builder.handlePlayerState(
+      buildPlayerState(
+        {
+          messages: [
+            {
+              topic: "/foo",
+              schemaName: "foo",
+              receiveTime: { sec: 1, nsec: 0 },
+              sizeInBytes: 0,
+              message: {
+                val: 1.5,
+              },
+            },
+            {
+              topic: "/foo",
+              schemaName: "foo",
+              receiveTime: { sec: 2, nsec: 0 },
+              sizeInBytes: 0,
+              message: {
+                val: 2.5,
+              },
+            },
+          ],
+        },
+        [block],
+      ),
+    );
+
+    await expect(
+      builder.getViewportDatasets({
+        size: { width: 1_000, height: 1_000 },
+        bounds: {},
+      }),
+    ).resolves.toEqual({
+      pathsWithMismatchedDataLengths: new Set(),
+      datasets: [
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 0, value: 0 },
+            { x: 0.5, y: 1, value: 1 },
+            { x: NaN, y: NaN, value: NaN },
+            { x: 1, y: 1.5, value: 1.5 },
+            { x: 2, y: 2.5, value: 2.5 },
+          ],
+        }),
+      ],
+    });
+  });
+
   it("computes derivative inside and outside of viewport", async () => {
     const builder = new TimeseriesDatasetsBuilder();
 
@@ -197,10 +373,6 @@ describe("TimeseriesDatasetsBuilder", () => {
       datasets: [
         expect.objectContaining({
           data: [
-            { x: NaN, y: NaN, value: NaN },
-            { x: NaN, y: NaN, value: NaN },
-            { x: NaN, y: NaN, value: NaN },
-            { x: NaN, y: NaN, value: NaN },
             { x: 0, y: 0, value: 0 },
             { x: 0.5, y: 1, value: 1 },
             { x: 1, y: 1.5, value: 1.5 },
@@ -209,10 +381,6 @@ describe("TimeseriesDatasetsBuilder", () => {
         }),
         expect.objectContaining({
           data: [
-            { x: 0, y: NaN, value: NaN },
-            { x: 0, y: NaN, value: NaN },
-            { x: 0, y: NaN, value: NaN },
-            { x: 0, y: NaN, value: NaN },
             { x: 0.5, y: 2, value: 2 },
             { x: 1, y: 1, value: 1 },
             { x: 2, y: 1, value: 1 },
@@ -241,10 +409,6 @@ describe("TimeseriesDatasetsBuilder", () => {
         }),
         expect.objectContaining({
           data: [
-            { x: 0, y: NaN, value: NaN },
-            { x: 0, y: NaN, value: NaN },
-            { x: 0, y: NaN, value: NaN },
-            { x: 0, y: NaN, value: NaN },
             { x: 0.5, y: 2, value: 2 },
             { x: 1, y: 1, value: 1 },
             { x: 2, y: 1, value: 1 },
