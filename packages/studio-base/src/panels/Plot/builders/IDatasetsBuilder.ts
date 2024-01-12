@@ -8,7 +8,7 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import type { PlayerState } from "@foxglove/studio-base/players/types";
 
 import type { Dataset } from "../ChartRenderer";
-import { OriginalValue } from "../internalTypes";
+import { OriginalValue } from "../datum";
 import { PlotConfig } from "../types";
 
 type CsvDatum = {
@@ -22,12 +22,15 @@ type CsvDatum = {
 type Size = { width: number; height: number };
 
 export type Viewport = {
-  // The numeric bounds of the viewport. When x or y are undefined, that axis is not bounded
-  // and assumed to display the entire range from the data.
+  /**
+   * The data bounds of the viewport. The bounds hint which data will be visible to the user. When
+   * undefined, assumes that all data is visible in the viewport.
+   */
   bounds: {
     x?: Partial<Bounds1D>;
     y?: Partial<Bounds1D>;
   };
+  /** The pixel size of the viewport */
   size: Size;
 };
 
@@ -41,6 +44,13 @@ export type GetViewportDatasetsResult = {
   pathsWithMismatchedDataLengths: ReadonlySet<string>;
 };
 
+/**
+ * IDatasetBuilder defines methods for updating the building a dataset.
+ *
+ * Dataset updates (via new player state, and config) are syncronous and the callers do not expect
+ * to wait on any promise. While getting the viewport datasets and csv data are async to allow them
+ * to happen on a worker.
+ */
 interface IDatasetsBuilder {
   handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
 

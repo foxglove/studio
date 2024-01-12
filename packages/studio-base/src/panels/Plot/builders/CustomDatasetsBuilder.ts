@@ -6,7 +6,6 @@ import * as Comlink from "comlink";
 import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
-import { toSec, isTime } from "@foxglove/rostime";
 import { Immutable, MessageEvent } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
@@ -15,7 +14,7 @@ import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/Me
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState } from "@foxglove/studio-base/players/types";
-import { unionBounds1D } from "@foxglove/studio-base/types/Bounds";
+import { extendBounds1D, unionBounds1D } from "@foxglove/studio-base/types/Bounds";
 import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotColors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
@@ -32,7 +31,8 @@ import {
   IDatasetsBuilder,
   Viewport,
 } from "./IDatasetsBuilder";
-import { OriginalValue, isReferenceLinePlotPathType } from "../internalTypes";
+import { getChartValue, isChartValue } from "../datum";
+import { isReferenceLinePlotPathType } from "../internalTypes";
 import { MathFunction, mathFunctions } from "../mathFunctions";
 import { PlotConfig } from "../types";
 
@@ -326,47 +326,8 @@ function readMessagePathItems(
   return out;
 }
 
-function isChartValue(value: unknown): value is OriginalValue {
-  switch (typeof value) {
-    case "bigint":
-    case "boolean":
-    case "number":
-    case "string":
-      return true;
-    case "object":
-      if (isTime(value)) {
-        return true;
-      }
-      return false;
-    default:
-      return false;
-  }
-  return false;
-}
-
-function getChartValue(value: unknown): number | undefined {
-  switch (typeof value) {
-    case "bigint":
-      return Number(value);
-    case "boolean":
-      return Number(value);
-    case "number":
-      return value;
-    case "object":
-      if (isTime(value)) {
-        return toSec(value);
-      }
-      return undefined;
-    case "string":
-      return +value;
-    default:
-      return undefined;
-  }
-}
-
 function accumulateBounds(acc: Bounds1D, item: Immutable<ValueItem>) {
-  acc.max = Math.max(acc.max, item.value);
-  acc.min = Math.min(acc.min, item.value);
+  extendBounds1D(acc, item.value);
   return acc;
 }
 

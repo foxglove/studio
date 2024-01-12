@@ -16,7 +16,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { CsvDataset, Viewport } from "./IDatasetsBuilder";
 import type { Dataset } from "../ChartRenderer";
-import { Datum } from "../internalTypes";
+import { Datum } from "../datum";
 
 export type DataItem = Datum & {
   receiveTime: Time;

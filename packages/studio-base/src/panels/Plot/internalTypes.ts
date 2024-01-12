@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ScatterDataPoint } from "chart.js";
-
 import { Time } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
@@ -48,16 +46,6 @@ export type PlotXAxisVal =
   // correspondible series message path value at the same array index. Only the latest message is used
   // for x-axis and each series
   | "currentCustom";
-
-export type OriginalValue = string | bigint | number | boolean | Time;
-
-// In addition to the base datum, we also add receiveTime and optionally header stamp to our datums
-// These are used in the csv export.
-export type Datum = ScatterDataPoint & {
-  value: OriginalValue;
-  receiveTime: Time;
-  headerStamp?: Time;
-};
 
 export type PlotDataItem = {
   queriedData: MessagePathDataItem[];

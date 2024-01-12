@@ -5,7 +5,7 @@
 import * as Comlink from "comlink";
 
 import { filterMap } from "@foxglove/den/collection";
-import { toSec, subtract as subtractTime, isTime } from "@foxglove/rostime";
+import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
@@ -31,7 +31,8 @@ import type {
   UpdateDataAction,
   SeriesConfigKey,
 } from "./TimeseriesDatasetsBuilderImpl";
-import { OriginalValue, isReferenceLinePlotPathType } from "../internalTypes";
+import { getChartValue, isChartValue } from "../datum";
+import { isReferenceLinePlotPathType } from "../internalTypes";
 import { MathFunction, mathFunctions } from "../mathFunctions";
 import { PlotConfig } from "../types";
 
@@ -274,42 +275,4 @@ function readMessagePathItems(
   }
 
   return out;
-}
-
-function isChartValue(value: unknown): value is OriginalValue {
-  switch (typeof value) {
-    case "bigint":
-    case "boolean":
-    case "number":
-    case "string":
-      return true;
-    case "object":
-      if (isTime(value)) {
-        return true;
-      }
-      return false;
-    default:
-      return false;
-  }
-  return false;
-}
-
-function getChartValue(value: unknown): number | undefined {
-  switch (typeof value) {
-    case "bigint":
-      return Number(value);
-    case "boolean":
-      return Number(value);
-    case "number":
-      return value;
-    case "object":
-      if (isTime(value)) {
-        return toSec(value);
-      }
-      return undefined;
-    case "string":
-      return +value;
-    default:
-      return undefined;
-  }
 }
