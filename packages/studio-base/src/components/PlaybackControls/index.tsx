@@ -257,7 +257,7 @@ export default function PlaybackControls(props: {
             <Tooltip
               title={
                 <>
-                  Seek foreward <kbd>→</kbd>
+                  Seek forward <kbd>→</kbd>
                 </>
               }
             >
