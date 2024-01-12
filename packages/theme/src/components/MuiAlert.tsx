@@ -41,6 +41,7 @@ export const MuiAlert: OverrideComponentReturn<"MuiAlert"> = {
       info: <Info20Regular />,
       success: <CheckmarkCircle20Regular />,
       warning: <Warning20Regular />,
+      primary: <Info20Regular />,
     },
   },
   styleOverrides: {
