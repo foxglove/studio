@@ -699,6 +699,7 @@ describe("fillInGlobalVariablesInPath", () => {
     });
   });
 
+  // This test captures current behavior, but in the future we might want to add support for boolean values.
   it("does not fill in boolean values", () => {
     expect(
       fillInGlobalVariablesInPath(
