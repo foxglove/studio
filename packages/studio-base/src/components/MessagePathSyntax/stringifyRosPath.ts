@@ -71,9 +71,10 @@ function slicePartToString(slicePart: Immutable<SlicePart>): string {
 
 function filterToString(filter: Immutable<MessagePathFilter>): string {
   if (typeof filter.value === "object") {
-    const start = filter.path[0] ?? "";
-    return `{${start}==$${filter.value.variableName}}`;
+    return `{${filter.repr}}`;
   }
 
-  return `{${filter.repr}}`;
+  return `{${filter.path.join(".")}==${
+    typeof filter.value === "bigint" ? filter.value.toString() : JSON.stringify(filter.value)
+  }}`;
 }
