@@ -152,7 +152,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     }
     this.#followRange = config.followingViewWidth;
 
-    this.#configBounds = {
+    const newConfigBounds = {
       x: {
         max: config.maxXValue,
         min: config.minXValue,
@@ -162,6 +162,10 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
         min: config.minYValue == undefined ? undefined : +config.minYValue,
       },
     };
+    const configYBoundsChanged =
+      this.#configBounds.y.min !== newConfigBounds.y.min ||
+      this.#configBounds.y.max !== newConfigBounds.y.max;
+    this.#configBounds = newConfigBounds;
 
     const referenceLines = filterMap(config.paths, (path, idx) => {
       if (!path.enabled || !isReferenceLinePlotPathType(path)) {
@@ -201,8 +205,10 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#updateAction.showYAxisLabels = config.showYAxisLabels;
     this.#updateAction.referenceLines = referenceLines;
 
-    // Config changes to yBounds always takes precedence over user interaction changes like pan/zoom
-    this.#updateAction.yBounds = this.#configBounds.y;
+    if (configYBoundsChanged) {
+      // Config changes to yBounds always takes precedence over user interaction changes like pan/zoom
+      this.#updateAction.yBounds = this.#configBounds.y;
+    }
 
     const seriesItems = filterMap(config.paths, (path, idx): Immutable<SeriesItem> | undefined => {
       if (isReferenceLinePlotPathType(path)) {
