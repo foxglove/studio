@@ -75,7 +75,7 @@ export type GetViewportDatasetsResult = {
 interface IDatasetsBuilder {
   handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
 
-  setConfig(config: Immutable<SeriesItem[]>): void;
+  setSeries(series: Immutable<SeriesItem[]>): void;
 
   getViewportDatasets(viewport: Immutable<Viewport>): Promise<GetViewportDatasetsResult>;
 

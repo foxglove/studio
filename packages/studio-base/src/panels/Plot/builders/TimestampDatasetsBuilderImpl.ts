@@ -75,13 +75,13 @@ export class TimestampDatasetsBuilderImpl {
     }
   }
 
-  public setConfig(series: Immutable<SeriesItem[]>): void {
+  public setSeries(series: Immutable<SeriesItem[]>): void {
     // Make a new map so we drop series which are no longer present
     const newSeries = new Map();
 
     for (const config of series) {
       let existingSeries = this.#seriesByKey.get(config.key);
-      if (!existingSeries || existingSeries.config.key !== config.key) {
+      if (!existingSeries) {
         existingSeries = {
           config,
           current: [],

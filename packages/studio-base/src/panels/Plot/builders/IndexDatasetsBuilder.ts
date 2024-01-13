@@ -82,17 +82,17 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
     return range;
   }
 
-  public setConfig(config: Immutable<SeriesItem[]>): void {
+  public setSeries(series: Immutable<SeriesItem[]>): void {
     // Make a new map so we drop series which are no longer present
     const newSeries = new Map();
 
-    for (const series of config) {
-      let existingSeries = this.#seriesByKey.get(series.key);
+    for (const item of series) {
+      let existingSeries = this.#seriesByKey.get(item.key);
       if (!existingSeries) {
         existingSeries = {
-          enabled: series.enabled,
-          messagePath: series.messagePath,
-          parsed: series.parsed,
+          enabled: item.enabled,
+          messagePath: item.messagePath,
+          parsed: item.parsed,
           dataset: {
             data: [],
           },
@@ -101,17 +101,17 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
 
       existingSeries.dataset = {
         ...existingSeries.dataset,
-        borderColor: series.color,
-        showLine: series.showLine,
+        borderColor: item.color,
+        showLine: item.showLine,
         fill: false,
-        borderWidth: series.lineSize,
-        pointRadius: series.lineSize * 1.2,
+        borderWidth: item.lineSize,
+        pointRadius: item.lineSize * 1.2,
         pointHoverRadius: 3,
-        pointBackgroundColor: series.showLine ? series.contrastColor : series.color,
+        pointBackgroundColor: item.showLine ? item.contrastColor : item.color,
         pointBorderColor: "transparent",
       };
 
-      newSeries.set(series.key, existingSeries);
+      newSeries.set(item.key, existingSeries);
     }
     this.#seriesByKey = newSeries;
   }

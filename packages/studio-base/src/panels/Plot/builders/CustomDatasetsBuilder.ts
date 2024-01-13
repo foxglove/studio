@@ -204,7 +204,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     });
   }
 
-  public setConfig(series: Immutable<SeriesItem[]>): void {
+  public setSeries(series: Immutable<SeriesItem[]>): void {
     this.#series = series.map((item) => {
       const existing = this.#series.find((existingItem) => existingItem.config.key === item.key);
       return {
@@ -213,7 +213,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       };
     });
 
-    void this.#datasetsBuilderRemote.setConfig(series);
+    void this.#datasetsBuilderRemote.setSeries(series);
   }
 
   public async getViewportDatasets(

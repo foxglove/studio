@@ -6,7 +6,9 @@ import * as Comlink from "comlink";
 import EventEmitter from "eventemitter3";
 import * as _ from "lodash-es";
 
+import { unwrap } from "@foxglove/den/monads";
 import { MessageEvent } from "@foxglove/studio";
+import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageBlock,
   PlayerPresence,
@@ -14,9 +16,10 @@ import {
   PlayerStateActiveData,
 } from "@foxglove/studio-base/players/types";
 
+import { SeriesConfigKey, SeriesItem } from "./IDatasetsBuilder";
 import { TimestampDatasetsBuilder } from "./TimestampDatasetsBuilder";
 import { TimestampDatasetsBuilderImpl } from "./TimestampDatasetsBuilderImpl";
-import { PlotConfig } from "../config";
+import { PlotPath } from "../config";
 
 class WorkerEndpoint extends EventEmitter {
   #client: Worker;
@@ -79,19 +82,25 @@ function groupByTopic(events: MessageEvent[]): Record<string, MessageEvent[]> {
   return _.groupBy(events, (item) => item.topic);
 }
 
-function buildPlotConfig(override: Partial<PlotConfig>): PlotConfig {
-  return {
-    isSynced: true,
-    legendDisplay: "floating",
-    showLegend: true,
-    showPlotValuesInLegend: false,
-    showXAxisLabels: true,
-    showYAxisLabels: true,
-    sidebarDimension: 0,
-    xAxisVal: "custom",
-    paths: [],
-    ...override,
-  };
+function buildSeriesItems(
+  paths: (Partial<PlotPath> & { key?: string; value: string })[],
+): SeriesItem[] {
+  return paths.map((item, idx) => {
+    const parsed = unwrap(parseRosPath(item.value));
+    const key = (item.key ?? String(idx)) as SeriesConfigKey;
+
+    return {
+      parsed,
+      color: "red",
+      contrastColor: "blue",
+      enabled: item.enabled ?? true,
+      timestampMethod: item.timestampMethod ?? "receiveTime",
+      key,
+      lineSize: 1,
+      messagePath: item.value,
+      showLine: true,
+    } satisfies SeriesItem;
+  });
 }
 
 function buildPlayerState(
@@ -131,18 +140,14 @@ describe("TimestampDatasetsBuilder", () => {
   it("should process current messages into a dataset", async () => {
     const builder = new TimestampDatasetsBuilder();
 
-    builder.setConfig(
-      buildPlotConfig({
-        paths: [
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/foo.val",
-          },
-        ],
-      }),
-      "light",
-      {},
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/foo.val",
+        },
+      ]),
     );
 
     builder.handlePlayerState(
@@ -211,18 +216,14 @@ describe("TimestampDatasetsBuilder", () => {
   it("should create a discontinuity between current and full", async () => {
     const builder = new TimestampDatasetsBuilder();
 
-    builder.setConfig(
-      buildPlotConfig({
-        paths: [
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/foo.val",
-          },
-        ],
-      }),
-      "light",
-      {},
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/foo.val",
+        },
+      ]),
     );
 
     const block = {
@@ -301,23 +302,19 @@ describe("TimestampDatasetsBuilder", () => {
   it("computes derivative inside and outside of viewport", async () => {
     const builder = new TimestampDatasetsBuilder();
 
-    builder.setConfig(
-      buildPlotConfig({
-        paths: [
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/foo.val",
-          },
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/foo.val.@derivative",
-          },
-        ],
-      }),
-      "light",
-      {},
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/foo.val",
+        },
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/foo.val.@derivative",
+        },
+      ]),
     );
 
     builder.handlePlayerState(

@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { unwrap } from "@foxglove/den/monads";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageBlock,
@@ -11,21 +12,28 @@ import {
 } from "@foxglove/studio-base/players/types";
 
 import { CurrentCustomDatasetsBuilder } from "./CurrentCustomDatasetsBuilder";
-import { PlotConfig } from "../config";
+import { SeriesConfigKey, SeriesItem } from "./IDatasetsBuilder";
+import { PlotPath } from "../config";
 
-function buildPlotConfig(override: Partial<PlotConfig>): PlotConfig {
-  return {
-    isSynced: true,
-    legendDisplay: "floating",
-    showLegend: true,
-    showPlotValuesInLegend: false,
-    showXAxisLabels: true,
-    showYAxisLabels: true,
-    sidebarDimension: 0,
-    xAxisVal: "custom",
-    paths: [],
-    ...override,
-  };
+function buildSeriesItems(
+  paths: (Partial<PlotPath> & { key?: string; value: string })[],
+): SeriesItem[] {
+  return paths.map((item, idx) => {
+    const parsed = unwrap(parseRosPath(item.value));
+    const key = (item.key ?? String(idx)) as SeriesConfigKey;
+
+    return {
+      parsed,
+      color: "red",
+      contrastColor: "blue",
+      enabled: item.enabled ?? true,
+      timestampMethod: item.timestampMethod ?? "receiveTime",
+      key,
+      lineSize: 1,
+      messagePath: item.value,
+      showLine: true,
+    } satisfies SeriesItem;
+  });
 }
 
 function buildPlayerState(
@@ -66,18 +74,14 @@ describe("CurrentCustomDatasetsBuilder", () => {
     const builder = new CurrentCustomDatasetsBuilder();
 
     builder.setXPath(parseRosPath("/foo.val.@negative"));
-    builder.setConfig(
-      buildPlotConfig({
-        paths: [
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/bar.val.@abs",
-          },
-        ],
-      }),
-      "light",
-      {},
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/bar.val.@abs",
+        },
+      ]),
     );
 
     builder.handlePlayerState(

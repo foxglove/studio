@@ -242,7 +242,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       };
     });
 
-    this.#datasetsBuilder.setConfig(seriesItems);
+    this.#datasetsBuilder.setSeries(seriesItems);
     this.#queueDispatchRender();
   }
 

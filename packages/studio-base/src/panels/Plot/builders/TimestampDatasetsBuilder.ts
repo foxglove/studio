@@ -139,8 +139,8 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     return { min, max };
   }
 
-  public setConfig(config: Immutable<SeriesItem[]>): void {
-    this.#series = config.map((item) => {
+  public setSeries(series: Immutable<SeriesItem[]>): void {
+    this.#series = series.map((item) => {
       const existing = this.#series.find((existingItem) => existingItem.config.key === item.key);
       return {
         config: item,
@@ -148,7 +148,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
       };
     });
 
-    void this.#datasetsBuilderRemote.setConfig(config);
+    void this.#datasetsBuilderRemote.setSeries(series);
   }
 
   public async getViewportDatasets(

@@ -6,6 +6,7 @@ import * as Comlink from "comlink";
 import EventEmitter from "eventemitter3";
 import * as _ from "lodash-es";
 
+import { unwrap } from "@foxglove/den/monads";
 import { MessageEvent } from "@foxglove/studio";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
@@ -17,7 +18,8 @@ import {
 
 import { CustomDatasetsBuilder } from "./CustomDatasetsBuilder";
 import { CustomDatasetsBuilderImpl } from "./CustomDatasetsBuilderImpl";
-import { PlotConfig } from "../config";
+import { SeriesConfigKey, SeriesItem } from "./IDatasetsBuilder";
+import { PlotPath } from "../config";
 
 class WorkerEndpoint extends EventEmitter {
   #client: Worker;
@@ -80,19 +82,25 @@ function groupByTopic(events: MessageEvent[]): Record<string, MessageEvent[]> {
   return _.groupBy(events, (item) => item.topic);
 }
 
-function buildPlotConfig(override: Partial<PlotConfig>): PlotConfig {
-  return {
-    isSynced: true,
-    legendDisplay: "floating",
-    showLegend: true,
-    showPlotValuesInLegend: false,
-    showXAxisLabels: true,
-    showYAxisLabels: true,
-    sidebarDimension: 0,
-    xAxisVal: "custom",
-    paths: [],
-    ...override,
-  };
+function buildSeriesItems(
+  paths: (Partial<PlotPath> & { key?: string; value: string })[],
+): SeriesItem[] {
+  return paths.map((item, idx) => {
+    const parsed = unwrap(parseRosPath(item.value));
+    const key = (item.key ?? String(idx)) as SeriesConfigKey;
+
+    return {
+      parsed,
+      color: "red",
+      contrastColor: "blue",
+      enabled: item.enabled ?? true,
+      timestampMethod: item.timestampMethod ?? "receiveTime",
+      key,
+      lineSize: item.lineSize ?? 1,
+      messagePath: item.value,
+      showLine: item.showLine ?? true,
+    } satisfies SeriesItem;
+  });
 }
 
 function buildPlayerState(
@@ -133,23 +141,19 @@ describe("CustomDatasetsBuilder", () => {
     const builder = new CustomDatasetsBuilder();
 
     builder.setXPath(parseRosPath("/foo.val"));
-    builder.setConfig(
-      buildPlotConfig({
-        paths: [
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/bar.val",
-          },
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/baz.val.@negative",
-          },
-        ],
-      }),
-      "light",
-      {},
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/bar.val",
+        },
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/baz.val.@negative",
+        },
+      ]),
     );
 
     builder.handlePlayerState(
@@ -258,25 +262,21 @@ describe("CustomDatasetsBuilder", () => {
     const builder = new CustomDatasetsBuilder();
 
     builder.setXPath(parseRosPath("/foo.val"));
-    builder.setConfig(
-      buildPlotConfig({
-        paths: [
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/bar.val",
-            lineSize: 1.0,
-          },
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/baz.val.@negative",
-            lineSize: 1.0,
-          },
-        ],
-      }),
-      "light",
-      {},
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/bar.val",
+          lineSize: 1.0,
+        },
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/baz.val.@negative",
+          lineSize: 1.0,
+        },
+      ]),
     );
 
     const block0 = {
@@ -389,23 +389,19 @@ describe("CustomDatasetsBuilder", () => {
     const builder = new CustomDatasetsBuilder();
 
     builder.setXPath(parseRosPath("/foo.values[:].val"));
-    builder.setConfig(
-      buildPlotConfig({
-        paths: [
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/bar.values[:].val",
-          },
-          {
-            enabled: true,
-            timestampMethod: "receiveTime",
-            value: "/baz.values[:].val",
-          },
-        ],
-      }),
-      "light",
-      {},
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/bar.values[:].val",
+        },
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/baz.values[:].val",
+        },
+      ]),
     );
 
     let latestBlocks: MessageBlock[] = [];
