@@ -41,6 +41,13 @@ type TimestampSeriesItem = {
   blockCursor: BlockTopicCursor;
 };
 
+/**
+ * TimestampDatasetsBuilder builds timeseries datasets.
+ *
+ * It supports full (preload) data and current frame data. The series datums are extracted from
+ * input player states and sent to the worker. The worker accumulates the data and provides
+ * downsampled data.
+ */
 export class TimestampDatasetsBuilder implements IDatasetsBuilder {
   #datasetsBuilderWorker: Worker;
   #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>;
@@ -133,10 +140,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
       }
     }
 
-    const max = toSec(subtractTime(activeData.endTime, activeData.startTime));
-    const min = 0;
-
-    return { min, max };
+    return { min: 0, max: toSec(subtractTime(activeData.endTime, activeData.startTime)) };
   }
 
   public setSeries(series: Immutable<SeriesItem[]>): void {

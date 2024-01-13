@@ -34,6 +34,10 @@ type CurrentCustomSeriesItem = {
   dataset: ChartDataset<"scatter", DatumWithReceiveTime[]>;
 };
 
+/**
+ * CurrentCustomDatasetsBuilder builds datasets from a custom x-axis message path and
+ * y-axis message path. It uses only the latest message for each path to build the datasets.
+ */
 export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   #xParsedPath?: Immutable<RosPath>;
 
@@ -42,6 +46,10 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   #seriesByKey = new Map<SeriesConfigKey, CurrentCustomSeriesItem>();
   #pathsWithMismatchedDataLengths = new Set<string>();
 
+  // Process the latest messages from the player state to extract any updated x or y values
+  //
+  // Datasets are built when y-values arrive though this could be expanded to also build
+  // when x-values arrive.
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
     const activeData = state.activeData;
     if (!activeData || !this.#xParsedPath) {
@@ -166,6 +174,10 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     this.#seriesByKey = newSeries;
   }
 
+  // We don't use the viewport because we do not do any downsampling on the assumption that
+  // one message won't produce so many points that we need to downsample.
+  //
+  // If that assumption changes then downsampling can be revisited.
   public async getViewportDatasets(): Promise<GetViewportDatasetsResult> {
     const datasets: Dataset[] = [];
     for (const series of this.#seriesByKey.values()) {

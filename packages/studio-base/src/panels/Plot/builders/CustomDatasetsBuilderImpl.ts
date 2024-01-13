@@ -332,7 +332,11 @@ export class CustomDatasetsBuilderImpl {
           0,
           this.#xValues.current.length + action.items.length - MAX_CURRENT_DATUMS_PER_SERIES,
         );
-        this.#xValues.current.splice(0, cullSize);
+
+        // cull more than max so we don't have to cull again immediately
+        if (cullSize > 0) {
+          this.#xValues.current.splice(0, cullSize + MAX_CURRENT_DATUMS_PER_SERIES * 0.25);
+        }
 
         for (const item of action.items) {
           if (lastFullReceiveTime && compare(item.receiveTime, lastFullReceiveTime) <= 0) {
@@ -374,7 +378,11 @@ export class CustomDatasetsBuilderImpl {
           0,
           series.current.length + action.items.length - MAX_CURRENT_DATUMS_PER_SERIES,
         );
-        series.current.splice(0, cullSize);
+
+        // cull more than max so we don't have to cull again immediately
+        if (cullSize > 0) {
+          series.current.splice(0, cullSize + MAX_CURRENT_DATUMS_PER_SERIES * 0.25);
+        }
 
         const lastFullReceiveTime = series.full[series.full.length - 1]?.receiveTime;
         for (const item of action.items) {

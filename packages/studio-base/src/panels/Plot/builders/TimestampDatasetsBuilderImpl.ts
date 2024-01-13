@@ -300,7 +300,11 @@ export class TimestampDatasetsBuilderImpl {
           0,
           series.current.length + action.items.length - MAX_CURRENT_DATUMS_PER_SERIES,
         );
-        series.current.splice(0, cullSize);
+
+        // cull more than max so we don't have to cull again immediately
+        if (cullSize > 0) {
+          series.current.splice(0, cullSize + MAX_CURRENT_DATUMS_PER_SERIES * 0.25);
+        }
 
         const sorted =
           series.config.timestampMethod === "headerStamp"

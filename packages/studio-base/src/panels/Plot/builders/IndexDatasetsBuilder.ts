@@ -116,6 +116,10 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
     this.#seriesByKey = newSeries;
   }
 
+  // We don't use the viewport because we do not do any downsampling on the assumption that
+  // one message won't produce so many points that we need to downsample.
+  //
+  // If that assumption changes then downsampling can be revisited.
   public async getViewportDatasets(): Promise<GetViewportDatasetsResult> {
     const datasets: Dataset[] = [];
     for (const series of this.#seriesByKey.values()) {
