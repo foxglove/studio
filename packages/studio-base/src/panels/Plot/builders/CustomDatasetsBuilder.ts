@@ -3,49 +3,32 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
-import * as _ from "lodash-es";
 
-import { filterMap } from "@foxglove/den/collection";
 import { Immutable, MessageEvent } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
-import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState } from "@foxglove/studio-base/players/types";
 import { extendBounds1D, unionBounds1D } from "@foxglove/studio-base/types/Bounds";
-import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotColors";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { BlockTopicCursor } from "./BlockTopicCursor";
 import {
   CustomDatasetsBuilderImpl,
   UpdateDataAction,
   ValueItem,
-  SeriesConfigKey,
 } from "./CustomDatasetsBuilderImpl";
 import {
   CsvDataset,
   GetViewportDatasetsResult,
   IDatasetsBuilder,
+  SeriesItem,
   Viewport,
 } from "./IDatasetsBuilder";
-import { isReferenceLinePlotPathType, PlotConfig } from "../config";
 import { getChartValue, isChartValue } from "../datum";
 import { MathFunction, mathFunctions } from "../mathFunctions";
 
-type SeriesItem = {
-  key: SeriesConfigKey;
-  messagePath: string;
-  parsed: RosPath;
-  color: string;
-  /** Used for points when lines are also shown to provide extra contrast */
-  contrastColor: string;
-  timestampMethod: TimestampMethod;
-  showLine: boolean;
-  lineSize: number;
-  enabled: boolean;
+type CustomDatasetsSeriesItem = {
+  config: Immutable<SeriesItem>;
   blockCursor: BlockTopicCursor;
 };
 
@@ -66,7 +49,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
   #lastSeekTime = 0;
 
-  #seriesConfigs: Immutable<SeriesItem[]> = [];
+  #series: Immutable<CustomDatasetsSeriesItem[]> = [];
 
   #xCurrentBounds?: Bounds1D;
   #xFullBounds?: Bounds1D;
@@ -116,21 +99,21 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
         }
       }
 
-      for (const seriesConfig of this.#seriesConfigs) {
-        const mathFn = seriesConfig.parsed.modifier
-          ? mathFunctions[seriesConfig.parsed.modifier]
+      for (const series of this.#series) {
+        const mathFn = series.config.parsed.modifier
+          ? mathFunctions[series.config.parsed.modifier]
           : undefined;
         if (didSeek) {
           this.#pendingDataDispatch.push({
             type: "reset-current",
-            series: seriesConfig.messagePath,
+            series: series.config.key,
           });
         }
 
-        const pathItems = readMessagePathItems(msgEvents, seriesConfig.parsed, mathFn);
+        const pathItems = readMessagePathItems(msgEvents, series.config.parsed, mathFn);
         this.#pendingDataDispatch.push({
           type: "append-current",
-          series: seriesConfig.messagePath,
+          series: series.config.key,
           items: pathItems,
         });
       }
@@ -164,25 +147,25 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
         }
       }
 
-      for (const seriesConfig of this.#seriesConfigs) {
-        const mathFn = seriesConfig.parsed.modifier
-          ? mathFunctions[seriesConfig.parsed.modifier]
+      for (const series of this.#series) {
+        const mathFn = series.config.parsed.modifier
+          ? mathFunctions[series.config.parsed.modifier]
           : undefined;
 
-        if (seriesConfig.blockCursor.nextWillReset(blocks)) {
+        if (series.blockCursor.nextWillReset(blocks)) {
           this.#pendingDataDispatch.push({
             type: "reset-full",
-            series: seriesConfig.messagePath,
+            series: series.config.key,
           });
         }
 
         let messageEvents = undefined;
-        while ((messageEvents = seriesConfig.blockCursor.next(blocks)) != undefined) {
-          const pathItems = readMessagePathItems(messageEvents, seriesConfig.parsed, mathFn);
+        while ((messageEvents = series.blockCursor.next(blocks)) != undefined) {
+          const pathItems = readMessagePathItems(messageEvents, series.config.parsed, mathFn);
 
           this.#pendingDataDispatch.push({
             type: "append-full",
-            series: seriesConfig.messagePath,
+            series: series.config.key,
             items: pathItems,
           });
         }
@@ -221,54 +204,16 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     });
   }
 
-  public setConfig(
-    config: Immutable<PlotConfig>,
-    colorScheme: "light" | "dark",
-    globalVariables: GlobalVariables,
-  ): void {
-    this.#seriesConfigs = filterMap(
-      config.paths,
-      (path, idx): Immutable<SeriesItem> | undefined => {
-        if (isReferenceLinePlotPathType(path)) {
-          return;
-        }
+  public setConfig(series: Immutable<SeriesItem[]>): void {
+    this.#series = series.map((item) => {
+      const existing = this.#series.find((existingItem) => existingItem.config.key === item.key);
+      return {
+        config: item,
+        blockCursor: existing?.blockCursor ?? new BlockTopicCursor(item.parsed.topicName),
+      };
+    });
 
-        const parsed = parseRosPath(path.value);
-        if (!parsed) {
-          return;
-        }
-
-        const filledParsed = fillInGlobalVariablesInPath(parsed, globalVariables);
-
-        // When global variables change the path.value is still the original value with the variable
-        // names But we need to consider this as a new series (new block cursor) so we compute new
-        // values when variables cause the resolved path value to update.
-        //
-        // We also want to re-compute values when the timestamp method changes. So we use a _key_ that
-        // is the filled path and the timestamp method. If either change, we consider this a new
-        // series.
-        const key: SeriesConfigKey = { path: filledParsed, timestampMethod: path.timestampMethod };
-
-        // It is important to keep the existing block cursor for the same series to avoid re-processing
-        // the blocks again when the series remains.
-        const existing = this.#seriesConfigs.find((item) => _.isEqual(item.key, key));
-        const color = getLineColor(path.color, idx);
-        return {
-          key,
-          messagePath: path.value,
-          parsed: filledParsed,
-          color,
-          contrastColor: getContrastColor(colorScheme, color),
-          lineSize: path.lineSize ?? 1.0,
-          timestampMethod: path.timestampMethod,
-          showLine: path.showLine ?? true,
-          enabled: path.enabled,
-          blockCursor: existing?.blockCursor ?? new BlockTopicCursor(parsed.topicName),
-        };
-      },
-    );
-
-    void this.#datasetsBuilderRemote.setConfig(this.#seriesConfigs);
+    void this.#datasetsBuilderRemote.setConfig(series);
   }
 
   public async getViewportDatasets(

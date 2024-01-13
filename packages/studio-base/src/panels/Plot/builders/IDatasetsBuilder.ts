@@ -2,13 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Opaque } from "ts-essentials";
+
 import type { Immutable, Time } from "@foxglove/studio";
+import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import type { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import type { PlayerState } from "@foxglove/studio-base/players/types";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import type { Dataset } from "../ChartRenderer";
-import { PlotConfig } from "../config";
 import { OriginalValue } from "../datum";
 
 type CsvDatum = {
@@ -20,6 +22,25 @@ type CsvDatum = {
 };
 
 type Size = { width: number; height: number };
+
+/**
+ * Identifier used to determine whether previous data can be reused when the config changes.
+ * Compare with deep equality.
+ */
+export type SeriesConfigKey = Opaque<string, "series-config-key">;
+
+export type SeriesItem = {
+  key: SeriesConfigKey;
+  messagePath: string;
+  parsed: RosPath;
+  color: string;
+  /** Used for points when lines are also shown to provide extra contrast */
+  contrastColor: string;
+  timestampMethod: TimestampMethod;
+  showLine: boolean;
+  lineSize: number;
+  enabled: boolean;
+};
 
 export type Viewport = {
   /**
@@ -54,11 +75,7 @@ export type GetViewportDatasetsResult = {
 interface IDatasetsBuilder {
   handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
 
-  setConfig(
-    config: Immutable<PlotConfig>,
-    colorScheme: "light" | "dark",
-    globalVariables: GlobalVariables,
-  ): void;
+  setConfig(config: Immutable<SeriesItem[]>): void;
 
   getViewportDatasets(viewport: Immutable<Viewport>): Promise<GetViewportDatasetsResult>;
 

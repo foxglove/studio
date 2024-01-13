@@ -2,8 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Opaque } from "ts-essentials";
-
 import { Immutable, Time } from "@foxglove/studio";
 import {
   MAX_POINTS,
@@ -12,35 +10,14 @@ import {
 } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { extendBounds1D } from "@foxglove/studio-base/types/Bounds";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
-import { CsvDataset, Viewport } from "./IDatasetsBuilder";
+import { CsvDataset, SeriesConfigKey, SeriesItem, Viewport } from "./IDatasetsBuilder";
 import type { Dataset } from "../ChartRenderer";
 import { Datum } from "../datum";
 
 export type DataItem = Datum & {
   receiveTime: Time;
   headerStamp?: Time;
-};
-
-/**
- * Identifier used to determine whether previous data can be reused when the config changes.
- * Compare with deep equality.
- */
-export type SeriesConfigKey = Opaque<string, "series-config-key">;
-
-export type SeriesConfig = {
-  key: SeriesConfigKey;
-  messagePath: string;
-  color: string;
-  /** Used for points when lines are also shown to provide extra contrast */
-  contrastColor: string;
-  timestampMethod: TimestampMethod;
-  showLine: boolean;
-  lineSize: number;
-  enabled: boolean;
-  // If true, the final dataset data is the time derivative of the input data
-  derivative: boolean;
 };
 
 type FullDatum = Datum & {
@@ -50,7 +27,7 @@ type FullDatum = Datum & {
 };
 
 type Series = {
-  config: SeriesConfig;
+  config: Immutable<SeriesItem>;
   current: FullDatum[];
   full: FullDatum[];
 };
@@ -98,11 +75,11 @@ export class TimestampDatasetsBuilderImpl {
     }
   }
 
-  public setConfig(seriesConfig: Immutable<SeriesConfig[]>): void {
+  public setConfig(series: Immutable<SeriesItem[]>): void {
     // Make a new map so we drop series which are no longer present
     const newSeries = new Map();
 
-    for (const config of seriesConfig) {
+    for (const config of series) {
       let existingSeries = this.#seriesByKey.get(config.key);
       if (!existingSeries || existingSeries.config.key !== config.key) {
         existingSeries = {
@@ -154,7 +131,7 @@ export class TimestampDatasetsBuilderImpl {
       let prevX = NaN;
       let prevY = NaN;
 
-      const derivative = series.config.derivative;
+      const derivative = series.config.parsed.modifier === "derivative";
 
       // Trim the dataset down to the view area. include one point on either side so it appears
       // to extend out of the view area.

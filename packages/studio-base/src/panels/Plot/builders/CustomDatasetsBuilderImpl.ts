@@ -6,13 +6,17 @@ import * as _ from "lodash-es";
 
 import { compare } from "@foxglove/rostime";
 import { Immutable, Time } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { downsampleScatter } from "@foxglove/studio-base/components/TimeBasedChart/downsample";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { extendBounds1D } from "@foxglove/studio-base/types/Bounds";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
-import { CsvDataset, GetViewportDatasetsResult, Viewport } from "./IDatasetsBuilder";
+import {
+  CsvDataset,
+  GetViewportDatasetsResult,
+  SeriesConfigKey,
+  SeriesItem,
+  Viewport,
+} from "./IDatasetsBuilder";
 import type { Dataset } from "../ChartRenderer";
 import { Datum, OriginalValue } from "../datum";
 
@@ -22,45 +26,25 @@ export type ValueItem = {
   receiveTime: Time;
 };
 
-/**
- * Identifier used to determine whether previous data can be reused when the config changes.
- * Compare with deep equality.
- */
-export type SeriesConfigKey = {
-  path: Immutable<RosPath>;
-  timestampMethod: TimestampMethod;
-};
-
-export type SeriesConfig = {
-  key: SeriesConfigKey;
-  messagePath: string;
-  color: string;
-  /** Used for points when lines are also shown to provide extra contrast */
-  contrastColor: string;
-  showLine: boolean;
-  lineSize: number;
-  enabled: boolean;
-};
-
 type FullDatum = Datum & {
   receiveTime: Time;
   index: number;
 };
 
 type Series = {
-  config: SeriesConfig;
+  config: Immutable<SeriesItem>;
   current: ValueItem[];
   full: ValueItem[];
 };
 
 type ResetSeriesFullAction = {
   type: "reset-full";
-  series: string;
+  series: SeriesConfigKey;
 };
 
 type ResetSeriesCurrentAction = {
   type: "reset-current";
-  series: string;
+  series: SeriesConfigKey;
 };
 
 type ResetCurrentXAction = {
@@ -83,13 +67,13 @@ type UpdateFullXAction = {
 
 type UpdateSeriesCurrentAction = {
   type: "append-current";
-  series: string;
+  series: SeriesConfigKey;
   items: ValueItem[];
 };
 
 type UpdateSeriesFullAction = {
   type: "append-full";
-  series: string;
+  series: SeriesConfigKey;
   items: ValueItem[];
 };
 
@@ -112,7 +96,7 @@ export class CustomDatasetsBuilderImpl {
     current: [],
     full: [],
   };
-  #seriesByMessagePath = new Map<string, Series>();
+  #seriesByKey = new Map<SeriesConfigKey, Series>();
 
   public updateData(actions: Immutable<UpdateDataAction[]>): void {
     for (const action of actions) {
@@ -120,12 +104,12 @@ export class CustomDatasetsBuilderImpl {
     }
   }
 
-  public setConfig(seriesConfig: Immutable<SeriesConfig[]>): void {
+  public setConfig(series: Immutable<SeriesItem[]>): void {
     // Make a new map so we drop series which are no longer present
     const newSeries = new Map();
 
-    for (const config of seriesConfig) {
-      let existingSeries = this.#seriesByMessagePath.get(config.messagePath);
+    for (const config of series) {
+      let existingSeries = this.#seriesByKey.get(config.key);
       if (!existingSeries || !_.isEqual(existingSeries.config.key, config.key)) {
         existingSeries = {
           config,
@@ -136,13 +120,13 @@ export class CustomDatasetsBuilderImpl {
       newSeries.set(config.messagePath, existingSeries);
       existingSeries.config = config;
     }
-    this.#seriesByMessagePath = newSeries;
+    this.#seriesByKey = newSeries;
   }
 
   public getViewportDatasets(viewport: Immutable<Viewport>): GetViewportDatasetsResult {
     const datasets: Dataset[] = [];
     const pathsWithMismatchedDataLengths = new Set<string>();
-    for (const series of this.#seriesByMessagePath.values()) {
+    for (const series of this.#seriesByKey.values()) {
       if (!series.config.enabled) {
         continue;
       }
@@ -264,7 +248,7 @@ export class CustomDatasetsBuilderImpl {
 
   public getCsvData(): CsvDataset[] {
     const datasets: CsvDataset[] = [];
-    for (const series of this.#seriesByMessagePath.values()) {
+    for (const series of this.#seriesByKey.values()) {
       if (!series.config.enabled) {
         continue;
       }
@@ -324,7 +308,7 @@ export class CustomDatasetsBuilderImpl {
         break;
       }
       case "reset-current": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }
@@ -334,7 +318,7 @@ export class CustomDatasetsBuilderImpl {
         break;
       }
       case "reset-full": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }
@@ -382,7 +366,7 @@ export class CustomDatasetsBuilderImpl {
         break;
       }
       case "append-current": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }
@@ -406,7 +390,7 @@ export class CustomDatasetsBuilderImpl {
         break;
       }
       case "append-full": {
-        const series = this.#seriesByMessagePath.get(action.series);
+        const series = this.#seriesByKey.get(action.series);
         if (!series) {
           return;
         }

@@ -8,17 +8,18 @@ import * as _ from "lodash-es";
 import { filterMap } from "@foxglove/den/collection";
 import { Immutable, Time, MessageEvent } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
-import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState } from "@foxglove/studio-base/players/types";
-import { getLineColor, getContrastColor } from "@foxglove/studio-base/util/plotColors";
 
-import { CsvDataset, GetViewportDatasetsResult, IDatasetsBuilder } from "./IDatasetsBuilder";
+import {
+  CsvDataset,
+  GetViewportDatasetsResult,
+  IDatasetsBuilder,
+  SeriesConfigKey,
+  SeriesItem,
+} from "./IDatasetsBuilder";
 import { Dataset } from "../ChartRenderer";
-import { isReferenceLinePlotPathType, PlotConfig } from "../config";
 import { getChartValue, isChartValue, Datum } from "../datum";
 import { mathFunctions } from "../mathFunctions";
 
@@ -26,10 +27,10 @@ type DatumWithReceiveTime = Datum & {
   receiveTime: Time;
 };
 
-type SeriesItem = {
+type CurrentCustomSeriesItem = {
   enabled: boolean;
   messagePath: string;
-  parsed: RosPath;
+  parsed: Immutable<RosPath>;
   dataset: ChartDataset<"scatter", DatumWithReceiveTime[]>;
 };
 
@@ -38,7 +39,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
 
   #xValues: number[] = [];
 
-  #seriesByMessagePath = new Map<string, SeriesItem>();
+  #seriesByKey = new Map<SeriesConfigKey, CurrentCustomSeriesItem>();
   #pathsWithMismatchedDataLengths = new Set<string>();
 
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
@@ -77,7 +78,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       }
     }
 
-    for (const series of this.#seriesByMessagePath.values()) {
+    for (const series of this.#seriesByKey.values()) {
       const mathFn = series.parsed.modifier ? mathFunctions[series.parsed.modifier] : undefined;
 
       const msgEvent = lastMatchingTopic(msgEvents, series.parsed.topicName);
@@ -125,70 +126,49 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
 
     // When the x-path changes we clear any existing data from the datasets
     this.#xParsedPath = path;
-    for (const series of this.#seriesByMessagePath.values()) {
+    for (const series of this.#seriesByKey.values()) {
       series.dataset.data = [];
     }
     this.#pathsWithMismatchedDataLengths.clear();
   }
 
-  public setConfig(
-    config: Immutable<PlotConfig>,
-    colorScheme: "light" | "dark",
-    globalVariables: GlobalVariables,
-  ): void {
+  public setConfig(config: Immutable<SeriesItem[]>): void {
     // Make a new map so we drop series which are no longer present
     const newSeries = new Map();
 
-    let idx = 0;
-    for (const path of config.paths) {
-      if (isReferenceLinePlotPathType(path)) {
-        continue;
-      }
-
-      const parsed = parseRosPath(path.value);
-      if (!parsed) {
-        continue;
-      }
-
-      const filledParsed = fillInGlobalVariablesInPath(parsed, globalVariables);
-
-      let existingSeries = this.#seriesByMessagePath.get(path.value);
+    for (const series of config) {
+      let existingSeries = this.#seriesByKey.get(series.key);
       if (!existingSeries) {
         existingSeries = {
-          enabled: path.enabled,
-          messagePath: path.value,
-          parsed: filledParsed,
+          enabled: series.enabled,
+          messagePath: series.messagePath,
+          parsed: series.parsed,
           dataset: {
             data: [],
           },
         };
       }
 
-      const color = getLineColor(path.color, idx);
-      const lineSize = path.lineSize ?? 1.0;
-      const showLine = path.showLine ?? true;
-
       existingSeries.dataset = {
         ...existingSeries.dataset,
-        borderColor: color,
-        showLine,
+        borderColor: series.color,
+        showLine: series.showLine,
         fill: false,
-        borderWidth: lineSize,
-        pointRadius: lineSize * 1.2,
+        borderWidth: series.lineSize,
+        pointRadius: series.lineSize * 1.2,
         pointHoverRadius: 3,
-        pointBackgroundColor: showLine ? getContrastColor(colorScheme, color) : color,
+        pointBackgroundColor: series.showLine ? series.contrastColor : series.color,
         pointBorderColor: "transparent",
       };
 
-      newSeries.set(path.value, existingSeries);
-      idx += 1;
+      newSeries.set(series.key, existingSeries);
     }
-    this.#seriesByMessagePath = newSeries;
+    this.#seriesByKey = newSeries;
   }
 
   public async getViewportDatasets(): Promise<GetViewportDatasetsResult> {
     const datasets: Dataset[] = [];
-    for (const series of this.#seriesByMessagePath.values()) {
+    for (const series of this.#seriesByKey.values()) {
       if (!series.enabled) {
         continue;
       }
@@ -201,7 +181,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
 
   public async getCsvData(): Promise<CsvDataset[]> {
     const datasets: CsvDataset[] = [];
-    for (const series of this.#seriesByMessagePath.values()) {
+    for (const series of this.#seriesByKey.values()) {
       if (!series.enabled) {
         continue;
       }

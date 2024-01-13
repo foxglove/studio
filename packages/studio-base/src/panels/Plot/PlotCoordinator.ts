@@ -11,16 +11,23 @@ import { Immutable } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
+import { stringifyRosPath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { PlayerState } from "@foxglove/studio-base/players/types";
 import { Bounds } from "@foxglove/studio-base/types/Bounds";
-import { getLineColor } from "@foxglove/studio-base/util/plotColors";
+import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotColors";
 
 import { InteractionEvent, Scale, UpdateAction } from "./ChartRenderer";
 import { OffscreenCanvasRenderer } from "./OffscreenCanvasRenderer";
-import { CsvDataset, IDatasetsBuilder, Viewport } from "./builders/IDatasetsBuilder";
+import {
+  CsvDataset,
+  IDatasetsBuilder,
+  SeriesConfigKey,
+  SeriesItem,
+  Viewport,
+} from "./builders/IDatasetsBuilder";
 import { isReferenceLinePlotPathType, PlotConfig } from "./config";
 
 type EventTypes = {
@@ -197,7 +204,45 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     // Config changes to yBounds always takes precedence over user interaction changes like pan/zoom
     this.#updateAction.yBounds = this.#configBounds.y;
 
-    this.#datasetsBuilder.setConfig(config, colorScheme, globalVariables);
+    const seriesItems = filterMap(config.paths, (path, idx): Immutable<SeriesItem> | undefined => {
+      if (isReferenceLinePlotPathType(path)) {
+        return;
+      }
+
+      const parsed = parseRosPath(path.value);
+      if (!parsed) {
+        return;
+      }
+
+      const filledParsed = fillInGlobalVariablesInPath(parsed, globalVariables);
+
+      // When global variables change the path.value is still the original value with the variable
+      // names But we need to consider this as a new series (new block cursor) so we compute new
+      // values when variables cause the resolved path value to update.
+      //
+      // We also want to re-compute values when the timestamp method changes. So we use a _key_ that
+      // is the filled path and the timestamp method. If either change, we consider this a new
+      // series.
+      //
+      // This key lets us treat series with the same name but different timestamp methods as distinct
+      // using a key instead of the path index lets us preserve loaded data when a path is removed
+      const key = `${path.timestampMethod}:${stringifyRosPath(filledParsed)}` as SeriesConfigKey;
+
+      const color = getLineColor(path.color, idx);
+      return {
+        key,
+        messagePath: path.value,
+        parsed: filledParsed,
+        color,
+        contrastColor: getContrastColor(colorScheme, color),
+        lineSize: path.lineSize ?? 1.0,
+        timestampMethod: path.timestampMethod,
+        showLine: path.showLine ?? true,
+        enabled: path.enabled,
+      };
+    });
+
+    this.#datasetsBuilder.setConfig(seriesItems);
     this.#queueDispatchRender();
   }
 
