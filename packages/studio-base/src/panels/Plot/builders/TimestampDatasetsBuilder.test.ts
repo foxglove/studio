@@ -98,7 +98,7 @@ function buildSeriesItems(
       key,
       lineSize: 1,
       messagePath: item.value,
-      showLine: true,
+      showLine: item.showLine ?? true,
     } satisfies SeriesItem;
   });
 }
@@ -465,5 +465,68 @@ describe("TimestampDatasetsBuilder", () => {
         }),
       ],
     });
+  });
+
+  it("should cull current messages after threshold is reached", async () => {
+    const builder = new TimestampDatasetsBuilder();
+
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/foo.val",
+          showLine: false,
+        },
+      ]),
+    );
+
+    const messages = new Array(60_000).fill(1).map((_val, idx) => {
+      return {
+        topic: "/foo",
+        schemaName: "foo",
+        receiveTime: { sec: idx, nsec: 0 },
+        sizeInBytes: 0,
+        message: {
+          val: idx,
+        },
+      };
+    });
+
+    // first batch of messages is under the limit
+    {
+      builder.handlePlayerState(
+        buildPlayerState({
+          messages: messages.slice(0, 40_000),
+        }),
+      );
+
+      const result = await builder.getViewportDatasets({
+        size: { width: 100_000, height: 100_000 },
+        bounds: {},
+      });
+
+      expect(result.datasets[0]!.data.length).toEqual(40_000);
+      expect(result.datasets[0]!.data[0]).toEqual({ x: 0, y: 0, value: 0 });
+      expect(result.datasets[0]!.data[39_999]).toEqual({ x: 39_999, y: 39_999, value: 39_999 });
+    }
+
+    // Next batch goes over the limit so some of the previous will be culled
+    {
+      builder.handlePlayerState(
+        buildPlayerState({
+          messages: messages.slice(40_000, 60_000),
+        }),
+      );
+
+      const result = await builder.getViewportDatasets({
+        size: { width: 100_000, height: 100_000 },
+        bounds: {},
+      });
+
+      expect(result.datasets[0]!.data.length).toEqual(37500);
+      expect(result.datasets[0]!.data[0]).toEqual({ x: 22_500, y: 22_500, value: 22_500 });
+      expect(result.datasets[0]!.data[37_499]).toEqual({ x: 59_999, y: 59_999, value: 59_999 });
+    }
   });
 });
