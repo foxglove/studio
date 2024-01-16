@@ -101,6 +101,22 @@ export class ImageAnnotations extends THREE.Object3D {
     ];
   }
 
+  public handleTopicsChanged(topics: readonly Topic[] | undefined): void {
+    if (!topics) {
+      return;
+    }
+    const availableAnnotationTopics = [];
+
+    for (const topic of topics) {
+      if (!topicIsConvertibleToSchema(topic, ALL_SUPPORTED_ANNOTATION_SCHEMAS)) {
+        continue;
+      }
+      availableAnnotationTopics.push(topic.name);
+    }
+
+    this.#context.messageHandler.setAvailableAnnotationTopics(availableAnnotationTopics);
+  }
+
   #filterMessageQueue<T>(msgs: MessageEvent<T>[]): MessageEvent<T>[] {
     // if sync annotations not active, only take the last message for each topic
     if (this.#context.config().synchronize !== true) {

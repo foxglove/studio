@@ -355,6 +355,7 @@ export class ImageMode
     if (imageTopic) {
       this.setImageTopic(imageTopic);
     }
+    this.#annotations.handleTopicsChanged(this.renderer.topics);
   };
 
   /** Sets specified image topic on the config and updates calibration topic if a match is found.
