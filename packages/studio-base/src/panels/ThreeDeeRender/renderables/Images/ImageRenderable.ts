@@ -11,6 +11,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
+import { vecEqual } from "@foxglove/studio-base/panels/ThreeDeeRender/math";
 import { WorkerImageDecoder } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/WorkerImageDecoder";
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { RosValue } from "@foxglove/studio-base/players/types";
@@ -20,6 +21,8 @@ import { decodeCompressedImageToBitmap } from "./decodeImage";
 import { CameraInfo } from "../../ros";
 import { DECODE_IMAGE_ERR_KEY, IMAGE_TOPIC_PATH } from "../ImageMode/constants";
 import { ColorModeSettings } from "../colorMode";
+
+const EMPTY_ARRAY: unknown[] = [];
 
 const log = Logger.getLogger(__filename);
 export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
@@ -154,7 +157,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (
       prevSettings.colorMode !== newSettings.colorMode ||
       prevSettings.flatColor !== newSettings.flatColor ||
-      prevSettings.gradient !== newSettings.gradient ||
+      !vecEqual(prevSettings.gradient ?? EMPTY_ARRAY, newSettings.gradient ?? EMPTY_ARRAY) ||
       prevSettings.colorMap !== newSettings.colorMap ||
       prevSettings.minValue !== newSettings.minValue ||
       prevSettings.maxValue !== newSettings.maxValue
