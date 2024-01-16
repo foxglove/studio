@@ -113,7 +113,6 @@ export function ShareJsonModal({
             onClick={() => {
               setValue("{}");
             }}
-            title="Clear"
             aria-label="Clear"
             icon={<Delete20Regular />}
           />

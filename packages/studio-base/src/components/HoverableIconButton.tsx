@@ -11,7 +11,7 @@ export type HoverableIconButtonProps = {
   activeIcon?: React.ReactNode;
   color?: IconButtonProps["color"];
   activeColor?: IconButtonProps["color"];
-} & Omit<IconButtonProps, "children" | "color">;
+} & Omit<IconButtonProps, "children" | "color" | "title">;
 
 const useStyles = makeStyles()({
   root: {
