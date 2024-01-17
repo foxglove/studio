@@ -208,7 +208,7 @@ export class TimestampDatasetsBuilderImpl {
       // dissapear when zooming in.
       const min = Math.min(downsampleViewport.width, maxPoints);
 
-      const downsampledIndicies =
+      const downsampledIndices =
         items.length < min
           ? items.map((item) => item.index)
           : dataset.showLine === true
@@ -219,7 +219,7 @@ export class TimestampDatasetsBuilderImpl {
       // data is downsampled.
       //
       // If show line is false then we must show points otherwise nothing will be displayed
-      if (downsampledIndicies.length < items.length && dataset.showLine === true) {
+      if (downsampledIndices.length < items.length && dataset.showLine === true) {
         dataset.pointRadius = 0;
       }
 
@@ -227,7 +227,7 @@ export class TimestampDatasetsBuilderImpl {
       // to create a discontinuity after the full data.
       let shouldAddNan = dataset.showLine === true && series.full.length > 0;
 
-      for (const index of downsampledIndicies) {
+      for (const index of downsampledIndices) {
         const item = allData[index];
         if (!item) {
           continue;
