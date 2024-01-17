@@ -115,8 +115,10 @@ export default function PlaybackControls(props: {
       // if we are at the end, we need to go back to start
       if (current && end && start && compare(current, end) >= 0) {
         seek(start);
+        play({ looped: true });
+      } else {
+        play();
       }
-      play();
     }
   }, [isPlaying, pause, getTimeInfo, play, seek]);
 

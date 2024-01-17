@@ -105,8 +105,8 @@ export class TopicAliasingPlayer implements Player {
     return await this.#player.callService(service, request);
   }
 
-  public startPlayback?(): void {
-    this.#player.startPlayback?.();
+  public startPlayback(opts?: { looped: boolean } | undefined): void {
+    this.#player.startPlayback?.(opts);
   }
 
   public pausePlayback?(): void {

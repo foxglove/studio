@@ -62,7 +62,7 @@ export interface Player {
   // Asset fetching. Available if `capabilities` contains PlayerCapabilities.assets.
   fetchAsset?(uri: string): Promise<Asset>;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
-  startPlayback?(): void;
+  startPlayback?(opts?: { looped: boolean }): void;
   pausePlayback?(): void;
   seekPlayback?(time: Time): void;
   playUntil?(time: Time): void;
@@ -347,6 +347,7 @@ export interface PlayerMetricsCollectorInterface {
   setProperty(key: string, value: string | number | boolean): void;
   playerConstructed(): void;
   play(speed: number): void;
+  loop(): void;
   seek(time: Time): void;
   setSpeed(speed: number): void;
   pause(): void;

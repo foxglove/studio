@@ -12,7 +12,7 @@ import {
 
 type RepeatAdapterProps = {
   repeatEnabled: boolean;
-  play: () => void;
+  play: (opts: { looped: boolean }) => void;
   seek: (to: Time) => void;
 };
 
@@ -47,7 +47,7 @@ export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
       seek(startTime);
       // if the user turns on repeat and we are at the end, we assume they want to play from start
       // even if paused
-      play();
+      play({ looped: true });
     }
   }, [activeData, play, repeatEnabled, seek]);
 

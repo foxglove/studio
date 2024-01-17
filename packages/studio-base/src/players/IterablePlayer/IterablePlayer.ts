@@ -209,26 +209,31 @@ export class IterablePlayer implements Player {
     this.#setState("initialize");
   }
 
-  public startPlayback(): void {
-    this.#startPlayImpl();
+  public startPlayback(opts: { looped?: boolean } = {}): void {
+    this.#startPlayImpl({ looped: opts.looped });
   }
 
   public playUntil(time: Time): void {
     this.#startPlayImpl({ untilTime: time });
   }
 
-  #startPlayImpl(opt?: { untilTime: Time }): void {
+  #startPlayImpl(opt: { untilTime?: Time; looped?: boolean } = {}): void {
     if (this.#isPlaying || this.#untilTime != undefined || !this.#start || !this.#end) {
       return;
     }
+    const { untilTime, looped = false } = opt;
 
-    if (opt?.untilTime) {
-      if (this.#currentTime && compare(opt.untilTime, this.#currentTime) <= 0) {
+    if (untilTime) {
+      if (this.#currentTime && compare(untilTime, this.#currentTime) <= 0) {
         throw new Error("Invariant: playUntil time must be after the current time");
       }
-      this.#untilTime = clampTime(opt.untilTime, this.#start, this.#end);
+      this.#untilTime = clampTime(untilTime, this.#start, this.#end);
     }
-    this.#metricsCollector.play(this.#speed);
+    if (looped) {
+      this.#metricsCollector.loop();
+    } else {
+      this.#metricsCollector.play(this.#speed);
+    }
     this.#isPlaying = true;
 
     // If we are idling we can start playing, if we have a next state queued we let that state
