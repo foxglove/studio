@@ -508,10 +508,10 @@ export function Plot(props: Props): JSX.Element {
         deltaX: event.deltaX,
         boundingClientRect: boundingRect.toJSON(),
       });
+      setShowReset(true);
     });
 
     hammerManager.on("panend", (event) => {
-      setShowReset(true);
       const boundingRect = event.target.getBoundingClientRect();
       coordinator.addInteractionEvent({
         type: "panend",
@@ -652,7 +652,20 @@ export function Plot(props: Props): JSX.Element {
 
   // The reset view button is shown when we have interacted locally or if the global bounds are set
   // and we are sync'd.
-  const showResetViewButton = shouldSync ? globalBounds != undefined : showReset;
+  //
+  // If global bounds are defined, our plot bounds might already match the global bounds. In that
+  // case we don't need to show a reset even if the global bounds are set. This interfaces with the
+  // current state transition panel which will set global bounds on startup which is different to
+  // plot panel behavior which only sets the bounds when a user interacts.
+  //
+  // If/when we update the state transition logic to only set on interact then we can also drop this
+  // logic and only check for `globalBounds != undefined`.
+  const coordinatorXBounds = coordinator?.getXBoundsWithoutGlobalBounds();
+  const globalBoundsMatch =
+    globalBounds?.min === coordinatorXBounds?.min && globalBounds?.max === coordinatorXBounds?.max;
+
+  const showResetViewButton =
+    showReset || (shouldSync && globalBounds != undefined && !globalBoundsMatch);
 
   return (
     <Stack

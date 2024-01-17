@@ -312,6 +312,34 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     return await this.#datasetsBuilder.getCsvData();
   }
 
+  /**
+   * Get the xBounds exluding the global bounds. This returns the xBounds that would be used
+   * if the global bounds were not overriding.
+   */
+  public getXBoundsWithoutGlobalBounds(): Partial<Bounds1D> {
+    const currentSecondsIfFollowMode =
+      this.#isTimeseriesPlot && this.#followRange != undefined && this.#currentSeconds != undefined
+        ? this.#currentSeconds
+        : undefined;
+    const xMax =
+      this.#interactionBounds?.x.max ??
+      currentSecondsIfFollowMode ??
+      this.#configBounds.x.max ??
+      this.#datasetRange?.max;
+
+    const xMinIfFollowMode =
+      this.#isTimeseriesPlot && this.#followRange != undefined && xMax != undefined
+        ? xMax - this.#followRange
+        : undefined;
+    const xMin =
+      this.#interactionBounds?.x.min ??
+      xMinIfFollowMode ??
+      this.#configBounds.x.min ??
+      this.#datasetRange?.min;
+
+    return { min: xMin, max: xMax };
+  }
+
   #getXBounds(): Partial<Bounds1D> {
     // Interaction, synced global bounds, config, and other bounds sources are combined in precedence order.
     // currentSeconds is only included in the sequence if follow mode is enabled.
