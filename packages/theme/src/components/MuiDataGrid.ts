@@ -45,7 +45,7 @@ export const MuiDataGrid: OverrideComponentReturn<"MuiDataGrid"> = {
     columnHeader: {
       // Disable focus outline by default since most of our grids are used
       // as non-interactive display tables
-      "&:focus-within": {
+      "&:focus, &:focus-within": {
         outline: "none",
       },
     },
