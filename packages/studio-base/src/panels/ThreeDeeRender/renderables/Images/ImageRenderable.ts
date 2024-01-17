@@ -22,8 +22,6 @@ import { CameraInfo } from "../../ros";
 import { DECODE_IMAGE_ERR_KEY, IMAGE_TOPIC_PATH } from "../ImageMode/constants";
 import { ColorModeSettings } from "../colorMode";
 
-const EMPTY_ARRAY: unknown[] = [];
-
 const log = Logger.getLogger(__filename);
 export interface ImageRenderableSettings extends Partial<ColorModeSettings> {
   visible: boolean;
@@ -157,7 +155,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (
       prevSettings.colorMode !== newSettings.colorMode ||
       prevSettings.flatColor !== newSettings.flatColor ||
-      !_.isEqual(prevSettings.gradient ?? EMPTY_ARRAY, newSettings.gradient ?? EMPTY_ARRAY) ||
+      !_.isEqual(prevSettings.gradient, newSettings.gradient) ||
       prevSettings.colorMap !== newSettings.colorMap ||
       prevSettings.minValue !== newSettings.minValue ||
       prevSettings.maxValue !== newSettings.maxValue
