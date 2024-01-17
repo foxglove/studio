@@ -34,13 +34,15 @@ const columns: GridColDef[] = [
 ];
 
 const rows = [
-  { id: 1, lastName: "Bandes-Storch", firstName: "Jacob", userName: "jtbandes" },
-  { id: 2, lastName: "Shtylman", firstName: "Roman", userName: "defunctzombie" },
-  { id: 3, lastName: "Carr", firstName: "Andrew", userName: "2metres" },
-  { id: 4, lastName: "Macneil", firstName: "Adrian", userName: "amacneil" },
-  { id: 5, lastName: "Nosenzo", firstName: "Sam", userName: "snosenzo" },
-  { id: 6, lastName: "Weon", firstName: "Esther S.", userName: "esthersweon" },
-  { id: 7, lastName: "Egan", firstName: "Miles", userName: "foxymiles" },
+  { id: 1, lastName: "Snow", firstName: "Jon", userName: "JonSnow" },
+  { id: 2, lastName: "Lannister", firstName: "Cersei", userName: "CerseiLannister" },
+  { id: 3, lastName: "Lannister", firstName: "Jaime", userName: "JaimeLannister" },
+  { id: 4, lastName: "Stark", firstName: "Arya", userName: undefined },
+  { id: 5, lastName: "Targaryen", firstName: "Daenerys", userName: "DaenerysTargaryen" },
+  { id: 6, lastName: "Melisandre", firstName: undefined, userName: "Melisandre" },
+  { id: 7, lastName: "Clifford", firstName: "Ferrara", userName: "FerraraClifford" },
+  { id: 8, lastName: "Frances", firstName: "Rossini", userName: "RossiniFrances" },
+  { id: 9, lastName: "Roxie", firstName: "Harvey", userName: "HarveyRoxie" },
 ];
 
 export const Default: StoryObj<typeof DataGrid> = {
