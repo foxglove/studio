@@ -19,9 +19,9 @@ type RepeatAdapterProps = {
   seek: (to: Time) => void;
 };
 
-function activeDataSelector(ctx: MessagePipelineContext) {
-  return ctx.playerState.activeData;
-}
+const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
+const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
+const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 
 /**
  * RepeatAdapter handled looping from the start of playback when playback reaches the end
@@ -34,7 +34,9 @@ export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
 
   const { play, seek, repeatEnabled, setRepeat } = props;
 
-  const activeData = useMessagePipeline(activeDataSelector);
+  const currentTime = useMessagePipeline(selectCurrentTime);
+  const startTime = useMessagePipeline(selectStartTime);
+  const endTime = useMessagePipeline(selectEndTime);
 
   const lastRepeatTime = useRef<number | undefined>();
 
@@ -42,10 +44,6 @@ export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
     if (!repeatEnabled) {
       return;
     }
-
-    const currentTime = activeData?.currentTime;
-    const endTime = activeData?.endTime;
-    const startTime = activeData?.startTime;
 
     // repeat logic could also live in messagePipeline but since it is only triggered
     // from playback controls we've implemented it here for now - if there is demand
@@ -57,6 +55,7 @@ export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
         enqueueSnackbar("Dataset is too small; playback loop has been automatically disabled.", {
           variant: "info",
         });
+        return;
       }
       lastRepeatTime.current = now;
 
@@ -65,7 +64,7 @@ export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
       // even if paused
       play({ looped: true });
     }
-  }, [activeData, enqueueSnackbar, play, repeatEnabled, seek, setRepeat]);
+  }, [currentTime, startTime, endTime, enqueueSnackbar, play, repeatEnabled, seek, setRepeat]);
 
   return <></>;
 }
