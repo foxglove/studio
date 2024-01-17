@@ -196,8 +196,22 @@ export class TimestampDatasetsBuilderImpl {
       };
 
       const maxPoints = MAX_POINTS / numSeries;
+
+      // We already have fewer items than the viewport width so there's no need to downsample
+      //
+      // Points could still "overlap" but we don't care because we are under our threshold for
+      // the number of points we want to return for a dataset.
+      //
+      // This avoids situations where downsampling might resolve datums to the same pixel at
+      // different zoom levels (due to pixel rounding for datums) as we zoom in and cause us to
+      // remove data points and hide dots. This creates a counter-intuitive UX where dots can
+      // dissapear when zooming in.
+      const min = Math.min(downsampleViewport.width, maxPoints);
+
       const downsampledIndicies =
-        dataset.showLine === true
+        items.length < min
+          ? items.map((item) => item.index)
+          : dataset.showLine === true
           ? downsampleTimeseries(items, downsampleViewport, maxPoints)
           : downsampleScatter(items, downsampleViewport);
 
