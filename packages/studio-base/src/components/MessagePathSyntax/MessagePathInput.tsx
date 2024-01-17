@@ -378,13 +378,14 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           autocompleteItems:
             structure == undefined
               ? []
-              : messagePathsForStructure(structure, {
-                  validTypes,
-                  noMultiSlices,
-                  messagePath: rosPath.messagePath,
-                })
-                  .filter((item) => item.path !== "")
-                  .map((item) => item.path),
+              : filterMap(
+                  messagePathsForStructure(structure, {
+                    validTypes,
+                    noMultiSlices,
+                    messagePath: rosPath.messagePath,
+                  }),
+                  (item) => item.path,
+                ),
 
           autocompleteRange: {
             start: rosPath.topicNameRepr.length + initialFilterLength,
