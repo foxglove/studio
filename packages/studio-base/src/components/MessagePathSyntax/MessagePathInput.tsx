@@ -159,6 +159,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     () => messagePathStructures(datatypes),
     [datatypes],
   );
+  /** A map from each possible message path to the corresponding MessagePathStructureItem */
   const allStructureItemsByPath = useMemo(
     () =>
       new Map(
@@ -382,10 +383,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
                   noMultiSlices,
                   messagePath: rosPath.messagePath,
                 })
-                  .filter(
-                    // .header.seq is pretty useless but shows up everryyywhere.
-                    (item) => item.path !== "" && !item.path.endsWith(".header.seq"),
-                  )
+                  .filter((item) => item.path !== "")
                   .map((item) => item.path),
 
           autocompleteRange: {
