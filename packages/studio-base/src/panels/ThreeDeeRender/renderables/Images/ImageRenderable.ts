@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as _ from "lodash-es";
 import * as THREE from "three";
 import { assert } from "ts-essentials";
 
@@ -11,7 +12,6 @@ import { toNanoSec } from "@foxglove/rostime";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { stringToRgba } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
-import { vecEqual } from "@foxglove/studio-base/panels/ThreeDeeRender/math";
 import { WorkerImageDecoder } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/WorkerImageDecoder";
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { RosValue } from "@foxglove/studio-base/players/types";
@@ -157,7 +157,7 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     if (
       prevSettings.colorMode !== newSettings.colorMode ||
       prevSettings.flatColor !== newSettings.flatColor ||
-      !vecEqual(prevSettings.gradient ?? EMPTY_ARRAY, newSettings.gradient ?? EMPTY_ARRAY) ||
+      !_.isEqual(prevSettings.gradient ?? EMPTY_ARRAY, newSettings.gradient ?? EMPTY_ARRAY) ||
       prevSettings.colorMap !== newSettings.colorMap ||
       prevSettings.minValue !== newSettings.minValue ||
       prevSettings.maxValue !== newSettings.maxValue

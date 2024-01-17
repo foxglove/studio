@@ -433,9 +433,8 @@ export class ImageMode
     // add unselected camera calibration option
     calibrationTopics.unshift({ label: "None", value: undefined });
 
-    const imageTopicExists = !(
-      imageTopicName && !imageTopics.some((topic) => topic.value === imageTopicName)
-    );
+    const imageTopicExists =
+      !imageTopicName || imageTopics.some((topic) => topic.value === imageTopicName);
     this.renderer.settings.errors.errorIfFalse(
       imageTopicExists,
       IMAGE_TOPIC_PATH,
