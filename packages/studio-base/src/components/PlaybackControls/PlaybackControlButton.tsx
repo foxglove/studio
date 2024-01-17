@@ -38,6 +38,7 @@ export function PlaybackControlButton(props: Props): JSX.Element {
       disableHoverListener
       onMouseEnter={handleOpen}
       onMouseLeave={handleClose}
+      TransitionProps={{ timeout: { exit: 0 } }}
     >
       <HoverableIconButton {...rest} onClick={handleClick} />
     </Tooltip>
