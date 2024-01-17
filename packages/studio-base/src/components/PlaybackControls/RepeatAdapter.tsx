@@ -2,8 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useSnackbar } from "notistack";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect } from "react";
 
 import { compare, Time } from "@foxglove/rostime";
 import {
@@ -30,15 +29,11 @@ const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeDat
  * a separate component so it does not cause virtual DOM diffing on any children.
  */
 export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
-  const { enqueueSnackbar } = useSnackbar();
-
   const { play, seek, repeatEnabled, setRepeat } = props;
 
   const currentTime = useMessagePipeline(selectCurrentTime);
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
-
-  const lastRepeatTime = useRef<number | undefined>();
 
   useLayoutEffect(() => {
     if (!repeatEnabled) {
@@ -49,22 +44,12 @@ export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
     // from playback controls we've implemented it here for now - if there is demand
     // to toggle repeat from elsewhere this logic can move
     if (startTime && currentTime && endTime && compare(currentTime, endTime) >= 0) {
-      const now = performance.now();
-      if (lastRepeatTime.current != undefined && now - lastRepeatTime.current < 250) {
-        setRepeat(false);
-        enqueueSnackbar("Dataset is too small; playback loop has been automatically disabled.", {
-          variant: "info",
-        });
-        return;
-      }
-      lastRepeatTime.current = now;
-
       seek(startTime);
       // if the user turns on repeat and we are at the end, we assume they want to play from start
       // even if paused
       play({ looped: true });
     }
-  }, [currentTime, startTime, endTime, enqueueSnackbar, play, repeatEnabled, seek, setRepeat]);
+  }, [currentTime, startTime, endTime, play, repeatEnabled, seek, setRepeat]);
 
   return <></>;
 }
