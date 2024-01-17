@@ -30,7 +30,6 @@ enum AppEvent {
   // Player events
   PLAYER_CONSTRUCTED = "Studio: Player Constructed",
   PLAYER_PLAY = "Studio: Player Played",
-  PLAYER_LOOPED = "Studio: Player Looped",
   PLAYER_SEEK = "Studio: Player Seeked",
   PLAYER_SET_SPEED = "Studio: Player Speed Set",
   PLAYER_PAUSE = "Studio: Player Paused",

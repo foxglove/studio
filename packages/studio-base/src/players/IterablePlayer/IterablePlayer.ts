@@ -229,9 +229,8 @@ export class IterablePlayer implements Player {
       }
       this.#untilTime = clampTime(untilTime, this.#start, this.#end);
     }
-    if (looped) {
-      this.#metricsCollector.loop();
-    } else {
+    // don't log "play" events when playback is looping automatically
+    if (!looped) {
       this.#metricsCollector.play(this.#speed);
     }
     this.#isPlaying = true;

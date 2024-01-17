@@ -39,10 +39,6 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
     this.logEvent(AppEvent.PLAYER_PLAY, { speed });
   }
 
-  public loop(): void {
-    this.logEvent(AppEvent.PLAYER_LOOPED);
-  }
-
   public seek(_time: Time): void {
     // NOTE: This event fires in more cases than user interaction
   }

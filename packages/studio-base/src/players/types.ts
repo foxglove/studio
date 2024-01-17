@@ -347,7 +347,6 @@ export interface PlayerMetricsCollectorInterface {
   setProperty(key: string, value: string | number | boolean): void;
   playerConstructed(): void;
   play(speed: number): void;
-  loop(): void;
   seek(time: Time): void;
   setSpeed(speed: number): void;
   pause(): void;

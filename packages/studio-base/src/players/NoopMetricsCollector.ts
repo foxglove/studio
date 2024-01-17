@@ -17,20 +17,49 @@ import {
 } from "@foxglove/studio-base/players/types";
 
 export default class NoopMetricsCollector implements PlayerMetricsCollectorInterface {
-  public setProperty(_key: string, _value: string | number | boolean): void {}
-  public playerConstructed(): void {}
-  public play(_speed: number): void {}
-  public loop(): void {}
-  public seek(_time: Time): void {}
-  public setSpeed(_speed: number): void {}
-  public pause(): void {}
-  public close(): void {}
-  public setSubscriptions(_subscriptions: SubscribePayload[]): void {}
-  public recordPlaybackTime(_time: Time): void {}
-  public recordBytesReceived(_bytes: number): void {}
-  public recordDataProviderPerformance(): void {}
-  public recordUncachedRangeRequest(): void {}
-  public recordTimeToFirstMsgs(): void {}
-  public recordDataProviderInitializePerformance(): void {}
-  public recordDataProviderStall(): void {}
+  public setProperty(_key: string, _value: string | number | boolean): void {
+    // no-op
+  }
+  public playerConstructed(): void {
+    // no-op
+  }
+  public play(_speed: number): void {
+    // no-op
+  }
+  public seek(_time: Time): void {
+    // no-op
+  }
+  public setSpeed(_speed: number): void {
+    // no-op
+  }
+  public pause(): void {
+    // no-op
+  }
+  public close(): void {
+    // no-op
+  }
+  public setSubscriptions(_subscriptions: SubscribePayload[]): void {
+    // no-op
+  }
+  public recordPlaybackTime(_time: Time): void {
+    // no-op
+  }
+  public recordBytesReceived(_bytes: number): void {
+    // no-op
+  }
+  public recordDataProviderPerformance(): void {
+    // no-op
+  }
+  public recordUncachedRangeRequest(): void {
+    // no-op
+  }
+  public recordTimeToFirstMsgs(): void {
+    // no-op
+  }
+  public recordDataProviderInitializePerformance(): void {
+    // no-op
+  }
+  public recordDataProviderStall(): void {
+    // no-op
+  }
 }
