@@ -12,8 +12,6 @@ import {
 
 type RepeatAdapterProps = {
   repeatEnabled: boolean;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  setRepeat: (repeat: boolean) => void;
   play: (opts: { looped: boolean }) => void;
   seek: (to: Time) => void;
 };
@@ -29,7 +27,7 @@ const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeDat
  * a separate component so it does not cause virtual DOM diffing on any children.
  */
 export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
-  const { play, seek, repeatEnabled, setRepeat } = props;
+  const { play, seek, repeatEnabled } = props;
 
   const currentTime = useMessagePipeline(selectCurrentTime);
   const startTime = useMessagePipeline(selectStartTime);
@@ -49,7 +47,7 @@ export function RepeatAdapter(props: RepeatAdapterProps): JSX.Element {
       // even if paused
       play({ looped: true });
     }
-  }, [currentTime, startTime, endTime, play, repeatEnabled, seek, setRepeat]);
+  }, [currentTime, startTime, endTime, play, repeatEnabled, seek]);
 
   return <></>;
 }
