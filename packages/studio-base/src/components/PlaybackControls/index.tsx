@@ -182,7 +182,7 @@ export default function PlaybackControls(props: {
 
   return (
     <>
-      <RepeatAdapter play={play} seek={seek} repeatEnabled={repeat} />
+      <RepeatAdapter play={play} seek={seek} repeatEnabled={repeat} setRepeat={setRepeat} />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.root}>
         <Scrubber onSeek={seek} />
