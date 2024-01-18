@@ -1705,7 +1705,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/react@npm:11.11.3, @emotion/react@npm:11.11.3  ":
+"@emotion/react@npm:11.11.3":
   version: 11.11.3
   resolution: "@emotion/react@npm:11.11.3"
   dependencies:
@@ -2498,7 +2498,7 @@ __metadata:
   resolution: "@foxglove/studio-base@workspace:packages/studio-base"
   dependencies:
     "@emotion/cache": 11.11.0
-    "@emotion/react": "11.11.3  "
+    "@emotion/react": 11.11.3
     "@emotion/styled": 11.11.0
     "@fluentui/react-icons": 2.0.224
     "@foxglove/avl": 1.0.0
