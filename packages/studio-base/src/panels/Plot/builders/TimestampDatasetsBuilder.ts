@@ -145,10 +145,11 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     return { min: 0, max: toSec(subtractTime(activeData.endTime, activeData.startTime)) };
   }
 
-  public *iterateBlocks(
+  public async handleBlocks(
     startTime: Immutable<Time>,
     blocks: Immutable<(MessageBlock | undefined)[]>,
-  ): Generator {
+    progress: () => Promise<void>,
+  ): Promise<void> {
     for (const series of this.#series) {
       const mathFn = series.config.parsed.modifier
         ? mathFunctions[series.config.parsed.modifier]
@@ -171,13 +172,17 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           mathFn,
         );
 
+        if (pathItems.length === 0) {
+          continue;
+        }
+
         this.#pendingDataDispatch.push({
           type: "append-full",
           series: series.config.key,
           items: pathItems,
         });
 
-        yield;
+        await progress();
       }
     }
   }

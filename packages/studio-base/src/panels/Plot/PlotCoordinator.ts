@@ -111,7 +111,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     const datasetsRange = this.#datasetsBuilder.handlePlayerState(state);
 
     const blocks = state.progress.messageCache?.blocks;
-    if (blocks) {
+    if (blocks && this.#datasetsBuilder.handleBlocks) {
       this.#queueBlocks(activeData.startTime, blocks);
     }
 
@@ -386,14 +386,13 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     startTime: Immutable<Time>,
     blocks: Immutable<(MessageBlock | undefined)[]>,
   ): Promise<void> {
-    if (!this.#datasetsBuilder.iterateBlocks) {
+    if (!this.#datasetsBuilder.handleBlocks) {
       return;
     }
 
-    for (const _ of this.#datasetsBuilder.iterateBlocks(startTime, blocks)) {
-      void _;
+    await this.#datasetsBuilder.handleBlocks(startTime, blocks, async () => {
       await delay(0);
       this.#queueDispatchDatasets();
-    }
+    });
   }
 }

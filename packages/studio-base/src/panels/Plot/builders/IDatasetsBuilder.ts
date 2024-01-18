@@ -75,10 +75,18 @@ export type GetViewportDatasetsResult = {
 interface IDatasetsBuilder {
   handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
 
-  iterateBlocks?(
+  /**
+   * The builder can provide an implementation of this method to handle block data separately from
+   * current frame player state data.
+   *
+   * The method is provided a _progress_ callback to call when there is an opportunity to render
+   * some of the processed block data to provide feedback to the caller that work has happened.
+   */
+  handleBlocks?(
     startTime: Immutable<Time>,
     blocks: Immutable<(MessageBlock | undefined)[]>,
-  ): Generator;
+    progress: () => Promise<void>,
+  ): Promise<void>;
 
   setSeries(series: Immutable<SeriesItem[]>): void;
 
