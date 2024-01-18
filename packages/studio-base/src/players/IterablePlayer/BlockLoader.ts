@@ -154,8 +154,8 @@ export class BlockLoader {
 
   public async stopLoading(): Promise<void> {
     log.debug("Stop loading blocks");
-    this.#abortController.abort();
     this.#stopped = true;
+    this.#abortController.abort();
     this.#activeChangeCondvar.notifyAll();
   }
 
