@@ -161,7 +161,13 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     const dispatch = this.#pendingDataDispatch;
     if (dispatch.length > 0) {
       this.#pendingDataDispatch = [];
-      await this.#datasetsBuilderRemote.updateData(dispatch);
+
+      // The pending data dispatches can contain a lot of data points (from block data)
+      // By breaking them up into individual updates the postMessage calls are smaller and avoid
+      // locking up the main thread.
+      for (const item of dispatch) {
+        await this.#datasetsBuilderRemote.applyAction(item);
+      }
     }
 
     const datasets = await this.#datasetsBuilderRemote.getViewportDatasets(viewport);
