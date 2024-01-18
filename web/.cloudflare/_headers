@@ -1,0 +1,7 @@
+/*
+    X-Frame-Options: DENY
+    X-Content-Type-Options: nosniff
+    Referrer-Policy: origin
+    Content-Security-Policy: base-uri 'self'
+    Cross-Origin-Opener-Policy: same-origin
+    Cross-Origin-Embedder-Policy: credentialless
