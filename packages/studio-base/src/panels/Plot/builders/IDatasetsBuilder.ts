@@ -7,7 +7,7 @@ import { Opaque } from "ts-essentials";
 import type { Immutable, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import type { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import type { PlayerState } from "@foxglove/studio-base/players/types";
+import type { MessageBlock, PlayerState } from "@foxglove/studio-base/players/types";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import type { Dataset } from "../ChartRenderer";
@@ -74,6 +74,11 @@ export type GetViewportDatasetsResult = {
  */
 interface IDatasetsBuilder {
   handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
+
+  iterateBlocks?(
+    startTime: Immutable<Time>,
+    blocks: Immutable<(MessageBlock | undefined)[]>,
+  ): Generator;
 
   setSeries(series: Immutable<SeriesItem[]>): void;
 

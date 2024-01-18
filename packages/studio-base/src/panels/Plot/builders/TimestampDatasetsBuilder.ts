@@ -9,7 +9,7 @@ import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { PlayerState } from "@foxglove/studio-base/players/types";
+import { MessageBlock, PlayerState } from "@foxglove/studio-base/players/types";
 import { TimestampMethod, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { BlockTopicCursor } from "./BlockTopicCursor";
@@ -107,6 +107,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
       }
     }
 
+    /*
     const blocks = state.progress.messageCache?.blocks;
     if (blocks) {
       for (const series of this.#series) {
@@ -139,8 +140,46 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
         }
       }
     }
+    */
 
     return { min: 0, max: toSec(subtractTime(activeData.endTime, activeData.startTime)) };
+  }
+
+  public *iterateBlocks(
+    startTime: Immutable<Time>,
+    blocks: Immutable<(MessageBlock | undefined)[]>,
+  ): Generator {
+    for (const series of this.#series) {
+      const mathFn = series.config.parsed.modifier
+        ? mathFunctions[series.config.parsed.modifier]
+        : undefined;
+
+      if (series.blockCursor.nextWillReset(blocks)) {
+        this.#pendingDataDispatch.push({
+          type: "reset-full",
+          series: series.config.key,
+        });
+      }
+
+      let messageEvents = undefined;
+      while ((messageEvents = series.blockCursor.next(blocks)) != undefined) {
+        const pathItems = readMessagePathItems(
+          messageEvents,
+          series.config.parsed,
+          series.config.timestampMethod,
+          startTime,
+          mathFn,
+        );
+
+        this.#pendingDataDispatch.push({
+          type: "append-full",
+          series: series.config.key,
+          items: pathItems,
+        });
+
+        yield;
+      }
+    }
   }
 
   public setSeries(series: Immutable<SeriesItem[]>): void {
@@ -161,13 +200,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     const dispatch = this.#pendingDataDispatch;
     if (dispatch.length > 0) {
       this.#pendingDataDispatch = [];
-
-      // The pending data dispatches can contain a lot of data points (from block data)
-      // By breaking them up into individual updates the postMessage calls are smaller and avoid
-      // locking up the main thread.
-      for (const item of dispatch) {
-        await this.#datasetsBuilderRemote.applyAction(item);
-      }
+      await this.#datasetsBuilderRemote.applyActions(dispatch);
     }
 
     const datasets = await this.#datasetsBuilderRemote.getViewportDatasets(viewport);

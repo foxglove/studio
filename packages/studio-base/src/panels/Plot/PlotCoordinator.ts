@@ -7,7 +7,7 @@ import EventEmitter from "eventemitter3";
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
-import { Immutable } from "@foxglove/studio";
+import { Immutable, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
@@ -15,8 +15,9 @@ import { stringifyRosPath } from "@foxglove/studio-base/components/MessagePathSy
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { PlayerState } from "@foxglove/studio-base/players/types";
+import { MessageBlock, PlayerState } from "@foxglove/studio-base/players/types";
 import { Bounds } from "@foxglove/studio-base/types/Bounds";
+import delay from "@foxglove/studio-base/util/delay";
 import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotColors";
 
 import { InteractionEvent, Scale, UpdateAction } from "./ChartRenderer";
@@ -83,13 +84,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   #latestXScale?: Scale;
 
-  #queueDispatchRender = debouncePromise(async () => {
-    await this.#dispatchRender();
-  });
-
-  #queueDispatchDatasets = debouncePromise(async () => {
-    await this.#dispatchDatasets();
-  });
+  #queueDispatchRender = debouncePromise(this.#dispatchRender.bind(this));
+  #queueDispatchDatasets = debouncePromise(this.#dispatchDatasets.bind(this));
+  #queueBlocks = debouncePromise(this.#dispatchBlocks.bind(this));
 
   public constructor(renderer: OffscreenCanvasRenderer, builder: IDatasetsBuilder) {
     super();
@@ -112,6 +109,11 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     }
 
     const datasetsRange = this.#datasetsBuilder.handlePlayerState(state);
+
+    const blocks = state.progress.messageCache?.blocks;
+    if (blocks) {
+      this.#queueBlocks(activeData.startTime, blocks);
+    }
 
     if (lastSeekTime !== this.#lastSeekTime) {
       this.#currentValues = [];
@@ -378,5 +380,20 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#latestXScale = await this.#renderer.updateDatasets(result.datasets);
     this.emit("xScaleChanged", this.#latestXScale);
     this.emit("pathsWithMismatchedDataLengthsChanged", [...result.pathsWithMismatchedDataLengths]);
+  }
+
+  async #dispatchBlocks(
+    startTime: Immutable<Time>,
+    blocks: Immutable<(MessageBlock | undefined)[]>,
+  ): Promise<void> {
+    if (!this.#datasetsBuilder.iterateBlocks) {
+      return;
+    }
+
+    for (const _ of this.#datasetsBuilder.iterateBlocks(startTime, blocks)) {
+      void _;
+      await delay(0);
+      this.#queueDispatchDatasets();
+    }
   }
 }

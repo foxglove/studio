@@ -273,6 +273,12 @@ export class TimestampDatasetsBuilderImpl {
     return datasets;
   }
 
+  public applyActions(actions: Immutable<UpdateDataAction[]>): void {
+    for (const action of actions) {
+      this.applyAction(action);
+    }
+  }
+
   public applyAction(action: Immutable<UpdateDataAction>): void {
     switch (action.type) {
       case "reset-current": {
