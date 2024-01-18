@@ -153,7 +153,9 @@ export function Plot(props: Props): JSX.Element {
   const [canvasDiv, setCanvasDiv] = useState<HTMLDivElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<OffscreenCanvasRenderer | undefined>(undefined);
   const [coordinator, setCoordinator] = useState<PlotCoordinator | undefined>(undefined);
-  const [showReset, setShowReset] = useState(false);
+
+  // When true the user can reset the plot back to the original view
+  const [canReset, setCanReset] = useState(false);
 
   const [activeTooltip, setActiveTooltip] = useState<{
     x: number;
@@ -247,6 +249,8 @@ export function Plot(props: Props): JSX.Element {
 
     const unsub = subscribeMessagePipeline((state) => {
       coordinator.handlePlayerState(state.playerState);
+
+      setCanReset(coordinator.canReset());
     });
 
     // Subscribing only gets us _new_ updates, so we feed the latest state into the chart
@@ -363,7 +367,7 @@ export function Plot(props: Props): JSX.Element {
         clientY: event.clientY,
         boundingClientRect: boundingRect.toJSON(),
       });
-      setShowReset(true);
+      setCanReset(coordinator.canReset());
     },
     [coordinator],
   );
@@ -508,7 +512,7 @@ export function Plot(props: Props): JSX.Element {
         deltaX: event.deltaX,
         boundingClientRect: boundingRect.toJSON(),
       });
-      setShowReset(true);
+      setCanReset(coordinator.canReset());
     });
 
     hammerManager.on("panend", (event) => {
@@ -582,6 +586,7 @@ export function Plot(props: Props): JSX.Element {
     }
 
     coordinator?.setGlobalBounds(globalBounds);
+    setCanReset(coordinator?.canReset() ?? false);
   }, [coordinator, globalBounds, shouldSync, subscriberId]);
 
   useEffect(() => {
@@ -604,8 +609,12 @@ export function Plot(props: Props): JSX.Element {
   }, [coordinator, setGlobalBounds, shouldSync, subscriberId]);
 
   const onResetView = useCallback(() => {
-    setShowReset(false);
-    coordinator?.resetBounds();
+    if (!coordinator) {
+      return;
+    }
+
+    coordinator.resetBounds();
+    setCanReset(coordinator.canReset());
 
     if (shouldSync) {
       setGlobalBounds(undefined);
@@ -649,23 +658,6 @@ export function Plot(props: Props): JSX.Element {
       },
     };
   }, [coordinator]);
-
-  // The reset view button is shown when we have interacted locally or if the global bounds are set
-  // and we are sync'd.
-  //
-  // If global bounds are defined, our plot bounds might already match the global bounds. In that
-  // case we don't need to show a reset even if the global bounds are set. This interfaces with the
-  // current state transition panel which will set global bounds on startup which is different to
-  // plot panel behavior which only sets the bounds when a user interacts.
-  //
-  // If/when we update the state transition logic to only set on interact then we can also drop this
-  // logic and only check for `globalBounds != undefined`.
-  const coordinatorXBounds = coordinator?.getXBoundsWithoutGlobalBounds();
-  const globalBoundsMatch =
-    globalBounds?.min === coordinatorXBounds?.min && globalBounds?.max === coordinatorXBounds?.max;
-
-  const showResetViewButton =
-    showReset || (shouldSync && globalBounds != undefined && !globalBoundsMatch);
 
   return (
     <Stack
@@ -725,7 +717,7 @@ export function Plot(props: Props): JSX.Element {
             />
           </div>
         </Tooltip>
-        {showResetViewButton && (
+        {canReset && (
           <div className={classes.resetZoomButton}>
             <Button
               variant="contained"

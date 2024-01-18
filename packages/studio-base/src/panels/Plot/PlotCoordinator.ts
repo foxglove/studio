@@ -313,29 +313,39 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   }
 
   /**
-   * Get the xBounds exluding the global bounds. This returns the xBounds that would be used
-   * if the global bounds were not overriding.
+   * Return true if the plot viewport has deviated from the config or dataset bounds and can reset
    */
-  public getXBoundsWithoutGlobalBounds(): Partial<Bounds1D> {
+  public canReset(): boolean {
+    if (this.#interactionBounds) {
+      return true;
+    }
+
+    if (this.#globalBounds) {
+      const resetBounds = this.#getXResetBounds();
+      return (
+        this.#globalBounds.min !== resetBounds.min || this.#globalBounds.max !== resetBounds.max
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * Get the xBounds if we cleared the interaction and global bounds (i.e) reset
+   * back to the config or dataset bounds
+   */
+  #getXResetBounds(): Partial<Bounds1D> {
     const currentSecondsIfFollowMode =
       this.#isTimeseriesPlot && this.#followRange != undefined && this.#currentSeconds != undefined
         ? this.#currentSeconds
         : undefined;
-    const xMax =
-      this.#interactionBounds?.x.max ??
-      currentSecondsIfFollowMode ??
-      this.#configBounds.x.max ??
-      this.#datasetRange?.max;
+    const xMax = currentSecondsIfFollowMode ?? this.#configBounds.x.max ?? this.#datasetRange?.max;
 
     const xMinIfFollowMode =
       this.#isTimeseriesPlot && this.#followRange != undefined && xMax != undefined
         ? xMax - this.#followRange
         : undefined;
-    const xMin =
-      this.#interactionBounds?.x.min ??
-      xMinIfFollowMode ??
-      this.#configBounds.x.min ??
-      this.#datasetRange?.min;
+    const xMin = xMinIfFollowMode ?? this.#configBounds.x.min ?? this.#datasetRange?.min;
 
     return { min: xMin, max: xMax };
   }
