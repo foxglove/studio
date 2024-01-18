@@ -391,8 +391,8 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     }
 
     await this.#datasetsBuilder.handleBlocks(startTime, blocks, async () => {
-      await delay(0);
       this.#queueDispatchDatasets();
+      await delay(0);
     });
   }
 }
