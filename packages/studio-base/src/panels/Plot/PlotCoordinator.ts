@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import * as _ from "lodash-es";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
@@ -183,7 +184,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       };
     });
 
-    this.#seriesPaths = config.paths.map((path) => {
+    const newSeriesPaths = config.paths.map((path) => {
       if (path.timestampMethod === "headerStamp") {
         // We currently do not support showing current values in the legend for header.stamp mode
         return undefined;
@@ -198,7 +199,14 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
       return fillInGlobalVariablesInPath(parsed, globalVariables);
     });
-    this.#currentValues = [];
+    // Keep current values for paths that match existing ones
+    this.#currentValues = newSeriesPaths.map((path) => {
+      const existingIdx = this.#seriesPaths.findIndex((existingPath) =>
+        _.isEqual(existingPath, path),
+      );
+      return this.#currentValues[existingIdx];
+    });
+    this.#seriesPaths = newSeriesPaths;
     this.emit("currentValuesChanged", this.#currentValues);
 
     this.#updateAction.showXAxisLabels = config.showXAxisLabels;
