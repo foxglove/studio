@@ -228,7 +228,6 @@ export class IterablePlayer implements Player {
       }
       this.#untilTime = clampTime(opt.untilTime, this.#start, this.#end);
     }
-    this.#metricsCollector.play(this.#speed);
     this.#isPlaying = true;
 
     // If we are idling we can start playing, if we have a next state queued we let that state
@@ -244,7 +243,6 @@ export class IterablePlayer implements Player {
     if (!this.#isPlaying) {
       return;
     }
-    this.#metricsCollector.pause();
     // clear out last tick millis so we don't read a huge chunk when we unpause
     this.#lastTickMillis = undefined;
     this.#isPlaying = false;
@@ -260,7 +258,6 @@ export class IterablePlayer implements Player {
   public setPlaybackSpeed(speed: number): void {
     this.#lastRangeMillis = undefined;
     this.#speed = speed;
-    this.#metricsCollector.setSpeed(speed);
 
     // Queue event state update to update speed in player state to UI
     this.#queueEmitState();
@@ -293,7 +290,6 @@ export class IterablePlayer implements Player {
       return;
     }
 
-    this.#metricsCollector.seek(targetTime);
     this.#seekTarget = targetTime;
     this.#untilTime = undefined;
     this.#lastTickMillis = undefined;
@@ -305,7 +301,6 @@ export class IterablePlayer implements Player {
   public setSubscriptions(newSubscriptions: SubscribePayload[]): void {
     log.debug("set subscriptions", newSubscriptions);
     this.#subscriptions = newSubscriptions;
-    this.#metricsCollector.setSubscriptions(newSubscriptions);
 
     const allTopics: TopicSelection = new Map(
       this.#subscriptions.map((subscription) => [subscription.topic, subscription]),
@@ -1078,7 +1073,6 @@ export class IterablePlayer implements Player {
 
   async #stateClose() {
     this.#isPlaying = false;
-    this.#metricsCollector.close();
     await this.#blockLoader?.stopLoading();
     await this.#blockLoadingProcess;
     await this.#bufferedSource.stopProducer();

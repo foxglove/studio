@@ -3,11 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import Log from "@foxglove/log";
-import { Time } from "@foxglove/rostime";
-import {
-  PlayerMetricsCollectorInterface,
-  SubscribePayload,
-} from "@foxglove/studio-base/players/types";
+import { PlayerMetricsCollectorInterface } from "@foxglove/studio-base/players/types";
 import IAnalytics, { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const log = Log.getLogger(__filename);
@@ -34,64 +30,4 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
   public playerConstructed(): void {
     this.logEvent(AppEvent.PLAYER_CONSTRUCTED);
   }
-
-  public play(speed: number): void {
-    this.logEvent(AppEvent.PLAYER_PLAY, { speed });
-  }
-
-  public seek(_time: Time): void {
-    // NOTE: This event fires in more cases than user interaction
-  }
-
-  public setSpeed(_speed: number): void {
-    // NOTE: This event fires in more cases than user interaction
-  }
-
-  public pause(): void {
-    this.logEvent(AppEvent.PLAYER_PAUSE);
-  }
-
-  public close(): void {
-    this.logEvent(AppEvent.PLAYER_CLOSE);
-  }
-
-  public setSubscriptions(_subscriptions: SubscribePayload[]): void {}
-
-  public recordBytesReceived(_bytes: number): void {}
-
-  public recordPlaybackTime(_time: Time, _params: { stillLoadingData: boolean }): void {}
-
-  public recordDataProviderPerformance(
-    _metadata: Readonly<{
-      type: "average_throughput";
-      totalSizeOfMessages: number;
-      numberOfMessages: number;
-      requestedRangeDuration: Time;
-      receivedRangeDuration: Time;
-      topics: readonly string[];
-      totalTransferTime: Time;
-    }>,
-  ): void {}
-
-  public recordUncachedRangeRequest(): void {}
-
-  public recordTimeToFirstMsgs(): void {}
-
-  public recordDataProviderInitializePerformance(
-    _metadata: Readonly<{
-      type: "initializationPerformance";
-      dataProviderType: string;
-      metrics: { [metricName: string]: string | number };
-    }>,
-  ): void {}
-
-  public recordDataProviderStall(
-    _metadata: Readonly<{
-      type: "data_provider_stall";
-      stallDuration: Time;
-      requestTimeUntilStall: Time;
-      transferTimeUntilStall: Time;
-      bytesReceivedBeforeStall: number;
-    }>,
-  ): void {}
 }

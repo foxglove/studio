@@ -92,10 +92,6 @@ export class TimestampDatasetsBuilderImpl {
     const datasets: Dataset[] = [];
     const numSeries = this.#seriesByKey.size;
     for (const series of this.#seriesByKey.values()) {
-      if (!series.config.enabled) {
-        continue;
-      }
-
       const { color, contrastColor, showLine } = series.config;
       const dataset: Dataset = {
         borderColor: color,
@@ -108,6 +104,12 @@ export class TimestampDatasetsBuilderImpl {
         pointBorderColor: "transparent",
         data: [],
       };
+
+      datasets.push(dataset);
+
+      if (!series.config.enabled) {
+        continue;
+      }
 
       // Copy so we can set the .index property for downsampling
       // If downsampling algos change to not need the .index then we can get rid of some copies
@@ -245,8 +247,6 @@ export class TimestampDatasetsBuilderImpl {
           value: item.value,
         });
       }
-
-      datasets.push(dataset);
     }
 
     return datasets;
