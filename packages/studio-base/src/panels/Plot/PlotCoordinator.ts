@@ -212,16 +212,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
       return fillInGlobalVariablesInPath(parsed, globalVariables);
     });
-    // Keep current values for paths that match existing ones
-    this.#currentValues = newSeriesPaths.map((path) => {
-      const existingIdx = this.#seriesPaths.findIndex((existingPath) =>
-        _.isEqual(existingPath, path),
-      );
-      return this.#currentValues[existingIdx];
-    });
-    this.#seriesPaths = newSeriesPaths;
-    this.emit("currentValuesChanged", this.#currentValues);
-
     this.#updateAction.showXAxisLabels = config.showXAxisLabels;
     this.#updateAction.showYAxisLabels = config.showYAxisLabels;
     this.#updateAction.referenceLines = referenceLines;
@@ -231,15 +221,23 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       this.#updateAction.yBounds = this.#configBounds.y;
     }
 
+    const newCurrentValues: unknown[] = [];
     const seriesItems = filterMap(config.paths, (path, idx): Immutable<SeriesItem> | undefined => {
       if (isReferenceLinePlotPathType(path)) {
+        newCurrentValues.push(undefined);
         return;
       }
 
       const parsed = parseRosPath(path.value);
       if (!parsed) {
+        newCurrentValues.push(undefined);
         return;
       }
+
+      const existingIdx = this.#seriesPaths.findIndex((existingPath) =>
+        _.isEqual(existingPath, parsed),
+      );
+      newCurrentValues.push(this.#currentValues[existingIdx]);
 
       const filledParsed = fillInGlobalVariablesInPath(parsed, globalVariables);
 
@@ -270,6 +268,11 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     });
 
     this.#datasetsBuilder.setSeries(seriesItems);
+
+    this.#seriesPaths = newSeriesPaths;
+    this.#currentValues = newCurrentValues;
+    this.emit("currentValuesChanged", this.#currentValues);
+
     this.#queueDispatchRender();
   }
 
