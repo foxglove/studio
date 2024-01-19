@@ -38,6 +38,8 @@ const emptyPaths = new Set<string>();
 export class IndexDatasetsBuilder implements IDatasetsBuilder {
   #seriesByKey = new Map<SeriesConfigKey, IndexDatasetsSeries>();
 
+  #range?: Bounds1D;
+
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
     const activeData = state.activeData;
     if (!activeData) {
@@ -46,7 +48,9 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
 
     const msgEvents = activeData.messages;
     if (msgEvents.length === 0) {
-      return;
+      // When there are no new messages we keep returning the same bounds as before since our
+      // datasets have not changed.
+      return this.#range;
     }
 
     const range: Bounds1D = { min: 0, max: 0 };
@@ -79,7 +83,7 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
       range.max = Math.max(range.max, series.dataset.data.length - 1);
     }
 
-    return range;
+    return (this.#range = range);
   }
 
   public setSeries(series: Immutable<SeriesItem[]>): void {
@@ -99,6 +103,7 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
         };
       }
 
+      existingSeries.enabled = item.enabled;
       existingSeries.dataset = {
         ...existingSeries.dataset,
         borderColor: item.color,
@@ -124,6 +129,7 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
     const datasets: Dataset[] = [];
     for (const series of this.#seriesByKey.values()) {
       if (!series.enabled) {
+        datasets.push({ data: [] });
         continue;
       }
 
@@ -147,10 +153,6 @@ export class IndexDatasetsBuilder implements IDatasetsBuilder {
     }
 
     return datasets;
-  }
-
-  public destroy(): void {
-    // no-op this builder does not use a worker
   }
 }
 

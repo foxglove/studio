@@ -98,10 +98,6 @@ export class TimestampDatasetsBuilderImpl {
     const datasets: Dataset[] = [];
     const numSeries = this.#seriesByKey.size;
     for (const series of this.#seriesByKey.values()) {
-      if (!series.config.enabled) {
-        continue;
-      }
-
       const { color, contrastColor, showLine } = series.config;
       const dataset: Dataset = {
         borderColor: color,
@@ -114,6 +110,12 @@ export class TimestampDatasetsBuilderImpl {
         pointBorderColor: "transparent",
         data: [],
       };
+
+      datasets.push(dataset);
+
+      if (!series.config.enabled) {
+        continue;
+      }
 
       // Copy so we can set the .index property for downsampling
       // If downsampling algos change to not need the .index then we can get rid of some copies
@@ -196,8 +198,22 @@ export class TimestampDatasetsBuilderImpl {
       };
 
       const maxPoints = MAX_POINTS / numSeries;
-      const downsampledIndicies =
-        dataset.showLine === true
+
+      // We already have fewer items than the viewport width so there's no need to downsample
+      //
+      // Points could still "overlap" but we don't care because we are under our threshold for
+      // the number of points we want to return for a dataset.
+      //
+      // This avoids situations where downsampling might resolve datums to the same pixel at
+      // different zoom levels (due to pixel rounding for datums) as we zoom in and cause us to
+      // remove data points and hide dots. This creates a counter-intuitive UX where dots can
+      // dissapear when zooming in.
+      const min = Math.min(downsampleViewport.width, maxPoints);
+
+      const downsampledIndices =
+        items.length < min
+          ? items.map((item) => item.index)
+          : dataset.showLine === true
           ? downsampleTimeseries(items, downsampleViewport, maxPoints)
           : downsampleScatter(items, downsampleViewport);
 
@@ -205,7 +221,7 @@ export class TimestampDatasetsBuilderImpl {
       // data is downsampled.
       //
       // If show line is false then we must show points otherwise nothing will be displayed
-      if (downsampledIndicies.length < items.length && dataset.showLine === true) {
+      if (downsampledIndices.length < items.length && dataset.showLine === true) {
         dataset.pointRadius = 0;
       }
 
@@ -213,7 +229,7 @@ export class TimestampDatasetsBuilderImpl {
       // to create a discontinuity after the full data.
       let shouldAddNan = dataset.showLine === true && series.full.length > 0;
 
-      for (const index of downsampledIndicies) {
+      for (const index of downsampledIndices) {
         const item = allData[index];
         if (!item) {
           continue;
@@ -237,8 +253,6 @@ export class TimestampDatasetsBuilderImpl {
           value: item.value,
         });
       }
-
-      datasets.push(dataset);
     }
 
     return datasets;
