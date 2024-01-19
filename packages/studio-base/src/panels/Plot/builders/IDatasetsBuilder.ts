@@ -80,12 +80,13 @@ interface IDatasetsBuilder {
    * current frame player state data.
    *
    * The method is provided a _progress_ callback to call when there is an opportunity to render
-   * some of the processed block data to provide feedback to the caller that work has happened.
+   * some of the processed block data to provide feedback to the caller that work has happened. The
+   * progress callback returns false when further processing should stop.
    */
   handleBlocks?(
     startTime: Immutable<Time>,
     blocks: Immutable<(MessageBlock | undefined)[]>,
-    progress: () => Promise<void>,
+    progress: () => Promise<boolean>,
   ): Promise<void>;
 
   setSeries(series: Immutable<SeriesItem[]>): void;

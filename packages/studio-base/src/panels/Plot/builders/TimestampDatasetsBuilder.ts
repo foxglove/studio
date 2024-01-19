@@ -113,7 +113,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
   public async handleBlocks(
     startTime: Immutable<Time>,
     blocks: Immutable<(MessageBlock | undefined)[]>,
-    progress: () => Promise<void>,
+    progress: () => Promise<boolean>,
   ): Promise<void> {
     // identify if series need resetting because
     for (const series of this.#series) {
@@ -163,7 +163,10 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           items: pathItems,
         });
 
-        await progress();
+        const bail = await progress();
+        if (bail) {
+          return;
+        }
       }
     } while (done < seriesArr.length);
   }

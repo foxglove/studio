@@ -106,7 +106,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   }
 
   public handlePlayerState(state: Immutable<PlayerState>): void {
-    if (this.#destroyed) {
+    if (this.#isDestroyed()) {
       return;
     }
     const activeData = state.activeData;
@@ -161,7 +161,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     colorScheme: "light" | "dark",
     globalVariables: GlobalVariables,
   ): void {
-    if (this.#destroyed) {
+    if (this.#isDestroyed()) {
       return;
     }
     this.#isTimeseriesPlot = config.xAxisVal === "timestamp";
@@ -327,7 +327,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   /** Get the entire data for all series */
   public async getCsvData(): Promise<CsvDataset[]> {
-    if (this.#destroyed) {
+    if (this.#isDestroyed()) {
       return [];
     }
     return await this.#datasetsBuilder.getCsvData();
@@ -380,8 +380,12 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     };
   }
 
+  #isDestroyed(): boolean {
+    return this.#destroyed;
+  }
+
   async #dispatchRender(): Promise<void> {
-    if (this.#destroyed) {
+    if (this.#isDestroyed()) {
       return;
     }
     this.#updateAction.xBounds = this.#getXBounds();
@@ -401,6 +405,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     };
 
     const bounds = await this.#renderer.update(action);
+    if (this.#isDestroyed()) {
+      return;
+    }
 
     if (haveInteractionEvents) {
       this.#interactionBounds = bounds;
@@ -414,14 +421,20 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   }
 
   async #dispatchDatasets(): Promise<void> {
-    if (this.#destroyed) {
+    if (this.#isDestroyed()) {
       return;
     }
     this.#viewport.bounds.x = this.#getXBounds();
     this.#viewport.bounds.y = this.#interactionBounds?.y ?? this.#configBounds.y;
 
     const result = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
+    if (this.#isDestroyed()) {
+      return;
+    }
     this.#latestXScale = await this.#renderer.updateDatasets(result.datasets);
+    if (this.#isDestroyed()) {
+      return;
+    }
     this.emit("xScaleChanged", this.#latestXScale);
     this.emit("pathsWithMismatchedDataLengthsChanged", [...result.pathsWithMismatchedDataLengths]);
   }
@@ -436,7 +449,20 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
     await this.#datasetsBuilder.handleBlocks(startTime, blocks, async () => {
       this.#queueDispatchDatasets();
+      // When blocks are fully loaded and a user splits the panel, we are able to process all of the
+      // blocks synchronously. However this creates a poor UX experience for large datasets by
+      // showing nothing on the plot for many seconds while the postMessage prepares a massive send.
+      // This send also hangs the main thread.
+      //
+      // Instead of doing this all synchronously and stalling main thread, we artificially break up
+      // block loading to periodically dispatch the loaded data and render it. This avoids stalling
+      // the main thread and provides visual feedabck to the user that data is loading on the plot.
+      //
+      // await Promise.resolve() does not work as it does not yield enough to the main thread to
+      // dispatch and render.
       await delay(0);
+
+      return this.#isDestroyed();
     });
   }
 }
