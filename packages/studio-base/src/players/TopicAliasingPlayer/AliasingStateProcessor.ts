@@ -46,7 +46,7 @@ export class AliasingStateProcessor implements IStateProcessor {
     this.#inverseMapping = invertAliasMap(mapping);
 
     this.#blockProcessors = Array.from(mapping.entries()).map(
-      (entry) => new BlockTopicProcessor(entry[0], entry[1]),
+      ([topic, aliases]) => new BlockTopicProcessor(topic, aliases),
     );
   }
 
@@ -117,19 +117,16 @@ export class AliasingStateProcessor implements IStateProcessor {
         return undefined;
       }
 
-      const accumulatedMessagesByTopic = this.#blockProcessors.reduce((acc, processor) => {
+      const messagesByTopic = this.#blockProcessors.reduce((acc, processor) => {
         return {
           ...acc,
           ...processor.aliasBlock(block, idx),
         };
-      }, {});
+      }, block.messagesByTopic);
 
       return {
         ...block,
-        messagesByTopic: {
-          ...block.messagesByTopic,
-          ...accumulatedMessagesByTopic,
-        },
+        messagesByTopic,
       };
     });
   });

@@ -5,7 +5,7 @@
 import type { Immutable as Im, MessageEvent } from "@foxglove/studio";
 import type { MessageBlock } from "@foxglove/studio-base/players/types";
 
-type BlockItem = { original: Im<MessageEvent[]>; aliased: Record<string, MessageEvent[]> };
+type BlockItem = { inputEvents: Im<MessageEvent[]>; aliased: Record<string, MessageEvent[]> };
 type SparseArray<T> = (T | undefined)[];
 
 /**
@@ -39,7 +39,7 @@ export class BlockTopicProcessor {
     }
 
     const existing = this.#blocks[index];
-    if (existing && existing.original === inputEvents) {
+    if (existing && existing.inputEvents === inputEvents) {
       return existing.aliased;
     }
 
@@ -53,7 +53,7 @@ export class BlockTopicProcessor {
 
     // Save the input events and the aliased data
     this.#blocks[index] = {
-      original: inputEvents,
+      inputEvents,
       aliased,
     };
 
