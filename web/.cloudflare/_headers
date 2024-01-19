@@ -1,3 +1,7 @@
+# Cloudflare Plain Text Headers File
+# Documentation: https://developers.cloudflare.com/pages/configuration/headers/
+
+# Apply to all pages
 /*
     X-Frame-Options: DENY
     X-Content-Type-Options: nosniff
