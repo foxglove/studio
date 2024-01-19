@@ -93,6 +93,8 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   #destroyed = false;
 
+  #latestBlocks?: Immutable<(MessageBlock | undefined)[]>;
+
   public constructor(renderer: OffscreenCanvasRenderer, builder: IDatasetsBuilder) {
     super();
 
@@ -125,6 +127,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
     const blocks = state.progress.messageCache?.blocks;
     if (blocks && this.#datasetsBuilder.handleBlocks) {
+      this.#latestBlocks = blocks;
       this.#queueBlocks(activeData.startTime, blocks);
     }
 
@@ -462,7 +465,10 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       // dispatch and render.
       await delay(0);
 
-      return this.#isDestroyed();
+      // Bail processing if the coordinator has been destroyed or if our input blocks have changed
+      // This lets us start processing new input blocks instead of continuing to work on stale
+      // blocks.
+      return this.#isDestroyed() || this.#latestBlocks !== blocks;
     });
   }
 }
