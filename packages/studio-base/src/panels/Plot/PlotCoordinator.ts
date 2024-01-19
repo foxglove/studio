@@ -92,6 +92,8 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     await this.#dispatchDatasets();
   });
 
+  #destroyed = false;
+
   public constructor(renderer: OffscreenCanvasRenderer, builder: IDatasetsBuilder) {
     super();
 
@@ -99,7 +101,15 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#datasetsBuilder = builder;
   }
 
+  /** Stop the coordinator from sending any future updates to the renderer. */
+  public destroy(): void {
+    this.#destroyed = true;
+  }
+
   public handlePlayerState(state: Immutable<PlayerState>): void {
+    if (this.#destroyed) {
+      return;
+    }
     const activeData = state.activeData;
     if (!activeData) {
       return;
@@ -147,6 +157,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     colorScheme: "light" | "dark",
     globalVariables: GlobalVariables,
   ): void {
+    if (this.#destroyed) {
+      return;
+    }
     this.#isTimeseriesPlot = config.xAxisVal === "timestamp";
     if (!this.#isTimeseriesPlot) {
       this.#currentSeconds = undefined;
@@ -317,6 +330,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   /** Get the entire data for all series */
   public async getCsvData(): Promise<CsvDataset[]> {
+    if (this.#destroyed) {
+      return [];
+    }
     return await this.#datasetsBuilder.getCsvData();
   }
 
@@ -350,6 +366,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   }
 
   async #dispatchRender(): Promise<void> {
+    if (this.#destroyed) {
+      return;
+    }
     this.#updateAction.xBounds = this.#getXBounds();
 
     if (this.#shouldResetY) {
@@ -379,6 +398,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   }
 
   async #dispatchDatasets(): Promise<void> {
+    if (this.#destroyed) {
+      return;
+    }
     this.#viewport.bounds.x = this.#getXBounds();
     this.#viewport.bounds.y = this.#interactionBounds?.y ?? this.#configBounds.y;
 
