@@ -373,8 +373,8 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     // Interaction, synced global bounds override the config and data source bounds in precedence
     const resetBounds = this.#getXResetBounds();
     return {
-      min: this.#interactionBounds?.x.max ?? this.#globalBounds?.max ?? resetBounds.max,
-      max: this.#interactionBounds?.x.min ?? this.#globalBounds?.min ?? resetBounds.min,
+      min: this.#interactionBounds?.x.min ?? this.#globalBounds?.min ?? resetBounds.min,
+      max: this.#interactionBounds?.x.max ?? this.#globalBounds?.max ?? resetBounds.max,
     };
   }
 
