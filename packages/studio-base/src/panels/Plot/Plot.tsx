@@ -249,8 +249,6 @@ export function Plot(props: Props): JSX.Element {
 
     const unsub = subscribeMessagePipeline((state) => {
       coordinator.handlePlayerState(state.playerState);
-
-      setCanReset(coordinator.canReset());
     });
 
     // Subscribing only gets us _new_ updates, so we feed the latest state into the chart
@@ -367,7 +365,6 @@ export function Plot(props: Props): JSX.Element {
         clientY: event.clientY,
         boundingClientRect: boundingRect.toJSON(),
       });
-      setCanReset(coordinator.canReset());
     },
     [coordinator],
   );
@@ -512,7 +509,6 @@ export function Plot(props: Props): JSX.Element {
         deltaX: event.deltaX,
         boundingClientRect: boundingRect.toJSON(),
       });
-      setCanReset(coordinator.canReset());
     });
 
     hammerManager.on("panend", (event) => {
@@ -586,7 +582,6 @@ export function Plot(props: Props): JSX.Element {
     }
 
     coordinator?.setGlobalBounds(globalBounds);
-    setCanReset(coordinator?.canReset() ?? false);
   }, [coordinator, globalBounds, shouldSync, subscriberId]);
 
   useEffect(() => {
@@ -603,8 +598,10 @@ export function Plot(props: Props): JSX.Element {
       });
     };
     coordinator.on("timeseriesBounds", onTimeseriesBounds);
+    coordinator.on("viewportChange", setCanReset);
     return () => {
       coordinator.off("timeseriesBounds", onTimeseriesBounds);
+      coordinator.off("viewportChange", setCanReset);
     };
   }, [coordinator, setGlobalBounds, shouldSync, subscriberId]);
 
@@ -614,7 +611,6 @@ export function Plot(props: Props): JSX.Element {
     }
 
     coordinator.resetBounds();
-    setCanReset(coordinator.canReset());
 
     if (shouldSync) {
       setGlobalBounds(undefined);

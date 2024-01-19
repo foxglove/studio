@@ -41,6 +41,9 @@ type EventTypes = {
 
   /** Paths with mismatched data lengths were detected */
   pathsWithMismatchedDataLengthsChanged(pathsWithMismatchedDataLengths: string[]): void;
+
+  /** Rendering updated the viewport. `canReset` is true if the viewport can be reset. */
+  viewportChange(canReset: boolean): void;
 };
 
 /**
@@ -315,7 +318,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   /**
    * Return true if the plot viewport has deviated from the config or dataset bounds and can reset
    */
-  public canReset(): boolean {
+  #canReset(): boolean {
     if (this.#interactionBounds) {
       return true;
     }
@@ -351,30 +354,11 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   }
 
   #getXBounds(): Partial<Bounds1D> {
-    // Interaction, synced global bounds, config, and other bounds sources are combined in precedence order.
-    // currentSeconds is only included in the sequence if follow mode is enabled.
-
-    const currentSecondsIfFollowMode =
-      this.#isTimeseriesPlot && this.#followRange != undefined && this.#currentSeconds != undefined
-        ? this.#currentSeconds
-        : undefined;
+    // Interaction, synced global bounds override the config and data source bounds in precedence
     const xMax =
-      this.#interactionBounds?.x.max ??
-      this.#globalBounds?.max ??
-      currentSecondsIfFollowMode ??
-      this.#configBounds.x.max ??
-      this.#datasetRange?.max;
-
-    const xMinIfFollowMode =
-      this.#isTimeseriesPlot && this.#followRange != undefined && xMax != undefined
-        ? xMax - this.#followRange
-        : undefined;
+      this.#interactionBounds?.x.max ?? this.#globalBounds?.max ?? this.#getXResetBounds().max;
     const xMin =
-      this.#interactionBounds?.x.min ??
-      this.#globalBounds?.min ??
-      xMinIfFollowMode ??
-      this.#configBounds.x.min ??
-      this.#datasetRange?.min;
+      this.#interactionBounds?.x.min ?? this.#globalBounds?.min ?? this.#getXResetBounds().min;
 
     return { min: xMin, max: xMax };
   }
@@ -405,6 +389,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     if (haveInteractionEvents && bounds) {
       this.emit("timeseriesBounds", bounds.x);
     }
+    this.emit("viewportChange", this.#canReset());
     this.#queueDispatchDatasets();
   }
 
