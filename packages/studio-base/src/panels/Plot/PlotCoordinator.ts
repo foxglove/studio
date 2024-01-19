@@ -234,6 +234,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
         return;
       }
 
+      // Keep current values for paths that match existing ones
       const existingIdx = this.#seriesPaths.findIndex((existingPath) =>
         _.isEqual(existingPath, parsed),
       );
