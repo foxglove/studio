@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
-import * as _ from "lodash-es";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
@@ -130,7 +129,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
     for (const seriesItem of this.#series) {
       if (seriesItem.timestampMethod === "headerStamp") {
-        // We currently do not support showing current values in the legend for header.stamp mode
+        // We currently do not support showing current values in the legend for header.stamp mode,
+        // which would require keeping a buffer of messages to sort (currently done in
+        // TimestampDatasetsBuilderImpl)
         continue;
       }
       for (let i = messages.length - 1; i >= 0; --i) {
@@ -232,7 +233,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       const key = `${path.timestampMethod}:${stringifyRosPath(filledParsed)}` as SeriesConfigKey;
 
       // Keep current values for paths that match existing ones
-      const existingSeries = this.#series.find((series) => _.isEqual(series.key, key));
+      const existingSeries = this.#series.find((series) => series.key === key);
       if (existingSeries != undefined) {
         newCurrentValuesByConfigIndex[idx] =
           this.#currentValuesByConfigIndex[existingSeries.configIndex];
