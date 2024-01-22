@@ -8,3 +8,4 @@ export { default as signal, type Signal } from "./signal";
 export { default as debouncePromise } from "./debouncePromise";
 export * from "./promiseTimeout";
 export * from "./Condvar";
+export * from "./ComlinkWrap";

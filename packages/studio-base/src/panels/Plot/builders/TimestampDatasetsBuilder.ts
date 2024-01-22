@@ -4,6 +4,7 @@
 
 import * as Comlink from "comlink";
 
+import { ComlinkWrap } from "@foxglove/den/async";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
@@ -30,8 +31,8 @@ import { MathFunction, mathFunctions } from "../mathFunctions";
 
 // If the datasets builder is garbage collected we also need to cleanup the worker
 // This registry ensures the worker is cleaned up when the builder is garbage collected
-const registry = new FinalizationRegistry<Worker>((worker) => {
-  worker.terminate();
+const registry = new FinalizationRegistry<() => void>((dispose) => {
+  dispose();
 });
 
 const emptyPaths = new Set<string>();
@@ -49,7 +50,6 @@ type TimestampSeriesItem = {
  * downsampled data.
  */
 export class TimestampDatasetsBuilder implements IDatasetsBuilder {
-  #datasetsBuilderWorker: Worker;
   #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>;
 
   #pendingDataDispatch: Immutable<UpdateDataAction>[] = [];
@@ -59,13 +59,15 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
   #series: Immutable<TimestampSeriesItem[]> = [];
 
   public constructor() {
-    this.#datasetsBuilderWorker = new Worker(
+    const worker = new Worker(
       // foxglove-depcheck-used: babel-plugin-transform-import-meta
       new URL("./TimestampDatasetsBuilderImpl.worker", import.meta.url),
     );
-    this.#datasetsBuilderRemote = Comlink.wrap(this.#datasetsBuilderWorker);
+    const { remote, dispose } =
+      ComlinkWrap<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>(worker);
+    this.#datasetsBuilderRemote = remote;
 
-    registry.register(this, this.#datasetsBuilderWorker);
+    registry.register(this, dispose);
   }
 
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
