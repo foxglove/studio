@@ -8,18 +8,18 @@ import EventEmitter from "eventemitter3";
 type ComlinkWorkerConstructor = new () => Comlink.Endpoint;
 
 /**
- * ComlinkWorkerMock provides a way to mock the global Worker class to _expose_ the worker
+ * makeComlinkWorkerMock provides a way to mock the global Worker class to _expose_ the worker
  * side of a comlink connection. The instance can be passed to a `Comlink.wrap()` call to
  * invoke methods on the underling class.
  *
  * ```
  * Object.defineProperty(global, "Worker", {
  *   writable: true,
- *   value: ComlinkWorkerMock(() => new SomeClassThatYouExpose())
+ *   value: makeComlinkWorkerMock(() => new SomeClassThatYouExpose())
  * });
  * ```
  */
-export function ComlinkWorkerMock(makeInstance: () => unknown): ComlinkWorkerConstructor {
+export function makeComlinkWorkerMock(makeInstance: () => unknown): ComlinkWorkerConstructor {
   class WorkerEndpoint extends EventEmitter {
     #client: WorkerClient;
 

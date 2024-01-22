@@ -5,7 +5,7 @@
 import * as _ from "lodash-es";
 
 import { unwrap } from "@foxglove/den/monads";
-import { ComlinkWorkerMock } from "@foxglove/den/testing";
+import { makeComlinkWorkerMock } from "@foxglove/den/testing";
 import { MessageEvent } from "@foxglove/studio";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
@@ -22,7 +22,7 @@ import { PlotPath } from "../config";
 
 Object.defineProperty(global, "Worker", {
   writable: true,
-  value: ComlinkWorkerMock(() => new CustomDatasetsBuilderImpl()),
+  value: makeComlinkWorkerMock(() => new CustomDatasetsBuilderImpl()),
 });
 
 function groupByTopic(events: MessageEvent[]): Record<string, MessageEvent[]> {
