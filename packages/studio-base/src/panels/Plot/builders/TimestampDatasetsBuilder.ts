@@ -163,8 +163,8 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           items: pathItems,
         });
 
-        const bail = await progress();
-        if (bail) {
+        const abort = await progress();
+        if (abort) {
           return;
         }
       }
