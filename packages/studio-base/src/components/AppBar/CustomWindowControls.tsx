@@ -14,6 +14,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 export type CustomWindowControlsProps = {
   showCustomWindowControls?: boolean;
   isMaximized?: boolean;
+  initialZoomFactor?: number;
   onMinimizeWindow?: () => void;
   onMaximizeWindow?: () => void;
   onUnmaximizeWindow?: () => void;
