@@ -10,7 +10,7 @@ export enum AppSetting {
   MESSAGE_RATE = "messageRate",
   UPDATES_ENABLED = "updates.enabled",
   LANGUAGE = "language",
-  ZOOM_LEVEL = "ui.zoom-level",
+  ZOOM_FACTOR = "ui.zoom-factor",
 
   // ROS
   ROS_PACKAGE_PATH = "ros.ros_package_path",
