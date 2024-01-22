@@ -431,7 +431,11 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     if (this.#isDestroyed()) {
       return;
     }
-    this.#latestXScale = await this.#renderer.updateDatasets(result.datasets);
+    this.#latestXScale = await this.#renderer.updateDatasets(
+      // Use Array.from to fill in any `undefined` entries with an empty dataset (`map` would not
+      // work for sparse arrays)
+      Array.from(result.datasetsByConfigIndex, (dataset) => dataset ?? { data: [] }),
+    );
     if (this.#isDestroyed()) {
       return;
     }
