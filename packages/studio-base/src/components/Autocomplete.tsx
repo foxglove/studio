@@ -262,6 +262,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
       className={className}
       componentsProps={{
         paper: { elevation: 8 },
+        popper: { style: { width: "fit-content" } },
       }}
       disableCloseOnSelect
       disabled={disabled}
@@ -274,7 +275,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         return getItemValue(item.item);
       }}
       filterOptions={filterOptions}
-      ListboxComponent={ReactWindowListboxAdapter}
+      //ListboxComponent={ReactWindowListboxAdapter}
       onChange={onSelect}
       onInputChange={onChange}
       openOnFocus

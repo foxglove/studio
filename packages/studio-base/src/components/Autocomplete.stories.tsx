@@ -144,3 +144,15 @@ export const ManyItems: Story = {
   },
   play: clickInput,
 };
+
+export const LongPathInPopup: Story = {
+  render: (args): JSX.Element => (
+    <div style={{ width: 200 }}>
+      <Autocomplete {...args} />
+    </div>
+  ),
+  args: {
+    items: ["/abcdefghi_jklmnop.abcdefghi_jklmnop[:]{some_id==1297193}.isSomething"],
+  },
+  play: clickInput,
+};
