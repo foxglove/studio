@@ -71,6 +71,11 @@ export type GetViewportDatasetsResult = {
   pathsWithMismatchedDataLengths: ReadonlySet<string>;
 };
 
+export type HandlePlayerStateResult = {
+  range: Bounds1D;
+  numDatums: number;
+};
+
 /**
  * IDatasetBuilder defines methods for updating the building a dataset.
  *
@@ -79,7 +84,7 @@ export type GetViewportDatasetsResult = {
  * to happen on a worker.
  */
 interface IDatasetsBuilder {
-  handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined;
+  handlePlayerState(state: Immutable<PlayerState>): HandlePlayerStateResult | undefined;
 
   /**
    * The builder can provide an implementation of this method to handle block data separately from
