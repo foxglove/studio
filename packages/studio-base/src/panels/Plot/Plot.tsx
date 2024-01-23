@@ -6,15 +6,16 @@ import { Button, Tooltip, Fade, buttonClasses, useTheme } from "@mui/material";
 import Hammer from "hammerjs";
 import * as _ from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMountedState } from "react-use";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
+import { parseMessagePath } from "@foxglove/message-path";
 import { add as addTimes, fromSec, isTime, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import {
   MessagePipelineContext,
@@ -148,12 +149,15 @@ export function Plot(props: Props): JSX.Element {
     });
   }, [saveConfig, setMessagePathDropConfig]);
 
+  const isMounted = useMountedState();
   const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
   const [subscriberId] = useState(() => uuidv4());
   const [canvasDiv, setCanvasDiv] = useState<HTMLDivElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<OffscreenCanvasRenderer | undefined>(undefined);
   const [coordinator, setCoordinator] = useState<PlotCoordinator | undefined>(undefined);
-  const [showReset, setShowReset] = useState(false);
+
+  // When true the user can reset the plot back to the original view
+  const [canReset, setCanReset] = useState(false);
 
   const [activeTooltip, setActiveTooltip] = useState<{
     x: number;
@@ -211,7 +215,7 @@ export function Plot(props: Props): JSX.Element {
         label: "Download plot data as CSV",
         onclick: async () => {
           const data = await coordinator?.getCsvData();
-          if (!data) {
+          if (!data || !isMounted()) {
             return;
           }
 
@@ -220,7 +224,7 @@ export function Plot(props: Props): JSX.Element {
       },
     ];
     return items;
-  }, [coordinator, customTitle, xAxisMode]);
+  }, [coordinator, customTitle, isMounted, xAxisMode]);
 
   const setSubscriptions = useMessagePipeline(
     useCallback(
@@ -281,7 +285,7 @@ export function Plot(props: Props): JSX.Element {
         return;
       }
 
-      const parsed = parseRosPath(xAxisPath.value);
+      const parsed = parseMessagePath(xAxisPath.value);
       if (!parsed) {
         datasetsBuilder.setXPath(undefined);
         return;
@@ -344,6 +348,7 @@ export function Plot(props: Props): JSX.Element {
 
     return () => {
       resizeObserver.disconnect();
+      plotCoordinator.destroy();
     };
   }, [canvasDiv, datasetsBuilder, renderer]);
 
@@ -363,7 +368,6 @@ export function Plot(props: Props): JSX.Element {
         clientY: event.clientY,
         boundingClientRect: boundingRect.toJSON(),
       });
-      setShowReset(true);
     },
     [coordinator],
   );
@@ -376,6 +380,10 @@ export function Plot(props: Props): JSX.Element {
         x: args.canvasX,
         y: args.canvasY,
       });
+
+      if (!isMounted()) {
+        return;
+      }
 
       // Looking up a tooltip is an async operation so the mouse might leave the component while
       // that is happening and we need to avoid showing a tooltip.
@@ -391,7 +399,7 @@ export function Plot(props: Props): JSX.Element {
         const tooltipValue = typeof value === "object" && isTime(value) ? toSec(value) : value;
 
         tooltipItems.push({
-          datasetIndex: element.datasetIndex,
+          configIndex: element.configIndex,
           value: tooltipValue,
         });
       }
@@ -407,7 +415,7 @@ export function Plot(props: Props): JSX.Element {
         data: tooltipItems,
       });
     });
-  }, [renderer]);
+  }, [renderer, isMounted]);
 
   // Extract the bounding client rect from currentTarget before calling the debounced function
   // because react re-uses the SyntheticEvent objects.
@@ -467,8 +475,8 @@ export function Plot(props: Props): JSX.Element {
       <TimeBasedChartTooltipContent
         content={activeTooltip.data}
         multiDataset={numSeries > 1}
-        colorsByDatasetIndex={colorsByDatasetIndex}
-        labelsByDatasetIndex={labelsByDatasetIndex}
+        colorsByConfigIndex={colorsByDatasetIndex}
+        labelsByConfigIndex={labelsByDatasetIndex}
       />
     ) : undefined;
   }, [activeTooltip, colorsByDatasetIndex, labelsByDatasetIndex, numSeries]);
@@ -511,7 +519,6 @@ export function Plot(props: Props): JSX.Element {
     });
 
     hammerManager.on("panend", (event) => {
-      setShowReset(true);
       const boundingRect = event.target.getBoundingClientRect();
       coordinator.addInteractionEvent({
         type: "panend",
@@ -537,23 +544,33 @@ export function Plot(props: Props): JSX.Element {
   // managing the lifecycle of the subscriptions. The renderer will correlate input message data to
   // the correct series.
   useEffect(() => {
+    // The index and currentCustom modes only need the latest message on each topic so we use
+    // partial subscribe mode for those to avoid preloading data that we don't need
+    const preloadType = xAxisMode === "index" || xAxisMode === "currentCustom" ? "partial" : "full";
+
     const subscriptions = filterMap(series, (item): SubscribePayload | undefined => {
       if (isReferenceLinePlotPathType(item)) {
         return;
       }
 
-      const parsed = parseRosPath(item.value);
+      const parsed = parseMessagePath(item.value);
       if (!parsed) {
         return;
       }
 
-      return pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
+      return pathToSubscribePayload(
+        fillInGlobalVariablesInPath(parsed, globalVariables),
+        preloadType,
+      );
     });
 
     if ((xAxisMode === "custom" || xAxisMode === "currentCustom") && xAxisPath) {
-      const parsed = parseRosPath(xAxisPath.value);
+      const parsed = parseMessagePath(xAxisPath.value);
       if (parsed) {
-        const sub = pathToSubscribePayload(fillInGlobalVariablesInPath(parsed, globalVariables));
+        const sub = pathToSubscribePayload(
+          fillInGlobalVariablesInPath(parsed, globalVariables),
+          preloadType,
+        );
         if (sub) {
           subscriptions.push(sub);
         }
@@ -598,14 +615,19 @@ export function Plot(props: Props): JSX.Element {
       });
     };
     coordinator.on("timeseriesBounds", onTimeseriesBounds);
+    coordinator.on("viewportChange", setCanReset);
     return () => {
       coordinator.off("timeseriesBounds", onTimeseriesBounds);
+      coordinator.off("viewportChange", setCanReset);
     };
   }, [coordinator, setGlobalBounds, shouldSync, subscriberId]);
 
   const onResetView = useCallback(() => {
-    setShowReset(false);
-    coordinator?.resetBounds();
+    if (!coordinator) {
+      return;
+    }
+
+    coordinator.resetBounds();
 
     if (shouldSync) {
       setGlobalBounds(undefined);
@@ -623,7 +645,7 @@ export function Plot(props: Props): JSX.Element {
 
     const values = new Array(config.paths.length).fill(undefined);
     for (const item of activeTooltip.data) {
-      values[item.datasetIndex] ??= item.value;
+      values[item.configIndex] ??= item.value;
     }
 
     return values;
@@ -649,10 +671,6 @@ export function Plot(props: Props): JSX.Element {
       },
     };
   }, [coordinator]);
-
-  // The reset view button is shown when we have interacted locally or if the global bounds are set
-  // and we are sync'd.
-  const showResetViewButton = shouldSync ? globalBounds != undefined : showReset;
 
   return (
     <Stack
@@ -712,7 +730,7 @@ export function Plot(props: Props): JSX.Element {
             />
           </div>
         </Tooltip>
-        {showResetViewButton && (
+        {canReset && (
           <div className={classes.resetZoomButton}>
             <Button
               variant="contained"

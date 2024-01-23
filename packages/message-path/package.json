@@ -1,5 +1,5 @@
 {
-  "name": "@foxglove/typescript-transformers",
+  "name": "@foxglove/message-path",
   "license": "MPL-2.0",
   "private": true,
   "repository": {
@@ -20,9 +20,11 @@
     "prepack": "tsc -b"
   },
   "dependencies": {
-    "typescript": "5.3.3"
+    "nearley": "2.20.1"
   },
   "devDependencies": {
-    "@foxglove/tsconfig": "2.0.0"
+    "@foxglove/tsconfig": "2.0.0",
+    "@types/nearley": "2.11.2",
+    "typescript": "5.3.3"
   }
 }

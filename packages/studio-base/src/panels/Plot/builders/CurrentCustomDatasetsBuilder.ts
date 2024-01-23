@@ -6,8 +6,8 @@ import { ChartDataset } from "chart.js";
 import * as _ from "lodash-es";
 
 import { filterMap } from "@foxglove/den/collection";
+import { MessagePath } from "@foxglove/message-path";
 import { Immutable, Time, MessageEvent } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { PlayerState } from "@foxglove/studio-base/players/types";
@@ -28,9 +28,10 @@ type DatumWithReceiveTime = Datum & {
 };
 
 type CurrentCustomSeriesItem = {
+  configIndex: number;
   enabled: boolean;
   messagePath: string;
-  parsed: Immutable<RosPath>;
+  parsed: Immutable<MessagePath>;
   dataset: ChartDataset<"scatter", DatumWithReceiveTime[]>;
 };
 
@@ -39,7 +40,7 @@ type CurrentCustomSeriesItem = {
  * y-axis message path. It uses only the latest message for each path to build the datasets.
  */
 export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
-  #xParsedPath?: Immutable<RosPath>;
+  #xParsedPath?: Immutable<MessagePath>;
 
   #xValues: number[] = [];
 
@@ -127,7 +128,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     return undefined;
   }
 
-  public setXPath(path: Immutable<RosPath> | undefined): void {
+  public setXPath(path: Immutable<MessagePath> | undefined): void {
     if (JSON.stringify(path) === JSON.stringify(this.#xParsedPath)) {
       return;
     }
@@ -148,6 +149,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       let existingSeries = this.#seriesByKey.get(item.key);
       if (!existingSeries) {
         existingSeries = {
+          configIndex: item.configIndex,
           enabled: item.enabled,
           messagePath: item.messagePath,
           parsed: item.parsed,
@@ -157,6 +159,8 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
         };
       }
 
+      existingSeries.configIndex = item.configIndex;
+      existingSeries.enabled = item.enabled;
       existingSeries.dataset = {
         ...existingSeries.dataset,
         borderColor: item.color,
@@ -181,14 +185,15 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   public async getViewportDatasets(): Promise<GetViewportDatasetsResult> {
     const datasets: Dataset[] = [];
     for (const series of this.#seriesByKey.values()) {
-      if (!series.enabled) {
-        continue;
+      if (series.enabled) {
+        datasets[series.configIndex] = series.dataset;
       }
-
-      datasets.push(series.dataset);
     }
 
-    return { datasets, pathsWithMismatchedDataLengths: this.#pathsWithMismatchedDataLengths };
+    return {
+      datasetsByConfigIndex: datasets,
+      pathsWithMismatchedDataLengths: this.#pathsWithMismatchedDataLengths,
+    };
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {
@@ -205,10 +210,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     }
 
     return datasets;
-  }
-
-  public destroy(): void {
-    // no-op this builder does not use a worker
   }
 }
 

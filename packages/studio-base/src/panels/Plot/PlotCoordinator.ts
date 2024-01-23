@@ -6,20 +6,20 @@ import EventEmitter from "eventemitter3";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
+import { parseMessagePath } from "@foxglove/message-path";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
-import { Immutable } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { Immutable, Time } from "@foxglove/studio";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
-import { stringifyRosPath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
+import { stringifyMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { PlayerState } from "@foxglove/studio-base/players/types";
+import { MessageBlock, PlayerState } from "@foxglove/studio-base/players/types";
 import { Bounds } from "@foxglove/studio-base/types/Bounds";
+import delay from "@foxglove/studio-base/util/delay";
 import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotColors";
 
-import { InteractionEvent, Scale, UpdateAction } from "./ChartRenderer";
+import { Dataset, InteractionEvent, Scale, UpdateAction } from "./ChartRenderer";
 import { OffscreenCanvasRenderer } from "./OffscreenCanvasRenderer";
 import {
   CsvDataset,
@@ -41,7 +41,12 @@ type EventTypes = {
 
   /** Paths with mismatched data lengths were detected */
   pathsWithMismatchedDataLengthsChanged(pathsWithMismatchedDataLengths: string[]): void;
+
+  /** Rendering updated the viewport. `canReset` is true if the viewport can be reset. */
+  viewportChange(canReset: boolean): void;
 };
+
+const replaceUndefinedWithEmptyDataset = (dataset: Dataset | undefined) => dataset ?? { data: [] };
 
 /**
  * PlotCoordinator interfaces commands and updates between the dataset builder and the chart
@@ -63,10 +68,10 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   #lastSeekTime = NaN;
 
+  /** Normalized series from latest config */
+  #series: Immutable<SeriesItem[]> = [];
   /** Current value for each series to show in the legend */
-  #currentValues: unknown[] = [];
-  /** Path with variables filled in for each series */
-  #seriesPaths: (RosPath | undefined)[] = [];
+  #currentValuesByConfigIndex: unknown[] = [];
 
   /** Flag indicating that new Y bounds should be sent to the renderer because the bounds have been reset */
   #shouldResetY = false;
@@ -83,13 +88,13 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   #latestXScale?: Scale;
 
-  #queueDispatchRender = debouncePromise(async () => {
-    await this.#dispatchRender();
-  });
+  #queueDispatchRender = debouncePromise(this.#dispatchRender.bind(this));
+  #queueDispatchDatasets = debouncePromise(this.#dispatchDatasets.bind(this));
+  #queueBlocks = debouncePromise(this.#dispatchBlocks.bind(this));
 
-  #queueDispatchDatasets = debouncePromise(async () => {
-    await this.#dispatchDatasets();
-  });
+  #destroyed = false;
+
+  #latestBlocks?: Immutable<(MessageBlock | undefined)[]>;
 
   public constructor(renderer: OffscreenCanvasRenderer, builder: IDatasetsBuilder) {
     super();
@@ -98,7 +103,15 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#datasetsBuilder = builder;
   }
 
+  /** Stop the coordinator from sending any future updates to the renderer. */
+  public destroy(): void {
+    this.#destroyed = true;
+  }
+
   public handlePlayerState(state: Immutable<PlayerState>): void {
+    if (this.#isDestroyed()) {
+      return;
+    }
     const activeData = state.activeData;
     if (!activeData) {
       return;
@@ -113,29 +126,38 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
     const datasetsRange = this.#datasetsBuilder.handlePlayerState(state);
 
+    const blocks = state.progress.messageCache?.blocks;
+    if (blocks && this.#datasetsBuilder.handleBlocks) {
+      this.#latestBlocks = blocks;
+      this.#queueBlocks(activeData.startTime, blocks);
+    }
+
     if (lastSeekTime !== this.#lastSeekTime) {
-      this.#currentValues = [];
+      this.#currentValuesByConfigIndex = [];
       this.#lastSeekTime = lastSeekTime;
     }
 
-    this.#seriesPaths.forEach((path, idx) => {
-      if (!path) {
-        return;
+    for (const seriesItem of this.#series) {
+      if (seriesItem.timestampMethod === "headerStamp") {
+        // We currently do not support showing current values in the legend for header.stamp mode,
+        // which would require keeping a buffer of messages to sort (currently done in
+        // TimestampDatasetsBuilderImpl)
+        continue;
       }
       for (let i = messages.length - 1; i >= 0; --i) {
         const msgEvent = messages[i]!;
-        if (msgEvent.topic !== path.topicName) {
+        if (msgEvent.topic !== seriesItem.parsed.topicName) {
           continue;
         }
-        const items = simpleGetMessagePathDataItems(msgEvent, path);
+        const items = simpleGetMessagePathDataItems(msgEvent, seriesItem.parsed);
         if (items.length > 0) {
-          this.#currentValues[idx] = items[items.length - 1];
+          this.#currentValuesByConfigIndex[seriesItem.configIndex] = items[items.length - 1];
           break;
         }
       }
-    });
+    }
 
-    this.emit("currentValuesChanged", this.#currentValues);
+    this.emit("currentValuesChanged", this.#currentValuesByConfigIndex);
 
     this.#datasetRange = datasetsRange;
     this.#queueDispatchRender();
@@ -146,6 +168,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     colorScheme: "light" | "dark",
     globalVariables: GlobalVariables,
   ): void {
+    if (this.#isDestroyed()) {
+      return;
+    }
     this.#isTimeseriesPlot = config.xAxisVal === "timestamp";
     if (!this.#isTimeseriesPlot) {
       this.#currentSeconds = undefined;
@@ -183,24 +208,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       };
     });
 
-    this.#seriesPaths = config.paths.map((path) => {
-      if (path.timestampMethod === "headerStamp") {
-        // We currently do not support showing current values in the legend for header.stamp mode
-        return undefined;
-      }
-      if (isReferenceLinePlotPathType(path)) {
-        return undefined;
-      }
-      const parsed = parseRosPath(path.value);
-      if (!parsed) {
-        return undefined;
-      }
-
-      return fillInGlobalVariablesInPath(parsed, globalVariables);
-    });
-    this.#currentValues = [];
-    this.emit("currentValuesChanged", this.#currentValues);
-
     this.#updateAction.showXAxisLabels = config.showXAxisLabels;
     this.#updateAction.showYAxisLabels = config.showYAxisLabels;
     this.#updateAction.referenceLines = referenceLines;
@@ -210,12 +217,13 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       this.#updateAction.yBounds = this.#configBounds.y;
     }
 
-    const seriesItems = filterMap(config.paths, (path, idx): Immutable<SeriesItem> | undefined => {
+    const newCurrentValuesByConfigIndex: unknown[] = [];
+    this.#series = filterMap(config.paths, (path, idx): Immutable<SeriesItem> | undefined => {
       if (isReferenceLinePlotPathType(path)) {
         return;
       }
 
-      const parsed = parseRosPath(path.value);
+      const parsed = parseMessagePath(path.value);
       if (!parsed) {
         return;
       }
@@ -232,11 +240,21 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       //
       // This key lets us treat series with the same name but different timestamp methods as distinct
       // using a key instead of the path index lets us preserve loaded data when a path is removed
-      const key = `${path.timestampMethod}:${stringifyRosPath(filledParsed)}` as SeriesConfigKey;
+      const key = `${path.timestampMethod}:${stringifyMessagePath(
+        filledParsed,
+      )}` as SeriesConfigKey;
+
+      // Keep current values for paths that match existing ones
+      const existingSeries = this.#series.find((series) => series.key === key);
+      if (existingSeries != undefined) {
+        newCurrentValuesByConfigIndex[idx] =
+          this.#currentValuesByConfigIndex[existingSeries.configIndex];
+      }
 
       const color = getLineColor(path.color, idx);
       return {
         key,
+        configIndex: idx,
         messagePath: path.value,
         parsed: filledParsed,
         color,
@@ -248,7 +266,11 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       };
     });
 
-    this.#datasetsBuilder.setSeries(seriesItems);
+    this.#datasetsBuilder.setSeries(this.#series);
+
+    this.#currentValuesByConfigIndex = newCurrentValuesByConfigIndex;
+    this.emit("currentValuesChanged", this.#currentValuesByConfigIndex);
+
     this.#queueDispatchRender();
   }
 
@@ -309,39 +331,67 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   /** Get the entire data for all series */
   public async getCsvData(): Promise<CsvDataset[]> {
+    if (this.#isDestroyed()) {
+      return [];
+    }
     return await this.#datasetsBuilder.getCsvData();
   }
 
-  #getXBounds(): Partial<Bounds1D> {
-    // Interaction, synced global bounds, config, and other bounds sources are combined in precedence order.
-    // currentSeconds is only included in the sequence if follow mode is enabled.
+  /**
+   * Return true if the plot viewport has deviated from the config or dataset bounds and can reset
+   */
+  #canReset(): boolean {
+    if (this.#interactionBounds) {
+      return true;
+    }
 
+    if (this.#globalBounds) {
+      const resetBounds = this.#getXResetBounds();
+      return (
+        this.#globalBounds.min !== resetBounds.min || this.#globalBounds.max !== resetBounds.max
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * Get the xBounds if we cleared the interaction and global bounds (i.e) reset
+   * back to the config or dataset bounds
+   */
+  #getXResetBounds(): Partial<Bounds1D> {
     const currentSecondsIfFollowMode =
       this.#isTimeseriesPlot && this.#followRange != undefined && this.#currentSeconds != undefined
         ? this.#currentSeconds
         : undefined;
-    const xMax =
-      this.#interactionBounds?.x.max ??
-      this.#globalBounds?.max ??
-      currentSecondsIfFollowMode ??
-      this.#configBounds.x.max ??
-      this.#datasetRange?.max;
+    const xMax = currentSecondsIfFollowMode ?? this.#configBounds.x.max ?? this.#datasetRange?.max;
 
     const xMinIfFollowMode =
       this.#isTimeseriesPlot && this.#followRange != undefined && xMax != undefined
         ? xMax - this.#followRange
         : undefined;
-    const xMin =
-      this.#interactionBounds?.x.min ??
-      this.#globalBounds?.min ??
-      xMinIfFollowMode ??
-      this.#configBounds.x.min ??
-      this.#datasetRange?.min;
+    const xMin = xMinIfFollowMode ?? this.#configBounds.x.min ?? this.#datasetRange?.min;
 
     return { min: xMin, max: xMax };
   }
 
+  #getXBounds(): Partial<Bounds1D> {
+    // Interaction, synced global bounds override the config and data source bounds in precedence
+    const resetBounds = this.#getXResetBounds();
+    return {
+      min: this.#interactionBounds?.x.min ?? this.#globalBounds?.min ?? resetBounds.min,
+      max: this.#interactionBounds?.x.max ?? this.#globalBounds?.max ?? resetBounds.max,
+    };
+  }
+
+  #isDestroyed(): boolean {
+    return this.#destroyed;
+  }
+
   async #dispatchRender(): Promise<void> {
+    if (this.#isDestroyed()) {
+      return;
+    }
     this.#updateAction.xBounds = this.#getXBounds();
 
     if (this.#shouldResetY) {
@@ -359,6 +409,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     };
 
     const bounds = await this.#renderer.update(action);
+    if (this.#isDestroyed()) {
+      return;
+    }
 
     if (haveInteractionEvents) {
       this.#interactionBounds = bounds;
@@ -367,16 +420,60 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     if (haveInteractionEvents && bounds) {
       this.emit("timeseriesBounds", bounds.x);
     }
+    this.emit("viewportChange", this.#canReset());
     this.#queueDispatchDatasets();
   }
 
   async #dispatchDatasets(): Promise<void> {
+    if (this.#isDestroyed()) {
+      return;
+    }
     this.#viewport.bounds.x = this.#getXBounds();
     this.#viewport.bounds.y = this.#interactionBounds?.y ?? this.#configBounds.y;
 
     const result = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
-    this.#latestXScale = await this.#renderer.updateDatasets(result.datasets);
+    if (this.#isDestroyed()) {
+      return;
+    }
+    this.#latestXScale = await this.#renderer.updateDatasets(
+      // Use Array.from to fill in any `undefined` entries with an empty dataset (`map` would not
+      // work for sparse arrays)
+      Array.from(result.datasetsByConfigIndex, replaceUndefinedWithEmptyDataset),
+    );
+    if (this.#isDestroyed()) {
+      return;
+    }
     this.emit("xScaleChanged", this.#latestXScale);
     this.emit("pathsWithMismatchedDataLengthsChanged", [...result.pathsWithMismatchedDataLengths]);
+  }
+
+  async #dispatchBlocks(
+    startTime: Immutable<Time>,
+    blocks: Immutable<(MessageBlock | undefined)[]>,
+  ): Promise<void> {
+    if (!this.#datasetsBuilder.handleBlocks) {
+      return;
+    }
+
+    await this.#datasetsBuilder.handleBlocks(startTime, blocks, async () => {
+      this.#queueDispatchDatasets();
+      // When blocks are fully loaded and a user splits the panel, we are able to process all of the
+      // blocks synchronously. However this creates a poor UX experience for large datasets by
+      // showing nothing on the plot for many seconds while the postMessage prepares a massive send.
+      // This send also hangs the main thread.
+      //
+      // Instead of doing this all synchronously and stalling main thread, we artificially break up
+      // block loading to periodically dispatch the loaded data and render it. This avoids stalling
+      // the main thread and provides visual feedabck to the user that data is loading on the plot.
+      //
+      // await Promise.resolve() does not work as it does not yield enough to the main thread to
+      // dispatch and render.
+      await delay(0);
+
+      // Bail processing if the coordinator has been destroyed or if our input blocks have changed
+      // This lets us start processing new input blocks instead of continuing to work on stale
+      // blocks.
+      return this.#isDestroyed() || this.#latestBlocks !== blocks;
+    });
   }
 }

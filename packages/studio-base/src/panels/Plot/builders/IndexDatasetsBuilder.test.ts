@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { unwrap } from "@foxglove/den/monads";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { parseMessagePath } from "@foxglove/message-path";
 import {
   MessageBlock,
   PlayerPresence,
@@ -19,10 +19,11 @@ function buildSeriesItems(
   paths: (Partial<PlotPath> & { key?: string; value: string })[],
 ): SeriesItem[] {
   return paths.map((item, idx) => {
-    const parsed = unwrap(parseRosPath(item.value));
+    const parsed = unwrap(parseMessagePath(item.value));
     const key = (item.key ?? String(idx)) as SeriesConfigKey;
 
     return {
+      configIndex: idx,
       parsed,
       color: "red",
       contrastColor: "blue",
@@ -103,7 +104,7 @@ describe("IndexDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [{ x: 0, y: -3, value: -3, receiveTime: { sec: 0, nsec: 0 } }],
           showLine: true,
@@ -185,12 +186,151 @@ describe("IndexDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [{ x: 0, y: 3, value: 3, receiveTime: { sec: 0, nsec: 0 } }],
           showLine: true,
           pointRadius: 1.2,
           fill: false,
+        }),
+      ],
+    });
+  });
+
+  it("supports toggling series enabled state", async () => {
+    const builder = new IndexDatasetsBuilder();
+
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/foo.val[:]",
+        },
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/bar.val[:]",
+        },
+      ]),
+    );
+
+    builder.handlePlayerState(
+      buildPlayerState({
+        messages: [
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: [1, 2],
+            },
+          },
+          {
+            topic: "/bar",
+            schemaName: "bar",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: [3, 4, 5],
+            },
+          },
+        ],
+      }),
+    );
+
+    await expect(builder.getViewportDatasets()).resolves.toEqual({
+      pathsWithMismatchedDataLengths: new Set(),
+      datasetsByConfigIndex: [
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 1, value: 1, receiveTime: { sec: 0, nsec: 0 } },
+            { x: 1, y: 2, value: 2, receiveTime: { sec: 0, nsec: 0 } },
+          ],
+        }),
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 3, value: 3, receiveTime: { sec: 0, nsec: 0 } },
+            { x: 1, y: 4, value: 4, receiveTime: { sec: 0, nsec: 0 } },
+            { x: 2, y: 5, value: 5, receiveTime: { sec: 0, nsec: 0 } },
+          ],
+        }),
+      ],
+    });
+
+    builder.setSeries(
+      buildSeriesItems([
+        {
+          enabled: false,
+          timestampMethod: "receiveTime",
+          value: "/foo.val[:]",
+        },
+        {
+          enabled: true,
+          timestampMethod: "receiveTime",
+          value: "/bar.val[:]",
+        },
+      ]),
+    );
+
+    await expect(builder.getViewportDatasets()).resolves.toEqual({
+      pathsWithMismatchedDataLengths: new Set(),
+      datasetsByConfigIndex: [
+        undefined,
+        expect.objectContaining({
+          data: [
+            { x: 0, y: 3, value: 3, receiveTime: { sec: 0, nsec: 0 } },
+            { x: 1, y: 4, value: 4, receiveTime: { sec: 0, nsec: 0 } },
+            { x: 2, y: 5, value: 5, receiveTime: { sec: 0, nsec: 0 } },
+          ],
+        }),
+      ],
+    });
+  });
+
+  it("leaves gaps in datasetsByConfigIndex for missing series", async () => {
+    const builder = new IndexDatasetsBuilder();
+
+    builder.setSeries([
+      {
+        configIndex: 3,
+        parsed: parseMessagePath("/foo.val")!,
+        color: "red",
+        contrastColor: "blue",
+        enabled: true,
+        timestampMethod: "receiveTime",
+        key: "x" as SeriesConfigKey,
+        lineSize: 1,
+        messagePath: "/foo.val",
+        showLine: true,
+      },
+    ]);
+
+    builder.handlePlayerState(
+      buildPlayerState({
+        messages: [
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 1,
+            },
+          },
+        ],
+      }),
+    );
+
+    await expect(builder.getViewportDatasets()).resolves.toEqual({
+      pathsWithMismatchedDataLengths: new Set(),
+      datasetsByConfigIndex: [
+        undefined,
+        undefined,
+        undefined,
+        expect.objectContaining({
+          data: [{ x: 0, y: 1, value: 1, receiveTime: { sec: 0, nsec: 0 } }],
         }),
       ],
     });

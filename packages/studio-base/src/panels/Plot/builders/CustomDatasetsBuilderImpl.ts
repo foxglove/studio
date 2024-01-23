@@ -128,7 +128,6 @@ export class CustomDatasetsBuilderImpl {
       if (!series.config.enabled) {
         continue;
       }
-
       const { showLine, color, contrastColor } = series.config;
       const dataset: Dataset = {
         borderColor: color,
@@ -141,6 +140,8 @@ export class CustomDatasetsBuilderImpl {
         pointBorderColor: "transparent",
         data: [],
       };
+
+      datasets[series.config.configIndex] = dataset;
 
       // Create the full dataset by pairing full y-values with their x-value peers
       // And then pairing current y-values with their x-value peers
@@ -231,8 +232,6 @@ export class CustomDatasetsBuilderImpl {
         }
       }
 
-      datasets.push(dataset);
-
       if (
         this.#xValues.full.length !== series.full.length ||
         this.#xValues.current.length !== series.current.length
@@ -241,7 +240,7 @@ export class CustomDatasetsBuilderImpl {
       }
     }
 
-    return { datasets, pathsWithMismatchedDataLengths };
+    return { datasetsByConfigIndex: datasets, pathsWithMismatchedDataLengths };
   }
 
   public getCsvData(): CsvDataset[] {

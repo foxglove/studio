@@ -17,13 +17,18 @@ import { CSSProperties, useCallback, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
+import {
+  quoteTopicNameIfNeeded,
+  parseMessagePath,
+  MessagePath,
+  PrimitiveType,
+} from "@foxglove/message-path";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 
-import { RosPath, RosPrimitive } from "./constants";
 import {
   traverseStructure,
   messagePathStructures,
@@ -31,7 +36,6 @@ import {
   validTerminatingStructureItem,
   StructureTraversalResult,
 } from "./messagePathsForDatatype";
-import parseRosPath, { quoteTopicNameIfNeeded } from "./parseRosPath";
 
 export function tryToSetDefaultGlobalVar(
   variableName: string,
@@ -47,7 +51,7 @@ export function tryToSetDefaultGlobalVar(
 }
 
 export function getFirstInvalidVariableFromRosPath(
-  rosPath: RosPath,
+  rosPath: MessagePath,
   globalVariables: GlobalVariables,
   setGlobalVariables: (arg0: GlobalVariables) => void,
 ): { variableName: string; loc: number } | undefined {
@@ -76,7 +80,7 @@ export function getFirstInvalidVariableFromRosPath(
   }).filter(({ variableName }) => !tryToSetDefaultGlobalVar(variableName, setGlobalVariables))[0];
 }
 
-function getExamplePrimitive(primitiveType: RosPrimitive) {
+function getExamplePrimitive(primitiveType: PrimitiveType) {
   switch (primitiveType) {
     case "string":
       return '""';
@@ -159,6 +163,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     () => messagePathStructures(datatypes),
     [datatypes],
   );
+  /** A map from each possible message path to the corresponding MessagePathStructureItem */
   const allStructureItemsByPath = useMemo(
     () =>
       new Map(
@@ -246,7 +251,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     [onChangeProp, path, props.index, allStructureItemsByPath, validTypes],
   );
 
-  const rosPath = useMemo(() => parseRosPath(path), [path]);
+  const rosPath = useMemo(() => parseMessagePath(path), [path]);
 
   const topic = useMemo(() => {
     if (!rosPath) {
@@ -377,16 +382,14 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           autocompleteItems:
             structure == undefined
               ? []
-              : messagePathsForStructure(structure, {
-                  validTypes,
-                  noMultiSlices,
-                  messagePath: rosPath.messagePath,
-                })
-                  .filter(
-                    // .header.seq is pretty useless but shows up everryyywhere.
-                    (item) => item.path !== "" && !item.path.endsWith(".header.seq"),
-                  )
-                  .map((item) => item.path),
+              : filterMap(
+                  messagePathsForStructure(structure, {
+                    validTypes,
+                    noMultiSlices,
+                    messagePath: rosPath.messagePath,
+                  }),
+                  (item) => item.path,
+                ),
 
           autocompleteRange: {
             start: rosPath.topicNameRepr.length + initialFilterLength,
