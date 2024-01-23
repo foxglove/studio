@@ -5,7 +5,7 @@
 import type { Immutable } from "@foxglove/studio";
 import type {
   MessagePathPart,
-  RosPath,
+  MessagePath,
 } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import type {
   SubscribePayload,
@@ -15,7 +15,7 @@ import type {
 const typeIsName = (part: Immutable<MessagePathPart>) => part.type === "name";
 
 export function pathToSubscribePayload(
-  path: Immutable<RosPath>,
+  path: Immutable<MessagePath>,
   preloadType: SubscriptionPreloadType,
 ): SubscribePayload | undefined {
   const { messagePath: parts, topicName: topic } = path;

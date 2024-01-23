@@ -13,7 +13,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { tryToSetDefaultGlobalVar, getFirstInvalidVariableFromRosPath } from "./MessagePathInput";
-import { RosPath } from "./constants";
+import { MessagePath } from "./constants";
 
 describe("tryToSetDefaultGlobalVar", () => {
   it("correctly returns true/false depending on whether a global variable has a default", () => {
@@ -26,7 +26,7 @@ describe("tryToSetDefaultGlobalVar", () => {
 describe("getFirstInvalidVariableFromRosPath", () => {
   it("returns all possible message paths when not passing in `validTypes`", () => {
     const setGlobalVars = jest.fn();
-    const rosPath: RosPath = {
+    const rosPath: MessagePath = {
       topicName: "/some_topic",
       topicNameRepr: "/some_topic",
       messagePath: [

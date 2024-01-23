@@ -14,7 +14,7 @@
 import * as _ from "lodash-es";
 import { Grammar, Parser } from "nearley";
 
-import { RosPath } from "./constants";
+import { MessagePath } from "./constants";
 import grammar from "./grammar.ne";
 
 const grammarObj = Grammar.fromCompiled(grammar);
@@ -37,7 +37,7 @@ export function quoteFieldNameIfNeeded(name: string): string {
   return `"${name.replace(/[\\"]/g, (char) => `\\${char}`)}"`;
 }
 
-const parseRosPath = _.memoize((path: string): RosPath | undefined => {
+const parseRosPath = _.memoize((path: string): MessagePath | undefined => {
   // Need to create a new Parser object for every new string to parse (should be cheap).
   const parser = new Parser(grammarObj);
   try {

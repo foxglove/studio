@@ -6,7 +6,7 @@ import { ChartDataset } from "chart.js";
 
 import { filterMap } from "@foxglove/den/collection";
 import { Immutable, Time, MessageEvent } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { PlayerState } from "@foxglove/studio-base/players/types";
@@ -30,7 +30,7 @@ type IndexDatasetsSeries = {
   configIndex: number;
   enabled: boolean;
   messagePath: string;
-  parsed: Immutable<RosPath>;
+  parsed: Immutable<MessagePath>;
   dataset: ChartDataset<"scatter", DatumWithReceiveTime[]>;
 };
 

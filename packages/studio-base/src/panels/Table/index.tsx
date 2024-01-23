@@ -17,7 +17,7 @@ import { makeStyles } from "tss-react/mui";
 import { useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { useCachedGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -50,7 +50,7 @@ function TablePanel({ config, saveConfig }: Props) {
     [saveConfig],
   );
 
-  const topicRosPath: RosPath | undefined = React.useMemo(
+  const topicRosPath: MessagePath | undefined = React.useMemo(
     () => parseRosPath(topicPath),
     [topicPath],
   );

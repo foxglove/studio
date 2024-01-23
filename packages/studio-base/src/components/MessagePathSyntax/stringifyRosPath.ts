@@ -4,7 +4,7 @@
 
 import { Immutable } from "@foxglove/studio";
 
-import { MessagePathFilter, MessagePathPart, RosPath } from "./constants";
+import { MessagePathFilter, MessagePathPart, MessagePath } from "./constants";
 
 type SlicePart = number | { variableName: string; startLoc: number };
 
@@ -16,7 +16,7 @@ type Slice = {
 /**
  * Return the string representation of the ros path
  */
-export function stringifyRosPath(path: Immutable<RosPath>): string {
+export function stringifyRosPath(path: Immutable<MessagePath>): string {
   return (
     path.topicNameRepr +
     path.messagePath.map(stringifyMessagePathPart).join("") +

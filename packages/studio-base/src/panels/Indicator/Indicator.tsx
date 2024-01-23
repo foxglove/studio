@@ -8,7 +8,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useState 
 import { makeStyles } from "tss-react/mui";
 
 import { MessageEvent, PanelExtensionContext, SettingsTreeAction } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -45,7 +45,7 @@ const useStyles = makeStyles()({
 
 type State = {
   path: string;
-  parsedPath: RosPath | undefined;
+  parsedPath: MessagePath | undefined;
   latestMessage: MessageEvent | undefined;
   latestMatchingQueriedData: unknown;
   error: Error | undefined;

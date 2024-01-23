@@ -57,7 +57,7 @@ export type MessagePathPart =
     }
   | MessagePathFilter;
 
-export type RosPath = {
+export type MessagePath = {
   /** Referenced topic name */
   topicName: string;
   /**

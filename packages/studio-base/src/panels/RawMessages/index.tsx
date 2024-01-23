@@ -24,7 +24,7 @@ import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
 import {
   MessagePathStructureItem,
-  RosPath,
+  MessagePath,
 } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import {
   messagePathStructures,
@@ -130,7 +130,7 @@ function RawMessages(props: Props) {
     [defaultGetItemString, diffEnabled],
   );
 
-  const topicRosPath: RosPath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
+  const topicRosPath: MessagePath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
   const topic: Topic | undefined = useMemo(
     () => topicRosPath && topics.find(({ name }) => name === topicRosPath.topicName),
     [topicRosPath, topics],

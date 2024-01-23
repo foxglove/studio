@@ -7,7 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useReducer, useState } from "r
 import { v4 as uuidv4 } from "uuid";
 
 import { MessageEvent, PanelExtensionContext, SettingsTreeAction } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import { turboColorString } from "@foxglove/studio-base/util/colorUtils";
@@ -31,7 +31,7 @@ const defaultConfig: Config = {
 
 type State = {
   path: string;
-  parsedPath: RosPath | undefined;
+  parsedPath: MessagePath | undefined;
   latestMessage: MessageEvent | undefined;
   latestMatchingQueriedData: unknown;
   error: Error | undefined;
