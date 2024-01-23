@@ -2711,8 +2711,10 @@ __metadata:
     "@mui/x-data-grid": 6.18.7
     "@storybook/react": 7.6.12
     "@types/react": 18.2.23
+    "@types/tinycolor2": 1.4.4
     lodash-es: 4.17.21
     react: 18.2.0
+    tinycolor2: 1.6.0
   languageName: unknown
   linkType: soft
 
@@ -6545,6 +6547,13 @@ __metadata:
     fflate: ~0.6.10
     meshoptimizer: ~0.18.1
   checksum: c81b3d656c22d400a180cd54af96b3dd7c3f41b7dba71f714a623474de43c77afe92395889e60765eb86221fd79d07a4730d4c4f1b441933daf9460b6bdba47f
+  languageName: node
+  linkType: hard
+
+"@types/tinycolor2@npm:1.4.4":
+  version: 1.4.4
+  resolution: "@types/tinycolor2@npm:1.4.4"
+  checksum: cf92f3b7c11750a4a8fe7ba2292fb9a795f5a0eeec39c69cf7e3fc3bbc3467a02c4eaf42d9eb258f63cd6a1c64448cfcf17301bacaa67e87cd0eacc93d25e12a
   languageName: node
   linkType: hard
 

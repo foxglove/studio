@@ -20,6 +20,7 @@ import { makeStyles } from "tss-react/mui";
 import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { Tooltip } from "@foxglove/studio-base/components/Tooltip";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 export type ShareJsonModalProps = {
@@ -108,15 +109,16 @@ export function ShareJsonModal({
             <ArrowDownload20Filled />
           </IconButton>
           <CopyButton color="inherit" getText={getText} />
-          <HoverableIconButton
-            activeColor="error"
-            onClick={() => {
-              setValue("{}");
-            }}
-            title="Clear"
-            aria-label="Clear"
-            icon={<Delete20Regular />}
-          />
+          <Tooltip title="Clear">
+            <HoverableIconButton
+              activeColor="error"
+              onClick={() => {
+                setValue("{}");
+              }}
+              aria-label="Clear"
+              icon={<Delete20Regular />}
+            />
+          </Tooltip>
         </Stack>
 
         <Stack flex="auto" />

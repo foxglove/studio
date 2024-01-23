@@ -107,14 +107,6 @@ const useStyles = makeStyles<{ debugDragRegion?: boolean }, "avatar">()((
       alignItems: "center",
       ...NOT_DRAGGABLE_STYLE, // make buttons clickable for desktop app
     },
-    keyEquivalent: {
-      fontFamily: theme.typography.fontMonospace,
-      background: tc(theme.palette.common.white).darken(45).toString(),
-      padding: theme.spacing(0, 0.5),
-      aspectRatio: 1,
-      borderRadius: theme.shape.borderRadius,
-      marginLeft: theme.spacing(1),
-    },
     tooltip: {
       marginTop: `${theme.spacing(0.5)} !important`,
     },
@@ -251,8 +243,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                 <AppBarIconButton
                   title={
                     <>
-                      {leftSidebarOpen ? t("hideLeftSidebar") : t("showLeftSidebar")}{" "}
-                      <kbd className={classes.keyEquivalent}>[</kbd>
+                      {leftSidebarOpen ? t("hideLeftSidebar") : t("showLeftSidebar")} <kbd>[</kbd>
                     </>
                   }
                   aria-label={`${leftSidebarOpen ? t("hideLeftSidebar") : t("showLeftSidebar")}`}
@@ -267,7 +258,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   title={
                     <>
                       {rightSidebarOpen ? t("hideRightSidebar") : t("showRightSidebar")}{" "}
-                      <kbd className={classes.keyEquivalent}>]</kbd>
+                      <kbd>]</kbd>
                     </>
                   }
                   aria-label={`${rightSidebarOpen ? t("hideRightSidebar") : t("showRightSidebar")}`}
