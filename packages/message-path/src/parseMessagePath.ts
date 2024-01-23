@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as _ from "lodash-es";
 import { Grammar, Parser } from "nearley";
 
 import grammar from "./grammar.ne";
@@ -37,7 +36,7 @@ export function quoteFieldNameIfNeeded(name: string): string {
   return `"${name.replace(/[\\"]/g, (char) => `\\${char}`)}"`;
 }
 
-const parseMessagePath = _.memoize((path: string): MessagePath | undefined => {
+const parseMessagePath = (path: string): MessagePath | undefined => {
   // Need to create a new Parser object for every new string to parse (should be cheap).
   const parser = new Parser(grammarObj);
   try {
@@ -45,6 +44,6 @@ const parseMessagePath = _.memoize((path: string): MessagePath | undefined => {
   } catch (_err) {
     return undefined;
   }
-});
+};
 
 export { parseMessagePath };

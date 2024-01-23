@@ -19,7 +19,11 @@
   "scripts": {
     "prepack": "tsc -b"
   },
+  "dependencies": {
+    "nearley": "2.20.1"
+  },
   "devDependencies": {
+    "@types/nearley": "2.11.2",
     "@foxglove/tsconfig": "2.0.0",
     "typescript": "5.2.2"
   }
