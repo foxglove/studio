@@ -4,7 +4,7 @@
 
 import * as Comlink from "comlink";
 
-import { ComlinkWrap } from "@foxglove/den/async";
+import { ComlinkWrap } from "@foxglove/den/worker";
 import { Immutable, MessageEvent } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";

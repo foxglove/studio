@@ -4,7 +4,7 @@
 
 import * as Comlink from "comlink";
 
-import { ComlinkWrap } from "@foxglove/den/async";
+import { ComlinkWrap } from "@foxglove/den/worker";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";

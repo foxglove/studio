@@ -5,7 +5,7 @@
 import type { Theme } from "@mui/material";
 import * as Comlink from "comlink";
 
-import { ComlinkWrap } from "@foxglove/den/async";
+import { ComlinkWrap } from "@foxglove/den/worker";
 import { Immutable } from "@foxglove/studio";
 import { Bounds } from "@foxglove/studio-base/types/Bounds";
 

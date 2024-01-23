@@ -5,7 +5,7 @@
 import * as Comlink from "comlink";
 
 import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
-import { ComlinkWrap } from "@foxglove/den/async";
+import { ComlinkWrap } from "@foxglove/den/worker";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 
 import type {
@@ -37,9 +37,7 @@ export class WorkerIterableSource implements IIterableSource {
   }
 
   public async initialize(): Promise<Initalization> {
-    if (this.#sourceWorkerRemote != undefined && this.#disposeRemote != undefined) {
-      this.#disposeRemote();
-    }
+    this.#disposeRemote?.();
 
     // Note: this launches the worker.
     const worker = this.#args.initWorker();
