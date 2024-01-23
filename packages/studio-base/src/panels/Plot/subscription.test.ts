@@ -14,11 +14,12 @@ describe("subscription", () => {
         throw new Error(`invalid path: ${path}`);
       }
 
-      return pathToSubscribePayload(parsed);
+      return pathToSubscribePayload(parsed, "full");
     };
 
     it("ignores path without a property", () => {
       expect(toPayload("/foo")).toEqual(undefined);
+      expect(toPayload("/foo.")).toEqual(undefined);
     });
 
     it("subscribes to one field", () => {

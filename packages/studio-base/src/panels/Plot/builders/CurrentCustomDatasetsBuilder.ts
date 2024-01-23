@@ -28,6 +28,7 @@ type DatumWithReceiveTime = Datum & {
 };
 
 type CurrentCustomSeriesItem = {
+  configIndex: number;
   enabled: boolean;
   messagePath: string;
   parsed: Immutable<RosPath>;
@@ -148,6 +149,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       let existingSeries = this.#seriesByKey.get(item.key);
       if (!existingSeries) {
         existingSeries = {
+          configIndex: item.configIndex,
           enabled: item.enabled,
           messagePath: item.messagePath,
           parsed: item.parsed,
@@ -157,6 +159,8 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
         };
       }
 
+      existingSeries.configIndex = item.configIndex;
+      existingSeries.enabled = item.enabled;
       existingSeries.dataset = {
         ...existingSeries.dataset,
         borderColor: item.color,
@@ -181,14 +185,15 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   public async getViewportDatasets(): Promise<GetViewportDatasetsResult> {
     const datasets: Dataset[] = [];
     for (const series of this.#seriesByKey.values()) {
-      if (!series.enabled) {
-        continue;
+      if (series.enabled) {
+        datasets[series.configIndex] = series.dataset;
       }
-
-      datasets.push(series.dataset);
     }
 
-    return { datasets, pathsWithMismatchedDataLengths: this.#pathsWithMismatchedDataLengths };
+    return {
+      datasetsByConfigIndex: datasets,
+      pathsWithMismatchedDataLengths: this.#pathsWithMismatchedDataLengths,
+    };
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {
@@ -205,10 +210,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     }
 
     return datasets;
-  }
-
-  public destroy(): void {
-    // no-op this builder does not use a worker
   }
 }
 
