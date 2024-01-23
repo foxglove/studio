@@ -14,11 +14,11 @@
 import { useEffect } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { parseMessagePath } from "@foxglove/message-path";
 import { useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
 import { useCachedGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";

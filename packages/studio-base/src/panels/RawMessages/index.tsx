@@ -18,6 +18,7 @@ import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 import { makeStyles } from "tss-react/mui";
 
+import { parseMessagePath } from "@foxglove/message-path";
 import { Immutable, SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
@@ -30,7 +31,6 @@ import {
   messagePathStructures,
   traverseStructure,
 } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
-import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useMessageDataItem";
 import Panel from "@foxglove/studio-base/components/Panel";

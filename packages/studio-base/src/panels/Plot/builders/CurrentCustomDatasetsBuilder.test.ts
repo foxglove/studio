@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { unwrap } from "@foxglove/den/monads";
-import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
+import { parseMessagePath } from "@foxglove/message-path";
 import {
   MessageBlock,
   PlayerPresence,

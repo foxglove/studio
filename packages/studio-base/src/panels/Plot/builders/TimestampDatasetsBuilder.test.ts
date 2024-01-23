@@ -8,7 +8,7 @@ import * as _ from "lodash-es";
 
 import { unwrap } from "@foxglove/den/monads";
 import { MessageEvent } from "@foxglove/studio";
-import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
+import { parseMessagePath } from "@foxglove/message-path";
 import {
   MessageBlock,
   PlayerPresence,

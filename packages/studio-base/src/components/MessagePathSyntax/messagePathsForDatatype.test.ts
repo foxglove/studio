@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { unwrap } from "@foxglove/den/monads";
-import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
+import { parseMessagePath } from "@foxglove/message-path";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 import {

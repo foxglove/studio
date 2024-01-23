@@ -9,7 +9,7 @@ import { makeStyles } from "tss-react/mui";
 
 import { MessageEvent, PanelExtensionContext, SettingsTreeAction } from "@foxglove/studio";
 import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
+import { parseMessagePath } from "@foxglove/message-path";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import Stack from "@foxglove/studio-base/components/Stack";
 
