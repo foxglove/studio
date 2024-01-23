@@ -23,7 +23,7 @@ import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 
-import { MessagePath, RosPrimitive } from "./constants";
+import { MessagePath, PrimitiveType } from "./constants";
 import {
   traverseStructure,
   messagePathStructures,
@@ -76,7 +76,7 @@ export function getFirstInvalidVariableFromRosPath(
   }).filter(({ variableName }) => !tryToSetDefaultGlobalVar(variableName, setGlobalVariables))[0];
 }
 
-function getExamplePrimitive(primitiveType: RosPrimitive) {
+function getExamplePrimitive(primitiveType: PrimitiveType) {
   switch (primitiveType) {
     case "string":
       return '""';

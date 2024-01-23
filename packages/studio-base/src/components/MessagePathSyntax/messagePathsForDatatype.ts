@@ -24,7 +24,7 @@ import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import {
   MessagePathPart,
   rosPrimitives,
-  RosPrimitive,
+  PrimitiveType,
   MessagePathStructureItem,
   MessagePathStructureItemMessage,
 } from "./constants";
@@ -40,8 +40,8 @@ const STRUCTURE_ITEM_INTEGER_TYPES = [
   "uint64",
 ];
 
-function isRosPrimitive(type: string): type is RosPrimitive {
-  return rosPrimitives.includes(type as RosPrimitive);
+function isRosPrimitive(type: string): type is PrimitiveType {
+  return rosPrimitives.includes(type as PrimitiveType);
 }
 
 function structureItemIsIntegerPrimitive(item: MessagePathStructureItem) {

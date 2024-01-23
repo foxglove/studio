@@ -13,7 +13,7 @@
 
 import {
   MessagePathStructureItem,
-  RosPrimitive,
+  PrimitiveType,
 } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
 
@@ -128,7 +128,7 @@ export function getValueActionForValue(
       };
     }
     // Otherwise, deduce a roughly-correct type from the runtime type of the value.
-    let primitiveType: RosPrimitive | undefined;
+    let primitiveType: PrimitiveType | undefined;
     switch (typeof value) {
       case "bigint":
         primitiveType = "int64";

@@ -26,8 +26,8 @@ const RosPrimitives = {
   string: undefined,
 };
 
-export type RosPrimitive = keyof typeof RosPrimitives;
-export const rosPrimitives = Object.keys(RosPrimitives) as RosPrimitive[];
+export type PrimitiveType = keyof typeof RosPrimitives;
+export const rosPrimitives = Object.keys(RosPrimitives) as PrimitiveType[];
 
 export type MessagePathFilter = {
   type: "filter";
@@ -85,7 +85,7 @@ type MessagePathStructureItemArray = {
 };
 type MessagePathStructureItemPrimitive = {
   structureType: "primitive";
-  primitiveType: RosPrimitive;
+  primitiveType: PrimitiveType;
   datatype: string;
 };
 export type MessagePathStructureItem =
