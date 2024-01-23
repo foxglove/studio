@@ -2371,7 +2371,7 @@ __metadata:
     "@foxglove/tsconfig": 2.0.0
     "@types/nearley": 2.11.2
     nearley: 2.20.1
-    typescript: 5.2.2
+    typescript: 5.3.3
   languageName: unknown
   linkType: soft
 
