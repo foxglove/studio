@@ -25,10 +25,12 @@ import {
 import { ImageModeConfig } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import {
   AnyImage,
+  CompressedVideo,
   getTimestampFromImage,
 } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/Images/ImageTypes";
 import {
   normalizeCompressedImage,
+  normalizeCompressedVideo,
   normalizeRawImage,
   normalizeRosCompressedImage,
   normalizeRosImage,
@@ -176,10 +178,15 @@ export class MessageHandler implements IMessageHandler {
     this.#availableAnnotationTopics = new Set();
   }
 
+  /**
+   *  Add listener that will trigger every time the state changes
+   *  The listener will be called with the new state and the previous state.
+   */
   public addListener(listener: RenderStateListener): void {
     this.#listeners.push(listener);
   }
 
+  /** Remove listener from being called on state update */
   public removeListener(listener: RenderStateListener): void {
     this.#listeners = this.#listeners.filter((fn) => fn !== listener);
   }
@@ -201,6 +208,9 @@ export class MessageHandler implements IMessageHandler {
   public handleCompressedImage = (messageEvent: PartialMessageEvent<CompressedImage>): void => {
     this.handleImage(messageEvent, normalizeCompressedImage(messageEvent.message));
   };
+  public handleCompressedVideo = (messageEvent: PartialMessageEvent<CompressedVideo>): void => {
+    this.handleImage(messageEvent, normalizeCompressedVideo(messageEvent.message));
+  }
 
   protected handleImage(message: PartialMessageEvent<AnyImage>, image: AnyImage): void {
     const normalizedImageMessage: MessageEvent<AnyImage> = {
@@ -449,6 +459,7 @@ export interface IMessageHandler {
   handleRosCompressedImage: (messageEvent: PartialMessageEvent<RosCompressedImage>) => void;
   handleRawImage: (messageEvent: PartialMessageEvent<RawImage>) => void;
   handleCompressedImage: (messageEvent: PartialMessageEvent<CompressedImage>) => void;
+  handleCompressedVideo: (messageEvent: PartialMessageEvent<CompressedVideo>) => void;
   handleCameraInfo: (message: PartialMessageEvent<CameraInfo>) => void;
   handleAnnotations: (
     messageEvent: MessageEvent<FoxgloveImageAnnotations | RosImageMarker | RosImageMarkerArray>,

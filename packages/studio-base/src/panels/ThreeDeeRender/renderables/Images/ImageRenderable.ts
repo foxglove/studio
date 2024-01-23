@@ -6,6 +6,7 @@ import * as _ from "lodash-es";
 import * as THREE from "three";
 import { assert } from "ts-essentials";
 
+import { VideoPlayer } from "@foxglove/den/video";
 import { PinholeCameraModel } from "@foxglove/den/image";
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
@@ -16,8 +17,10 @@ import { WorkerImageDecoder } from "@foxglove/studio-base/panels/ThreeDeeRender/
 import { projectPixel } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/projections";
 import { RosValue } from "@foxglove/studio-base/players/types";
 
-import { AnyImage } from "./ImageTypes";
-import { decodeCompressedImageToBitmap } from "./decodeImage";
+import { AnyImage, CompressedVideo } from "./ImageTypes";
+import { decodeCompressedImageToBitmap,
+  decodeCompressedVideoToBitmap,
+  getVideoDecoderConfig } from "./decodeImage";
 import { CameraInfo } from "../../ros";
 import { DECODE_IMAGE_ERR_KEY, IMAGE_TOPIC_PATH } from "../ImageMode/constants";
 import { ColorModeSettings } from "../colorMode";
@@ -43,9 +46,13 @@ export const IMAGE_RENDERABLE_DEFAULT_SETTINGS: ImageRenderableSettings = {
   color: "#ffffff",
 };
 
+const IMAGE_FORMATS = new Set(["jpeg", "png", "webp"]);
+const VIDEO_FORMATS = new Set(["h264"]);
+
 export type ImageUserData = BaseUserData & {
   topic: string;
   settings: ImageRenderableSettings;
+  firstMessageTime: bigint | undefined;
   cameraInfo: CameraInfo | undefined;
   cameraModel: PinholeCameraModel | undefined;
   image: AnyImage | undefined;
@@ -56,6 +63,9 @@ export type ImageUserData = BaseUserData & {
 };
 
 export class ImageRenderable extends Renderable<ImageUserData> {
+  // A lazily instantiated player for compressed video
+  public videoPlayer: VideoPlayer | undefined;
+
   // Make sure that everything is build the first time we render
   // set when camera info or image changes
   #geometryNeedsUpdate = true;
@@ -232,7 +242,52 @@ export class ImageRenderable extends Renderable<ImageUserData> {
     resizeWidth?: number,
   ): Promise<ImageBitmap | ImageData> {
     if ("format" in image) {
-      return await decodeCompressedImageToBitmap(image, resizeWidth);
+      if (VIDEO_FORMATS.has(image.format)) {
+        const frameMsg = image as CompressedVideo;
+
+        if (frameMsg.data.byteLength === 0) {
+          // Raise error so the caller can catch it
+          throw new Error("Empty video frame");
+        }
+
+        if (!this.videoPlayer) {
+          this.videoPlayer = new VideoPlayer();
+          this.videoPlayer.on("error", (err) => {
+            log.error(err);
+            this.addError(DECODE_IMAGE_ERR_KEY, `Error decoding video: ${err.message}`);
+          });
+          this.videoPlayer.on("warn", (msg) => {
+            log.warn(msg);
+          });
+        }
+        const videoPlayer = this.videoPlayer;
+
+        // Initialize the video player if needed
+        if (!videoPlayer.isInitialized()) {
+          const decoderConfig = getVideoDecoderConfig(frameMsg);
+          if (decoderConfig) {
+            await videoPlayer.init(decoderConfig);
+          } else {
+            // Raise error so the caller can catch it
+            throw new Error("Waiting for keyframe");
+          }
+        }
+
+        assert(this.userData.firstMessageTime != undefined, "firstMessageTime must be set");
+
+        return await decodeCompressedVideoToBitmap(
+          frameMsg,
+          videoPlayer,
+          this.userData.firstMessageTime,
+          resizeWidth,
+        );
+
+      } else if (IMAGE_FORMATS.has(image.format)) {
+        return await decodeCompressedImageToBitmap(image, resizeWidth);
+      } else {
+        // Raise error so the caller can catch it
+        throw new Error(`Unsupported format: "${image.format}"`);
+      }
     }
     return await (this.decoder ??= new WorkerImageDecoder()).decode(image, this.userData.settings);
   }
