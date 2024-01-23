@@ -9,7 +9,7 @@ import { Immutable } from "@foxglove/studio";
 import {
   quoteFieldNameIfNeeded,
   quoteTopicNameIfNeeded,
-} from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+} from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 
 /**

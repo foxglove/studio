@@ -18,7 +18,7 @@ import { useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
 import { useCachedGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
@@ -51,7 +51,7 @@ function TablePanel({ config, saveConfig }: Props) {
   );
 
   const topicRosPath: MessagePath | undefined = React.useMemo(
-    () => parseRosPath(topicPath),
+    () => parseMessagePath(topicPath),
     [topicPath],
   );
   const topicName = topicRosPath?.topicName ?? "";

@@ -31,7 +31,7 @@ import {
   validTerminatingStructureItem,
   StructureTraversalResult,
 } from "./messagePathsForDatatype";
-import parseRosPath, { quoteTopicNameIfNeeded } from "./parseRosPath";
+import { quoteTopicNameIfNeeded, parseMessagePath } from "./parseMessagePath";
 
 export function tryToSetDefaultGlobalVar(
   variableName: string,
@@ -247,7 +247,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     [onChangeProp, path, props.index, allStructureItemsByPath, validTypes],
   );
 
-  const rosPath = useMemo(() => parseRosPath(path), [path]);
+  const rosPath = useMemo(() => parseMessagePath(path), [path]);
 
   const topic = useMemo(() => {
     if (!rosPath) {

@@ -30,7 +30,7 @@ import {
   messagePathStructures,
   traverseStructure,
 } from "@foxglove/studio-base/components/MessagePathSyntax/messagePathsForDatatype";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useMessageDataItem";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -130,7 +130,10 @@ function RawMessages(props: Props) {
     [defaultGetItemString, diffEnabled],
   );
 
-  const topicRosPath: MessagePath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
+  const topicRosPath: MessagePath | undefined = useMemo(
+    () => parseMessagePath(topicPath),
+    [topicPath],
+  );
   const topic: Topic | undefined = useMemo(
     () => topicRosPath && topics.find(({ name }) => name === topicRosPath.topicName),
     [topicRosPath, topics],

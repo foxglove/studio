@@ -16,7 +16,7 @@ import * as _ from "lodash-es";
 import { Immutable } from "@foxglove/studio";
 import { MessagePathFilter } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
-import { quoteFieldNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { quoteFieldNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";

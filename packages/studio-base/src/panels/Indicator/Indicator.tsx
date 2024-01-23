@@ -9,7 +9,7 @@ import { makeStyles } from "tss-react/mui";
 
 import { MessageEvent, PanelExtensionContext, SettingsTreeAction } from "@foxglove/studio";
 import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { parseMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/parseMessagePath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import Stack from "@foxglove/studio-base/components/Stack";
 
@@ -90,7 +90,7 @@ function reducer(state: State, action: Action): State {
         return { ...state, latestMessage, latestMatchingQueriedData, error: undefined };
       }
       case "path": {
-        const newPath = parseRosPath(action.path);
+        const newPath = parseMessagePath(action.path);
         let pathParseError: string | undefined;
         if (
           newPath?.messagePath.some(
@@ -155,7 +155,7 @@ export function Indicator({ context }: Props): JSX.Element {
     config,
     ({ path }): State => ({
       path,
-      parsedPath: parseRosPath(path),
+      parsedPath: parseMessagePath(path),
       latestMessage: undefined,
       latestMatchingQueriedData: undefined,
       pathParseError: undefined,

@@ -36,7 +36,7 @@ import {
 import { filterMatches } from "./filterMatches";
 import { TypicalFilterNames } from "./isTypicalFilterName";
 import { messagePathStructures } from "./messagePathsForDatatype";
-import parseRosPath, { quoteTopicNameIfNeeded } from "./parseRosPath";
+import { quoteTopicNameIfNeeded, parseMessagePath } from "./parseMessagePath";
 
 type ValueInMapRecord<T> = T extends Map<unknown, infer I> ? I : never;
 
@@ -58,7 +58,7 @@ export function useCachedGetMessagePathDataItems(
 
   const parsedPaths = useMemo(() => {
     return filterMap(memoizedPaths, (path) => {
-      const rosPath = parseRosPath(path);
+      const rosPath = parseMessagePath(path);
       return rosPath ? ([path, rosPath] satisfies [string, MessagePath]) : undefined;
     });
   }, [memoizedPaths]);
@@ -345,7 +345,7 @@ export function useDecodeMessagePathsForMessagesByTopic(
       const obj: { [path: string]: MessageAndData[] } = {};
       for (const path of memoizedPaths) {
         // Create an array for invalid paths, and valid paths with entries in messagesByTopic
-        const rosPath = parseRosPath(path);
+        const rosPath = parseMessagePath(path);
         if (!rosPath) {
           obj[path] = [];
           continue;
