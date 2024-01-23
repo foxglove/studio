@@ -10,7 +10,7 @@ import { parseMessagePath } from "@foxglove/message-path";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable, Time } from "@foxglove/studio";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
-import { stringifyRosPath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
+import { stringifyMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -240,7 +240,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       //
       // This key lets us treat series with the same name but different timestamp methods as distinct
       // using a key instead of the path index lets us preserve loaded data when a path is removed
-      const key = `${path.timestampMethod}:${stringifyRosPath(filledParsed)}` as SeriesConfigKey;
+      const key = `${path.timestampMethod}:${stringifyMessagePath(
+        filledParsed,
+      )}` as SeriesConfigKey;
 
       // Keep current values for paths that match existing ones
       const existingSeries = this.#series.find((series) => series.key === key);

@@ -5,7 +5,7 @@
 import { parseMessagePath } from "@foxglove/message-path";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 
-import { stringifyRosPath } from "./stringifyRosPath";
+import { stringifyMessagePath } from "./stringifyRosPath";
 
 describe("stringifyRosPath", () => {
   const paths = [
@@ -29,7 +29,7 @@ describe("stringifyRosPath", () => {
     "/topic.foo{bar==$}.a{bar.baz==$my_var_1}",
   ];
   it.each(paths)("returns original string for: %s", (str) => {
-    expect(stringifyRosPath(parseMessagePath(str)!)).toEqual(str);
+    expect(stringifyMessagePath(parseMessagePath(str)!)).toEqual(str);
   });
 
   it.each([
@@ -41,7 +41,7 @@ describe("stringifyRosPath", () => {
     // note: only string and number are currently supported by fillInGlobalVariablesInPath
     const globalVariables = { str: "foo", num1: 1, num2: 2 };
     expect(
-      stringifyRosPath(fillInGlobalVariablesInPath(parseMessagePath(path)!, globalVariables)),
+      stringifyMessagePath(fillInGlobalVariablesInPath(parseMessagePath(path)!, globalVariables)),
     ).toEqual(expected);
   });
 });

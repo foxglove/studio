@@ -15,7 +15,7 @@ type Slice = {
 /**
  * Return the string representation of the ros path
  */
-export function stringifyRosPath(path: Immutable<MessagePath>): string {
+export function stringifyMessagePath(path: Immutable<MessagePath>): string {
   return (
     path.topicNameRepr +
     path.messagePath.map(stringifyMessagePathPart).join("") +
