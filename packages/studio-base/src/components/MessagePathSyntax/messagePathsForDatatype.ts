@@ -39,7 +39,8 @@ const STRUCTURE_ITEM_INTEGER_TYPES = [
 ];
 
 function isPrimitiveType(type: string): type is PrimitiveType {
-  switch (type) {
+  // casting _as_ PrimitiveType here to have typescript error if add a case to the union
+  switch (type as PrimitiveType) {
     case "bool":
     case "int8":
     case "uint8":
@@ -53,9 +54,9 @@ function isPrimitiveType(type: string): type is PrimitiveType {
     case "float64":
     case "string":
       return true;
-    default:
-      return false;
   }
+
+  return false;
 }
 
 function structureItemIsIntegerPrimitive(item: MessagePathStructureItem) {
