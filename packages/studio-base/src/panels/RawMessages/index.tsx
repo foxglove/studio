@@ -18,15 +18,11 @@ import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 import { makeStyles } from "tss-react/mui";
 
-import { parseMessagePath } from "@foxglove/message-path";
+import { parseMessagePath, MessagePathStructureItem, MessagePath } from "@foxglove/message-path";
 import { Immutable, SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
-import {
-  MessagePathStructureItem,
-  MessagePath,
-} from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import {
   messagePathStructures,
   traverseStructure,

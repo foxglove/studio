@@ -16,6 +16,13 @@ import { useCallback, useMemo } from "react";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useDeepMemo, useShallowMemo } from "@foxglove/hooks";
+import {
+  quoteTopicNameIfNeeded,
+  parseMessagePath,
+  MessagePathStructureItem,
+  MessagePathStructureItemMessage,
+  MessagePath,
+} from "@foxglove/message-path";
 import { Immutable } from "@foxglove/studio";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import useGlobalVariables, {
@@ -28,15 +35,9 @@ import {
   extractTypeFromStudioEnumAnnotation,
 } from "@foxglove/studio-base/util/enums";
 
-import {
-  MessagePathStructureItem,
-  MessagePathStructureItemMessage,
-  MessagePath,
-} from "./constants";
 import { filterMatches } from "./filterMatches";
 import { TypicalFilterNames } from "./isTypicalFilterName";
 import { messagePathStructures } from "./messagePathsForDatatype";
-import { quoteTopicNameIfNeeded, parseMessagePath } from "./parseMessagePath";
 
 type ValueInMapRecord<T> = T extends Map<unknown, infer I> ? I : never;
 

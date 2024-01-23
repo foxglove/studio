@@ -14,9 +14,8 @@
 import * as _ from "lodash-es";
 import { Grammar, Parser } from "nearley";
 
-import { MessagePath } from "@foxglove/studio-base/src/components/MessagePathSyntax/constants";
-
 import grammar from "./grammar.ne";
+import { MessagePath } from "./types";
 
 const grammarObj = Grammar.fromCompiled(grammar);
 

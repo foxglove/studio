@@ -13,20 +13,19 @@
 
 import * as _ from "lodash-es";
 
-import { Immutable } from "@foxglove/studio";
-import { MessagePathFilter } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
-import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
-import { quoteFieldNameIfNeeded } from "@foxglove/message-path";
-import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import { assertNever } from "@foxglove/studio-base/util/assertNever";
-import naturalSort from "@foxglove/studio-base/util/naturalSort";
-
 import {
+  MessagePathFilter,
+  quoteFieldNameIfNeeded,
   MessagePathPart,
   PrimitiveType,
   MessagePathStructureItem,
   MessagePathStructureItemMessage,
-} from "./constants";
+} from "@foxglove/message-path";
+import { Immutable } from "@foxglove/studio";
+import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { assertNever } from "@foxglove/studio-base/util/assertNever";
+import naturalSort from "@foxglove/studio-base/util/naturalSort";
 
 const STRUCTURE_ITEM_INTEGER_TYPES = [
   "int8",

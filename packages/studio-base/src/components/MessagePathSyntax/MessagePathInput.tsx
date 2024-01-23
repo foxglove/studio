@@ -17,13 +17,18 @@ import { CSSProperties, useCallback, useMemo } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { filterMap } from "@foxglove/den/collection";
+import {
+  quoteTopicNameIfNeeded,
+  parseMessagePath,
+  MessagePath,
+  PrimitiveType,
+} from "@foxglove/message-path";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 
-import { MessagePath, PrimitiveType } from "./constants";
 import {
   traverseStructure,
   messagePathStructures,
@@ -31,7 +36,6 @@ import {
   validTerminatingStructureItem,
   StructureTraversalResult,
 } from "./messagePathsForDatatype";
-import { quoteTopicNameIfNeeded, parseMessagePath } from "./parseMessagePath";
 
 export function tryToSetDefaultGlobalVar(
   variableName: string,

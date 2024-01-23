@@ -7,8 +7,8 @@ import EventEmitter from "eventemitter3";
 import * as _ from "lodash-es";
 
 import { unwrap } from "@foxglove/den/monads";
-import { MessageEvent } from "@foxglove/studio";
 import { parseMessagePath } from "@foxglove/message-path";
+import { MessageEvent } from "@foxglove/studio";
 import {
   MessageBlock,
   PlayerPresence,

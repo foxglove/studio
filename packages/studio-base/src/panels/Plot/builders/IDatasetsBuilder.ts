@@ -4,8 +4,8 @@
 
 import { Opaque } from "ts-essentials";
 
+import { MessagePath } from "@foxglove/message-path";
 import type { Immutable, Time } from "@foxglove/studio";
-import { MessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import type { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import type { MessageBlock, PlayerState } from "@foxglove/studio-base/players/types";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";

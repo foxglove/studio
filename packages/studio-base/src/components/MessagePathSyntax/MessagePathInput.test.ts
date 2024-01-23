@@ -12,8 +12,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { MessagePath } from "@foxglove/message-path";
+
 import { tryToSetDefaultGlobalVar, getFirstInvalidVariableFromRosPath } from "./MessagePathInput";
-import { MessagePath } from "./constants";
 
 describe("tryToSetDefaultGlobalVar", () => {
   it("correctly returns true/false depending on whether a global variable has a default", () => {

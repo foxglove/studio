@@ -11,10 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  MessagePathStructureItem,
-  PrimitiveType,
-} from "@foxglove/studio-base/components/MessagePathSyntax/constants";
+import { MessagePathStructureItem, PrimitiveType } from "@foxglove/message-path";
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
 
 export type ValueAction = {
