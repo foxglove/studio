@@ -231,6 +231,8 @@ export default function PlaybackControls(props: {
           </Stack>
           <Stack direction="row" alignItems="center" gap={1}>
             <Tooltip
+              enterDelay={1200}
+              enterNextDelay={800}
               title={
                 <>
                   Seek backward <kbd>←</kbd>
@@ -248,6 +250,8 @@ export default function PlaybackControls(props: {
               />
             </Tooltip>
             <Tooltip
+              enterDelay={1200}
+              enterNextDelay={800}
               title={
                 <>
                   {isPlaying ? "Pause" : "Play"} <kbd>Space</kbd>
@@ -263,6 +267,8 @@ export default function PlaybackControls(props: {
               />
             </Tooltip>
             <Tooltip
+              enterDelay={1200}
+              enterNextDelay={800}
               title={
                 <>
                   Seek forward <kbd>→</kbd>
