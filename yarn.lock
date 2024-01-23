@@ -2350,11 +2350,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/message-path@workspace:packages/message-path":
+"@foxglove/message-path@workspace:*, @foxglove/message-path@workspace:packages/message-path":
   version: 0.0.0-use.local
   resolution: "@foxglove/message-path@workspace:packages/message-path"
   dependencies:
     "@foxglove/tsconfig": 2.0.0
+    "@types/nearley": 2.11.2
+    nearley: 2.20.1
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -2519,6 +2521,7 @@ __metadata:
     "@foxglove/log": "workspace:*"
     "@foxglove/mcap-support": "workspace:*"
     "@foxglove/message-definition": 0.3.1
+    "@foxglove/message-path": "workspace:*"
     "@foxglove/rosbag": 0.4.0
     "@foxglove/rosbag2-web": 4.1.1
     "@foxglove/roslibjs": 0.0.3
