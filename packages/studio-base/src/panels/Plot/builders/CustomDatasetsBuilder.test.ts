@@ -6,8 +6,8 @@ import * as _ from "lodash-es";
 
 import { unwrap } from "@foxglove/den/monads";
 import { makeComlinkWorkerMock } from "@foxglove/den/testing";
+import { parseMessagePath } from "@foxglove/message-path";
 import { MessageEvent } from "@foxglove/studio";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageBlock,
   PlayerPresence,
@@ -33,7 +33,7 @@ function buildSeriesItems(
   paths: (Partial<PlotPath> & { key?: string; value: string })[],
 ): SeriesItem[] {
   return paths.map((item, idx) => {
-    const parsed = unwrap(parseRosPath(item.value));
+    const parsed = unwrap(parseMessagePath(item.value));
     const key = (item.key ?? String(idx)) as SeriesConfigKey;
 
     return {
@@ -88,7 +88,7 @@ describe("CustomDatasetsBuilder", () => {
   it("should dataset from current messages", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -188,7 +188,7 @@ describe("CustomDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(["/baz.val.@negative"]),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [
             { x: 0, y: 0, value: 0 },
@@ -209,7 +209,7 @@ describe("CustomDatasetsBuilder", () => {
   it("should build updates from blocks", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -315,7 +315,7 @@ describe("CustomDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(["/baz.val.@negative"]),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [
             { x: 0, y: 0, value: 0 },
@@ -339,7 +339,7 @@ describe("CustomDatasetsBuilder", () => {
   it.each(["current", "blocks"] as const)("combines all values from arrays (%s)", async (type) => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.values[:].val"));
+    builder.setXPath(parseMessagePath("/foo.values[:].val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -441,7 +441,7 @@ describe("CustomDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(["/baz.values[:].val"]),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [
             { x: 0, y: 10, value: 10 },
@@ -467,7 +467,7 @@ describe("CustomDatasetsBuilder", () => {
   it("supports toggling series enabled state", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -515,7 +515,7 @@ describe("CustomDatasetsBuilder", () => {
       }),
     ).resolves.toEqual({
       pathsWithMismatchedDataLengths: new Set(),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [{ x: 1, y: 1, value: 1 }],
         }),
@@ -547,12 +547,63 @@ describe("CustomDatasetsBuilder", () => {
       }),
     ).resolves.toEqual({
       pathsWithMismatchedDataLengths: new Set(),
-      datasets: [
-        expect.objectContaining({
-          data: [],
-        }),
+      datasetsByConfigIndex: [
+        undefined,
         expect.objectContaining({
           data: [{ x: 1, y: 2, value: 2 }],
+        }),
+      ],
+    });
+  });
+
+  it("leaves gaps in datasetsByConfigIndex for missing series", async () => {
+    const builder = new CustomDatasetsBuilder();
+
+    builder.setXPath(parseMessagePath("/foo.val"));
+    builder.setSeries([
+      {
+        configIndex: 3,
+        parsed: parseMessagePath("/foo.val")!,
+        color: "red",
+        contrastColor: "blue",
+        enabled: true,
+        timestampMethod: "receiveTime",
+        key: "x" as SeriesConfigKey,
+        lineSize: 1,
+        messagePath: "/foo.val",
+        showLine: true,
+      },
+    ]);
+
+    builder.handlePlayerState(
+      buildPlayerState({
+        messages: [
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 1,
+            },
+          },
+        ],
+      }),
+    );
+
+    await expect(
+      builder.getViewportDatasets({
+        size: { width: 1_000, height: 1_000 },
+        bounds: {},
+      }),
+    ).resolves.toEqual({
+      pathsWithMismatchedDataLengths: new Set(),
+      datasetsByConfigIndex: [
+        undefined,
+        undefined,
+        undefined,
+        expect.objectContaining({
+          data: [{ x: 1, y: 1, value: 1 }],
         }),
       ],
     });

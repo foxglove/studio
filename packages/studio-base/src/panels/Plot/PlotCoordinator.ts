@@ -6,11 +6,11 @@ import EventEmitter from "eventemitter3";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
+import { parseMessagePath } from "@foxglove/message-path";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable, Time } from "@foxglove/studio";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
-import { stringifyRosPath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
+import { stringifyMessagePath } from "@foxglove/studio-base/components/MessagePathSyntax/stringifyRosPath";
 import { fillInGlobalVariablesInPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -19,7 +19,7 @@ import { Bounds } from "@foxglove/studio-base/types/Bounds";
 import delay from "@foxglove/studio-base/util/delay";
 import { getContrastColor, getLineColor } from "@foxglove/studio-base/util/plotColors";
 
-import { InteractionEvent, Scale, UpdateAction } from "./ChartRenderer";
+import { Dataset, InteractionEvent, Scale, UpdateAction } from "./ChartRenderer";
 import { OffscreenCanvasRenderer } from "./OffscreenCanvasRenderer";
 import {
   CsvDataset,
@@ -45,6 +45,8 @@ type EventTypes = {
   /** Rendering updated the viewport. `canReset` is true if the viewport can be reset. */
   viewportChange(canReset: boolean): void;
 };
+
+const replaceUndefinedWithEmptyDataset = (dataset: Dataset | undefined) => dataset ?? { data: [] };
 
 /**
  * PlotCoordinator interfaces commands and updates between the dataset builder and the chart
@@ -221,7 +223,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
         return;
       }
 
-      const parsed = parseRosPath(path.value);
+      const parsed = parseMessagePath(path.value);
       if (!parsed) {
         return;
       }
@@ -238,7 +240,9 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       //
       // This key lets us treat series with the same name but different timestamp methods as distinct
       // using a key instead of the path index lets us preserve loaded data when a path is removed
-      const key = `${path.timestampMethod}:${stringifyRosPath(filledParsed)}` as SeriesConfigKey;
+      const key = `${path.timestampMethod}:${stringifyMessagePath(
+        filledParsed,
+      )}` as SeriesConfigKey;
 
       // Keep current values for paths that match existing ones
       const existingSeries = this.#series.find((series) => series.key === key);
@@ -431,7 +435,11 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     if (this.#isDestroyed()) {
       return;
     }
-    this.#latestXScale = await this.#renderer.updateDatasets(result.datasets);
+    this.#latestXScale = await this.#renderer.updateDatasets(
+      // Use Array.from to fill in any `undefined` entries with an empty dataset (`map` would not
+      // work for sparse arrays)
+      Array.from(result.datasetsByConfigIndex, replaceUndefinedWithEmptyDataset),
+    );
     if (this.#isDestroyed()) {
       return;
     }

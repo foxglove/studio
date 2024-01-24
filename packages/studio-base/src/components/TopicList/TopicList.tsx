@@ -22,10 +22,10 @@ import { makeStyles } from "tss-react/mui";
 import { useDebounce } from "use-debounce";
 
 import { filterMap } from "@foxglove/den/collection";
+import { quoteTopicNameIfNeeded } from "@foxglove/message-path";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { DirectTopicStatsUpdater } from "@foxglove/studio-base/components/DirectTopicStatsUpdater";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import { quoteTopicNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -75,6 +75,7 @@ function getDraggedMessagePath(treeItem: TopicListItem): DraggedMessagePath {
         rootSchemaName: treeItem.item.item.schemaName,
         isTopic: true,
         isLeaf: false,
+        topicName: treeItem.item.item.name,
       };
     case "schema":
       return {
@@ -82,6 +83,7 @@ function getDraggedMessagePath(treeItem: TopicListItem): DraggedMessagePath {
         rootSchemaName: treeItem.item.item.topic.schemaName,
         isTopic: false,
         isLeaf: treeItem.item.item.suffix.isLeaf,
+        topicName: treeItem.item.item.topic.name,
       };
   }
 }

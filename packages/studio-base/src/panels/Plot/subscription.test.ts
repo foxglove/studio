@@ -2,23 +2,24 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
+import { parseMessagePath } from "@foxglove/message-path";
 
 import { pathToSubscribePayload } from "./subscription";
 
 describe("subscription", () => {
   describe("pathToPayload", () => {
     const toPayload = (path: string) => {
-      const parsed = parseRosPath(path);
+      const parsed = parseMessagePath(path);
       if (parsed == undefined) {
         throw new Error(`invalid path: ${path}`);
       }
 
-      return pathToSubscribePayload(parsed);
+      return pathToSubscribePayload(parsed, "full");
     };
 
     it("ignores path without a property", () => {
       expect(toPayload("/foo")).toEqual(undefined);
+      expect(toPayload("/foo.")).toEqual(undefined);
     });
 
     it("subscribes to one field", () => {
