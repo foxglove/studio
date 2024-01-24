@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { IconButton, IconButtonProps } from "@mui/material";
-import { forwardRef, useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
+import { makeStyles } from "tss-react/mui";
 
 type Props = {
   icon: React.ReactNode;
@@ -12,9 +13,16 @@ type Props = {
   activeColor?: IconButtonProps["color"];
 } & Omit<IconButtonProps, "children" | "color">;
 
-const HoverableIconButton = forwardRef<HTMLButtonElement, Props>((props, ref) => {
-  const { icon, activeIcon, color, activeColor, onMouseLeave, onMouseEnter, ...rest } = props;
+const useStyles = makeStyles()(() => ({
+  root: {
+    svg: { pointerEvents: "none" },
+  },
+}));
 
+const HoverableIconButton = forwardRef<HTMLButtonElement, Props>((props, ref) => {
+  const { icon, activeIcon, className, color, activeColor, onMouseLeave, onMouseEnter, ...rest } =
+    props;
+  const { classes, cx } = useStyles();
   const [hovered, setHovered] = useState(false);
 
   const handleMouseEnter = useCallback(
@@ -46,16 +54,25 @@ const HoverableIconButton = forwardRef<HTMLButtonElement, Props>((props, ref) =>
     }
   }, [props.disabled]);
 
+  const iconComponent = useMemo(() => {
+    if (activeIcon != undefined) {
+      return hovered ? activeIcon : icon;
+    }
+
+    return icon;
+  }, [activeIcon, hovered, icon]);
+
   return (
     <IconButton
       ref={ref}
       {...rest}
+      className={cx(classes.root, className)}
       component="button"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       color={activeColor != undefined ? (hovered ? activeColor : color) : color}
     >
-      {activeIcon != undefined ? (hovered ? activeIcon : icon) : icon}
+      {iconComponent}
     </IconButton>
   );
 });
