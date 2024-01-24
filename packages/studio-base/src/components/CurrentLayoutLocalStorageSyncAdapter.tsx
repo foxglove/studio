@@ -23,7 +23,7 @@ function selectLayoutData(state: LayoutState) {
 
 const log = Log.getLogger(__filename);
 
-const KEY = "studio.layout";
+export const LOCAL_STORAGE_STUDIO_LAYOUT_KEY = "studio.layout";
 
 export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
   const { selectedSource } = usePlayerSelection();
@@ -46,13 +46,13 @@ export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
 
     const serializedLayoutData = JSON.stringify(debouncedLayoutData);
     assert(serializedLayoutData);
-    localStorage.setItem(KEY, serializedLayoutData);
+    localStorage.setItem(LOCAL_STORAGE_STUDIO_LAYOUT_KEY, serializedLayoutData);
   }, [debouncedLayoutData]);
 
   useEffect(() => {
-    log.debug(`Reading layout from local storage: ${KEY}`);
+    log.debug(`Reading layout from local storage: ${LOCAL_STORAGE_STUDIO_LAYOUT_KEY}`);
 
-    const serializedLayoutData = localStorage.getItem(KEY);
+    const serializedLayoutData = localStorage.getItem(LOCAL_STORAGE_STUDIO_LAYOUT_KEY);
 
     if (serializedLayoutData) {
       log.debug("Restoring layout from local storage");
