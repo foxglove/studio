@@ -180,7 +180,10 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
       };
     });
 
-    void this.#datasetsBuilderRemote.setSeries(series);
+    this.#pendingDataDispatch.push({
+      type: "update-series-config",
+      seriesItems: series,
+    });
   }
 
   public async getViewportDatasets(
