@@ -9,6 +9,7 @@ import { VecQueue } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add as addTime, compare, clampTime } from "@foxglove/rostime";
 import { Time, MessageEvent } from "@foxglove/studio";
+import { IBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
 import { CachingIterableSource } from "./CachingIterableSource";
@@ -45,7 +46,7 @@ interface EventTypes {
  * is the consumer and reads messages from cache while the startProducer method produces messages by
  * reading from the underlying source and populating the cache.
  */
-class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterableSource {
+class BufferedIterableSource extends EventEmitter<EventTypes> implements IBufferedIterableSource {
   #source: CachingIterableSource;
 
   #readDone = false;
@@ -214,11 +215,11 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IIterab
     this.#producer = undefined;
   }
 
-  public loadedRanges(): Range[] {
+  public async loadedRanges(): Promise<Range[]> {
     return this.#source.loadedRanges();
   }
 
-  public getCacheSize(): number {
+  public async getCacheSize(): Promise<number> {
     return this.#source.getCacheSize();
   }
 

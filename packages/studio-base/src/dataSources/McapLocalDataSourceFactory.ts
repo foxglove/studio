@@ -6,7 +6,10 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
+import {
+  IterablePlayer,
+  WorkerBufferedIterableSource,
+} from "@foxglove/studio-base/players/IterablePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
 class McapLocalDataSourceFactory implements IDataSourceFactory {
@@ -22,7 +25,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const source = new WorkerIterableSource({
+    const source = new WorkerBufferedIterableSource({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
