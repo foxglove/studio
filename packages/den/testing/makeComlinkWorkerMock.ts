@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as Comlink from "comlink";
-import EventEmitter from "eventemitter3";
+import { EventEmitter } from "node:events";
 
 type ComlinkWorkerConstructor = new () => Comlink.Endpoint;
 
