@@ -45,7 +45,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
   #datasetsBuilderWorker: Worker;
   #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<CustomDatasetsBuilderImpl>>;
 
-  #pendingDataDispatch: Immutable<UpdateDataAction>[] = [];
+  #pendingDispatch: Immutable<UpdateDataAction>[] = [];
 
   #lastSeekTime = 0;
 
@@ -76,7 +76,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     const msgEvents = activeData.messages;
     if (msgEvents.length > 0) {
       if (didSeek) {
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "reset-current-x",
         });
         this.#xCurrentBounds = undefined;
@@ -89,7 +89,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
         const pathItems = readMessagePathItems(msgEvents, this.#xParsedPath, mathFn);
 
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "append-current-x",
           items: pathItems,
         });
@@ -104,14 +104,14 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           ? mathFunctions[series.config.parsed.modifier]
           : undefined;
         if (didSeek) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-current",
             series: series.config.key,
           });
         }
 
         const pathItems = readMessagePathItems(msgEvents, series.config.parsed, mathFn);
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "append-current",
           series: series.config.key,
           items: pathItems,
@@ -127,7 +127,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
 
         if (this.#xValuesCursor.nextWillReset(blocks)) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-full-x",
           });
         }
@@ -136,7 +136,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
         while ((messageEvents = this.#xValuesCursor.next(blocks)) != undefined) {
           const pathItems = readMessagePathItems(messageEvents, this.#xParsedPath, mathFn);
 
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "append-full-x",
             items: pathItems,
           });
@@ -153,7 +153,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
 
         if (series.blockCursor.nextWillReset(blocks)) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-full",
             series: series.config.key,
           });
@@ -163,7 +163,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
         while ((messageEvents = series.blockCursor.next(blocks)) != undefined) {
           const pathItems = readMessagePathItems(messageEvents, series.config.parsed, mathFn);
 
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "append-full",
             series: series.config.key,
             items: pathItems,
@@ -195,11 +195,11 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       this.#xValuesCursor = undefined;
     }
 
-    this.#pendingDataDispatch.push({
+    this.#pendingDispatch.push({
       type: "reset-current-x",
     });
 
-    this.#pendingDataDispatch.push({
+    this.#pendingDispatch.push({
       type: "reset-full-x",
     });
   }
@@ -213,7 +213,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       };
     });
 
-    this.#pendingDataDispatch.push({
+    this.#pendingDispatch.push({
       type: "update-series-config",
       seriesItems: series,
     });
@@ -222,9 +222,9 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
   public async getViewportDatasets(
     viewport: Immutable<Viewport>,
   ): Promise<GetViewportDatasetsResult> {
-    const dispatch = this.#pendingDataDispatch;
+    const dispatch = this.#pendingDispatch;
     if (dispatch.length > 0) {
-      this.#pendingDataDispatch = [];
+      this.#pendingDispatch = [];
       await this.#datasetsBuilderRemote.updateData(dispatch);
     }
 

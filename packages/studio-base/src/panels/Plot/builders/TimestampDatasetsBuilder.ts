@@ -52,7 +52,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
   #datasetsBuilderWorker: Worker;
   #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>;
 
-  #pendingDataDispatch: Immutable<UpdateDataAction>[] = [];
+  #pendingDispatch: Immutable<UpdateDataAction>[] = [];
 
   #lastSeekTime = 0;
 
@@ -85,7 +85,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
 
         if (didSeek) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-current",
             series: series.config.key,
           });
@@ -99,7 +99,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           mathFn,
         );
 
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "append-current",
           series: series.config.key,
           items: pathItems,
@@ -118,7 +118,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     // identify if series need resetting because
     for (const series of this.#series) {
       if (series.blockCursor.nextWillReset(blocks)) {
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "reset-full",
           series: series.config.key,
         });
@@ -157,7 +157,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           continue;
         }
 
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "append-full",
           series: series.config.key,
           items: pathItems,
@@ -180,7 +180,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
       };
     });
 
-    this.#pendingDataDispatch.push({
+    this.#pendingDispatch.push({
       type: "update-series-config",
       seriesItems: series,
     });
@@ -189,9 +189,9 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
   public async getViewportDatasets(
     viewport: Immutable<Viewport>,
   ): Promise<GetViewportDatasetsResult> {
-    const dispatch = this.#pendingDataDispatch;
+    const dispatch = this.#pendingDispatch;
     if (dispatch.length > 0) {
-      this.#pendingDataDispatch = [];
+      this.#pendingDispatch = [];
       await this.#datasetsBuilderRemote.applyActions(dispatch);
     }
 
