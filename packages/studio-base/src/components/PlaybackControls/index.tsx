@@ -24,7 +24,7 @@ import {
   Previous20Filled,
   Previous20Regular,
 } from "@fluentui/react-icons";
-import { useCallback, useMemo, useState } from "react";
+import { MouseEvent, useCallback, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { Time, compare } from "@foxglove/rostime";
@@ -128,7 +128,7 @@ export default function PlaybackControls(props: {
   }, [isPlaying, pause, getTimeInfo, play, seek]);
 
   const seekForwardAction = useCallback(
-    (ev?: KeyboardEvent) => {
+    (ev?: KeyboardEvent | MouseEvent<HTMLButtonElement>) => {
       const { currentTime } = getTimeInfo();
       if (!currentTime) {
         return;
@@ -155,7 +155,7 @@ export default function PlaybackControls(props: {
   );
 
   const seekBackwardAction = useCallback(
-    (ev?: KeyboardEvent) => {
+    (ev?: KeyboardEvent | MouseEvent<HTMLButtonElement>) => {
       const { currentTime } = getTimeInfo();
       if (!currentTime) {
         return;
@@ -244,9 +244,7 @@ export default function PlaybackControls(props: {
                 size="small"
                 icon={<Previous20Regular />}
                 activeIcon={<Previous20Filled />}
-                onClick={() => {
-                  seekBackwardAction();
-                }}
+                onClick={seekBackwardAction}
               />
             </Tooltip>
             <Tooltip
@@ -280,9 +278,7 @@ export default function PlaybackControls(props: {
                 size="small"
                 icon={<Next20Regular />}
                 activeIcon={<Next20Filled />}
-                onClick={() => {
-                  seekForwardAction();
-                }}
+                onClick={seekForwardAction}
               />
             </Tooltip>
           </Stack>
