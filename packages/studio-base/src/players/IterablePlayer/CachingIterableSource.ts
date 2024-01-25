@@ -8,7 +8,7 @@ import * as _ from "lodash-es";
 import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add, compare, subtract, toNanoSec } from "@foxglove/rostime";
-import { MessageEvent, Time } from "@foxglove/studio";
+import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { TopicSelection } from "@foxglove/studio-base/players/types";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
@@ -73,7 +73,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
   #source: IIterableSource;
 
   // Stores which topics we have been caching. See notes at usage site for why we store this.
-  #cachedTopics: TopicSelection = new Map();
+  #cachedTopics: Immutable<TopicSelection> = new Map();
 
   // The producer loads results into the cache and the consumer reads from the cache.
   #cache: CacheBlock[] = [];
@@ -112,7 +112,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
 
   public async terminate(): Promise<void> {
     this.#cache.length = 0;
-    this.#cachedTopics.clear();
+    this.#cachedTopics = new Map();
   }
 
   public loadedRanges(): Range[] {
@@ -124,7 +124,7 @@ class CachingIterableSource extends EventEmitter<EventTypes> implements IIterabl
   }
 
   public async *messageIterator(
-    args: MessageIteratorArgs,
+    args: Immutable<MessageIteratorArgs>,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");

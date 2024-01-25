@@ -21,7 +21,7 @@ import { IteratorCursor } from "@foxglove/studio-base/players/IterablePlayer/Ite
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import { MessageBlock, Progress, TopicSelection } from "@foxglove/studio-base/players/types";
 
-import { IIterableSource, MessageIteratorArgs } from "./IIterableSource";
+import { IBufferedIterableSource, MessageIteratorArgs } from "./IBufferedIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -29,7 +29,7 @@ export const MEMORY_INFO_PRELOADED_MSGS = "Preloaded messages";
 
 type BlockLoaderArgs = {
   cacheSizeBytes: number;
-  source: IIterableSource;
+  source: IBufferedIterableSource;
   start: Time;
   end: Time;
   maxBlocks: number;
@@ -51,7 +51,7 @@ type LoadArgs = {
  * BlockLoader manages loading blocks from a source. Blocks are fixed time span containers for messages.
  */
 export class BlockLoader {
-  #source: IIterableSource;
+  #source: IBufferedIterableSource;
   #blocks: Blocks = [];
   #start: Time;
   #end: Time;
@@ -245,6 +245,7 @@ export class BlockLoader {
         start: cursorStartTime,
         end: cursorEndTime,
         consumptionType: "full",
+        bufferingType: "unbuffered", // The buffering source can't have more than one message iterator
       };
 
       // If the source provides a message cursor we use its message cursor, otherwise we make one

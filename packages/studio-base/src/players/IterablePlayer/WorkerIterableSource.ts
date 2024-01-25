@@ -7,6 +7,7 @@ import * as Comlink from "comlink";
 import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
 import { ComlinkWrap } from "@foxglove/den/worker";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
+import { IWorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IWorkerIterableSource";
 
 import type {
   GetBackfillMessagesArgs,
@@ -26,7 +27,7 @@ type ConstructorArgs = {
   initArgs: IterableSourceInitializeArgs;
 };
 
-export class WorkerIterableSource<T extends WorkerIterableSourceWorker = WorkerIterableSourceWorker>
+export class WorkerIterableSource<T extends IWorkerIterableSource = WorkerIterableSourceWorker>
   implements IIterableSource
 {
   readonly #args: ConstructorArgs;

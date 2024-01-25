@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as comlink from "comlink";
+import * as Comlink from "comlink";
 
+import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
 import {
   BufferedRanges,
   IBufferedIterableSource,
@@ -18,6 +19,8 @@ type ConstructorArgs = {
   initWorker: () => Worker;
   initArgs: IterableSourceInitializeArgs;
 };
+
+Comlink.transferHandlers.set("abortsignal", abortSignalTransferHandler);
 
 export class WorkerBufferedIterableSource
   extends WorkerIterableSource<WorkerBufferedIterableSourceWorker>
@@ -41,7 +44,11 @@ export class WorkerBufferedIterableSource
 
   public async onLoadedRangesChange(
     rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
+    options?: { minIntervalMs: number },
   ): Promise<void> {
-    await this._sourceWorkerRemote?.onLoadedRangesChange(comlink.proxy(rangeChangeHandler));
+    await this._sourceWorkerRemote?.onLoadedRangesChange(
+      Comlink.proxy(rangeChangeHandler),
+      options,
+    );
   }
 }

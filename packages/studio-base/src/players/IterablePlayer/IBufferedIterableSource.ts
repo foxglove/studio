@@ -2,10 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Time } from "@foxglove/studio";
+import { Immutable, Time } from "@foxglove/studio";
 import {
   IIterableSource,
   Initalization,
+  MessageIteratorArgs as IterableSourceMessageIteratorArgs,
+  IteratorResult,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 
 export type Range = {
@@ -29,6 +31,10 @@ export type BufferedRanges = {
   cacheSizeInBytes: number;
 };
 
+export type MessageIteratorArgs = IterableSourceMessageIteratorArgs & {
+  bufferingType?: "buffered" | "unbuffered"; // Default is "buffered"
+};
+
 export interface IBufferedIterableSource extends IIterableSource {
   initialize(options?: InitalizationOptions): Promise<Initalization>;
 
@@ -36,8 +42,12 @@ export interface IBufferedIterableSource extends IIterableSource {
   getCacheSize(): Promise<number>;
   loadedRanges(): Promise<Range[]>;
 
+  messageIterator(
+    args: Immutable<MessageIteratorArgs>,
+  ): AsyncIterableIterator<Readonly<IteratorResult>>;
+
   onLoadedRangesChange?(
     rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
-    // maxUpdateFrequency: number
+    options?: { minIntervalMs: number },
   ): Promise<void>;
 }

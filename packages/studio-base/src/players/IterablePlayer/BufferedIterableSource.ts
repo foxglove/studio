@@ -8,11 +8,11 @@ import { Condvar } from "@foxglove/den/async";
 import { VecQueue } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add as addTime, compare, clampTime } from "@foxglove/rostime";
-import { Time, MessageEvent } from "@foxglove/studio";
-import { IBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
+import { Time, MessageEvent, Immutable } from "@foxglove/studio";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
 import { CachingIterableSource } from "./CachingIterableSource";
+import { IBufferedIterableSource } from "./IBufferedIterableSource";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -96,7 +96,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IBuffer
     return this.#initResult;
   }
 
-  async #startProducer(args: MessageIteratorArgs): Promise<void> {
+  async #startProducer(args: Immutable<MessageIteratorArgs>): Promise<void> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -224,7 +224,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IBuffer
   }
 
   public messageIterator(
-    args: MessageIteratorArgs,
+    args: Immutable<MessageIteratorArgs>,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");

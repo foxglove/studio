@@ -536,17 +536,20 @@ export class IterablePlayer implements Player {
       }
 
       // Subscribe to range changes of the buffered source
-      void this.#iterableSource.onLoadedRangesChange?.((bufferedRanges) => {
-        this.#progress = {
-          fullyLoadedFractionRanges: bufferedRanges.ranges,
-          messageCache: this.#progress.messageCache,
-          memoryInfo: {
-            ...this.#progress.memoryInfo,
-            [MEMORY_INFO_BUFFERED_MSGS]: bufferedRanges.cacheSizeInBytes,
-          },
-        };
-        this.#queueEmitState();
-      });
+      void this.#iterableSource.onLoadedRangesChange?.(
+        (bufferedRanges) => {
+          this.#progress = {
+            fullyLoadedFractionRanges: bufferedRanges.ranges,
+            messageCache: this.#progress.messageCache,
+            memoryInfo: {
+              ...this.#progress.memoryInfo,
+              [MEMORY_INFO_BUFFERED_MSGS]: bufferedRanges.cacheSizeInBytes,
+            },
+          };
+          this.#queueEmitState();
+        },
+        { minIntervalMs: 100 },
+      );
 
       this.#presence = PlayerPresence.PRESENT;
     } catch (error) {
@@ -981,13 +984,6 @@ export class IterablePlayer implements Player {
     this.#isPlaying = false;
     this.#presence = PlayerPresence.PRESENT;
 
-    // set the latest value of the loaded ranges for the next emit state
-    this.#progress = {
-      ...this.#progress,
-      fullyLoadedFractionRanges: await this.#iterableSource.loadedRanges(),
-      messageCache: this.#progress.messageCache,
-    };
-
     const abort = (this.#abort = new AbortController());
     const aborted = new Promise((resolve) => {
       abort.signal.addEventListener("abort", resolve);
@@ -1029,17 +1025,6 @@ export class IterablePlayer implements Player {
         if (this.#nextState) {
           return;
         }
-
-        // Update with the latest loaded ranges from the buffered source
-        // The messageCache is updated separately by block loader events
-        this.#progress = {
-          fullyLoadedFractionRanges: await this.#iterableSource.loadedRanges(),
-          messageCache: this.#progress.messageCache,
-          memoryInfo: {
-            ...this.#progress.memoryInfo,
-            [MEMORY_INFO_BUFFERED_MSGS]: await this.#iterableSource.getCacheSize(),
-          },
-        };
 
         // If subscriptions changed, update to the new subscriptions
         if (this.#allTopics !== allTopics) {
