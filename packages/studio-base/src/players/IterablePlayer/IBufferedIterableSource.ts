@@ -35,7 +35,8 @@ export type MessageIteratorArgs = IterableSourceMessageIteratorArgs & {
   bufferingType?: "buffered" | "unbuffered"; // Default is "buffered"
 };
 
-export interface IBufferedIterableSource extends IIterableSource {
+export interface IBufferedIterableSource<MessageType = unknown>
+  extends IIterableSource<MessageType> {
   initialize(options?: InitalizationOptions): Promise<Initalization>;
 
   stopProducer(): Promise<void>;
@@ -44,7 +45,7 @@ export interface IBufferedIterableSource extends IIterableSource {
 
   messageIterator(
     args: Immutable<MessageIteratorArgs>,
-  ): AsyncIterableIterator<Readonly<IteratorResult>>;
+  ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>>;
 
   onLoadedRangesChange?(
     rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,

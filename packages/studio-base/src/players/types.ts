@@ -210,6 +210,12 @@ export type Topic = {
   schemaName: string | undefined;
   // Name of the topic before topic aliasing, if any.
   aliasedFromName?: string;
+  /** Schema data */
+  schemaData?: Uint8Array;
+  /** Schema encoding */
+  schemaEncoding?: string;
+  /** Message encoding */
+  messageEncoding?: string;
 };
 
 export type TopicWithSchemaName = Topic & { schemaName: string };

@@ -24,15 +24,19 @@ import type {
   IteratorResult,
 } from "./IIterableSource";
 
-export class WorkerBufferedIterableSourceWorker
-  implements IBufferedIterableSource, IWorkerIterableSource
+export class WorkerBufferedIterableSourceWorker<MessageType = unknown>
+  implements IBufferedIterableSource<MessageType>, IWorkerIterableSource<MessageType>
 {
-  protected _unbufferedSource: IIterableSource;
-  protected _bufferedSource: BufferedIterableSource;
+  protected _unbufferedSource: IIterableSource<MessageType>;
+  protected _bufferedSource: BufferedIterableSource<MessageType>;
 
-  public constructor(source: IIterableSource) {
+  public constructor(source: IIterableSource<MessageType>) {
     this._unbufferedSource = source;
-    this._bufferedSource = new BufferedIterableSource(source);
+    this._bufferedSource = new BufferedIterableSource<MessageType>(source, {
+      readAheadDuration: { sec: 60, nsec: 0 },
+      maxCacheSizeBytes: Math.trunc(1.5 * 1024 * 1024 * 1024),
+      yieldCopiedMessage: true,
+    });
   }
 
   public async initialize(): Promise<Initalization> {
@@ -44,7 +48,7 @@ export class WorkerBufferedIterableSourceWorker
     // abortSignal is a separate argument so it can be proxied by comlink since AbortSignal is not
     // clonable (and needs to signal across the worker boundary)
     abortSignal?: AbortSignal,
-  ): Promise<MessageEvent[]> {
+  ): Promise<MessageEvent<MessageType>[]> {
     return await this._bufferedSource.getBackfillMessages({
       ...args,
       abortSignal,
@@ -53,7 +57,7 @@ export class WorkerBufferedIterableSourceWorker
 
   public messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> & Comlink.ProxyMarked {
+  ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> & Comlink.ProxyMarked {
     if (args.bufferingType) {
       return Comlink.proxy(this._unbufferedSource.messageIterator(args));
     } else {
@@ -64,11 +68,11 @@ export class WorkerBufferedIterableSourceWorker
   public getMessageCursor(
     args: Omit<Immutable<MessageIteratorArgs>, "abort">,
     abort?: AbortSignal,
-  ): IMessageCursor & Comlink.ProxyMarked {
+  ): IMessageCursor<MessageType> & Comlink.ProxyMarked {
     const iter = args.bufferingType
       ? this._unbufferedSource.messageIterator(args)
       : this._bufferedSource.messageIterator(args);
-    const cursor = new IteratorCursor(iter, abort);
+    const cursor = new IteratorCursor<MessageType>(iter, abort);
     return Comlink.proxy(cursor);
   }
 

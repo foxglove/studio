@@ -14,18 +14,18 @@ import type {
   MessageIteratorArgs,
 } from "./IIterableSource";
 
-export interface IWorkerIterableSource extends IIterableSource {
+export interface IWorkerIterableSource<MessageType = unknown> extends IIterableSource<MessageType> {
   messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> & Comlink.ProxyMarked;
+  ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> & Comlink.ProxyMarked;
   getBackfillMessages(
     args: Omit<GetBackfillMessagesArgs, "abortSignal">,
     // abortSignal is a separate argument so it can be proxied by comlink since AbortSignal is not
     // clonable (and needs to signal across the worker boundary)
     abortSignal?: AbortSignal,
-  ): Promise<MessageEvent[]>;
+  ): Promise<MessageEvent<MessageType>[]>;
   getMessageCursor(
     args: Omit<Immutable<MessageIteratorArgs>, "abort">,
     abort?: AbortSignal,
-  ): IMessageCursor & Comlink.ProxyMarked;
+  ): IMessageCursor<MessageType> & Comlink.ProxyMarked;
 }

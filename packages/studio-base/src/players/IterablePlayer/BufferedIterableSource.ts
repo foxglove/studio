@@ -31,6 +31,10 @@ type Options = {
   readAheadDuration?: Time;
   // The minimum duration to buffer before playback resumes
   minReadAheadDuration?: Time;
+
+  maxCacheSizeBytes?: number;
+
+  yieldCopiedMessage?: boolean;
 };
 
 interface EventTypes {
@@ -46,8 +50,11 @@ interface EventTypes {
  * is the consumer and reads messages from cache while the startProducer method produces messages by
  * reading from the underlying source and populating the cache.
  */
-class BufferedIterableSource extends EventEmitter<EventTypes> implements IBufferedIterableSource {
-  #source: CachingIterableSource;
+class BufferedIterableSource<MessageType = unknown>
+  extends EventEmitter<EventTypes>
+  implements IBufferedIterableSource<MessageType>
+{
+  #source: CachingIterableSource<MessageType>;
 
   #readDone = false;
   #aborted = false;
@@ -59,7 +66,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IBuffer
   #writeSignal = new Condvar();
 
   // The producer loads results into the cache and the consumer reads from the cache.
-  #cache = new VecQueue<IteratorResult>();
+  #cache = new VecQueue<IteratorResult<MessageType>>();
 
   // The location of the consumer read head
   #readHead: Time = { sec: 0, nsec: 0 };
@@ -76,12 +83,14 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IBuffer
   // The minimum duration to buffer before playback resumes
   #minReadAheadDuration: Time;
 
-  public constructor(source: IIterableSource, opt?: Options) {
+  public constructor(source: IIterableSource<MessageType>, opt?: Options) {
     super();
 
     this.#readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
     this.#minReadAheadDuration = opt?.minReadAheadDuration ?? DEFAULT_MIN_READ_AHEAD_DURATION;
-    this.#source = new CachingIterableSource(source);
+    this.#source = new CachingIterableSource<MessageType>(source, {
+      maxTotalSize: opt?.maxCacheSizeBytes,
+    });
 
     if (compare(this.#readAheadDuration, this.#minReadAheadDuration) < 0) {
       throw new Error("Invariant: readAheadDuration < minReadAheadDuration");
@@ -225,7 +234,7 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IBuffer
 
   public messageIterator(
     args: Immutable<MessageIteratorArgs>,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -286,7 +295,17 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IBuffer
           // this notification is picked up on the next tick.
           self.#writeSignal.notifyAll();
 
-          yield item;
+          if (item.type === "message-event" && item.msgEvent.message instanceof Uint8Array) {
+            yield {
+              ...item,
+              msgEvent: {
+                ...item.msgEvent,
+                message: new Uint8Array(item.msgEvent.message) as MessageType,
+              },
+            };
+          } else {
+            yield item;
+          }
         }
       } finally {
         log.debug("ending buffered message iterator");
@@ -295,7 +314,9 @@ class BufferedIterableSource extends EventEmitter<EventTypes> implements IBuffer
     })();
   }
 
-  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<MessageType>[]> {
     return await this.#source.getBackfillMessages(args);
   }
 }

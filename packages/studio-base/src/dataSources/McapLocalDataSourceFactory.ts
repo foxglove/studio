@@ -10,6 +10,7 @@ import {
   IterablePlayer,
   WorkerBufferedIterableSource,
 } from "@foxglove/studio-base/players/IterablePlayer";
+import { DeserializingBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingBufferedIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
 
 class McapLocalDataSourceFactory implements IDataSourceFactory {
@@ -25,7 +26,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const source = new WorkerBufferedIterableSource({
+    const source = new WorkerBufferedIterableSource<Uint8Array>({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -40,7 +41,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
 
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
-      source,
+      source: new DeserializingBufferedIterableSource(source),
       name: file.name,
       sourceId: this.id,
     });

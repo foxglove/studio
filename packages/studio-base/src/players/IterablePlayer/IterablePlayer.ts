@@ -188,6 +188,7 @@ export class IterablePlayer implements Player {
     this.#bufferedSource = new BufferedIterableSource(source, {
       minReadAheadDuration: { sec: 0, nsec: 16_000_000 },
       readAheadDuration: { sec: 1, nsec: 0 },
+      maxCacheSizeBytes: 50 * 1024 * 1024,
     });
     this.#name = name;
     this.#urlParams = urlParams;

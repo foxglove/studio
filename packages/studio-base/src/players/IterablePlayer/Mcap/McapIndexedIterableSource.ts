@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { McapIndexedReader, McapTypes } from "@mcap/core";
+import * as Comlink from "comlink";
 
 import { pickFields } from "@foxglove/den/records";
 import Logger from "@foxglove/log";
@@ -92,7 +93,13 @@ export class McapIndexedIterableSource implements IIterableSource {
 
       let topic = topicsByName.get(channel.topic);
       if (!topic) {
-        topic = { name: channel.topic, schemaName: schema?.name };
+        topic = {
+          name: channel.topic,
+          schemaName: schema?.name,
+          schemaData: schema?.data,
+          schemaEncoding: schema?.encoding,
+          messageEncoding: channel.messageEncoding,
+        };
         topicsByName.set(channel.topic, topic);
 
         const numMessages = this.#reader.statistics?.channelMessageCounts.get(channel.id);
@@ -177,26 +184,14 @@ export class McapIndexedIterableSource implements IIterableSource {
         continue;
       }
       try {
-        const msg = channelInfo.parsedChannel.deserialize(message.data) as Record<string, unknown>;
-        const spec = topicsWithSubscriptionHash.get(channelInfo.channel.topic);
-        const payload = spec?.fields != undefined ? pickFields(msg, spec.fields) : msg;
-        const estimatedMemorySize = this.#estimateMessageSize(
-          spec?.subscriptionHash ?? channelInfo.channel.topic,
-          payload,
-        );
-        const sizeInBytes =
-          spec?.fields == undefined
-            ? Math.max(message.data.byteLength, estimatedMemorySize)
-            : estimatedMemorySize;
-
         yield {
           type: "message-event",
           msgEvent: {
             topic: channelInfo.channel.topic,
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
-            message: payload,
-            sizeInBytes,
+            message: message.data,
+            sizeInBytes: message.data.byteLength,
             schemaName: channelInfo.schemaName ?? "",
           },
         };
@@ -235,17 +230,17 @@ export class McapIndexedIterableSource implements IIterableSource {
         }
 
         try {
-          const deserializedMessage = channelInfo.parsedChannel.deserialize(message.data);
-          const sizeInBytes = Math.max(
-            message.data.byteLength,
-            this.#estimateMessageSize(channelInfo.channel.topic, deserializedMessage),
-          );
+          // const deserializedMessage = channelInfo.parsedChannel.deserialize(message.data);
+          // const sizeInBytes = Math.max(
+          //   message.data.byteLength,
+          //   this.#estimateMessageSize(channelInfo.channel.topic, deserializedMessage),
+          // );
           messages.push({
             topic: channelInfo.channel.topic,
             receiveTime: fromNanoSec(message.logTime),
             publishTime: fromNanoSec(message.publishTime),
-            message: deserializedMessage,
-            sizeInBytes,
+            message: message.data,
+            sizeInBytes: message.data.byteLength,
             schemaName: channelInfo.schemaName ?? "",
           });
         } catch (err) {
