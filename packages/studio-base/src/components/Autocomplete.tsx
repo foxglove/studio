@@ -33,7 +33,8 @@ import { useResizeDetector } from "react-resize-detector";
 import { makeStyles } from "tss-react/mui";
 
 import { HighlightChars } from "@foxglove/studio-base/components/HighlightChars";
-import { ReactWindowListboxAdapter } from "@foxglove/studio-base/components/ReactWindowListboxAdapter";
+// fixme
+//import { ReactWindowListboxAdapter } from "@foxglove/studio-base/components/ReactWindowListboxAdapter";
 
 const MAX_FZF_MATCHES = 200;
 
