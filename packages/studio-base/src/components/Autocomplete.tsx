@@ -101,6 +101,9 @@ const useStyles = makeStyles()((theme) => ({
   itemHighlighted: {
     backgroundColor: theme.palette.action.hover,
   },
+  popper: {
+    width: "fit-content !important",
+  },
 }));
 
 function defaultGetText(name: string): (item: unknown) => string {
@@ -262,7 +265,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
       className={className}
       componentsProps={{
         paper: { elevation: 8 },
-        popper: { style: { width: "fit-content" } },
+        popper: { className: classes.popper, placement: "top-start" },
       }}
       disableCloseOnSelect
       disabled={disabled}
