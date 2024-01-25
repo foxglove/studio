@@ -42,6 +42,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import delay from "@foxglove/studio-base/util/delay";
 
 import { BlockLoader } from "./BlockLoader";
+import { BufferedIterableSource } from "./BufferedIterableSource";
 import { IteratorResult } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
@@ -159,6 +160,7 @@ export class IterablePlayer implements Player {
   #problemManager = new PlayerProblemManager();
 
   #iterableSource: IBufferedIterableSource;
+  #bufferedSource: BufferedIterableSource;
 
   // Some states register an abort controller to signal they should abort
   #abort?: AbortController;
@@ -183,6 +185,10 @@ export class IterablePlayer implements Player {
     const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
 
     this.#iterableSource = source;
+    this.#bufferedSource = new BufferedIterableSource(source, {
+      minReadAheadDuration: { sec: 0, nsec: 16_000_000 },
+      readAheadDuration: { sec: 1, nsec: 0 },
+    });
     this.#name = name;
     this.#urlParams = urlParams;
     this.#metricsCollector = metricsCollector ?? new NoopMetricsCollector();
@@ -466,7 +472,7 @@ export class IterablePlayer implements Player {
         publishersByTopic,
         datatypes,
         name,
-      } = await this.#iterableSource.initialize();
+      } = await this.#bufferedSource.initialize();
 
       // Prior to initialization, the seekTarget may have been set to an out-of-bounds value
       // This brings the value in bounds
@@ -584,10 +590,11 @@ export class IterablePlayer implements Player {
     await this.#playbackIterator?.return?.();
 
     // set the playIterator to the seek time
+    await this.#bufferedSource.stopProducer();
     await this.#iterableSource.stopProducer();
 
     log.debug("Initializing forward iterator from", next);
-    this.#playbackIterator = this.#iterableSource.messageIterator({
+    this.#playbackIterator = this.#bufferedSource.messageIterator({
       topics: this.#allTopics,
       start: next,
       consumptionType: "partial",
@@ -630,7 +637,7 @@ export class IterablePlayer implements Player {
     }
 
     log.debug("Initializing forward iterator from", this.#start);
-    this.#playbackIterator = this.#iterableSource.messageIterator({
+    this.#playbackIterator = this.#bufferedSource.messageIterator({
       topics: this.#allTopics,
       start: this.#start,
       consumptionType: "partial",
@@ -722,7 +729,7 @@ export class IterablePlayer implements Player {
 
     try {
       this.#abort = new AbortController();
-      const messages = await this.#iterableSource.getBackfillMessages({
+      const messages = await this.#bufferedSource.getBackfillMessages({
         topics: this.#allTopics,
         time: targetTime,
         abortSignal: this.#abort.signal,
@@ -1054,6 +1061,8 @@ export class IterablePlayer implements Player {
     this.#isPlaying = false;
     await this.#blockLoader?.stopLoading();
     await this.#blockLoadingProcess;
+    await this.#bufferedSource.stopProducer();
+    await this.#bufferedSource.terminate();
     await this.#iterableSource.stopProducer();
     await this.#iterableSource.terminate?.();
     await this.#playbackIterator?.return?.();
