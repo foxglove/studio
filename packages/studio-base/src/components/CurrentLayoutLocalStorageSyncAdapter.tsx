@@ -17,13 +17,13 @@ import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectio
 import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
 import { migratePanelsState } from "@foxglove/studio-base/services/migrateLayout";
 
+import { LOCAL_STORAGE_STUDIO_LAYOUT_KEY } from "../constants/localStorageKeys";
+
 function selectLayoutData(state: LayoutState) {
   return state.selectedLayout?.data;
 }
 
 const log = Log.getLogger(__filename);
-
-export const LOCAL_STORAGE_STUDIO_LAYOUT_KEY = "studio.layout";
 
 export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
   const { selectedSource } = usePlayerSelection();
