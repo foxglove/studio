@@ -18,10 +18,12 @@ import type {
 } from "./IIterableSource";
 import { IteratorCursor } from "./IteratorCursor";
 
-export class WorkerIterableSourceWorker implements IIterableSource, IWorkerIterableSource {
-  protected _source: IIterableSource;
+export class WorkerIterableSourceWorker<MessageType = unknown>
+  implements IIterableSource<MessageType>, IWorkerIterableSource<MessageType>
+{
+  protected _source: IIterableSource<MessageType>;
 
-  public constructor(source: IIterableSource) {
+  public constructor(source: IIterableSource<MessageType>) {
     this._source = source;
   }
 
@@ -31,7 +33,7 @@ export class WorkerIterableSourceWorker implements IIterableSource, IWorkerItera
 
   public messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> & Comlink.ProxyMarked {
+  ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> & Comlink.ProxyMarked {
     return Comlink.proxy(this._source.messageIterator(args));
   }
 
@@ -40,7 +42,7 @@ export class WorkerIterableSourceWorker implements IIterableSource, IWorkerItera
     // abortSignal is a separate argument so it can be proxied by comlink since AbortSignal is not
     // clonable (and needs to signal across the worker boundary)
     abortSignal?: AbortSignal,
-  ): Promise<MessageEvent[]> {
+  ): Promise<MessageEvent<MessageType>[]> {
     return await this._source.getBackfillMessages({
       ...args,
       abortSignal,
@@ -50,9 +52,9 @@ export class WorkerIterableSourceWorker implements IIterableSource, IWorkerItera
   public getMessageCursor(
     args: Omit<Immutable<MessageIteratorArgs>, "abort">,
     abort?: AbortSignal,
-  ): IMessageCursor & Comlink.ProxyMarked {
+  ): IMessageCursor<MessageType> & Comlink.ProxyMarked {
     const iter = this._source.messageIterator(args);
-    const cursor = new IteratorCursor(iter, abort);
+    const cursor = new IteratorCursor<MessageType>(iter, abort);
     return Comlink.proxy(cursor);
   }
 }

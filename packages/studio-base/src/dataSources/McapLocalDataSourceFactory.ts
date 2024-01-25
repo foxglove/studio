@@ -6,11 +6,10 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  IterablePlayer,
-  WorkerBufferedIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer";
+import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
+import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
 import { DeserializingBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingBufferedIterableSource";
+import { SplitterIterableSource } from "@foxglove/studio-base/players/IterablePlayer/SplitterIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
 
 class McapLocalDataSourceFactory implements IDataSourceFactory {
@@ -26,7 +25,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const source = new WorkerBufferedIterableSource<Uint8Array>({
+    const workerSource = new WorkerIterableSource<Uint8Array>({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -39,9 +38,18 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       initArgs: { file },
     });
 
+    const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
+      readAheadDuration: { sec: 60, nsec: 0 },
+      maxCacheSizeBytes: Math.trunc(2 * 1024 * 1024 * 1024),
+    });
+
+    const source = new DeserializingBufferedIterableSource(
+      new SplitterIterableSource<Uint8Array>(workerSource, rawBufferedSource),
+    );
+
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
-      source: new DeserializingBufferedIterableSource(source),
+      source,
       name: file.name,
       sourceId: this.id,
     });

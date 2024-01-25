@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import * as _ from "lodash-es";
 
 import { Condvar } from "@foxglove/den/async";
 import { VecQueue } from "@foxglove/den/collection";
@@ -12,7 +13,7 @@ import { Time, MessageEvent, Immutable } from "@foxglove/studio";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
 import { CachingIterableSource } from "./CachingIterableSource";
-import { IBufferedIterableSource } from "./IBufferedIterableSource";
+import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -318,6 +319,22 @@ class BufferedIterableSource<MessageType = unknown>
     args: GetBackfillMessagesArgs,
   ): Promise<MessageEvent<MessageType>[]> {
     return await this.#source.getBackfillMessages(args);
+  }
+
+  public async onLoadedRangesChange(
+    rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
+    options?: { minIntervalMs: number },
+  ): Promise<void> {
+    const throttledEventHandler = _.throttle(
+      async () => {
+        rangeChangeHandler({
+          cacheSizeInBytes: await this.getCacheSize(),
+          ranges: await this.loadedRanges(),
+        });
+      },
+      options?.minIntervalMs ?? 50,
+    );
+    this.on("loadedRangesChange", throttledEventHandler);
   }
 }
 

@@ -27,8 +27,10 @@ type ConstructorArgs = {
   initArgs: IterableSourceInitializeArgs;
 };
 
-export class WorkerIterableSource<T extends IWorkerIterableSource = WorkerIterableSourceWorker>
-  implements IIterableSource
+export class WorkerIterableSource<
+  MessageType = unknown,
+  T extends IWorkerIterableSource<MessageType> = WorkerIterableSourceWorker<MessageType>,
+> implements IIterableSource<MessageType>
 {
   readonly #args: ConstructorArgs;
 
@@ -55,7 +57,7 @@ export class WorkerIterableSource<T extends IWorkerIterableSource = WorkerIterab
 
   public messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> {
     if (this._sourceWorkerRemote == undefined) {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
@@ -85,7 +87,9 @@ export class WorkerIterableSource<T extends IWorkerIterableSource = WorkerIterab
     })();
   }
 
-  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<MessageType>[]> {
     if (this._sourceWorkerRemote == undefined) {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
@@ -99,7 +103,7 @@ export class WorkerIterableSource<T extends IWorkerIterableSource = WorkerIterab
 
   public getMessageCursor(
     args: Immutable<MessageIteratorArgs & { abort?: AbortSignal }>,
-  ): IMessageCursor {
+  ): IMessageCursor<MessageType> {
     if (this._sourceWorkerRemote == undefined) {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
@@ -110,7 +114,7 @@ export class WorkerIterableSource<T extends IWorkerIterableSource = WorkerIterab
     const { abort, ...rest } = args;
     const messageCursorPromise = this._sourceWorkerRemote.getMessageCursor(rest, abort);
 
-    const cursor: IMessageCursor = {
+    const cursor: IMessageCursor<MessageType> = {
       async next() {
         const messageCursor = await messageCursorPromise;
         return await messageCursor.next();
