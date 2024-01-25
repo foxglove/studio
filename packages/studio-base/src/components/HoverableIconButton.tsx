@@ -58,7 +58,6 @@ const HoverableIconButton = forwardRef<HTMLButtonElement, Props>((props, ref) =>
     if (activeIcon != undefined) {
       return hovered ? activeIcon : icon;
     }
-
     return icon;
   }, [activeIcon, hovered, icon]);
 
