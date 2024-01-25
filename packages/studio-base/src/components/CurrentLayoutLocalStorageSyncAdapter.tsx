@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useDebounce } from "use-debounce";
 
 import Log from "@foxglove/log";
+import { LOCAL_STORAGE_STUDIO_LAYOUT_KEY } from "@foxglove/studio-base/constants/localStorageKeys";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -16,8 +17,6 @@ import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/a
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
 import { migratePanelsState } from "@foxglove/studio-base/services/migrateLayout";
-
-import { LOCAL_STORAGE_STUDIO_LAYOUT_KEY } from "../constants/localStorageKeys";
 
 function selectLayoutData(state: LayoutState) {
   return state.selectedLayout?.data;
