@@ -129,13 +129,8 @@ export const WithALongTruncatedPathAndAutoSize: Story = {
     </div>
   ),
   args: {
-    items: [
-      { value: "/abcdefghi_jklmnop.abcdefghi_jklmnop[:]{some_id==1297193}.isSomething" },
-      { value: "/abcdefghi_jklmnop.abcdefghi_jklmnop[:]{some_id==1297194}.isSomething" },
-      { value: "/abcdefghi_jklmnop.abcdefghi_jklmnop[:]{some_id==1297195}.isSomething" },
-    ],
+    items: [],
     value: "/abcdefghi_jklmnop.abcdefghi_jklmnop[:]{some_id==1297193}.isSomething",
-    filterText: "/abcdefghi_jklmnop.abcdefghi_jklmnop[:]{",
     autoSize: true,
   },
   name: "with a long truncated path (and autoSize)",
