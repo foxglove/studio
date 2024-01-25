@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Tooltip as MuiTooltip, TooltipProps } from "@mui/material";
-import { Instance } from "@popperjs/core";
-import { MouseEvent, useCallback, useMemo, useRef } from "react";
+import { MouseEvent, useCallback, useMemo } from "react";
 
 /**
  * This component exists as result of a team preference to close the
@@ -12,13 +11,20 @@ import { MouseEvent, useCallback, useMemo, useRef } from "react";
  */
 
 export function Tooltip(props: TooltipProps): JSX.Element {
-  const { children, PopperProps, ...rest } = props;
+  const { children, ...rest } = props;
+  const [open, setOpen] = React.useState(false);
 
-  const popperRef = useRef<Instance>(ReactNull);
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
 
   const handleChildClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      popperRef.current?.destroy();
+      handleClose();
       children.props.onClick?.(event);
     },
     [children.props],
@@ -30,7 +36,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
   );
 
   return (
-    <MuiTooltip {...rest} PopperProps={{ ...PopperProps, popperRef }}>
+    <MuiTooltip {...rest} open={open} onOpen={handleOpen} onClose={handleClose}>
       {clonedChildren}
     </MuiTooltip>
   );
