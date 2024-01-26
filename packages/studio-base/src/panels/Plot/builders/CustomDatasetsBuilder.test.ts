@@ -2,13 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as Comlink from "comlink";
-import EventEmitter from "eventemitter3";
 import * as _ from "lodash-es";
 
 import { unwrap } from "@foxglove/den/monads";
+import { makeComlinkWorkerMock } from "@foxglove/den/testing";
+import { parseMessagePath } from "@foxglove/message-path";
 import { MessageEvent } from "@foxglove/studio";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageBlock,
   PlayerPresence,
@@ -21,61 +20,9 @@ import { CustomDatasetsBuilderImpl } from "./CustomDatasetsBuilderImpl";
 import { SeriesConfigKey, SeriesItem } from "./IDatasetsBuilder";
 import { PlotPath } from "../config";
 
-class WorkerEndpoint extends EventEmitter {
-  #client: Worker;
-
-  public constructor(client: Worker) {
-    super();
-
-    this.#client = client;
-  }
-
-  public postMessage(msg: unknown): void {
-    this.#client.emit("message", {
-      data: msg,
-    });
-  }
-
-  public addEventListener(event: string, fn: () => void): void {
-    this.on(event, fn);
-  }
-
-  public removeEventListener(event: string, fn: () => void): void {
-    this.off(event, fn);
-  }
-}
-
-class Worker extends EventEmitter {
-  #server: WorkerEndpoint;
-  public constructor() {
-    super();
-
-    this.#server = new WorkerEndpoint(this);
-    Comlink.expose(new CustomDatasetsBuilderImpl(), this.#server);
-  }
-
-  public postMessage(msg: unknown): void {
-    this.#server.emit("message", {
-      data: msg,
-    });
-  }
-
-  public addEventListener(event: string, fn: () => void): void {
-    this.on(event, fn);
-  }
-
-  public removeEventListener(event: string, fn: () => void): void {
-    this.off(event, fn);
-  }
-
-  public terminate() {
-    // no-op
-  }
-}
-
 Object.defineProperty(global, "Worker", {
   writable: true,
-  value: Worker,
+  value: makeComlinkWorkerMock(() => new CustomDatasetsBuilderImpl()),
 });
 
 function groupByTopic(events: MessageEvent[]): Record<string, MessageEvent[]> {
@@ -86,7 +33,7 @@ function buildSeriesItems(
   paths: (Partial<PlotPath> & { key?: string; value: string })[],
 ): SeriesItem[] {
   return paths.map((item, idx) => {
-    const parsed = unwrap(parseRosPath(item.value));
+    const parsed = unwrap(parseMessagePath(item.value));
     const key = (item.key ?? String(idx)) as SeriesConfigKey;
 
     return {
@@ -141,7 +88,7 @@ describe("CustomDatasetsBuilder", () => {
   it("should dataset from current messages", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -262,7 +209,7 @@ describe("CustomDatasetsBuilder", () => {
   it("should build updates from blocks", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -392,7 +339,7 @@ describe("CustomDatasetsBuilder", () => {
   it.each(["current", "blocks"] as const)("combines all values from arrays (%s)", async (type) => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.values[:].val"));
+    builder.setXPath(parseMessagePath("/foo.values[:].val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -520,7 +467,7 @@ describe("CustomDatasetsBuilder", () => {
   it("supports toggling series enabled state", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -612,11 +559,11 @@ describe("CustomDatasetsBuilder", () => {
   it("leaves gaps in datasetsByConfigIndex for missing series", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries([
       {
         configIndex: 3,
-        parsed: parseRosPath("/foo.val")!,
+        parsed: parseMessagePath("/foo.val")!,
         color: "red",
         contrastColor: "blue",
         enabled: true,

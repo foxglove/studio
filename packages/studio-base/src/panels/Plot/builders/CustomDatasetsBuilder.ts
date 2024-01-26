@@ -4,8 +4,9 @@
 
 import * as Comlink from "comlink";
 
+import { ComlinkWrap } from "@foxglove/den/worker";
+import { MessagePath } from "@foxglove/message-path";
 import { Immutable, MessageEvent } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { PlayerState } from "@foxglove/studio-base/players/types";
@@ -34,18 +35,17 @@ type CustomDatasetsSeriesItem = {
 
 // If the datasets builder is garbage collected we also need to cleanup the worker
 // This registry ensures the worker is cleaned up when the builder is garbage collected
-const registry = new FinalizationRegistry<Worker>((worker) => {
-  worker.terminate();
+const registry = new FinalizationRegistry<() => void>((dispose) => {
+  dispose();
 });
 
 export class CustomDatasetsBuilder implements IDatasetsBuilder {
-  #xParsedPath?: Immutable<RosPath>;
+  #xParsedPath?: Immutable<MessagePath>;
   #xValuesCursor?: BlockTopicCursor;
 
-  #datasetsBuilderWorker: Worker;
   #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<CustomDatasetsBuilderImpl>>;
 
-  #pendingDataDispatch: Immutable<UpdateDataAction>[] = [];
+  #pendingDispatch: Immutable<UpdateDataAction>[] = [];
 
   #lastSeekTime = 0;
 
@@ -55,13 +55,15 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
   #xFullBounds?: Bounds1D;
 
   public constructor() {
-    this.#datasetsBuilderWorker = new Worker(
+    const worker = new Worker(
       // foxglove-depcheck-used: babel-plugin-transform-import-meta
       new URL("./CustomDatasetsBuilderImpl.worker", import.meta.url),
     );
-    this.#datasetsBuilderRemote = Comlink.wrap(this.#datasetsBuilderWorker);
+    const { remote, dispose } =
+      ComlinkWrap<Comlink.RemoteObject<CustomDatasetsBuilderImpl>>(worker);
 
-    registry.register(this, this.#datasetsBuilderWorker);
+    this.#datasetsBuilderRemote = remote;
+    registry.register(this, dispose);
   }
 
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
@@ -76,7 +78,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     const msgEvents = activeData.messages;
     if (msgEvents.length > 0) {
       if (didSeek) {
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "reset-current-x",
         });
         this.#xCurrentBounds = undefined;
@@ -89,7 +91,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
         const pathItems = readMessagePathItems(msgEvents, this.#xParsedPath, mathFn);
 
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "append-current-x",
           items: pathItems,
         });
@@ -104,14 +106,14 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           ? mathFunctions[series.config.parsed.modifier]
           : undefined;
         if (didSeek) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-current",
             series: series.config.key,
           });
         }
 
         const pathItems = readMessagePathItems(msgEvents, series.config.parsed, mathFn);
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "append-current",
           series: series.config.key,
           items: pathItems,
@@ -127,7 +129,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
 
         if (this.#xValuesCursor.nextWillReset(blocks)) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-full-x",
           });
         }
@@ -136,7 +138,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
         while ((messageEvents = this.#xValuesCursor.next(blocks)) != undefined) {
           const pathItems = readMessagePathItems(messageEvents, this.#xParsedPath, mathFn);
 
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "append-full-x",
             items: pathItems,
           });
@@ -153,7 +155,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
 
         if (series.blockCursor.nextWillReset(blocks)) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-full",
             series: series.config.key,
           });
@@ -163,7 +165,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
         while ((messageEvents = series.blockCursor.next(blocks)) != undefined) {
           const pathItems = readMessagePathItems(messageEvents, series.config.parsed, mathFn);
 
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "append-full",
             series: series.config.key,
             items: pathItems,
@@ -183,7 +185,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     return unionBounds1D(this.#xCurrentBounds, this.#xFullBounds);
   }
 
-  public setXPath(path: Immutable<RosPath> | undefined): void {
+  public setXPath(path: Immutable<MessagePath> | undefined): void {
     if (JSON.stringify(path) === JSON.stringify(this.#xParsedPath)) {
       return;
     }
@@ -195,11 +197,11 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       this.#xValuesCursor = undefined;
     }
 
-    this.#pendingDataDispatch.push({
+    this.#pendingDispatch.push({
       type: "reset-current-x",
     });
 
-    this.#pendingDataDispatch.push({
+    this.#pendingDispatch.push({
       type: "reset-full-x",
     });
   }
@@ -213,15 +215,18 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
       };
     });
 
-    void this.#datasetsBuilderRemote.setSeries(series);
+    this.#pendingDispatch.push({
+      type: "update-series-config",
+      seriesItems: series,
+    });
   }
 
   public async getViewportDatasets(
     viewport: Immutable<Viewport>,
   ): Promise<GetViewportDatasetsResult> {
-    const dispatch = this.#pendingDataDispatch;
+    const dispatch = this.#pendingDispatch;
     if (dispatch.length > 0) {
-      this.#pendingDataDispatch = [];
+      this.#pendingDispatch = [];
       await this.#datasetsBuilderRemote.updateData(dispatch);
     }
 
@@ -235,7 +240,7 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
 
 function readMessagePathItems(
   events: Immutable<MessageEvent[]>,
-  path: Immutable<RosPath>,
+  path: Immutable<MessagePath>,
   mathFunction?: MathFunction,
 ): ValueItem[] {
   const out = [];
