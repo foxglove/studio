@@ -80,7 +80,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     this.#lastSeekTime = activeData.lastSeekTime;
 
     const msgEvents = activeData.messages;
-    const numDatums = 0;
+    let datasetsChanged = false;
     if (msgEvents.length > 0) {
       for (const series of this.#series) {
         const mathFn = series.config.parsed.modifier
@@ -102,6 +102,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           mathFn,
         );
 
+        datasetsChanged ||= pathItems.length > 0;
         this.#pendingDispatch.push({
           type: "append-current",
           series: series.config.key,
@@ -112,7 +113,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
 
     return {
       range: { min: 0, max: toSec(subtractTime(activeData.endTime, activeData.startTime)) },
-      numDatums,
+      datasetsChanged,
     };
   }
 

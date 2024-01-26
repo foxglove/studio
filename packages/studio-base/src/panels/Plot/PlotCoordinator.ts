@@ -171,14 +171,14 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
     const newRange = handlePlayerStateResult.range;
 
-    // If the range has changed we will trigger a render to incorporate the new range
+    // If the range has changed we will trigger a render to incorporate the new range into the chart
+    // axis
     if (!_.isEqual(this.#datasetRange, newRange)) {
       this.#datasetRange = handlePlayerStateResult.range;
       this.#queueDispatchRender();
     }
 
-    // The underlying dataset may have changed so we downsample
-    if (handlePlayerStateResult.numDatums > 0) {
+    if (handlePlayerStateResult.datasetsChanged) {
       this.#queueDispatchDownsample();
     }
   }
@@ -458,7 +458,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
   /** Dispatch getting the latest downsampled datasets and then queue rendering them */
   async #dispatchDownsample(): Promise<void> {
-    console.log("downsample");
     if (this.#isDestroyed()) {
       return;
     }

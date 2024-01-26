@@ -72,8 +72,10 @@ export type GetViewportDatasetsResult = {
 };
 
 export type HandlePlayerStateResult = {
-  range: Bounds1D;
-  numDatums: number;
+  /** The x-axis range of the dataset if it is known */
+  range?: Bounds1D;
+  /** True if the datasets were changed (i.e. the builder extracted new data from the state) */
+  datasetsChanged: boolean;
 };
 
 /**
