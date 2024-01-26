@@ -15,6 +15,7 @@ import {
   MenuItem,
   Autocomplete as MuiAutocomplete,
   Popper,
+  PopperProps,
   TextField,
   TextFieldProps,
   alpha,
@@ -134,8 +135,9 @@ function itemToFzfResult<T>(item: T): FzfResultItem<T> {
   };
 }
 
-const PopperMy = function (props) {
-  return <Popper {...props} style={{ minWidth: props.style.width ?? 0 }} placement="top-start" />;
+const CustomPopper = function (props: PopperProps) {
+  const width = props.style?.width ?? 0;
+  return <Popper {...props} style={{ minWidth: width }} placement="top-start" />;
 };
 
 /**
@@ -283,7 +285,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         return getItemValue(item.item);
       }}
       filterOptions={filterOptions}
-      PopperComponent={PopperMy}
+      PopperComponent={CustomPopper}
       ListboxComponent={ReactWindowListboxAdapter}
       onChange={onSelect}
       onInputChange={onChange}

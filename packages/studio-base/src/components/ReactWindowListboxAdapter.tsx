@@ -20,14 +20,9 @@ function renderRow(props: ListChildComponentProps) {
   };
 
   return (
-    <>
-      <Typography component="li" noWrap style={inlineStyle}>
-        {dataSet}
-      </Typography>
-      <Typography component="li" noWrap style={{ visibility: "hidden" }}>
-        {dataSet}
-      </Typography>
-    </>
+    <Typography component="li" noWrap style={inlineStyle}>
+      {dataSet}
+    </Typography>
   );
 }
 
@@ -55,11 +50,19 @@ export const ReactWindowListboxAdapter = React.forwardRef<
     },
   );
 
+  const longestChild = (children as React.ReactChild[]).reduce((prev, item) => {
+    if (item.key.length > prev.length) {
+      return item.key;
+    }
+    return prev;
+  }, "");
+
   const totalHeight =
     2 * Constants.LISTBOX_PADDING + Constants.ROW_HEIGHT * _.clamp(itemData.length, 16);
 
   return (
     <div ref={ref}>
+      <div style={{ visibility: "hidden", height: 0 }}>{longestChild}</div>
       <OuterElementContext.Provider value={other}>
         <FixedSizeList
           height={totalHeight}
