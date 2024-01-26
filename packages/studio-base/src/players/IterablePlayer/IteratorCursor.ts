@@ -1,7 +1,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import * as Comlink from "comlink";
 
 import { compare, add as addTime } from "@foxglove/rostime";
 import { Time } from "@foxglove/studio";
@@ -11,7 +10,7 @@ import type { IMessageCursor, IteratorResult } from "./IIterableSource";
 const TIME_ZERO = Object.freeze({ sec: 0, nsec: 0 });
 
 /// IteratorCursor implements a IMessageCursor interface on top of an AsyncIterable
-class IteratorCursor<MessageType = unknown> implements IMessageCursor {
+class IteratorCursor<MessageType = unknown> implements IMessageCursor<MessageType> {
   #iter: AsyncIterableIterator<Readonly<IteratorResult<MessageType>>>;
   // readUntil reads from the iterator inclusive of end time. To do this, it reads from the iterator
   // until it receives a receiveTime after end time to signal it has received all the messages
@@ -48,7 +47,6 @@ class IteratorCursor<MessageType = unknown> implements IMessageCursor {
     }
 
     const results: IteratorResult<MessageType>[] = [firstResult];
-    const transfers: Transferable[] = [];
 
     let cutoffTime: Time = TIME_ZERO;
     switch (firstResult.type) {
@@ -56,9 +54,6 @@ class IteratorCursor<MessageType = unknown> implements IMessageCursor {
         cutoffTime = addTime(firstResult.stamp, { sec: 0, nsec: durationMs * 1e6 });
         break;
       case "message-event":
-        if (firstResult.msgEvent.message instanceof Uint8Array) {
-          transfers.push(firstResult.msgEvent.message.buffer);
-        }
         cutoffTime = addTime(firstResult.msgEvent.receiveTime, { sec: 0, nsec: durationMs * 1e6 });
         break;
     }
@@ -78,16 +73,13 @@ class IteratorCursor<MessageType = unknown> implements IMessageCursor {
         break;
       }
       if (result.type === "message-event") {
-        if (result.msgEvent.message instanceof Uint8Array) {
-          transfers.push(result.msgEvent.message.buffer);
-        }
         if (compare(result.msgEvent.receiveTime, cutoffTime) > 0) {
           break;
         }
       }
     }
 
-    return Comlink.transfer(results, transfers); // ACHIM: This has to be done differently. If this is not used in a worker then the transfer cache will explode at some point -> OOM
+    return results;
   }
 
   public async readUntil(end: Time): ReturnType<IMessageCursor<MessageType>["readUntil"]> {

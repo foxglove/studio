@@ -12,11 +12,11 @@ import { McapIterableSource } from "./McapIterableSource";
 export function initialize(args: IterableSourceInitializeArgs): WorkerIterableSourceWorker {
   if (args.file) {
     const source = new McapIterableSource({ type: "file", file: args.file });
-    const wrapped = new WorkerIterableSourceWorker(source);
+    const wrapped = new WorkerIterableSourceWorker(source, { isRawSource: true });
     return Comlink.proxy(wrapped);
   } else if (args.url) {
     const source = new McapIterableSource({ type: "url", url: args.url });
-    const wrapped = new WorkerIterableSourceWorker(source);
+    const wrapped = new WorkerIterableSourceWorker(source, { isRawSource: true });
     return Comlink.proxy(wrapped);
   }
 

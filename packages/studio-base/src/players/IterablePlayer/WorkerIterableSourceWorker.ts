@@ -6,6 +6,7 @@ import * as Comlink from "comlink";
 
 import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
 import { Immutable, MessageEvent } from "@foxglove/studio";
+import { ComlinkTransferIteratorCursor } from "@foxglove/studio-base/players/IterablePlayer/ComlinkTransferIteratorCursor";
 
 import type {
   GetBackfillMessagesArgs,
@@ -21,9 +22,11 @@ export class WorkerIterableSourceWorker<MessageType = unknown>
   implements IIterableSource<MessageType>
 {
   protected _source: IIterableSource<MessageType>;
+  protected _isRawSource;
 
-  public constructor(source: IIterableSource<MessageType>) {
+  public constructor(source: IIterableSource<MessageType>, options?: { isRawSource?: boolean }) {
     this._source = source;
+    this._isRawSource = options?.isRawSource ?? false;
   }
 
   public async initialize(): Promise<Initalization> {
@@ -53,8 +56,15 @@ export class WorkerIterableSourceWorker<MessageType = unknown>
     abort?: AbortSignal,
   ): IMessageCursor<MessageType> & Comlink.ProxyMarked {
     const iter = this._source.messageIterator(args);
-    const cursor = new IteratorCursor<MessageType>(iter, abort);
-    return Comlink.proxy(cursor);
+    if (this._isRawSource) {
+      const cursor = new ComlinkTransferIteratorCursor(
+        new IteratorCursor<MessageType>(iter, abort),
+      );
+      return Comlink.proxy(cursor);
+    } else {
+      const cursor = new IteratorCursor<MessageType>(iter, abort);
+      return Comlink.proxy(cursor);
+    }
   }
 }
 
