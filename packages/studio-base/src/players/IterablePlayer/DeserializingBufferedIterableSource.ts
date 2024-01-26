@@ -3,11 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { DeserializingIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingIterableSource";
-import {
-  BufferedRanges,
-  IBufferedIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
 import { Initalization } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
+
+import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
 
 export class DeserializingBufferedIterableSource
   extends DeserializingIterableSource

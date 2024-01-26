@@ -9,13 +9,10 @@ import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add, compare, subtract, toNanoSec } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
-import {
-  BufferedRanges,
-  IBufferedIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
 import { TopicSelection } from "@foxglove/studio-base/players/types";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
+import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,

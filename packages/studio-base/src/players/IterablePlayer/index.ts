@@ -4,3 +4,6 @@
 
 export * from "./IterablePlayer";
 export * from "./WorkerIterableSource";
+export * from "./BufferedIterableSource";
+export * from "./DeserializingBufferedIterableSource";
+export * from "./DeserializingIterableSource";

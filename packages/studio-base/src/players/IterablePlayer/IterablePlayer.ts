@@ -20,10 +20,6 @@ import {
   toString,
 } from "@foxglove/rostime";
 import { Immutable, MessageEvent, ParameterValue } from "@foxglove/studio";
-import {
-  BufferedRanges,
-  IBufferedIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -45,6 +41,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import delay from "@foxglove/studio-base/util/delay";
 
 import { BlockLoader } from "./BlockLoader";
+import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
 import { IIterableSource, IteratorResult } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);

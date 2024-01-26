@@ -7,7 +7,6 @@ import * as _ from "lodash-es";
 
 import { signal } from "@foxglove/den/async";
 import { fromSec } from "@foxglove/rostime";
-import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
 import {
   MessageEvent,
   PlayerCapabilities,
@@ -16,6 +15,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { mockTopicSelection } from "@foxglove/studio-base/test/mocks/mockTopicSelection";
 
+import { BufferedIterableSource } from "./BufferedIterableSource";
 import {
   IIterableSource,
   Initalization,

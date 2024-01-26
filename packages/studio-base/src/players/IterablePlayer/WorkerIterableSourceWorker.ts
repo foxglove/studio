@@ -6,8 +6,8 @@ import * as Comlink from "comlink";
 
 import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
 import { Immutable, MessageEvent } from "@foxglove/studio";
-import { ComlinkTransferIteratorCursor } from "@foxglove/studio-base/players/IterablePlayer/ComlinkTransferIteratorCursor";
 
+import { ComlinkTransferIteratorCursor } from "./ComlinkTransferIteratorCursor";
 import type {
   GetBackfillMessagesArgs,
   IIterableSource,

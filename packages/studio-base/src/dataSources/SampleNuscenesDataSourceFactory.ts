@@ -6,10 +6,13 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
-import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
-import { DeserializingBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingBufferedIterableSource";
-import { DeserializingIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingIterableSource";
+import {
+  IterablePlayer,
+  WorkerIterableSource,
+  BufferedIterableSource,
+  DeserializingBufferedIterableSource,
+  DeserializingIterableSource,
+} from "@foxglove/studio-base/players/IterablePlayer";
 
 import SampleNuscenesLayout from "./SampleNuscenesLayout.json";
 
