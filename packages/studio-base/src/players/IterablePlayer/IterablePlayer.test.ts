@@ -7,6 +7,7 @@ import * as _ from "lodash-es";
 
 import { signal } from "@foxglove/den/async";
 import { fromSec } from "@foxglove/rostime";
+import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
 import {
   MessageEvent,
   PlayerCapabilities,
@@ -113,6 +114,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -186,6 +188,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -290,6 +293,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -371,6 +375,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -455,6 +460,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -576,6 +582,7 @@ describe("IterablePlayer", () => {
     const source = new DuplicateTopicsSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -598,6 +605,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -661,6 +669,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -709,6 +718,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -758,6 +768,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -806,6 +817,7 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });

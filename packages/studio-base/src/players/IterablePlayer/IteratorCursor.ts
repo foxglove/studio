@@ -87,7 +87,7 @@ class IteratorCursor<MessageType = unknown> implements IMessageCursor {
       }
     }
 
-    return Comlink.transfer(results, transfers); // ACHIM: Dangerous!!!
+    return Comlink.transfer(results, transfers); // ACHIM: This has to be done differently. If this is not used in a worker then the transfer cache will explode at some point -> OOM
   }
 
   public async readUntil(end: Time): ReturnType<IMessageCursor<MessageType>["readUntil"]> {

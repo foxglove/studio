@@ -41,9 +41,11 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
     });
 
     const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
-      readAheadDuration: { sec: 60, nsec: 0 },
+      readAheadDuration: { sec: 120, nsec: 0 },
       maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
     });
+
+    // Achim: Both deserializing sources have to be initialized (to create deserializers)
     const source = new DeserializingIterableSource(workerSource);
     const bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
 
