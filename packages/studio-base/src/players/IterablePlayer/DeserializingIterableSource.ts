@@ -89,10 +89,6 @@ export class DeserializingIterableSource implements IIterableSource {
   }
 
   public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
-    // An AbortSignal is not clonable, so we remove it from the args and send it as a separate argumet
-    // to our worker getBackfillMessages call. Our installed Comlink handler for AbortSignal handles
-    // making the abort signal available within the worker.
-
     const deserialize = (rawMessages: MessageEvent<Uint8Array>[]) => {
       return rawMessages.map((rawMsg) => this.#deserializeMessage(rawMsg));
     };
@@ -101,6 +97,8 @@ export class DeserializingIterableSource implements IIterableSource {
 
   #deserializeMessage(rawMessageEvent: MessageEvent<Uint8Array>): MessageEvent {
     const { schemaName, message } = rawMessageEvent;
+
+    // ACHIM: Message slicing has to be added here
     const deserialize = this.#deserializersBySchema[schemaName];
     if (!deserialize) {
       // ACHIM: Add problem or something like that?

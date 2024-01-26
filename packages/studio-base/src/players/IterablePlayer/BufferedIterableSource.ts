@@ -31,10 +31,8 @@ type Options = {
   readAheadDuration?: Time;
   // The minimum duration to buffer before playback resumes
   minReadAheadDuration?: Time;
-
+  // Max. cache size in bytes
   maxCacheSizeBytes?: number;
-
-  yieldCopiedMessage?: boolean;
 };
 
 interface EventTypes {
@@ -295,17 +293,7 @@ class BufferedIterableSource<MessageType = unknown>
           // this notification is picked up on the next tick.
           self.#writeSignal.notifyAll();
 
-          if (item.type === "message-event" && item.msgEvent.message instanceof Uint8Array) {
-            yield {
-              ...item,
-              msgEvent: {
-                ...item.msgEvent,
-                message: new Uint8Array(item.msgEvent.message) as MessageType,
-              },
-            };
-          } else {
-            yield item;
-          }
+          yield item;
         }
       } finally {
         log.debug("ending buffered message iterator");

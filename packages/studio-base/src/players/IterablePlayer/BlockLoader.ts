@@ -17,13 +17,11 @@ import {
   toNanoSec,
 } from "@foxglove/rostime";
 import { Immutable, MessageEvent } from "@foxglove/studio";
-import {
-  IIterableSource,
-  MessageIteratorArgs,
-} from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { IteratorCursor } from "@foxglove/studio-base/players/IterablePlayer/IteratorCursor";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import { MessageBlock, Progress, TopicSelection } from "@foxglove/studio-base/players/types";
+
+import { IIterableSource, MessageIteratorArgs } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
