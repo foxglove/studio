@@ -9,6 +9,10 @@ import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add, compare, subtract, toNanoSec } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
+import {
+  BufferedRanges,
+  IBufferedIterableSource,
+} from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
 import { TopicSelection } from "@foxglove/studio-base/players/types";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
@@ -71,7 +75,7 @@ interface EventTypes {
  */
 class CachingIterableSource<MessageType>
   extends EventEmitter<EventTypes>
-  implements IIterableSource<MessageType>
+  implements IBufferedIterableSource<MessageType>
 {
   #source: IIterableSource<MessageType>;
 
@@ -111,6 +115,10 @@ class CachingIterableSource<MessageType>
   public async initialize(): Promise<Initalization> {
     this.#initResult = await this.#source.initialize();
     return this.#initResult;
+  }
+
+  public init(initResult: Initalization): void {
+    this.#initResult = initResult;
   }
 
   public async terminate(): Promise<void> {
@@ -685,6 +693,34 @@ class CachingIterableSource<MessageType>
     }
 
     return idx;
+  }
+
+  public async stopProducer(): Promise<void> {}
+
+  public getLoadedRanges(): BufferedRanges {
+    return {
+      cacheSizeInBytes: this.getCacheSize(),
+      ranges: this.loadedRanges(),
+    };
+  }
+
+  public subscribeToLoadedRangeChanges(
+    rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
+  ): { unsubscribe: () => void } {
+    const handler = () => {
+      rangeChangeHandler({
+        cacheSizeInBytes: this.getCacheSize(),
+        ranges: this.loadedRanges(),
+      });
+    };
+
+    this.on("loadedRangesChange", handler);
+
+    return {
+      unsubscribe: () => {
+        this.off("loadedRangesChange", handler);
+      },
+    };
   }
 }
 

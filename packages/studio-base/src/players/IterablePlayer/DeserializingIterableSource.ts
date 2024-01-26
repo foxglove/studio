@@ -23,8 +23,10 @@ export class DeserializingIterableSource implements IIterableSource {
   }
 
   public async initialize(): Promise<Initalization> {
-    const initResult = await this._source.initialize();
+    return this.initializeDeserializers(await this._source.initialize());
+  }
 
+  protected initializeDeserializers(initResult: Initalization): Initalization {
     for (const topic of initResult.topics) {
       if (
         topic.messageEncoding != undefined &&

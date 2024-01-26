@@ -463,6 +463,8 @@ export class IterablePlayer implements Player {
     this.#queueEmitState();
 
     try {
+      const initResult = await this.#iterableSource.initialize();
+      this.#bufferedSource.init(initResult);
       const {
         start,
         end,
@@ -473,8 +475,7 @@ export class IterablePlayer implements Player {
         publishersByTopic,
         datatypes,
         name,
-      } = await this.#iterableSource.initialize();
-      await this.#bufferedSource.initialize();
+      } = initResult;
 
       // Prior to initialization, the seekTarget may have been set to an out-of-bounds value
       // This brings the value in bounds

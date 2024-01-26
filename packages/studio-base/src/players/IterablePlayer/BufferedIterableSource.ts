@@ -2,14 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import EventEmitter from "eventemitter3";
-
 import { Condvar } from "@foxglove/den/async";
 import { VecQueue } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add as addTime, clampTime, compare } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
-import { Range } from "@foxglove/studio-base/util/ranges";
 
 import { CachingIterableSource } from "./CachingIterableSource";
 import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
@@ -35,11 +32,6 @@ type Options = {
   maxCacheSizeBytes?: number;
 };
 
-interface EventTypes {
-  /** Dispatched when the loaded ranges have changed. Use `loadedRanges()` to get the new ranges. */
-  loadedRangesChange: () => void;
-}
-
 /**
  * BufferedIterableSource proxies access to IIterableSource. It buffers the messageIterator by
  * reading ahead in the underlying source.
@@ -49,7 +41,6 @@ interface EventTypes {
  * reading from the underlying source and populating the cache.
  */
 class BufferedIterableSource<MessageType = unknown>
-  extends EventEmitter<EventTypes>
   implements IBufferedIterableSource<MessageType>
 {
   #source: CachingIterableSource<MessageType>;
@@ -82,8 +73,6 @@ class BufferedIterableSource<MessageType = unknown>
   #minReadAheadDuration: Time;
 
   public constructor(source: IIterableSource<MessageType>, opt?: Options) {
-    super();
-
     this.#readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
     this.#minReadAheadDuration = opt?.minReadAheadDuration ?? DEFAULT_MIN_READ_AHEAD_DURATION;
     this.#source = new CachingIterableSource<MessageType>(source, {
@@ -93,14 +82,16 @@ class BufferedIterableSource<MessageType = unknown>
     if (compare(this.#readAheadDuration, this.#minReadAheadDuration) < 0) {
       throw new Error("Invariant: readAheadDuration < minReadAheadDuration");
     }
-
-    // pass-through the range change event
-    this.#source.on("loadedRangesChange", () => this.emit("loadedRangesChange"));
   }
 
   public async initialize(): Promise<Initalization> {
     this.#initResult = await this.#source.initialize();
     return this.#initResult;
+  }
+
+  public init(initResult: Initalization): void {
+    this.#initResult = initResult;
+    this.#source.init(initResult);
   }
 
   async #startProducer(args: Immutable<MessageIteratorArgs>): Promise<void> {
@@ -222,14 +213,6 @@ class BufferedIterableSource<MessageType = unknown>
     this.#producer = undefined;
   }
 
-  public loadedRanges(): Range[] {
-    return this.#source.loadedRanges();
-  }
-
-  public getCacheSize(): number {
-    return this.#source.getCacheSize();
-  }
-
   public messageIterator(
     args: Immutable<MessageIteratorArgs>,
   ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> {
@@ -309,29 +292,13 @@ class BufferedIterableSource<MessageType = unknown>
   }
 
   public getLoadedRanges(): BufferedRanges {
-    return {
-      cacheSizeInBytes: this.getCacheSize(),
-      ranges: this.loadedRanges(),
-    };
+    return this.#source.getLoadedRanges();
   }
 
   public subscribeToLoadedRangeChanges(
     rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
   ): { unsubscribe: () => void } {
-    const handler = () => {
-      rangeChangeHandler({
-        cacheSizeInBytes: this.getCacheSize(),
-        ranges: this.loadedRanges(),
-      });
-    };
-
-    this.on("loadedRangesChange", handler);
-
-    return {
-      unsubscribe: () => {
-        this.off("loadedRangesChange", handler);
-      },
-    };
+    return this.#source.subscribeToLoadedRangeChanges(rangeChangeHandler);
   }
 }
 

@@ -8,6 +8,8 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
 import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
+import { DeserializingBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingBufferedIterableSource";
+import { DeserializingIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingIterableSource";
 
 import SampleNuscenesLayout from "./SampleNuscenesLayout.json";
 
@@ -24,7 +26,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   ): ReturnType<IDataSourceFactory["initialize"]> {
     const bagUrl = "https://assets.foxglove.dev/NuScenes-v1.0-mini-scene-0061-df24c12.mcap";
 
-    const source = new WorkerIterableSource({
+    const workerSource = new WorkerIterableSource<Uint8Array>({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -37,7 +39,14 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
       initArgs: { url: bagUrl },
     });
 
-    const bufferedSource = new BufferedIterableSource(source);
+    const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
+    const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
+      readAheadDuration: { sec: 120, nsec: 0 },
+      maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
+    });
+
+    const source = new DeserializingIterableSource(workerSource);
+    const bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
 
     return new IterablePlayer({
       source,

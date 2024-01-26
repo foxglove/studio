@@ -11,6 +11,8 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
 import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
+import { DeserializingBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingBufferedIterableSource";
+import { DeserializingIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
 
 const initWorkers: Record<string, () => Worker> = {
@@ -94,8 +96,20 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
       throw new Error(`Unsupported extension: ${extension}`);
     }
 
-    const source = new WorkerIterableSource({ initWorker, initArgs: { url } });
-    const bufferedSource = new BufferedIterableSource(source);
+    let source, bufferedSource;
+    if (extension === ".mcap") {
+      const workerSource = new WorkerIterableSource<Uint8Array>({ initWorker, initArgs: { url } });
+      const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
+      const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
+        readAheadDuration: { sec: 120, nsec: 0 },
+        maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
+      });
+      source = new DeserializingIterableSource(workerSource);
+      bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
+    } else {
+      source = new WorkerIterableSource({ initWorker, initArgs: { url } });
+      bufferedSource = new BufferedIterableSource(source);
+    }
 
     return new IterablePlayer({
       source,

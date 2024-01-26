@@ -7,6 +7,7 @@ import {
   BufferedRanges,
   IBufferedIterableSource,
 } from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
+import { Initalization } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 
 export class DeserializingBufferedIterableSource
   extends DeserializingIterableSource
@@ -17,6 +18,11 @@ export class DeserializingBufferedIterableSource
   public constructor(source: IBufferedIterableSource<Uint8Array>) {
     super(source);
     this.#bufferedSource = source;
+  }
+
+  public init(initResult: Initalization): void {
+    this.initializeDeserializers(initResult);
+    this.#bufferedSource.init(initResult);
   }
 
   public async stopProducer(): Promise<void> {

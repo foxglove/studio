@@ -2,7 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
+import {
+  IIterableSource,
+  Initalization,
+} from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 
 export type Range = {
   /** inclusive */
@@ -18,6 +21,9 @@ export type BufferedRanges = {
 
 export interface IBufferedIterableSource<MessageType = unknown>
   extends IIterableSource<MessageType> {
+  // Initialize the source without initializing the underyling source which may already have been initialized.
+  init(initResult: Initalization): void;
+
   stopProducer(): Promise<void>;
 
   getLoadedRanges(): BufferedRanges;
