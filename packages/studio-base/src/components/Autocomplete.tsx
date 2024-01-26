@@ -14,6 +14,7 @@
 import {
   MenuItem,
   Autocomplete as MuiAutocomplete,
+  Popper,
   TextField,
   TextFieldProps,
   alpha,
@@ -132,6 +133,10 @@ function itemToFzfResult<T>(item: T): FzfResultItem<T> {
     end: 0,
   };
 }
+
+const PopperMy = function (props) {
+  return <Popper {...props} style={{ minWidth: props.style.width ?? 0 }} placement="top-start" />;
+};
 
 /**
  * <Autocomplete> is a Studio-specific wrapper of MUI autocomplete with support
@@ -278,6 +283,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         return getItemValue(item.item);
       }}
       filterOptions={filterOptions}
+      PopperComponent={PopperMy}
       ListboxComponent={ReactWindowListboxAdapter}
       onChange={onSelect}
       onInputChange={onChange}
