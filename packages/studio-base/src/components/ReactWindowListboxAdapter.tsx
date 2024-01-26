@@ -20,9 +20,14 @@ function renderRow(props: ListChildComponentProps) {
   };
 
   return (
-    <Typography component="li" noWrap style={inlineStyle}>
-      {dataSet}
-    </Typography>
+    <>
+      <Typography component="li" noWrap style={inlineStyle}>
+        {dataSet}
+      </Typography>
+      <Typography component="li" noWrap style={{ visibility: "hidden" }}>
+        {dataSet}
+      </Typography>
+    </>
   );
 }
 
