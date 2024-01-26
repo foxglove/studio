@@ -6,10 +6,8 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  IterablePlayer,
-  WorkerBufferedIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer";
+import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
+import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
 
 import SampleNuscenesLayout from "./SampleNuscenesLayout.json";
 
@@ -26,7 +24,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   ): ReturnType<IDataSourceFactory["initialize"]> {
     const bagUrl = "https://assets.foxglove.dev/NuScenes-v1.0-mini-scene-0061-df24c12.mcap";
 
-    const source = new WorkerBufferedIterableSource({
+    const source = new WorkerIterableSource({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -39,8 +37,11 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
       initArgs: { url: bagUrl },
     });
 
+    const bufferedSource = new BufferedIterableSource(source);
+
     return new IterablePlayer({
       source,
+      bufferedSource,
       isSampleDataSource: true,
       name: "Adapted from nuScenes dataset. Copyright © 2020 nuScenes. https://www.nuscenes.org/terms-of-use",
       metricsCollector: args.metricsCollector,

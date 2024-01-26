@@ -11,27 +11,15 @@ import {
   IteratorResult,
   GetBackfillMessagesArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
+import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 
 export class DeserializingIterableSource implements IIterableSource {
   protected _source: IIterableSource<Uint8Array>;
   #deserializersBySchema: Record<string, (data: ArrayBufferView) => unknown> = {};
+  #messageSizeEstimateByTopic: Record<string, number> = {};
 
   public constructor(source: IIterableSource<Uint8Array>) {
     this._source = source;
-  }
-
-  #deserializeMessage(rawMessageEvent: MessageEvent<Uint8Array>): MessageEvent {
-    const { schemaName, message } = rawMessageEvent;
-    const deserialize = this.#deserializersBySchema[schemaName];
-    if (!deserialize) {
-      // ACHIM: Add problem or something like that?
-      throw new Error(`Failed to find deserializer for schema ${schemaName}`);
-    }
-
-    return {
-      ...rawMessageEvent,
-      message: deserialize(message),
-    };
   }
 
   public async initialize(): Promise<Initalization> {
@@ -64,29 +52,32 @@ export class DeserializingIterableSource implements IIterableSource {
   public messageIterator(
     args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
-    // Rather than messageIterator itself being a generator, we return a generator function. This is
-    // so the setup code above will run when the messageIterator is called rather than when .next()
-    // is called the first time. This behavior is important because we want the producer to start
-    // producing immediately.
     const rawIterator = this._source.messageIterator(args);
-    const deserializersBySchema = this.#deserializersBySchema;
+    const deserializeMsgEvent = (msg: MessageEvent<Uint8Array>) => this.#deserializeMessage(msg);
     return (async function* deserializedIterableGenerator() {
       try {
         for await (const iterResult of rawIterator) {
           if (iterResult.type === "message-event") {
-            const { schemaName, message } = iterResult.msgEvent;
-            const deserialize = deserializersBySchema[schemaName];
-            if (!deserialize) {
-              // ACHIM: Add problem or something like that?
-              throw new Error(`Failed to find deserializer for schema ${schemaName}`);
+            try {
+              const deserializedMsgEvent = deserializeMsgEvent(iterResult.msgEvent);
+              yield {
+                type: iterResult.type,
+                msgEvent: deserializedMsgEvent,
+              };
+            } catch (err) {
+              const connectionId = 1;
+              yield {
+                type: "problem",
+                connectionId,
+                problem: {
+                  severity: "error",
+                  message: `Failed to deserialize message on topic ${
+                    iterResult.msgEvent.topic
+                  }. ${err.toString()}`,
+                  tip: `Check that your bag file is well-formed. It should have a connection record for every connection id referenced from a message record.`,
+                },
+              };
             }
-
-            const deserializedMessage = deserialize(message);
-
-            yield {
-              type: iterResult.type,
-              msgEvent: { ...iterResult.msgEvent, message: deserializedMessage },
-            };
           } else {
             yield iterResult;
           }
@@ -106,5 +97,29 @@ export class DeserializingIterableSource implements IIterableSource {
       return rawMessages.map((rawMsg) => this.#deserializeMessage(rawMsg));
     };
     return await this._source.getBackfillMessages(args).then(deserialize);
+  }
+
+  #deserializeMessage(rawMessageEvent: MessageEvent<Uint8Array>): MessageEvent {
+    const { schemaName, message } = rawMessageEvent;
+    const deserialize = this.#deserializersBySchema[schemaName];
+    if (!deserialize) {
+      // ACHIM: Add problem or something like that?
+      throw new Error(`Failed to find deserializer for schema ${schemaName}`);
+    }
+
+    const deserializedMessage = deserialize(message);
+
+    // Lookup the size estimate for this topic or compute it if not found in the cache.
+    let msgSizeEstimate = this.#messageSizeEstimateByTopic[rawMessageEvent.topic];
+    if (msgSizeEstimate == undefined) {
+      msgSizeEstimate = estimateObjectSize(deserializedMessage);
+      this.#messageSizeEstimateByTopic[rawMessageEvent.topic] = msgSizeEstimate;
+    }
+
+    return {
+      ...rawMessageEvent,
+      message: deserializedMessage,
+      sizeInBytes: Math.max(message.byteLength, msgSizeEstimate),
+    };
   }
 }

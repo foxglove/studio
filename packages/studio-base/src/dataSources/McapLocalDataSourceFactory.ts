@@ -9,8 +9,10 @@ import {
 import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
 import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
 import { DeserializingBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingBufferedIterableSource";
-import { SplitterIterableSource } from "@foxglove/studio-base/players/IterablePlayer/SplitterIterableSource";
+import { DeserializingIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
+
+const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
 
 class McapLocalDataSourceFactory implements IDataSourceFactory {
   public id = "mcap-local-file";
@@ -40,16 +42,15 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
 
     const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
       readAheadDuration: { sec: 60, nsec: 0 },
-      maxCacheSizeBytes: Math.trunc(2 * 1024 * 1024 * 1024),
+      maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
     });
-
-    const source = new DeserializingBufferedIterableSource(
-      new SplitterIterableSource<Uint8Array>(workerSource, rawBufferedSource),
-    );
+    const source = new DeserializingIterableSource(workerSource);
+    const bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
 
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
       source,
+      bufferedSource,
       name: file.name,
       sourceId: this.id,
     });

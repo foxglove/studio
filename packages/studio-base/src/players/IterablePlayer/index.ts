@@ -4,4 +4,3 @@
 
 export * from "./IterablePlayer";
 export * from "./WorkerIterableSource";
-export * from "./WorkerBufferedIterableSource";

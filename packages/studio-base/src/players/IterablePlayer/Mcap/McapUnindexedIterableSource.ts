@@ -25,7 +25,6 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -34,9 +33,9 @@ const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
 type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
 /** Only efficient for small files */
-export class McapUnindexedIterableSource implements IIterableSource {
+export class McapUnindexedIterableSource implements IIterableSource<Uint8Array> {
   #options: Options;
-  #msgEventsByChannel?: Map<number, MessageEvent[]>;
+  #msgEventsByChannel?: Map<number, MessageEvent<Uint8Array>[]>;
   #start?: Time;
   #end?: Time;
 
@@ -58,7 +57,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
     const channelIdsWithErrors = new Set<number>();
 
     let messageCount = 0;
-    const messagesByChannel = new Map<number, MessageEvent[]>();
+    const messagesByChannel = new Map<number, MessageEvent<Uint8Array>[]>();
     const schemasById = new Map<number, McapTypes.TypedMcapRecords["Schema"]>();
     const channelInfoById = new Map<
       number,
@@ -68,18 +67,6 @@ export class McapUnindexedIterableSource implements IIterableSource {
         schemaName: string | undefined;
       }
     >();
-    const messageSizeEstimateByTopic: Record<string, number> = {};
-    const estimateMessageSize = (topic: string, msg: unknown): number => {
-      const cachedSize = messageSizeEstimateByTopic[topic];
-      if (cachedSize != undefined) {
-        return cachedSize;
-      }
-
-      const sizeEstimate = estimateObjectSize(msg);
-      messageSizeEstimateByTopic[topic] = sizeEstimate;
-      return sizeEstimate;
-    };
-
     let startTime: Time | undefined;
     let endTime: Time | undefined;
     let profile: string | undefined;
@@ -159,17 +146,12 @@ export class McapUnindexedIterableSource implements IIterableSource {
           if (!endTime || isGreaterThan(receiveTime, endTime)) {
             endTime = receiveTime;
           }
-          const deserializedMessage = channelInfo.parsedChannel.deserialize(record.data);
-          const estimatedMemorySize = estimateMessageSize(
-            channelInfo.channel.topic,
-            deserializedMessage,
-          );
           messages.push({
             topic: channelInfo.channel.topic,
             receiveTime,
             publishTime: fromNanoSec(record.publishTime),
-            message: deserializedMessage,
-            sizeInBytes: Math.max(record.data.byteLength, estimatedMemorySize),
+            message: record.data,
+            sizeInBytes: record.data.byteLength,
             schemaName: channelInfo.schemaName ?? "",
           });
           break;
@@ -258,7 +240,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
 
   public async *messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult<Uint8Array>>> {
     if (!this.#msgEventsByChannel) {
       throw new Error("initialization not completed");
     }
@@ -295,13 +277,15 @@ export class McapUnindexedIterableSource implements IIterableSource {
     yield* resultMessages;
   }
 
-  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<Uint8Array>[]> {
     if (!this.#msgEventsByChannel) {
       throw new Error("initialization not completed");
     }
 
     const needTopics = args.topics;
-    const msgEventsByTopic = new Map<string, MessageEvent>();
+    const msgEventsByTopic = new Map<string, MessageEvent<Uint8Array>>();
     for (const [, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
         if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.has(msgEvent.topic)) {

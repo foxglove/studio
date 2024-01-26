@@ -6,10 +6,8 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  IterablePlayer,
-  WorkerBufferedIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer";
+import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
+import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
 
 class Ros2LocalBagDataSourceFactory implements IDataSourceFactory {
@@ -28,7 +26,7 @@ class Ros2LocalBagDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const source = new WorkerBufferedIterableSource({
+    const source = new WorkerIterableSource({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -41,9 +39,12 @@ class Ros2LocalBagDataSourceFactory implements IDataSourceFactory {
       initArgs: { files },
     });
 
+    const bufferedSource = new BufferedIterableSource(source);
+
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
       source,
+      bufferedSource,
       name,
       sourceId: this.id,
     });

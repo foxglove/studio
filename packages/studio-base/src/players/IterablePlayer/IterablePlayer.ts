@@ -42,7 +42,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import delay from "@foxglove/studio-base/util/delay";
 
 import { BlockLoader } from "./BlockLoader";
-import { IteratorResult } from "./IIterableSource";
+import { IIterableSource, IteratorResult } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -75,7 +75,8 @@ const EMPTY_ARRAY = Object.freeze([]);
 type IterablePlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
 
-  source: IBufferedIterableSource;
+  source: IIterableSource;
+  bufferedSource: IBufferedIterableSource;
 
   // Optional player name
   name?: string;
@@ -158,7 +159,8 @@ export class IterablePlayer implements Player {
 
   #problemManager = new PlayerProblemManager();
 
-  #iterableSource: IBufferedIterableSource;
+  #iterableSource: IIterableSource;
+  #bufferedSource: IBufferedIterableSource;
 
   // Some states register an abort controller to signal they should abort
   #abort?: AbortController;
@@ -180,9 +182,11 @@ export class IterablePlayer implements Player {
   #resolveIsClosed: () => void = () => {};
 
   public constructor(options: IterablePlayerOptions) {
-    const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
+    const { metricsCollector, urlParams, source, bufferedSource, name, enablePreload, sourceId } =
+      options;
 
     this.#iterableSource = source;
+    this.#bufferedSource = bufferedSource;
     this.#name = name;
     this.#urlParams = urlParams;
     this.#metricsCollector = metricsCollector ?? new NoopMetricsCollector();
@@ -467,6 +471,7 @@ export class IterablePlayer implements Player {
         datatypes,
         name,
       } = await this.#iterableSource.initialize();
+      await this.#bufferedSource.initialize();
 
       // Prior to initialization, the seekTarget may have been set to an out-of-bounds value
       // This brings the value in bounds
@@ -536,7 +541,7 @@ export class IterablePlayer implements Player {
       }
 
       // Subscribe to range changes of the buffered source
-      void this.#iterableSource.onLoadedRangesChange?.(
+      void this.#bufferedSource.onLoadedRangesChange?.(
         (bufferedRanges) => {
           this.#progress = {
             fullyLoadedFractionRanges: bufferedRanges.ranges,
@@ -584,10 +589,10 @@ export class IterablePlayer implements Player {
     await this.#playbackIterator?.return?.();
 
     // set the playIterator to the seek time
-    await this.#iterableSource.stopProducer();
+    await this.#bufferedSource.stopProducer();
 
     log.debug("Initializing forward iterator from", next);
-    this.#playbackIterator = this.#iterableSource.messageIterator({
+    this.#playbackIterator = this.#bufferedSource.messageIterator({
       topics: this.#allTopics,
       start: next,
       consumptionType: "partial",
@@ -630,7 +635,7 @@ export class IterablePlayer implements Player {
     }
 
     log.debug("Initializing forward iterator from", this.#start);
-    this.#playbackIterator = this.#iterableSource.messageIterator({
+    this.#playbackIterator = this.#bufferedSource.messageIterator({
       topics: this.#allTopics,
       start: this.#start,
       consumptionType: "partial",
@@ -722,7 +727,7 @@ export class IterablePlayer implements Player {
 
     try {
       this.#abort = new AbortController();
-      const messages = await this.#iterableSource.getBackfillMessages({
+      const messages = await this.#bufferedSource.getBackfillMessages({
         topics: this.#allTopics,
         time: targetTime,
         abortSignal: this.#abort.signal,
@@ -1054,7 +1059,8 @@ export class IterablePlayer implements Player {
     this.#isPlaying = false;
     await this.#blockLoader?.stopLoading();
     await this.#blockLoadingProcess;
-    await this.#iterableSource.stopProducer();
+    await this.#bufferedSource.stopProducer();
+    await this.#bufferedSource.terminate?.();
     await this.#iterableSource.terminate?.();
     await this.#playbackIterator?.return?.();
     this.#playbackIterator = undefined;

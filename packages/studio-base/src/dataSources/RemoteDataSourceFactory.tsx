@@ -9,10 +9,8 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  IterablePlayer,
-  WorkerBufferedIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer";
+import { IterablePlayer, WorkerIterableSource } from "@foxglove/studio-base/players/IterablePlayer";
+import { BufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/BufferedIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
 
 const initWorkers: Record<string, () => Worker> = {
@@ -96,10 +94,12 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
       throw new Error(`Unsupported extension: ${extension}`);
     }
 
-    const source = new WorkerBufferedIterableSource({ initWorker, initArgs: { url } });
+    const source = new WorkerIterableSource({ initWorker, initArgs: { url } });
+    const bufferedSource = new BufferedIterableSource(source);
 
     return new IterablePlayer({
       source,
+      bufferedSource,
       name: url,
       metricsCollector: args.metricsCollector,
       // Use blank url params so the data source is set in the url
