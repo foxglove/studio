@@ -43,9 +43,9 @@ async function tryCreateIndexedReader(readable: McapTypes.IReadable) {
   }
 }
 
-export class McapIterableSource implements IIterableSource {
+export class McapIterableSource implements IIterableSource<Uint8Array> {
   #source: McapSource;
-  #sourceImpl: IIterableSource | undefined;
+  #sourceImpl: IIterableSource<Uint8Array> | undefined;
 
   public constructor(source: McapSource) {
     this.#source = source;
@@ -103,7 +103,7 @@ export class McapIterableSource implements IIterableSource {
 
   public messageIterator(
     opt: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult<Uint8Array>>> {
     if (!this.#sourceImpl) {
       throw new Error("Invariant: uninitialized");
     }
@@ -111,7 +111,9 @@ export class McapIterableSource implements IIterableSource {
     return this.#sourceImpl.messageIterator(opt);
   }
 
-  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<Uint8Array>[]> {
     if (!this.#sourceImpl) {
       throw new Error("Invariant: uninitialized");
     }
