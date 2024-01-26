@@ -45,7 +45,6 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
     });
 
-    // Achim: Both deserializing sources have to be initialized (to create deserializers)
     const source = new DeserializingIterableSource(workerSource);
     const bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
 
