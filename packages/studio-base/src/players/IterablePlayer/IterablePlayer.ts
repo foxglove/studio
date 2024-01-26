@@ -20,7 +20,10 @@ import {
   toString,
 } from "@foxglove/rostime";
 import { Immutable, MessageEvent, ParameterValue } from "@foxglove/studio";
-import { IBufferedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
+import {
+  BufferedRanges,
+  IBufferedIterableSource,
+} from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -540,22 +543,6 @@ export class IterablePlayer implements Player {
         }
       }
 
-      // Subscribe to range changes of the buffered source
-      void this.#bufferedSource.onLoadedRangesChange?.(
-        (bufferedRanges) => {
-          this.#progress = {
-            fullyLoadedFractionRanges: bufferedRanges.ranges,
-            messageCache: this.#progress.messageCache,
-            memoryInfo: {
-              ...this.#progress.memoryInfo,
-              [MEMORY_INFO_BUFFERED_MSGS]: bufferedRanges.cacheSizeInBytes,
-            },
-          };
-          this.#queueEmitState();
-        },
-        { minIntervalMs: 100 },
-      );
-
       this.#presence = PlayerPresence.PRESENT;
     } catch (error) {
       this.#setError(`Error initializing: ${error.message}`, error);
@@ -989,13 +976,40 @@ export class IterablePlayer implements Player {
     this.#isPlaying = false;
     this.#presence = PlayerPresence.PRESENT;
 
+    // set the latest value of the loaded ranges for the next emit state
+    const { ranges: loadedRanges } = this.#bufferedSource.getLoadedRanges();
+    this.#progress = {
+      ...this.#progress,
+      fullyLoadedFractionRanges: loadedRanges,
+      messageCache: this.#progress.messageCache,
+    };
+
     const abort = (this.#abort = new AbortController());
     const aborted = new Promise((resolve) => {
       abort.signal.addEventListener("abort", resolve);
     });
 
+    const rangeChangeHandler = (bufferedRanges: BufferedRanges) => {
+      this.#progress = {
+        fullyLoadedFractionRanges: bufferedRanges.ranges,
+        messageCache: this.#progress.messageCache,
+        memoryInfo: {
+          ...this.#progress.memoryInfo,
+          [MEMORY_INFO_BUFFERED_MSGS]: bufferedRanges.cacheSizeInBytes,
+        },
+      };
+      this.#queueEmitState();
+    };
+
+    // While idle, the buffered source might still be loading and we still want to update downstream
+    // with the new ranges we've buffered. This event will update progress and queue state emits
+    const { unsubscribe: unsubscribeLoadedRangeChanges } =
+      this.#bufferedSource.subscribeToLoadedRangeChanges(rangeChangeHandler);
+
     this.#queueEmitState();
     await aborted;
+
+    unsubscribeLoadedRangeChanges();
   }
 
   async #statePlay() {
@@ -1030,6 +1044,18 @@ export class IterablePlayer implements Player {
         if (this.#nextState) {
           return;
         }
+
+        // Update with the latest loaded ranges from the buffered source
+        // The messageCache is updated separately by block loader events
+        const { ranges: loadedRanges, cacheSizeInBytes } = this.#bufferedSource.getLoadedRanges();
+        this.#progress = {
+          fullyLoadedFractionRanges: loadedRanges,
+          messageCache: this.#progress.messageCache,
+          memoryInfo: {
+            ...this.#progress.memoryInfo,
+            [MEMORY_INFO_BUFFERED_MSGS]: cacheSizeInBytes,
+          },
+        };
 
         // If subscriptions changed, update to the new subscriptions
         if (this.#allTopics !== allTopics) {

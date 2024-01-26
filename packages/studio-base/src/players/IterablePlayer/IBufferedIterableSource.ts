@@ -34,11 +34,10 @@ export interface IBufferedIterableSource<MessageType = unknown>
   initialize(options?: InitalizationOptions): Promise<Initalization>;
 
   stopProducer(): Promise<void>;
-  getCacheSize(): Promise<number>;
-  loadedRanges(): Promise<Range[]>;
 
-  onLoadedRangesChange?(
-    rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
-    options?: { minIntervalMs: number },
-  ): Promise<void>;
+  getLoadedRanges(): BufferedRanges;
+
+  subscribeToLoadedRangeChanges(rangeChangeHandler: (bufferedRanges: BufferedRanges) => void): {
+    unsubscribe: () => void;
+  };
 }

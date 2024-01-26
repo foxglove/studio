@@ -6,7 +6,6 @@ import { DeserializingIterableSource } from "@foxglove/studio-base/players/Itera
 import {
   BufferedRanges,
   IBufferedIterableSource,
-  Range,
 } from "@foxglove/studio-base/players/IterablePlayer/IBufferedIterableSource";
 
 export class DeserializingBufferedIterableSource
@@ -24,18 +23,13 @@ export class DeserializingBufferedIterableSource
     await this.#bufferedSource.stopProducer();
   }
 
-  public async getCacheSize(): Promise<number> {
-    return await this.#bufferedSource.getCacheSize();
+  public getLoadedRanges(): BufferedRanges {
+    return this.#bufferedSource.getLoadedRanges();
   }
 
-  public async loadedRanges(): Promise<Range[]> {
-    return await this.#bufferedSource.loadedRanges();
-  }
-
-  public async onLoadedRangesChange(
+  public subscribeToLoadedRangeChanges(
     rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
-    options?: { minIntervalMs: number },
-  ): Promise<void> {
-    await this.#bufferedSource.onLoadedRangesChange?.(rangeChangeHandler, options);
+  ): { unsubscribe: () => void } {
+    return this.#bufferedSource.subscribeToLoadedRangeChanges(rangeChangeHandler);
   }
 }

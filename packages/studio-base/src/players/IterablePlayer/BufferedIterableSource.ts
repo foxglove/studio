@@ -3,13 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
-import * as _ from "lodash-es";
 
 import { Condvar } from "@foxglove/den/async";
 import { VecQueue } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import { add as addTime, compare, clampTime } from "@foxglove/rostime";
-import { Time, MessageEvent, Immutable } from "@foxglove/studio";
+import { add as addTime, clampTime, compare } from "@foxglove/rostime";
+import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
 import { CachingIterableSource } from "./CachingIterableSource";
@@ -225,11 +224,11 @@ class BufferedIterableSource<MessageType = unknown>
     this.#producer = undefined;
   }
 
-  public async loadedRanges(): Promise<Range[]> {
+  public loadedRanges(): Range[] {
     return this.#source.loadedRanges();
   }
 
-  public async getCacheSize(): Promise<number> {
+  public getCacheSize(): number {
     return this.#source.getCacheSize();
   }
 
@@ -321,20 +320,30 @@ class BufferedIterableSource<MessageType = unknown>
     return await this.#source.getBackfillMessages(args);
   }
 
-  public async onLoadedRangesChange(
+  public getLoadedRanges(): BufferedRanges {
+    return {
+      cacheSizeInBytes: this.getCacheSize(),
+      ranges: this.loadedRanges(),
+    };
+  }
+
+  public subscribeToLoadedRangeChanges(
     rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
-    options?: { minIntervalMs: number },
-  ): Promise<void> {
-    const throttledEventHandler = _.throttle(
-      async () => {
-        rangeChangeHandler({
-          cacheSizeInBytes: await this.getCacheSize(),
-          ranges: await this.loadedRanges(),
-        });
+  ): { unsubscribe: () => void } {
+    const handler = () => {
+      rangeChangeHandler({
+        cacheSizeInBytes: this.getCacheSize(),
+        ranges: this.loadedRanges(),
+      });
+    };
+
+    this.on("loadedRangesChange", handler);
+
+    return {
+      unsubscribe: () => {
+        this.off("loadedRangesChange", handler);
       },
-      options?.minIntervalMs ?? 50,
-    );
-    this.on("loadedRangesChange", throttledEventHandler);
+    };
   }
 }
 
