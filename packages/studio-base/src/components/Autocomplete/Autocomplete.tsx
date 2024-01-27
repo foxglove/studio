@@ -85,6 +85,9 @@ function itemToFzfResult<T>(item: T): FzfResultItem<T> {
   };
 }
 
+// The builtin Popper in MuiAutocomplete uses the width hint from the parent Autocomplete to set
+// the width. We want to set the minWidth to allow the popper to grow wider than the input field width.
+// so we can show long topic paths and autocomplete entries.
 const CustomPopper = function (props: PopperProps) {
   const width = props.style?.width ?? 0;
   return <Popper {...props} style={{ minWidth: width }} placement="bottom-start" />;
@@ -186,6 +189,13 @@ export const Autocomplete = React.forwardRef(function Autocomplete(
     [onSelectCallback, blur, focus, setSelectionRange],
   );
 
+  // We use fzf to filter the input items to make autocompleteItems so we don't need the
+  // MuiAutocomplete to also filter the items. Using a passthrough function for filterOptions
+  // disables the internal filtering of MuiAutocomplete
+  //
+  // https://mui.com/material-ui/react-autocomplete/#search-as-you-type
+  const filterOptions = useCallback((options: FzfResultItem[]) => options, []);
+
   return (
     <MuiAutocomplete
       className={className}
@@ -203,6 +213,7 @@ export const Autocomplete = React.forwardRef(function Autocomplete(
       freeSolo
       fullWidth
       PopperComponent={CustomPopper}
+      filterOptions={filterOptions}
       ListboxComponent={ReactWindowListboxAdapter}
       onChange={onSelect}
       onInputChange={onChange}
