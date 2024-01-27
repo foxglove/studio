@@ -85,6 +85,16 @@ function itemToFzfResult<T>(item: T): FzfResultItem<T> {
   };
 }
 
+// We use fzf to filter the input items to make autocompleteItems so we don't need the
+// MuiAutocomplete to also filter the items. Using a passthrough function for filterOptions
+// disables the internal filtering of MuiAutocomplete
+//
+// https://mui.com/material-ui/react-autocomplete/#search-as-you-type
+const filterOptions = (options: FzfResultItem[]) => options;
+
+const getOptionLabel = (item: string | FzfResultItem) =>
+  typeof item === "string" ? item : item.item;
+
 // The builtin Popper in MuiAutocomplete uses the width hint from the parent Autocomplete to set
 // the width. We want to set the minWidth to allow the popper to grow wider than the input field width.
 // so we can show long topic paths and autocomplete entries.
@@ -189,25 +199,13 @@ export const Autocomplete = React.forwardRef(function Autocomplete(
     [onSelectCallback, blur, focus, setSelectionRange],
   );
 
-  // We use fzf to filter the input items to make autocompleteItems so we don't need the
-  // MuiAutocomplete to also filter the items. Using a passthrough function for filterOptions
-  // disables the internal filtering of MuiAutocomplete
-  //
-  // https://mui.com/material-ui/react-autocomplete/#search-as-you-type
-  const filterOptions = useCallback((options: FzfResultItem[]) => options, []);
-
   return (
     <MuiAutocomplete
       className={className}
       componentsProps={{
         paper: { elevation: 8 },
       }}
-      getOptionLabel={(item: string | FzfResultItem) => {
-        if (typeof item === "string") {
-          return item;
-        }
-        return item.item;
-      }}
+      getOptionLabel={getOptionLabel}
       disableCloseOnSelect
       disabled={disabled}
       freeSolo
