@@ -54,7 +54,13 @@ type UpdateSeriesFullAction = {
   items: DataItem[];
 };
 
+type UpdateSeriesConfigAction = {
+  type: "update-series-config";
+  seriesItems: SeriesItem[];
+};
+
 export type UpdateDataAction =
+  | UpdateSeriesConfigAction
   | ResetSeriesFullAction
   | ResetSeriesCurrentAction
   | UpdateSeriesCurrentAction
@@ -69,35 +75,13 @@ const compareDatum = (a: Datum, b: Datum) => a.x - b.x;
 export class TimestampDatasetsBuilderImpl {
   #seriesByKey = new Map<SeriesConfigKey, Series>();
 
-  public updateData(actions: Immutable<UpdateDataAction[]>): void {
-    for (const action of actions) {
-      this.#applyAction(action);
-    }
-  }
-
-  public setSeries(series: Immutable<SeriesItem[]>): void {
-    // Make a new map so we drop series which are no longer present
-    const newSeries = new Map();
-
-    for (const config of series) {
-      let existingSeries = this.#seriesByKey.get(config.key);
-      if (!existingSeries) {
-        existingSeries = {
-          config,
-          current: [],
-          full: [],
-        };
-      }
-      newSeries.set(config.key, existingSeries);
-      existingSeries.config = config;
-    }
-    this.#seriesByKey = newSeries;
-  }
-
   public getViewportDatasets(viewport: Immutable<Viewport>): Dataset[] {
     const datasets: Dataset[] = [];
     const numSeries = this.#seriesByKey.size;
     for (const series of this.#seriesByKey.values()) {
+      if (!series.config.enabled) {
+        continue;
+      }
       const { color, contrastColor, showLine } = series.config;
       const dataset: Dataset = {
         borderColor: color,
@@ -111,11 +95,7 @@ export class TimestampDatasetsBuilderImpl {
         data: [],
       };
 
-      datasets.push(dataset);
-
-      if (!series.config.enabled) {
-        continue;
-      }
+      datasets[series.config.configIndex] = dataset;
 
       // Copy so we can set the .index property for downsampling
       // If downsampling algos change to not need the .index then we can get rid of some copies
@@ -279,7 +259,13 @@ export class TimestampDatasetsBuilderImpl {
     return datasets;
   }
 
-  #applyAction(action: Immutable<UpdateDataAction>): void {
+  public applyActions(actions: Immutable<UpdateDataAction[]>): void {
+    for (const action of actions) {
+      this.applyAction(action);
+    }
+  }
+
+  public applyAction(action: Immutable<UpdateDataAction>): void {
     switch (action.type) {
       case "reset-current": {
         const series = this.#seriesByKey.get(action.series);
@@ -383,7 +369,30 @@ export class TimestampDatasetsBuilderImpl {
             series.current.splice(0, idx);
           }
         }
+        break;
       }
+      case "update-series-config":
+        this.#updateSeriesConfigAction(action.seriesItems);
+        break;
     }
+  }
+
+  #updateSeriesConfigAction(series: Immutable<SeriesItem[]>): void {
+    // Make a new map so we drop series which are no longer present
+    const newSeries = new Map();
+
+    for (const config of series) {
+      let existingSeries = this.#seriesByKey.get(config.key);
+      if (!existingSeries) {
+        existingSeries = {
+          config,
+          current: [],
+          full: [],
+        };
+      }
+      newSeries.set(config.key, existingSeries);
+      existingSeries.config = config;
+    }
+    this.#seriesByKey = newSeries;
   }
 }

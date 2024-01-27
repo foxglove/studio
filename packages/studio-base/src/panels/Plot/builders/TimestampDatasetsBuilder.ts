@@ -4,12 +4,13 @@
 
 import * as Comlink from "comlink";
 
+import { ComlinkWrap } from "@foxglove/den/worker";
+import { MessagePath } from "@foxglove/message-path";
 import { toSec, subtract as subtractTime } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
-import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { PlayerState } from "@foxglove/studio-base/players/types";
+import { MessageBlock, PlayerState } from "@foxglove/studio-base/players/types";
 import { TimestampMethod, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { BlockTopicCursor } from "./BlockTopicCursor";
@@ -30,8 +31,8 @@ import { MathFunction, mathFunctions } from "../mathFunctions";
 
 // If the datasets builder is garbage collected we also need to cleanup the worker
 // This registry ensures the worker is cleaned up when the builder is garbage collected
-const registry = new FinalizationRegistry<Worker>((worker) => {
-  worker.terminate();
+const registry = new FinalizationRegistry<() => void>((dispose) => {
+  dispose();
 });
 
 const emptyPaths = new Set<string>();
@@ -49,23 +50,24 @@ type TimestampSeriesItem = {
  * downsampled data.
  */
 export class TimestampDatasetsBuilder implements IDatasetsBuilder {
-  #datasetsBuilderWorker: Worker;
   #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>;
 
-  #pendingDataDispatch: Immutable<UpdateDataAction>[] = [];
+  #pendingDispatch: Immutable<UpdateDataAction>[] = [];
 
   #lastSeekTime = 0;
 
   #series: Immutable<TimestampSeriesItem[]> = [];
 
   public constructor() {
-    this.#datasetsBuilderWorker = new Worker(
+    const worker = new Worker(
       // foxglove-depcheck-used: babel-plugin-transform-import-meta
       new URL("./TimestampDatasetsBuilderImpl.worker", import.meta.url),
     );
-    this.#datasetsBuilderRemote = Comlink.wrap(this.#datasetsBuilderWorker);
+    const { remote, dispose } =
+      ComlinkWrap<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>(worker);
+    this.#datasetsBuilderRemote = remote;
 
-    registry.register(this, this.#datasetsBuilderWorker);
+    registry.register(this, dispose);
   }
 
   public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
@@ -85,7 +87,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           : undefined;
 
         if (didSeek) {
-          this.#pendingDataDispatch.push({
+          this.#pendingDispatch.push({
             type: "reset-current",
             series: series.config.key,
           });
@@ -99,7 +101,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
           mathFn,
         );
 
-        this.#pendingDataDispatch.push({
+        this.#pendingDispatch.push({
           type: "append-current",
           series: series.config.key,
           items: pathItems,
@@ -107,40 +109,68 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
       }
     }
 
-    const blocks = state.progress.messageCache?.blocks;
-    if (blocks) {
-      for (const series of this.#series) {
+    return { min: 0, max: toSec(subtractTime(activeData.endTime, activeData.startTime)) };
+  }
+
+  public async handleBlocks(
+    startTime: Immutable<Time>,
+    blocks: Immutable<(MessageBlock | undefined)[]>,
+    progress: () => Promise<boolean>,
+  ): Promise<void> {
+    // identify if series need resetting because
+    for (const series of this.#series) {
+      if (series.blockCursor.nextWillReset(blocks)) {
+        this.#pendingDispatch.push({
+          type: "reset-full",
+          series: series.config.key,
+        });
+      }
+    }
+
+    const seriesArr = this.#series;
+
+    // We loop through the series and only process one next block and keep doing this until
+    // there are no more updates. This processes the series "in parallel" so that all of them appear
+    // to be loading blocks at the same time.
+    let done = 0;
+    do {
+      done = 0;
+
+      for (const series of seriesArr) {
         const mathFn = series.config.parsed.modifier
           ? mathFunctions[series.config.parsed.modifier]
           : undefined;
 
-        if (series.blockCursor.nextWillReset(blocks)) {
-          this.#pendingDataDispatch.push({
-            type: "reset-full",
-            series: series.config.key,
-          });
+        const messageEvents = series.blockCursor.next(blocks);
+        if (!messageEvents) {
+          done += 1;
+          continue;
         }
 
-        let messageEvents = undefined;
-        while ((messageEvents = series.blockCursor.next(blocks)) != undefined) {
-          const pathItems = readMessagePathItems(
-            messageEvents,
-            series.config.parsed,
-            series.config.timestampMethod,
-            activeData.startTime,
-            mathFn,
-          );
+        const pathItems = readMessagePathItems(
+          messageEvents,
+          series.config.parsed,
+          series.config.timestampMethod,
+          startTime,
+          mathFn,
+        );
 
-          this.#pendingDataDispatch.push({
-            type: "append-full",
-            series: series.config.key,
-            items: pathItems,
-          });
+        if (pathItems.length === 0) {
+          continue;
+        }
+
+        this.#pendingDispatch.push({
+          type: "append-full",
+          series: series.config.key,
+          items: pathItems,
+        });
+
+        const abort = await progress();
+        if (abort) {
+          return;
         }
       }
-    }
-
-    return { min: 0, max: toSec(subtractTime(activeData.endTime, activeData.startTime)) };
+    } while (done < seriesArr.length);
   }
 
   public setSeries(series: Immutable<SeriesItem[]>): void {
@@ -152,20 +182,23 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
       };
     });
 
-    void this.#datasetsBuilderRemote.setSeries(series);
+    this.#pendingDispatch.push({
+      type: "update-series-config",
+      seriesItems: series,
+    });
   }
 
   public async getViewportDatasets(
     viewport: Immutable<Viewport>,
   ): Promise<GetViewportDatasetsResult> {
-    const dispatch = this.#pendingDataDispatch;
+    const dispatch = this.#pendingDispatch;
     if (dispatch.length > 0) {
-      this.#pendingDataDispatch = [];
-      await this.#datasetsBuilderRemote.updateData(dispatch);
+      this.#pendingDispatch = [];
+      await this.#datasetsBuilderRemote.applyActions(dispatch);
     }
 
     const datasets = await this.#datasetsBuilderRemote.getViewportDatasets(viewport);
-    return { datasets, pathsWithMismatchedDataLengths: emptyPaths };
+    return { datasetsByConfigIndex: datasets, pathsWithMismatchedDataLengths: emptyPaths };
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {
@@ -175,7 +208,7 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
 
 function readMessagePathItems(
   events: Immutable<MessageEvent[]>,
-  path: Immutable<RosPath>,
+  path: Immutable<MessagePath>,
   timestampMethod: TimestampMethod,
   startTime: Immutable<Time>,
   mathFunction?: MathFunction,

@@ -2,13 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import * as Comlink from "comlink";
-import EventEmitter from "eventemitter3";
 import * as _ from "lodash-es";
 
 import { unwrap } from "@foxglove/den/monads";
+import { makeComlinkWorkerMock } from "@foxglove/den/testing";
+import { parseMessagePath } from "@foxglove/message-path";
 import { MessageEvent } from "@foxglove/studio";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageBlock,
   PlayerPresence,
@@ -21,61 +20,9 @@ import { CustomDatasetsBuilderImpl } from "./CustomDatasetsBuilderImpl";
 import { SeriesConfigKey, SeriesItem } from "./IDatasetsBuilder";
 import { PlotPath } from "../config";
 
-class WorkerEndpoint extends EventEmitter {
-  #client: Worker;
-
-  public constructor(client: Worker) {
-    super();
-
-    this.#client = client;
-  }
-
-  public postMessage(msg: unknown): void {
-    this.#client.emit("message", {
-      data: msg,
-    });
-  }
-
-  public addEventListener(event: string, fn: () => void): void {
-    this.on(event, fn);
-  }
-
-  public removeEventListener(event: string, fn: () => void): void {
-    this.off(event, fn);
-  }
-}
-
-class Worker extends EventEmitter {
-  #server: WorkerEndpoint;
-  public constructor() {
-    super();
-
-    this.#server = new WorkerEndpoint(this);
-    Comlink.expose(new CustomDatasetsBuilderImpl(), this.#server);
-  }
-
-  public postMessage(msg: unknown): void {
-    this.#server.emit("message", {
-      data: msg,
-    });
-  }
-
-  public addEventListener(event: string, fn: () => void): void {
-    this.on(event, fn);
-  }
-
-  public removeEventListener(event: string, fn: () => void): void {
-    this.off(event, fn);
-  }
-
-  public terminate() {
-    // no-op
-  }
-}
-
 Object.defineProperty(global, "Worker", {
   writable: true,
-  value: Worker,
+  value: makeComlinkWorkerMock(() => new CustomDatasetsBuilderImpl()),
 });
 
 function groupByTopic(events: MessageEvent[]): Record<string, MessageEvent[]> {
@@ -86,10 +33,11 @@ function buildSeriesItems(
   paths: (Partial<PlotPath> & { key?: string; value: string })[],
 ): SeriesItem[] {
   return paths.map((item, idx) => {
-    const parsed = unwrap(parseRosPath(item.value));
+    const parsed = unwrap(parseMessagePath(item.value));
     const key = (item.key ?? String(idx)) as SeriesConfigKey;
 
     return {
+      configIndex: idx,
       parsed,
       color: "red",
       contrastColor: "blue",
@@ -140,7 +88,7 @@ describe("CustomDatasetsBuilder", () => {
   it("should dataset from current messages", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -240,7 +188,7 @@ describe("CustomDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(["/baz.val.@negative"]),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [
             { x: 0, y: 0, value: 0 },
@@ -261,7 +209,7 @@ describe("CustomDatasetsBuilder", () => {
   it("should build updates from blocks", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -311,6 +259,9 @@ describe("CustomDatasetsBuilder", () => {
         },
       ]),
     };
+
+    // Baz is empty in the first block
+    block0.messagesByTopic["/baz"] = [];
 
     const block1 = {
       sizeInBytes: 0,
@@ -364,7 +315,7 @@ describe("CustomDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(["/baz.val.@negative"]),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [
             { x: 0, y: 0, value: 0 },
@@ -388,7 +339,7 @@ describe("CustomDatasetsBuilder", () => {
   it.each(["current", "blocks"] as const)("combines all values from arrays (%s)", async (type) => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.values[:].val"));
+    builder.setXPath(parseMessagePath("/foo.values[:].val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -411,7 +362,13 @@ describe("CustomDatasetsBuilder", () => {
       } else {
         latestBlocks = [
           ...latestBlocks,
-          { sizeInBytes: 0, messagesByTopic: groupByTopic(messages) },
+          {
+            sizeInBytes: 0,
+            messagesByTopic: {
+              "/baz": [],
+              ...groupByTopic(messages),
+            },
+          },
         ];
         builder.handlePlayerState(buildPlayerState({}, latestBlocks));
       }
@@ -484,7 +441,7 @@ describe("CustomDatasetsBuilder", () => {
 
     expect(result).toEqual({
       pathsWithMismatchedDataLengths: new Set(["/baz.values[:].val"]),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [
             { x: 0, y: 10, value: 10 },
@@ -510,7 +467,7 @@ describe("CustomDatasetsBuilder", () => {
   it("supports toggling series enabled state", async () => {
     const builder = new CustomDatasetsBuilder();
 
-    builder.setXPath(parseRosPath("/foo.val"));
+    builder.setXPath(parseMessagePath("/foo.val"));
     builder.setSeries(
       buildSeriesItems([
         {
@@ -558,7 +515,7 @@ describe("CustomDatasetsBuilder", () => {
       }),
     ).resolves.toEqual({
       pathsWithMismatchedDataLengths: new Set(),
-      datasets: [
+      datasetsByConfigIndex: [
         expect.objectContaining({
           data: [{ x: 1, y: 1, value: 1 }],
         }),
@@ -590,12 +547,63 @@ describe("CustomDatasetsBuilder", () => {
       }),
     ).resolves.toEqual({
       pathsWithMismatchedDataLengths: new Set(),
-      datasets: [
-        expect.objectContaining({
-          data: [],
-        }),
+      datasetsByConfigIndex: [
+        undefined,
         expect.objectContaining({
           data: [{ x: 1, y: 2, value: 2 }],
+        }),
+      ],
+    });
+  });
+
+  it("leaves gaps in datasetsByConfigIndex for missing series", async () => {
+    const builder = new CustomDatasetsBuilder();
+
+    builder.setXPath(parseMessagePath("/foo.val"));
+    builder.setSeries([
+      {
+        configIndex: 3,
+        parsed: parseMessagePath("/foo.val")!,
+        color: "red",
+        contrastColor: "blue",
+        enabled: true,
+        timestampMethod: "receiveTime",
+        key: "x" as SeriesConfigKey,
+        lineSize: 1,
+        messagePath: "/foo.val",
+        showLine: true,
+      },
+    ]);
+
+    builder.handlePlayerState(
+      buildPlayerState({
+        messages: [
+          {
+            topic: "/foo",
+            schemaName: "foo",
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            message: {
+              val: 1,
+            },
+          },
+        ],
+      }),
+    );
+
+    await expect(
+      builder.getViewportDatasets({
+        size: { width: 1_000, height: 1_000 },
+        bounds: {},
+      }),
+    ).resolves.toEqual({
+      pathsWithMismatchedDataLengths: new Set(),
+      datasetsByConfigIndex: [
+        undefined,
+        undefined,
+        undefined,
+        expect.objectContaining({
+          data: [{ x: 1, y: 1, value: 1 }],
         }),
       ],
     });

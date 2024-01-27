@@ -75,7 +75,13 @@ type UpdateSeriesFullAction = {
   items: ValueItem[];
 };
 
+type UpdateSeriesConfigAction = {
+  type: "update-series-config";
+  seriesItems: SeriesItem[];
+};
+
 export type UpdateDataAction =
+  | UpdateSeriesConfigAction
   | ResetSeriesFullAction
   | ResetSeriesCurrentAction
   | ResetCurrentXAction
@@ -102,29 +108,13 @@ export class CustomDatasetsBuilderImpl {
     }
   }
 
-  public setSeries(series: Immutable<SeriesItem[]>): void {
-    // Make a new map so we drop series which are no longer present
-    const newSeries = new Map();
-
-    for (const config of series) {
-      let existingSeries = this.#seriesByKey.get(config.key);
-      if (!existingSeries) {
-        existingSeries = {
-          config,
-          current: [],
-          full: [],
-        };
-      }
-      newSeries.set(config.key, existingSeries);
-      existingSeries.config = config;
-    }
-    this.#seriesByKey = newSeries;
-  }
-
   public getViewportDatasets(viewport: Immutable<Viewport>): GetViewportDatasetsResult {
     const datasets: Dataset[] = [];
     const pathsWithMismatchedDataLengths = new Set<string>();
     for (const series of this.#seriesByKey.values()) {
+      if (!series.config.enabled) {
+        continue;
+      }
       const { showLine, color, contrastColor } = series.config;
       const dataset: Dataset = {
         borderColor: color,
@@ -138,11 +128,7 @@ export class CustomDatasetsBuilderImpl {
         data: [],
       };
 
-      datasets.push(dataset);
-
-      if (!series.config.enabled) {
-        continue;
-      }
+      datasets[series.config.configIndex] = dataset;
 
       // Create the full dataset by pairing full y-values with their x-value peers
       // And then pairing current y-values with their x-value peers
@@ -241,7 +227,7 @@ export class CustomDatasetsBuilderImpl {
       }
     }
 
-    return { datasets, pathsWithMismatchedDataLengths };
+    return { datasetsByConfigIndex: datasets, pathsWithMismatchedDataLengths };
   }
 
   public getCsvData(): CsvDataset[] {
@@ -418,7 +404,30 @@ export class CustomDatasetsBuilderImpl {
             series.current.splice(0, idx);
           }
         }
+        break;
       }
+      case "update-series-config":
+        this.#updateSeriesConfigAction(action.seriesItems);
+        break;
     }
+  }
+
+  #updateSeriesConfigAction(series: Immutable<SeriesItem[]>): void {
+    // Make a new map so we drop series which are no longer present
+    const newSeries = new Map();
+
+    for (const config of series) {
+      let existingSeries = this.#seriesByKey.get(config.key);
+      if (!existingSeries) {
+        existingSeries = {
+          config,
+          current: [],
+          full: [],
+        };
+      }
+      newSeries.set(config.key, existingSeries);
+      existingSeries.config = config;
+    }
+    this.#seriesByKey = newSeries;
   }
 }
