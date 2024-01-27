@@ -73,6 +73,9 @@ export const ReactWindowListboxAdapter = React.forwardRef<
   const totalHeight =
     2 * Constants.LISTBOX_PADDING + Constants.ROW_HEIGHT * Math.min(options.length, 16);
 
+  // The hidden div is a trick to cause the parent div to expand to the width of the longest child
+  // in the list. Without this, the parent div would have a width of 0 because the FixedSizeList
+  // places items using position absolute which means they do not impact the size of their parent.
   return (
     <div ref={ref} {...rest}>
       <div style={{ visibility: "hidden", height: 0 }}>{longestChild}</div>
