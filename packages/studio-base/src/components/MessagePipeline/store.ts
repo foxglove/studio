@@ -176,16 +176,16 @@ export function createMessagePipelineStore({
           if (player?.fetchAsset) {
             try {
               return await player.fetchAsset(uri);
-            } catch (err) {
-              if (canBuiltinFetchPkgUri) {
-                // Fallback to a builtin _fetch_ call if the asset couldn't be loaded through the player.
-                return await builtinFetch(uri, options);
-              }
-              throw err; // Bail out otherwise.
+            } catch (_err) {
+              // Do nothing here as one of the fallback methods below might work.
             }
-          } else if (canBuiltinFetchPkgUri) {
+          }
+
+          if (canBuiltinFetchPkgUri) {
             return await builtinFetch(uri, options);
-          } else if (
+          }
+
+          if (
             pkgName &&
             options?.referenceUrl != undefined &&
             !options.referenceUrl.startsWith("package://") &&
@@ -200,6 +200,8 @@ export function createMessagePipelineStore({
               options.referenceUrl.slice(0, options.referenceUrl.lastIndexOf(pkgName)) + pkgPath;
             return await builtinFetch(resolvedUrl, options);
           }
+
+          throw new Error(`Failed to load asset ${uri}`);
         }
 
         // Use a regular fetch for all other protocols
