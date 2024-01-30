@@ -96,7 +96,7 @@ const getOptionLabel = (item: string | FzfResultItem) =>
   typeof item === "string" ? item : item.item;
 
 // The builtin Popper in MuiAutocomplete uses the width hint from the parent Autocomplete to set
-// the width. We want to set the minWidth to allow the popper to grow wider than the input field width.
+// the width. We want to set the minWidth to allow the popper to grow wider than the input field width,
 // so we can show long topic paths and autocomplete entries.
 const CustomPopper = function (props: PopperProps) {
   const width = props.style?.width ?? 0;
