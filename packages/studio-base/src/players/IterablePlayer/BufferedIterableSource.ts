@@ -9,7 +9,7 @@ import { add as addTime, clampTime, compare } from "@foxglove/rostime";
 import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 
 import { CachingIterableSource } from "./CachingIterableSource";
-import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
+import { BufferInfo, IBufferedIterableSource } from "./IBufferedIterableSource";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -87,11 +87,6 @@ class BufferedIterableSource<MessageType = unknown>
   public async initialize(): Promise<Initalization> {
     this.#initResult = await this.#source.initialize();
     return this.#initResult;
-  }
-
-  public init(initResult: Initalization): void {
-    this.#initResult = initResult;
-    this.#source.init(initResult);
   }
 
   async #startProducer(args: Immutable<MessageIteratorArgs>): Promise<void> {
@@ -291,14 +286,14 @@ class BufferedIterableSource<MessageType = unknown>
     return await this.#source.getBackfillMessages(args);
   }
 
-  public getLoadedRanges(): BufferedRanges {
-    return this.#source.getLoadedRanges();
+  public getBufferInfo(): BufferInfo {
+    return this.#source.getBufferInfo();
   }
 
-  public subscribeToLoadedRangeChanges(
-    rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
-  ): { unsubscribe: () => void } {
-    return this.#source.subscribeToLoadedRangeChanges(rangeChangeHandler);
+  public subscribeToBufferingChanges(bufferInfoChangeHandler: (bufferInfo: BufferInfo) => void): {
+    unsubscribe: () => void;
+  } {
+    return this.#source.subscribeToBufferingChanges(bufferInfoChangeHandler);
   }
 }
 

@@ -8,7 +8,7 @@ import { toRFC3339String } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { BlockLoader } from "@foxglove/studio-base/players/IterablePlayer/BlockLoader";
-import { IIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
+import { IDeserializedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
@@ -30,14 +30,14 @@ const MAX_BLOCKS = 400;
 const CAPABILITIES: string[] = [PlayerCapabilities.playbackControl];
 
 class BenchmarkPlayer implements Player {
-  #source: IIterableSource;
+  #source: IDeserializedIterableSource;
   #name: string;
   #listener?: (state: PlayerState) => Promise<void>;
   #subscriptions: SubscribePayload[] = [];
   #blockLoader?: BlockLoader;
   #problemManager = new PlayerProblemManager();
 
-  public constructor(name: string, source: IIterableSource) {
+  public constructor(name: string, source: IDeserializedIterableSource) {
     this.#name = name;
     this.#source = source;
   }

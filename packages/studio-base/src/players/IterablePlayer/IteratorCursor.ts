@@ -72,13 +72,10 @@ class IteratorCursor<MessageType = unknown> implements IMessageCursor<MessageTyp
       if (result.type === "stamp" && compare(result.stamp, cutoffTime) > 0) {
         break;
       }
-      if (result.type === "message-event") {
-        if (compare(result.msgEvent.receiveTime, cutoffTime) > 0) {
-          break;
-        }
+      if (result.type === "message-event" && compare(result.msgEvent.receiveTime, cutoffTime) > 0) {
+        break;
       }
     }
-
     return results;
   }
 

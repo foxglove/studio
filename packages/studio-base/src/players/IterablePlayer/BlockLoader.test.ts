@@ -10,13 +10,14 @@ import { mockTopicSelection } from "@foxglove/studio-base/test/mocks/mockTopicSe
 import { BlockLoader, MEMORY_INFO_PRELOADED_MSGS } from "./BlockLoader";
 import {
   GetBackfillMessagesArgs,
-  IIterableSource,
+  IDeserializedIterableSource,
   Initalization,
   IteratorResult,
   MessageIteratorArgs,
 } from "./IIterableSource";
 
-class TestSource implements IIterableSource {
+class TestSource implements IDeserializedIterableSource {
+  public readonly sourceType = "deserialized";
   public async initialize(): Promise<Initalization> {
     return {
       start: { sec: 0, nsec: 0 },

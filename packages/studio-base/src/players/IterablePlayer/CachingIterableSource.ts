@@ -12,7 +12,7 @@ import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import { TopicSelection } from "@foxglove/studio-base/players/types";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
-import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
+import { BufferInfo, IBufferedIterableSource } from "./IBufferedIterableSource";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -112,10 +112,6 @@ class CachingIterableSource<MessageType>
   public async initialize(): Promise<Initalization> {
     this.#initResult = await this.#source.initialize();
     return this.#initResult;
-  }
-
-  public init(initResult: Initalization): void {
-    this.#initResult = initResult;
   }
 
   public async terminate(): Promise<void> {
@@ -694,20 +690,20 @@ class CachingIterableSource<MessageType>
 
   public async stopProducer(): Promise<void> {}
 
-  public getLoadedRanges(): BufferedRanges {
+  public getBufferInfo(): BufferInfo {
     return {
       cacheSizeInBytes: this.getCacheSize(),
-      ranges: this.loadedRanges(),
+      loadedRanges: this.loadedRanges(),
     };
   }
 
-  public subscribeToLoadedRangeChanges(
-    rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
-  ): { unsubscribe: () => void } {
+  public subscribeToBufferingChanges(bufferInfoChangeHandler: (bufferInfo: BufferInfo) => void): {
+    unsubscribe: () => void;
+  } {
     const handler = () => {
-      rangeChangeHandler({
+      bufferInfoChangeHandler({
         cacheSizeInBytes: this.getCacheSize(),
-        ranges: this.loadedRanges(),
+        loadedRanges: this.loadedRanges(),
       });
     };
 

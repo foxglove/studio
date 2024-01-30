@@ -3,9 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { DeserializingIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingIterableSource";
-import { Initalization } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 
-import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
+import { BufferInfo, IBufferedIterableSource } from "./IBufferedIterableSource";
 
 export class DeserializingBufferedIterableSource
   extends DeserializingIterableSource
@@ -18,22 +17,17 @@ export class DeserializingBufferedIterableSource
     this.#bufferedSource = source;
   }
 
-  public init(initResult: Initalization): void {
-    this.initializeDeserializers(initResult);
-    this.#bufferedSource.init(initResult);
-  }
-
   public async stopProducer(): Promise<void> {
     await this.#bufferedSource.stopProducer();
   }
 
-  public getLoadedRanges(): BufferedRanges {
-    return this.#bufferedSource.getLoadedRanges();
+  public getBufferInfo(): BufferInfo {
+    return this.#bufferedSource.getBufferInfo();
   }
 
-  public subscribeToLoadedRangeChanges(
-    rangeChangeHandler: (bufferedRanges: BufferedRanges) => void,
-  ): { unsubscribe: () => void } {
-    return this.#bufferedSource.subscribeToLoadedRangeChanges(rangeChangeHandler);
+  public subscribeToBufferingChanges(bufferInfoChangeHandler: (bufferInfo: BufferInfo) => void): {
+    unsubscribe: () => void;
+  } {
+    return this.#bufferedSource.subscribeToBufferingChanges(bufferInfoChangeHandler);
   }
 }

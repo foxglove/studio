@@ -6,15 +6,13 @@ import { Link } from "@mui/material";
 import path from "path";
 
 import {
-  IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
+  IDataSourceFactory,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   IterablePlayer,
   WorkerIterableSource,
-  BufferedIterableSource,
-  DeserializingBufferedIterableSource,
-  DeserializingIterableSource,
+  WorkerRawIterableSource,
 } from "@foxglove/studio-base/players/IterablePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
@@ -99,24 +97,12 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
       throw new Error(`Unsupported extension: ${extension}`);
     }
 
-    let source, bufferedSource;
-    if (extension === ".mcap") {
-      const workerSource = new WorkerIterableSource<Uint8Array>({ initWorker, initArgs: { url } });
-      const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
-      const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
-        readAheadDuration: { sec: 120, nsec: 0 },
-        maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
-      });
-      source = new DeserializingIterableSource(workerSource);
-      bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
-    } else {
-      source = new WorkerIterableSource({ initWorker, initArgs: { url } });
-      bufferedSource = new BufferedIterableSource(source);
-    }
-
+    const source =
+      extension === ".mcap"
+        ? new WorkerRawIterableSource({ initWorker, initArgs: { url } })
+        : new WorkerIterableSource({ initWorker, initArgs: { url } });
     return new IterablePlayer({
       source,
-      bufferedSource,
       name: url,
       metricsCollector: args.metricsCollector,
       // Use blank url params so the data source is set in the url

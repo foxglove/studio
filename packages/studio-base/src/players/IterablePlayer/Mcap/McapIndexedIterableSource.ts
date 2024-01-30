@@ -10,17 +10,18 @@ import { Time, compare, fromNanoSec, toNanoSec } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
 import {
   GetBackfillMessagesArgs,
-  IIterableSource,
-  Initalization,
   IteratorResult,
   MessageIteratorArgs,
+  IRawIterableSource,
+  Initalization,
+  TopicWithDecodingInfo,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
+import { PlayerProblem, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const log = Logger.getLogger(__filename);
 
-export class McapIndexedIterableSource implements IIterableSource<Uint8Array> {
+export class McapIndexedIterableSource implements IRawIterableSource {
   #reader: McapIndexedReader;
   #channelInfoById = new Map<
     number,
@@ -32,6 +33,8 @@ export class McapIndexedIterableSource implements IIterableSource<Uint8Array> {
   >();
   #start?: Time;
   #end?: Time;
+
+  public readonly sourceType = "raw";
 
   public constructor(reader: McapIndexedReader) {
     this.#reader = reader;
@@ -50,7 +53,7 @@ export class McapIndexedIterableSource implements IIterableSource<Uint8Array> {
     }
 
     const topicStats = new Map<string, TopicStats>();
-    const topicsByName = new Map<string, Topic>();
+    const topicsByName = new Map<string, TopicWithDecodingInfo>();
     const datatypes: RosDatatypes = new Map();
     const problems: PlayerProblem[] = [];
     const publishersByTopic = new Map<string, Set<string>>();
@@ -87,9 +90,9 @@ export class McapIndexedIterableSource implements IIterableSource<Uint8Array> {
         topic = {
           name: channel.topic,
           schemaName: schema?.name,
+          messageEncoding: channel.messageEncoding,
           schemaData: schema?.data,
           schemaEncoding: schema?.encoding,
-          messageEncoding: channel.messageEncoding,
         };
         topicsByName.set(channel.topic, topic);
 

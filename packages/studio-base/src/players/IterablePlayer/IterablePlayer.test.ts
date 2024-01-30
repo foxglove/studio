@@ -15,17 +15,17 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { mockTopicSelection } from "@foxglove/studio-base/test/mocks/mockTopicSelection";
 
-import { BufferedIterableSource } from "./BufferedIterableSource";
 import {
-  IIterableSource,
-  Initalization,
-  MessageIteratorArgs,
-  IteratorResult,
   GetBackfillMessagesArgs,
+  IDeserializedIterableSource,
+  Initalization,
+  IteratorResult,
+  MessageIteratorArgs,
 } from "./IIterableSource";
 import { IterablePlayer } from "./IterablePlayer";
 
-class TestSource implements IIterableSource {
+class TestSource implements IDeserializedIterableSource {
+  public readonly sourceType = "deserialized";
   public async initialize(): Promise<Initalization> {
     return {
       start: { sec: 0, nsec: 0 },
@@ -114,7 +114,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -188,7 +187,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -293,7 +291,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -375,7 +372,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -460,7 +456,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -552,7 +547,8 @@ describe("IterablePlayer", () => {
   });
 
   it("provides error message for inconsistent topic datatypes", async () => {
-    class DuplicateTopicsSource implements IIterableSource {
+    class DuplicateTopicsSource implements IDeserializedIterableSource {
+      public readonly sourceType = "deserialized";
       public async initialize(): Promise<Initalization> {
         return {
           start: { sec: 0, nsec: 0 },
@@ -582,7 +578,6 @@ describe("IterablePlayer", () => {
     const source = new DuplicateTopicsSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -605,7 +600,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -669,7 +663,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -718,7 +711,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -768,7 +760,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });
@@ -817,7 +808,6 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
-      bufferedSource: new BufferedIterableSource(source),
       enablePreload: false,
       sourceId: "test",
     });

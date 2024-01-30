@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IIterableSource, Initalization } from "./IIterableSource";
+import { IIterableSource } from "./IIterableSource";
 
 export type Range = {
   /** inclusive */
@@ -11,21 +11,18 @@ export type Range = {
   end: number;
 };
 
-export type BufferedRanges = {
-  ranges: Range[];
+export type BufferInfo = {
+  loadedRanges: Range[];
   cacheSizeInBytes: number;
 };
 
 export interface IBufferedIterableSource<MessageType = unknown>
   extends IIterableSource<MessageType> {
-  // Initialize the source without initializing the underyling source which may already have been initialized.
-  init(initResult: Initalization): void;
-
   stopProducer(): Promise<void>;
 
-  getLoadedRanges(): BufferedRanges;
+  getBufferInfo(): BufferInfo;
 
-  subscribeToLoadedRangeChanges(rangeChangeHandler: (bufferedRanges: BufferedRanges) => void): {
+  subscribeToBufferingChanges(bufferInfoChangeHandler: (bufferInfo: BufferInfo) => void): {
     unsubscribe: () => void;
   };
 }

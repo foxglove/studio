@@ -7,31 +7,34 @@ import * as Comlink from "comlink";
 import { abortSignalTransferHandler } from "@foxglove/comlink-transfer-handlers";
 import { Immutable, MessageEvent } from "@foxglove/studio";
 
+import { ComlinkTransferIteratorCursor } from "./ComlinkTransferIteratorCursor";
 import type {
   GetBackfillMessagesArgs,
-  IIterableSource,
   IMessageCursor,
-  Initalization,
   IteratorResult,
   MessageIteratorArgs,
+  IRawIterableSource,
+  Initalization,
 } from "./IIterableSource";
 import { IteratorCursor } from "./IteratorCursor";
 
-export class WorkerIterableSourceWorker implements IIterableSource {
-  protected _source: IIterableSource;
+export class WorkerRawIterableSourceWorker implements IRawIterableSource {
+  #source: IRawIterableSource;
 
-  public constructor(source: IIterableSource) {
-    this._source = source;
+  public constructor(source: IRawIterableSource) {
+    this.#source = source;
   }
 
+  public readonly sourceType = "raw";
+
   public async initialize(): Promise<Initalization> {
-    return await this._source.initialize();
+    return await this.#source.initialize();
   }
 
   public messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> & Comlink.ProxyMarked {
-    return Comlink.proxy(this._source.messageIterator(args));
+  ): AsyncIterableIterator<Readonly<IteratorResult<Uint8Array>>> & Comlink.ProxyMarked {
+    return Comlink.proxy(this.#source.messageIterator(args));
   }
 
   public async getBackfillMessages(
@@ -39,8 +42,8 @@ export class WorkerIterableSourceWorker implements IIterableSource {
     // abortSignal is a separate argument so it can be proxied by comlink since AbortSignal is not
     // clonable (and needs to signal across the worker boundary)
     abortSignal?: AbortSignal,
-  ): Promise<MessageEvent[]> {
-    return await this._source.getBackfillMessages({
+  ): Promise<MessageEvent<Uint8Array>[]> {
+    return await this.#source.getBackfillMessages({
       ...args,
       abortSignal,
     });
@@ -49,9 +52,9 @@ export class WorkerIterableSourceWorker implements IIterableSource {
   public getMessageCursor(
     args: Omit<Immutable<MessageIteratorArgs>, "abort">,
     abort?: AbortSignal,
-  ): IMessageCursor & Comlink.ProxyMarked {
-    const iter = this._source.messageIterator(args);
-    const cursor = new IteratorCursor(iter, abort);
+  ): IMessageCursor<Uint8Array> & Comlink.ProxyMarked {
+    const iter = this.#source.messageIterator(args);
+    const cursor = new ComlinkTransferIteratorCursor(new IteratorCursor<Uint8Array>(iter, abort));
     return Comlink.proxy(cursor);
   }
 }

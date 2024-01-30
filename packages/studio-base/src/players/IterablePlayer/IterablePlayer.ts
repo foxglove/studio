@@ -41,8 +41,11 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import delay from "@foxglove/studio-base/util/delay";
 
 import { BlockLoader } from "./BlockLoader";
-import { BufferedRanges, IBufferedIterableSource } from "./IBufferedIterableSource";
-import { IIterableSource, IteratorResult } from "./IIterableSource";
+import { BufferedIterableSource } from "./BufferedIterableSource";
+import { DeserializingBufferedIterableSource } from "./DeserializingBufferedIterableSource";
+import { DeserializingIterableSource } from "./DeserializingIterableSource";
+import { BufferInfo, IBufferedIterableSource } from "./IBufferedIterableSource";
+import { IDeserializedIterableSource, IteratorResult, IRawIterableSource } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -75,8 +78,7 @@ const EMPTY_ARRAY = Object.freeze([]);
 type IterablePlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
 
-  source: IIterableSource;
-  bufferedSource: IBufferedIterableSource;
+  source: IDeserializedIterableSource | IRawIterableSource;
 
   // Optional player name
   name?: string;
@@ -159,7 +161,7 @@ export class IterablePlayer implements Player {
 
   #problemManager = new PlayerProblemManager();
 
-  #iterableSource: IIterableSource;
+  #iterableSource: IDeserializedIterableSource | IRawIterableSource;
   #bufferedSource: IBufferedIterableSource;
 
   // Some states register an abort controller to signal they should abort
@@ -182,11 +184,21 @@ export class IterablePlayer implements Player {
   #resolveIsClosed: () => void = () => {};
 
   public constructor(options: IterablePlayerOptions) {
-    const { metricsCollector, urlParams, source, bufferedSource, name, enablePreload, sourceId } =
-      options;
+    const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
 
     this.#iterableSource = source;
-    this.#bufferedSource = bufferedSource;
+
+    const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
+    this.#bufferedSource =
+      source.sourceType === "raw"
+        ? new DeserializingBufferedIterableSource(
+            new BufferedIterableSource(source, {
+              readAheadDuration: { sec: 120, nsec: 0 },
+              maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
+            }),
+          )
+        : new BufferedIterableSource(source);
+
     this.#name = name;
     this.#urlParams = urlParams;
     this.#metricsCollector = metricsCollector ?? new NoopMetricsCollector();
@@ -460,8 +472,7 @@ export class IterablePlayer implements Player {
     this.#queueEmitState();
 
     try {
-      const initResult = await this.#iterableSource.initialize();
-      this.#bufferedSource.init(initResult);
+      const initResult = await this.#bufferedSource.initialize();
       const {
         start,
         end,
@@ -517,9 +528,19 @@ export class IterablePlayer implements Player {
       if (this.#enablePreload) {
         // --- setup block loader which loads messages for _full_ subscriptions in the "background"
         try {
+          let blockLoaderSource: IDeserializedIterableSource;
+          if (this.#iterableSource.sourceType === "raw") {
+            const deserSource = new DeserializingIterableSource(this.#iterableSource);
+            // The underlying source is already initialized, so we must not call initialize() here.
+            deserSource.initializeDeserializers(initResult);
+            blockLoaderSource = deserSource;
+          } else {
+            blockLoaderSource = this.#iterableSource;
+          }
+
           this.#blockLoader = new BlockLoader({
             cacheSizeBytes: DEFAULT_CACHE_SIZE_BYTES,
-            source: this.#iterableSource,
+            source: blockLoaderSource,
             start: this.#start,
             end: this.#end,
             maxBlocks: MAX_BLOCKS,
@@ -975,7 +996,7 @@ export class IterablePlayer implements Player {
     this.#presence = PlayerPresence.PRESENT;
 
     // set the latest value of the loaded ranges for the next emit state
-    const { ranges: loadedRanges } = this.#bufferedSource.getLoadedRanges();
+    const { loadedRanges } = this.#bufferedSource.getBufferInfo();
     this.#progress = {
       ...this.#progress,
       fullyLoadedFractionRanges: loadedRanges,
@@ -987,13 +1008,13 @@ export class IterablePlayer implements Player {
       abort.signal.addEventListener("abort", resolve);
     });
 
-    const rangeChangeHandler = (bufferedRanges: BufferedRanges) => {
+    const bufferInfoChangeHandler = (bufferInfo: BufferInfo) => {
       this.#progress = {
-        fullyLoadedFractionRanges: bufferedRanges.ranges,
+        fullyLoadedFractionRanges: bufferInfo.loadedRanges,
         messageCache: this.#progress.messageCache,
         memoryInfo: {
           ...this.#progress.memoryInfo,
-          [MEMORY_INFO_BUFFERED_MSGS]: bufferedRanges.cacheSizeInBytes,
+          [MEMORY_INFO_BUFFERED_MSGS]: bufferInfo.cacheSizeInBytes,
         },
       };
       this.#queueEmitState();
@@ -1002,7 +1023,7 @@ export class IterablePlayer implements Player {
     // While idle, the buffered source might still be loading and we still want to update downstream
     // with the new ranges we've buffered. This event will update progress and queue state emits
     const { unsubscribe: unsubscribeLoadedRangeChanges } =
-      this.#bufferedSource.subscribeToLoadedRangeChanges(rangeChangeHandler);
+      this.#bufferedSource.subscribeToBufferingChanges(bufferInfoChangeHandler);
 
     this.#queueEmitState();
     await aborted;
@@ -1045,7 +1066,7 @@ export class IterablePlayer implements Player {
 
         // Update with the latest loaded ranges from the buffered source
         // The messageCache is updated separately by block loader events
-        const { ranges: loadedRanges, cacheSizeInBytes } = this.#bufferedSource.getLoadedRanges();
+        const { loadedRanges, cacheSizeInBytes } = this.#bufferedSource.getBufferInfo();
         this.#progress = {
           fullyLoadedFractionRanges: loadedRanges,
           messageCache: this.#progress.messageCache,
@@ -1085,7 +1106,6 @@ export class IterablePlayer implements Player {
     await this.#blockLoadingProcess;
     await this.#bufferedSource.stopProducer();
     await this.#bufferedSource.terminate?.();
-    await this.#iterableSource.terminate?.();
     await this.#playbackIterator?.return?.();
     this.#playbackIterator = undefined;
     await this.#iterableSource.terminate?.();

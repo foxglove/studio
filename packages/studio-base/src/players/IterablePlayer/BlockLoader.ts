@@ -21,7 +21,7 @@ import { IteratorCursor } from "@foxglove/studio-base/players/IterablePlayer/Ite
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import { MessageBlock, Progress, TopicSelection } from "@foxglove/studio-base/players/types";
 
-import { IIterableSource, MessageIteratorArgs } from "./IIterableSource";
+import { IDeserializedIterableSource, MessageIteratorArgs } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -29,7 +29,7 @@ export const MEMORY_INFO_PRELOADED_MSGS = "Preloaded messages";
 
 type BlockLoaderArgs = {
   cacheSizeBytes: number;
-  source: IIterableSource;
+  source: IDeserializedIterableSource;
   start: Time;
   end: Time;
   maxBlocks: number;
@@ -51,7 +51,7 @@ type LoadArgs = {
  * BlockLoader manages loading blocks from a source. Blocks are fixed time span containers for messages.
  */
 export class BlockLoader {
-  #source: IIterableSource;
+  #source: IDeserializedIterableSource;
   #blocks: Blocks = [];
   #start: Time;
   #end: Time;

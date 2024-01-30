@@ -12,10 +12,16 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
+export type TopicWithDecodingInfo = Topic & {
+  messageEncoding?: string;
+  schemaEncoding?: string;
+  schemaData?: Uint8Array;
+};
+
 export type Initalization = {
   start: Time;
   end: Time;
-  topics: Topic[];
+  topics: TopicWithDecodingInfo[];
   topicStats: Map<string, TopicStats>;
   datatypes: RosDatatypes;
   profile: string | undefined;
@@ -206,4 +212,9 @@ export type IterableSourceInitializeArgs = {
     baseUrl: string;
     auth?: string;
   };
+};
+
+export type IRawIterableSource = IIterableSource<Uint8Array> & { sourceType: "raw" };
+export type IDeserializedIterableSource = IIterableSource & {
+  sourceType: "deserialized";
 };

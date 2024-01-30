@@ -13,11 +13,11 @@ import { McapIndexedIterableSource } from "./McapIndexedIterableSource";
 import { McapUnindexedIterableSource } from "./McapUnindexedIterableSource";
 import { RemoteFileReadable } from "./RemoteFileReadable";
 import {
-  IIterableSource,
-  IteratorResult,
-  Initalization,
-  MessageIteratorArgs,
   GetBackfillMessagesArgs,
+  IRawIterableSource,
+  Initalization,
+  IteratorResult,
+  MessageIteratorArgs,
 } from "../IIterableSource";
 
 const log = Log.getLogger(__filename);
@@ -43,13 +43,15 @@ async function tryCreateIndexedReader(readable: McapTypes.IReadable) {
   }
 }
 
-export class McapIterableSource implements IIterableSource<Uint8Array> {
+export class McapIterableSource implements IRawIterableSource {
   #source: McapSource;
-  #sourceImpl: IIterableSource<Uint8Array> | undefined;
+  #sourceImpl: IRawIterableSource | undefined;
 
   public constructor(source: McapSource) {
     this.#source = source;
   }
+
+  public readonly sourceType = "raw";
 
   public async initialize(): Promise<Initalization> {
     const source = this.#source;

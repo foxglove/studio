@@ -20,12 +20,13 @@ import {
 import { MessageEvent } from "@foxglove/studio";
 import {
   GetBackfillMessagesArgs,
-  IIterableSource,
-  Initalization,
   IteratorResult,
   MessageIteratorArgs,
+  IRawIterableSource,
+  Initalization,
+  TopicWithDecodingInfo,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
+import { PlayerProblem, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
@@ -33,11 +34,13 @@ const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
 type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
 /** Only efficient for small files */
-export class McapUnindexedIterableSource implements IIterableSource<Uint8Array> {
+export class McapUnindexedIterableSource implements IRawIterableSource {
   #options: Options;
   #msgEventsByChannel?: Map<number, MessageEvent<Uint8Array>[]>;
   #start?: Time;
   #end?: Time;
+
+  public readonly sourceType = "raw";
 
   public constructor(options: Options) {
     this.#options = options;
@@ -65,6 +68,8 @@ export class McapUnindexedIterableSource implements IIterableSource<Uint8Array> 
         channel: McapTypes.Channel;
         parsedChannel: ParsedChannel;
         schemaName: string | undefined;
+        schemaEncoding: string | undefined;
+        schemaData: Uint8Array | undefined;
       }
     >();
     let startTime: Time | undefined;
@@ -115,6 +120,8 @@ export class McapUnindexedIterableSource implements IIterableSource<Uint8Array> 
               channel: record,
               parsedChannel,
               schemaName: schema?.name,
+              schemaEncoding: schema?.encoding,
+              schemaData: schema?.data,
             });
             messagesByChannel.set(record.id, []);
           } catch (error) {
@@ -169,13 +176,25 @@ export class McapUnindexedIterableSource implements IIterableSource<Uint8Array> 
 
     this.#msgEventsByChannel = messagesByChannel;
 
-    const topics: Topic[] = [];
+    const topics: TopicWithDecodingInfo[] = [];
     const topicStats = new Map<string, TopicStats>();
     const datatypes: RosDatatypes = new Map();
     const publishersByTopic = new Map<string, Set<string>>();
 
-    for (const { channel, parsedChannel, schemaName } of channelInfoById.values()) {
-      topics.push({ name: channel.topic, schemaName });
+    for (const {
+      channel,
+      parsedChannel,
+      schemaName,
+      schemaData,
+      schemaEncoding,
+    } of channelInfoById.values()) {
+      topics.push({
+        name: channel.topic,
+        messageEncoding: channel.messageEncoding,
+        schemaName,
+        schemaData,
+        schemaEncoding,
+      });
       const numMessages = messagesByChannel.get(channel.id)?.length;
       if (numMessages != undefined) {
         topicStats.set(channel.topic, { numMessages });

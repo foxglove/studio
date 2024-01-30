@@ -6,17 +6,18 @@ import { pickFields } from "@foxglove/den/records";
 import { parseChannel } from "@foxglove/mcap-support";
 import { MessageEvent } from "@foxglove/studio";
 import {
-  IIterableSource,
-  Initalization,
   MessageIteratorArgs,
   IteratorResult,
   GetBackfillMessagesArgs,
+  IDeserializedIterableSource,
+  Initalization,
+  IIterableSource,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 
-export class DeserializingIterableSource implements IIterableSource {
+export class DeserializingIterableSource implements IDeserializedIterableSource {
   protected _source: IIterableSource<Uint8Array>;
-  #deserializersBySchema: Record<string, (data: ArrayBufferView) => unknown> = {};
+  #deserializersByTopic: Record<string, (data: ArrayBufferView) => unknown> = {};
   #messageSizeEstimateByTopic: Record<string, number> = {};
   #connectionIdByTopic: Record<string, number> = {};
 
@@ -24,38 +25,50 @@ export class DeserializingIterableSource implements IIterableSource {
     this._source = source;
   }
 
+  public readonly sourceType = "deserialized";
+
   public async initialize(): Promise<Initalization> {
     return this.initializeDeserializers(await this._source.initialize());
   }
 
-  protected initializeDeserializers(initResult: Initalization): Initalization {
+  public initializeDeserializers(initResult: Initalization): Initalization {
     const problems: Initalization["problems"] = [];
-    let nextConnectionId = 0;
-    for (const topic of initResult.topics) {
-      this.#connectionIdByTopic[topic.name] = nextConnectionId++;
 
-      if (
-        topic.messageEncoding != undefined &&
-        topic.schemaData != undefined &&
-        topic.schemaEncoding != undefined &&
-        topic.schemaName != undefined &&
-        this.#deserializersBySchema[topic.schemaName] == undefined
-      ) {
+    let nextConnectionId = 0;
+    for (const {
+      name: topic,
+      messageEncoding,
+      schemaName,
+      schemaData,
+      schemaEncoding,
+    } of initResult.topics) {
+      this.#connectionIdByTopic[topic] = nextConnectionId++;
+
+      if (this.#deserializersByTopic[topic] == undefined) {
         try {
+          if (messageEncoding == undefined) {
+            throw new Error(`Unspecified message encoding for topic ${topic}`);
+          }
+
+          const schema =
+            schemaName != undefined && schemaData != undefined && schemaEncoding != undefined
+              ? {
+                  name: schemaName,
+                  encoding: schemaEncoding,
+                  data: schemaData,
+                }
+              : undefined;
+
           const { deserialize } = parseChannel({
-            messageEncoding: topic.messageEncoding,
-            schema: {
-              data: topic.schemaData,
-              encoding: topic.schemaEncoding,
-              name: topic.schemaName,
-            },
+            messageEncoding,
+            schema,
           });
-          this.#deserializersBySchema[topic.schemaName] = deserialize;
+          this.#deserializersByTopic[topic] = deserialize;
         } catch (error) {
           // This should in practice never happen as the underlying source filters out invalid topics
           problems.push({
             severity: "error",
-            message: `Error in topic ${topic.name}: ${error.message}`,
+            message: `Error in topic ${topic}: ${error.message}`,
             error,
           });
         }
@@ -67,7 +80,7 @@ export class DeserializingIterableSource implements IIterableSource {
 
   public messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult<Record<string, unknown>>>> {
     const rawIterator = this._source.messageIterator(args);
     const deserializeMsgEvent = (msg: MessageEvent<Uint8Array>, fieldsToPick: string[]) =>
       this.#deserializeMessage(msg, fieldsToPick);
@@ -108,7 +121,9 @@ export class DeserializingIterableSource implements IIterableSource {
     })();
   }
 
-  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<Record<string, unknown>>[]> {
     const deserialize = (rawMessages: MessageEvent<Uint8Array>[]) => {
       return rawMessages.map((rawMsg) => {
         const fieldsToPick = args.topics.get(rawMsg.topic)?.fields ?? [];
@@ -121,12 +136,12 @@ export class DeserializingIterableSource implements IIterableSource {
   #deserializeMessage(
     rawMessageEvent: MessageEvent<Uint8Array>,
     fieldsToPick: string[],
-  ): MessageEvent {
-    const { schemaName, message } = rawMessageEvent;
+  ): MessageEvent<Record<string, unknown>> {
+    const { topic, message } = rawMessageEvent;
 
-    const deserialize = this.#deserializersBySchema[schemaName];
+    const deserialize = this.#deserializersByTopic[topic];
     if (!deserialize) {
-      throw new Error(`Failed to find deserializer for schema ${schemaName}`);
+      throw new Error(`Failed to find deserializer for topic ${topic}`);
     }
 
     const deserializedMessage = deserialize(message) as Record<string, unknown>;

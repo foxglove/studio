@@ -3,19 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
+  IDataSourceFactory,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  IterablePlayer,
-  WorkerIterableSource,
-  BufferedIterableSource,
-  DeserializingBufferedIterableSource,
-  DeserializingIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer";
+import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
+import { WorkerRawIterableSource } from "@foxglove/studio-base/players/IterablePlayer/WorkerRawIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
-
-const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
 
 class McapLocalDataSourceFactory implements IDataSourceFactory {
   public id = "mcap-local-file";
@@ -30,7 +23,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const workerSource = new WorkerIterableSource<Uint8Array>({
+    const source = new WorkerRawIterableSource({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -43,18 +36,9 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       initArgs: { file },
     });
 
-    const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
-      readAheadDuration: { sec: 120, nsec: 0 },
-      maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
-    });
-
-    const source = new DeserializingIterableSource(workerSource);
-    const bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
-
     return new IterablePlayer({
       metricsCollector: args.metricsCollector,
       source,
-      bufferedSource,
       name: file.name,
       sourceId: this.id,
     });

@@ -7,14 +7,14 @@ import { Time } from "@foxglove/studio";
 
 import type { IMessageCursor, IteratorResult } from "./IIterableSource";
 
-class ComlinkTransferIteratorCursor<MessageType = unknown> implements IMessageCursor<MessageType> {
-  #cursor: IMessageCursor<MessageType>;
+class ComlinkTransferIteratorCursor implements IMessageCursor<Uint8Array> {
+  #cursor: IMessageCursor<Uint8Array>;
 
-  public constructor(cursor: IMessageCursor<MessageType>) {
+  public constructor(cursor: IMessageCursor<Uint8Array>) {
     this.#cursor = cursor;
   }
 
-  public async next(): ReturnType<IMessageCursor<MessageType>["next"]> {
+  public async next(): ReturnType<IMessageCursor<Uint8Array>["next"]> {
     const next = await this.#cursor.next();
     if (next == undefined) {
       return next;
@@ -27,7 +27,7 @@ class ComlinkTransferIteratorCursor<MessageType = unknown> implements IMessageCu
     return next;
   }
 
-  public async nextBatch(durationMs: number): Promise<IteratorResult<MessageType>[] | undefined> {
+  public async nextBatch(durationMs: number): Promise<IteratorResult<Uint8Array>[] | undefined> {
     const batch = await this.#cursor.nextBatch(durationMs);
     if (batch == undefined) {
       return batch;
@@ -45,11 +45,11 @@ class ComlinkTransferIteratorCursor<MessageType = unknown> implements IMessageCu
     return Comlink.transfer(batch, transferables);
   }
 
-  public async readUntil(end: Time): ReturnType<IMessageCursor<MessageType>["readUntil"]> {
+  public async readUntil(end: Time): ReturnType<IMessageCursor<Uint8Array>["readUntil"]> {
     return await this.#cursor.readUntil(end);
   }
 
-  public async end(): ReturnType<IMessageCursor<MessageType>["end"]> {
+  public async end(): ReturnType<IMessageCursor<Uint8Array>["end"]> {
     await this.#cursor.end();
   }
 }

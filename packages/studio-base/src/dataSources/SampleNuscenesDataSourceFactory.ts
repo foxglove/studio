@@ -3,16 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
+  IDataSourceFactory,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import {
-  IterablePlayer,
-  WorkerIterableSource,
-  BufferedIterableSource,
-  DeserializingBufferedIterableSource,
-  DeserializingIterableSource,
-} from "@foxglove/studio-base/players/IterablePlayer";
+import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
+import { WorkerRawIterableSource } from "@foxglove/studio-base/players/IterablePlayer/WorkerRawIterableSource";
 
 import SampleNuscenesLayout from "./SampleNuscenesLayout.json";
 
@@ -29,7 +24,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
   ): ReturnType<IDataSourceFactory["initialize"]> {
     const bagUrl = "https://assets.foxglove.dev/NuScenes-v1.0-mini-scene-0061-df24c12.mcap";
 
-    const workerSource = new WorkerIterableSource<Uint8Array>({
+    const source = new WorkerRawIterableSource({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta
@@ -42,18 +37,8 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
       initArgs: { url: bagUrl },
     });
 
-    const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
-    const rawBufferedSource = new BufferedIterableSource<Uint8Array>(workerSource, {
-      readAheadDuration: { sec: 120, nsec: 0 },
-      maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
-    });
-
-    const source = new DeserializingIterableSource(workerSource);
-    const bufferedSource = new DeserializingBufferedIterableSource(rawBufferedSource);
-
     return new IterablePlayer({
       source,
-      bufferedSource,
       isSampleDataSource: true,
       name: "Adapted from nuScenes dataset. Copyright © 2020 nuScenes. https://www.nuscenes.org/terms-of-use",
       metricsCollector: args.metricsCollector,
