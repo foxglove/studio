@@ -127,8 +127,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
     }
 
     return {
-      // Returning undefined means we allow the chart to determine the bounds and don't need to
-      // provide the dataset bounds.
       range: undefined,
       datasetsChanged,
     };

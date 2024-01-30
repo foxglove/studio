@@ -72,8 +72,13 @@ export type GetViewportDatasetsResult = {
 };
 
 export type HandlePlayerStateResult = {
-  /** The x-axis range of the dataset if it is known */
-  range?: Bounds1D;
+  /**
+   * The x-axis range of the dataset if it is known.
+   *
+   * Setting the range to undefined indicates the builder does not know the range or does not want
+   * to impose a specific range.
+   */
+  range?: Immutable<Bounds1D>;
   /** True if the datasets were changed (i.e. the builder extracted new data from the state) */
   datasetsChanged: boolean;
 };
