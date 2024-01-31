@@ -9,12 +9,12 @@ import { filterMap } from "@foxglove/den/collection";
 import { MessagePath } from "@foxglove/message-path";
 import { Immutable, Time, MessageEvent } from "@foxglove/studio";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
+import { Bounds1D } from "@foxglove/studio-base/components/TimeBasedChart/types";
 import { PlayerState } from "@foxglove/studio-base/players/types";
 
 import {
   CsvDataset,
   GetViewportDatasetsResult,
-  HandlePlayerStateResult,
   IDatasetsBuilder,
   SeriesConfigKey,
   SeriesItem,
@@ -51,7 +51,7 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
   //
   // Datasets are built when y-values arrive though this could be expanded to also build
   // when x-values arrive.
-  public handlePlayerState(state: Immutable<PlayerState>): HandlePlayerStateResult | undefined {
+  public handlePlayerState(state: Immutable<PlayerState>): Bounds1D | undefined {
     const activeData = state.activeData;
     if (!activeData || !this.#xParsedPath) {
       return;
@@ -62,7 +62,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       return;
     }
 
-    let datasetsChanged = false;
     {
       const xAxisMathFn =
         (this.#xParsedPath.modifier ? mathFunctions[this.#xParsedPath.modifier] : undefined) ??
@@ -72,7 +71,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       if (msgEvent) {
         const items = simpleGetMessagePathDataItems(msgEvent, this.#xParsedPath);
 
-        datasetsChanged ||= items.length > 0;
         this.#xValues = [];
         for (const item of items) {
           if (!isChartValue(item)) {
@@ -98,7 +96,6 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       }
 
       const items = simpleGetMessagePathDataItems(msgEvent, series.parsed);
-      datasetsChanged ||= items.length > 0;
 
       const pathItems = filterMap(items, (item, idx) => {
         if (!isChartValue(item)) {
@@ -126,10 +123,9 @@ export class CurrentCustomDatasetsBuilder implements IDatasetsBuilder {
       series.dataset.data = pathItems;
     }
 
-    return {
-      range: undefined,
-      datasetsChanged,
-    };
+    // Returning undefined means we allow the chart to determine the bounds and don't need to
+    // provide the dataset bounds.
+    return undefined;
   }
 
   public setXPath(path: Immutable<MessagePath> | undefined): void {

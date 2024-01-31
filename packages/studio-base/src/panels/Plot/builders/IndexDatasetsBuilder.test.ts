@@ -128,7 +128,7 @@ describe("IndexDatasetsBuilder", () => {
       ]),
     );
 
-    const result = builder.handlePlayerState(
+    const range = builder.handlePlayerState(
       buildPlayerState({
         messages: [
           {
@@ -144,16 +144,13 @@ describe("IndexDatasetsBuilder", () => {
       }),
     );
 
-    const secondResult = builder.handlePlayerState(
+    const rangeAgain = builder.handlePlayerState(
       buildPlayerState({
         messages: [],
       }),
     );
 
-    expect(secondResult).toEqual({
-      range: result?.range,
-      datasetsChanged: false,
-    });
+    expect(rangeAgain).toEqual(range);
   });
 
   it("should apply a math function", async () => {

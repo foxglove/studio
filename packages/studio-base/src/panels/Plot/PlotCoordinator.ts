@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
-import * as _ from "lodash-es";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
@@ -90,8 +89,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
   #latestXScale?: Scale;
 
   #queueDispatchRender = debouncePromise(this.#dispatchRender.bind(this));
-  #queueDispatchDownsample = debouncePromise(this.#dispatchDownsample.bind(this));
-  #queueDatasetsRender = debouncePromise(this.#dispatchDatasetsRender.bind(this));
+  #queueDispatchDatasets = debouncePromise(this.#dispatchDatasets.bind(this));
   #queueBlocks = debouncePromise(this.#dispatchBlocks.bind(this));
 
   #destroyed = false;
@@ -126,6 +124,14 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       this.#currentSeconds = secondsSinceStart;
     }
 
+    const datasetsRange = this.#datasetsBuilder.handlePlayerState(state);
+
+    const blocks = state.progress.messageCache?.blocks;
+    if (blocks && this.#datasetsBuilder.handleBlocks) {
+      this.#latestBlocks = blocks;
+      this.#queueBlocks(activeData.startTime, blocks);
+    }
+
     if (lastSeekTime !== this.#lastSeekTime) {
       this.#currentValuesByConfigIndex = [];
       this.#lastSeekTime = lastSeekTime;
@@ -153,34 +159,8 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
 
     this.emit("currentValuesChanged", this.#currentValuesByConfigIndex);
 
-    const handlePlayerStateResult = this.#datasetsBuilder.handlePlayerState(state);
-
-    const blocks = state.progress.messageCache?.blocks;
-    if (blocks && this.#datasetsBuilder.handleBlocks) {
-      this.#latestBlocks = blocks;
-      this.#queueBlocks(activeData.startTime, blocks);
-    }
-
-    // There's no result from the builder so we clear dataset range and trigger a render so
-    // we can fall back to other ranges
-    if (!handlePlayerStateResult) {
-      this.#datasetRange = undefined;
-      this.#queueDispatchRender();
-      return;
-    }
-
-    const newRange = handlePlayerStateResult.range;
-
-    // If the range has changed we will trigger a render to incorporate the new range into the chart
-    // axis
-    if (!_.isEqual(this.#datasetRange, newRange)) {
-      this.#datasetRange = handlePlayerStateResult.range;
-      this.#queueDispatchRender();
-    }
-
-    if (handlePlayerStateResult.datasetsChanged) {
-      this.#queueDispatchDownsample();
-    }
+    this.#datasetRange = datasetsRange;
+    this.#queueDispatchRender();
   }
 
   public handleConfig(
@@ -286,15 +266,12 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       };
     });
 
+    this.#datasetsBuilder.setSeries(this.#series);
+
     this.#currentValuesByConfigIndex = newCurrentValuesByConfigIndex;
     this.emit("currentValuesChanged", this.#currentValuesByConfigIndex);
 
-    // Dispatch because bounds changed
     this.#queueDispatchRender();
-
-    // Dispatch since we might have series changes
-    this.#datasetsBuilder.setSeries(this.#series);
-    this.#queueDispatchDownsample();
   }
 
   public setGlobalBounds(bounds: Immutable<Bounds1D> | undefined): void {
@@ -323,7 +300,6 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     this.#viewport.size = size;
     this.#updateAction.size = size;
     this.#queueDispatchRender();
-    this.#queueDispatchDownsample();
   }
 
   public addInteractionEvent(ev: InteractionEvent): void {
@@ -445,46 +421,30 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       this.emit("timeseriesBounds", bounds.x);
     }
     this.emit("viewportChange", this.#canReset());
-
-    // The viewport has changed from some render interactions so we need to consider new datasets
-    const x = this.#getXBounds();
-    const y = this.#interactionBounds?.y ?? this.#configBounds.y;
-    if (!_.isEqual(this.#viewport.bounds.x, x) || !_.isEqual(this.#viewport.bounds.y, y)) {
-      this.#viewport.bounds.x = x;
-      this.#viewport.bounds.y = y;
-      this.#queueDispatchDownsample();
-    }
+    this.#queueDispatchDatasets();
   }
 
-  /** Dispatch getting the latest downsampled datasets and then queue rendering them */
-  async #dispatchDownsample(): Promise<void> {
+  async #dispatchDatasets(): Promise<void> {
     if (this.#isDestroyed()) {
       return;
     }
+    this.#viewport.bounds.x = this.#getXBounds();
+    this.#viewport.bounds.y = this.#interactionBounds?.y ?? this.#configBounds.y;
 
     const result = await this.#datasetsBuilder.getViewportDatasets(this.#viewport);
     if (this.#isDestroyed()) {
       return;
     }
-    this.emit("pathsWithMismatchedDataLengthsChanged", [...result.pathsWithMismatchedDataLengths]);
-
-    // Use Array.from to fill in any `undefined` entries with an empty dataset (`map` would not
-    // work for sparse arrays)
-    const datasets = Array.from(result.datasetsByConfigIndex, replaceUndefinedWithEmptyDataset);
-    this.#queueDatasetsRender(datasets);
-  }
-
-  /** Render the provided datasets */
-  async #dispatchDatasetsRender(datasets: Dataset[]): Promise<void> {
-    if (this.#isDestroyed()) {
-      return;
-    }
-
-    this.#latestXScale = await this.#renderer.updateDatasets(datasets);
+    this.#latestXScale = await this.#renderer.updateDatasets(
+      // Use Array.from to fill in any `undefined` entries with an empty dataset (`map` would not
+      // work for sparse arrays)
+      Array.from(result.datasetsByConfigIndex, replaceUndefinedWithEmptyDataset),
+    );
     if (this.#isDestroyed()) {
       return;
     }
     this.emit("xScaleChanged", this.#latestXScale);
+    this.emit("pathsWithMismatchedDataLengthsChanged", [...result.pathsWithMismatchedDataLengths]);
   }
 
   async #dispatchBlocks(
@@ -496,7 +456,7 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
     }
 
     await this.#datasetsBuilder.handleBlocks(startTime, blocks, async () => {
-      this.#queueDispatchDownsample();
+      this.#queueDispatchDatasets();
       // When blocks are fully loaded and a user splits the panel, we are able to process all of the
       // blocks synchronously. However this creates a poor UX experience for large datasets by
       // showing nothing on the plot for many seconds while the postMessage prepares a massive send.
