@@ -42,6 +42,7 @@ import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
   PlayerCapabilities,
+  PlayerPresence,
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
 import {
@@ -118,7 +119,7 @@ function PanelExtensionAdapter(
   const { playerState, pauseFrame, setSubscriptions, seekPlayback, sortedTopics } =
     messagePipelineContext;
 
-  const { capabilities, profile: dataSourceProfile } = playerState;
+  const { capabilities, profile: dataSourceProfile, presence: playerPresence } = playerState;
 
   const { openSiblingPanel, setMessagePathDropConfig } = usePanelContext();
 
@@ -547,6 +548,10 @@ function PanelExtensionAdapter(
     );
   }, [initialState, highestSupportedConfigVersion]);
 
+  const playerPresenceShouldBlockRender = useMemo(() => {
+    return playerPresence === PlayerPresence.INITIALIZING;
+  }, [playerPresence]);
+
   // Manage extension lifecycle by calling initPanel() when the panel context changes.
   //
   // If we useEffect here instead of useLayoutEffect, the prevRenderState can get polluted with data
@@ -558,7 +563,9 @@ function PanelExtensionAdapter(
 
     // If the config is too new for this panel to support we bail and don't do any panel initialization
     // We will instead show a warning message to the user
-    if (configTooNew) {
+    // Also don't show panel when initializing to save on render cycles that will be thrown
+    // away after it is initialized.
+    if (configTooNew || playerPresenceShouldBlockRender) {
       return;
     }
 
@@ -596,7 +603,14 @@ function PanelExtensionAdapter(
       getMessagePipelineContext().setSubscriptions(panelId, []);
       getMessagePipelineContext().setPublishers(panelId, []);
     };
-  }, [initPanel, panelId, partialExtensionContext, getMessagePipelineContext, configTooNew]);
+  }, [
+    initPanel,
+    panelId,
+    partialExtensionContext,
+    getMessagePipelineContext,
+    configTooNew,
+    playerPresenceShouldBlockRender,
+  ]);
 
   const style: CSSProperties = {};
   if (slowRender) {
