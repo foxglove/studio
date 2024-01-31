@@ -68,7 +68,7 @@ describe("BufferedIterableSource", () => {
     const bufferedSource = new BufferedIterableSource(source);
 
     await bufferedSource.initialize();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0 }]);
   });
 
   it("should produce messages that the source produces", async () => {
@@ -122,7 +122,7 @@ describe("BufferedIterableSource", () => {
       done: true,
     });
 
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 1 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
   });
 
   it("should produce messages after buffering is complete", async () => {
@@ -219,7 +219,7 @@ describe("BufferedIterableSource", () => {
 
     await signal.wait();
 
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 1 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
 
     // confirm messages are what we expect
     for (let i = 0; i < 8; ++i) {
@@ -280,11 +280,11 @@ describe("BufferedIterableSource", () => {
 
     await partialBuffer.wait();
 
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.4999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.4999999999 }]);
 
     // When the underlying source has finished loading, the _end_ is reached even if the last message is not at the end time
     await doneYield.wait();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 1 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
   });
 
   it("should yield correct messages when starting a new iterator before the the cached items", async () => {
@@ -318,7 +318,7 @@ describe("BufferedIterableSource", () => {
       });
 
       await doneYield.wait();
-      expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0.5, end: 1 }]);
+      expect(bufferedSource.loadedRanges()).toEqual([{ start: 0.5, end: 1 }]);
       await messageIterator.return?.();
       await bufferedSource.stopProducer();
     }
@@ -350,7 +350,7 @@ describe("BufferedIterableSource", () => {
 
       await doneYield.wait();
 
-      expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 1 }]);
+      expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 1 }]);
 
       {
         {
@@ -449,13 +449,13 @@ describe("BufferedIterableSource", () => {
     // Wait for the buffered iterable source to stop reading messages
     await signal.wait();
 
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.1999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.1999999999 }]);
 
     // Reading the second message buffers more data
     signal = waiter(1);
     await messageIterator.next();
     await signal.wait();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.2999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
 
     // We should have called the messageIterator method only once
     expect(messageIteratorCount).toEqual(1);
@@ -509,16 +509,16 @@ describe("BufferedIterableSource", () => {
 
     // Reading the first message should buffer a minimum amount
     await messageIterator.next();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.2999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
     // Reading the next message should not increase the buffer
     await messageIterator.next();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.2999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.2999999999 }]);
     // Next message should increase the buffer again
     await messageIterator.next();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.3999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.3999999999 }]);
     // Let the buffer read to the end
     await signal.wait();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.5999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.5999999999 }]);
 
     // We should have called the messageIterator method only once
     expect(messageIteratorCount).toEqual(1);
@@ -622,13 +622,13 @@ describe("BufferedIterableSource", () => {
     // Wait for the buffered iterable source to stop reading messages
     await signal.wait();
 
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.0999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.0999999999 }]);
 
     // Reading the second message buffers more data
     signal = waiter(1);
     await messageIterator.next();
     await signal.wait();
-    expect(bufferedSource.getBufferInfo().loadedRanges).toEqual([{ start: 0, end: 0.1999999999 }]);
+    expect(bufferedSource.loadedRanges()).toEqual([{ start: 0, end: 0.1999999999 }]);
 
     // We should have called the messageIterator method only once
     expect(messageIteratorCount).toEqual(1);

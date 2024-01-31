@@ -2,14 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import EventEmitter from "eventemitter3";
+
 import { Condvar } from "@foxglove/den/async";
 import { VecQueue } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
-import { add as addTime, clampTime, compare } from "@foxglove/rostime";
-import { Immutable, MessageEvent, Time } from "@foxglove/studio";
+import { add as addTime, compare, clampTime } from "@foxglove/rostime";
+import { Time, MessageEvent } from "@foxglove/studio";
+import { Range } from "@foxglove/studio-base/util/ranges";
 
 import { CachingIterableSource } from "./CachingIterableSource";
-import { BufferInfo, IBufferedIterableSource } from "./IBufferedIterableSource";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -32,6 +34,11 @@ type Options = {
   maxCacheSizeBytes?: number;
 };
 
+interface EventTypes {
+  /** Dispatched when the loaded ranges have changed. Use `loadedRanges()` to get the new ranges. */
+  loadedRangesChange: () => void;
+}
+
 /**
  * BufferedIterableSource proxies access to IIterableSource. It buffers the messageIterator by
  * reading ahead in the underlying source.
@@ -41,7 +48,8 @@ type Options = {
  * reading from the underlying source and populating the cache.
  */
 class BufferedIterableSource<MessageType = unknown>
-  implements IBufferedIterableSource<MessageType>
+  extends EventEmitter<EventTypes>
+  implements IIterableSource<MessageType>
 {
   #source: CachingIterableSource<MessageType>;
 
@@ -73,6 +81,8 @@ class BufferedIterableSource<MessageType = unknown>
   #minReadAheadDuration: Time;
 
   public constructor(source: IIterableSource<MessageType>, opt?: Options) {
+    super();
+
     this.#readAheadDuration = opt?.readAheadDuration ?? DEFAULT_READ_AHEAD_DURATION;
     this.#minReadAheadDuration = opt?.minReadAheadDuration ?? DEFAULT_MIN_READ_AHEAD_DURATION;
     this.#source = new CachingIterableSource<MessageType>(source, {
@@ -82,6 +92,9 @@ class BufferedIterableSource<MessageType = unknown>
     if (compare(this.#readAheadDuration, this.#minReadAheadDuration) < 0) {
       throw new Error("Invariant: readAheadDuration < minReadAheadDuration");
     }
+
+    // pass-through the range change event
+    this.#source.on("loadedRangesChange", () => this.emit("loadedRangesChange"));
   }
 
   public async initialize(): Promise<Initalization> {
@@ -89,7 +102,7 @@ class BufferedIterableSource<MessageType = unknown>
     return this.#initResult;
   }
 
-  async #startProducer(args: Immutable<MessageIteratorArgs>): Promise<void> {
+  async #startProducer(args: MessageIteratorArgs): Promise<void> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
     }
@@ -208,8 +221,16 @@ class BufferedIterableSource<MessageType = unknown>
     this.#producer = undefined;
   }
 
+  public loadedRanges(): Range[] {
+    return this.#source.loadedRanges();
+  }
+
+  public getCacheSize(): number {
+    return this.#source.getCacheSize();
+  }
+
   public messageIterator(
-    args: Immutable<MessageIteratorArgs>,
+    args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
@@ -284,16 +305,6 @@ class BufferedIterableSource<MessageType = unknown>
     args: GetBackfillMessagesArgs,
   ): Promise<MessageEvent<MessageType>[]> {
     return await this.#source.getBackfillMessages(args);
-  }
-
-  public getBufferInfo(): BufferInfo {
-    return this.#source.getBufferInfo();
-  }
-
-  public subscribeToBufferingChanges(bufferInfoChangeHandler: (bufferInfo: BufferInfo) => void): {
-    unsubscribe: () => void;
-  } {
-    return this.#source.subscribeToBufferingChanges(bufferInfoChangeHandler);
   }
 }
 

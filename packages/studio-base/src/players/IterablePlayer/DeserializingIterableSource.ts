@@ -15,8 +15,11 @@ import {
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 
+/**
+ * Iterable source that deserializes messages from a raw iterable source (messages are Uint8Arrays).
+ */
 export class DeserializingIterableSource implements IDeserializedIterableSource {
-  protected _source: IIterableSource<Uint8Array>;
+  #source: IIterableSource<Uint8Array>;
   #deserializersByTopic: Record<string, (data: ArrayBufferView) => unknown> = {};
   #messageSizeEstimateByTopic: Record<string, number> = {};
   #connectionIdByTopic: Record<string, number> = {};
@@ -24,11 +27,11 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
   public readonly sourceType = "deserialized";
 
   public constructor(source: IIterableSource<Uint8Array>) {
-    this._source = source;
+    this.#source = source;
   }
 
   public async initialize(): Promise<Initalization> {
-    return this.initializeDeserializers(await this._source.initialize());
+    return this.initializeDeserializers(await this.#source.initialize());
   }
 
   public initializeDeserializers(initResult: Initalization): Initalization {
@@ -80,11 +83,10 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
 
   public messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult<Record<string, unknown>>>> {
-    const rawIterator = this._source.messageIterator(args);
-    const deserializeMsgEvent = (msg: MessageEvent<Uint8Array>, fieldsToPick: string[]) =>
-      this.#deserializeMessage(msg, fieldsToPick);
-    const connectionIdByTopic = this.#connectionIdByTopic;
+  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    const rawIterator = self.#source.messageIterator(args);
     return (async function* deserializedIterableGenerator() {
       try {
         for await (const iterResult of rawIterator) {
@@ -95,13 +97,16 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
 
           try {
             const fieldsToPick = args.topics.get(iterResult.msgEvent.topic)?.fields ?? [];
-            const deserializedMsgEvent = deserializeMsgEvent(iterResult.msgEvent, fieldsToPick);
+            const deserializedMsgEvent = self.#deserializeMessage(
+              iterResult.msgEvent,
+              fieldsToPick,
+            );
             yield {
               type: iterResult.type,
               msgEvent: deserializedMsgEvent,
             };
           } catch (err) {
-            const connectionId = connectionIdByTopic[iterResult.msgEvent.topic] ?? 0;
+            const connectionId = self.#connectionIdByTopic[iterResult.msgEvent.topic] ?? 0;
             yield {
               type: "problem",
               connectionId,
@@ -121,22 +126,20 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
     })();
   }
 
-  public async getBackfillMessages(
-    args: GetBackfillMessagesArgs,
-  ): Promise<MessageEvent<Record<string, unknown>>[]> {
+  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
     const deserialize = (rawMessages: MessageEvent<Uint8Array>[]) => {
       return rawMessages.map((rawMsg) => {
         const fieldsToPick = args.topics.get(rawMsg.topic)?.fields ?? [];
         return this.#deserializeMessage(rawMsg, fieldsToPick);
       });
     };
-    return await this._source.getBackfillMessages(args).then(deserialize);
+    return await this.#source.getBackfillMessages(args).then(deserialize);
   }
 
   #deserializeMessage(
     rawMessageEvent: MessageEvent<Uint8Array>,
     fieldsToPick: string[],
-  ): MessageEvent<Record<string, unknown>> {
+  ): MessageEvent {
     const { topic, message } = rawMessageEvent;
 
     const deserialize = this.#deserializersByTopic[topic];

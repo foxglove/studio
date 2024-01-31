@@ -8,11 +8,10 @@ import * as _ from "lodash-es";
 import { minIndexBy, sortedIndexByTuple } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import { add, compare, subtract, toNanoSec } from "@foxglove/rostime";
-import { Immutable, MessageEvent, Time } from "@foxglove/studio";
+import { MessageEvent, Time } from "@foxglove/studio";
 import { TopicSelection } from "@foxglove/studio-base/players/types";
 import { Range } from "@foxglove/studio-base/util/ranges";
 
-import { BufferInfo, IBufferedIterableSource } from "./IBufferedIterableSource";
 import {
   GetBackfillMessagesArgs,
   IIterableSource,
@@ -70,14 +69,14 @@ interface EventTypes {
  * buffer for previously read messages, then the underlying source is used and the messages are
  * cached when read.
  */
-class CachingIterableSource<MessageType>
+class CachingIterableSource<MessageType = unknown>
   extends EventEmitter<EventTypes>
-  implements IBufferedIterableSource<MessageType>
+  implements IIterableSource<MessageType>
 {
   #source: IIterableSource<MessageType>;
 
   // Stores which topics we have been caching. See notes at usage site for why we store this.
-  #cachedTopics: Immutable<TopicSelection> = new Map();
+  #cachedTopics: TopicSelection = new Map();
 
   // The producer loads results into the cache and the consumer reads from the cache.
   #cache: CacheBlock<MessageType>[] = [];
@@ -116,7 +115,7 @@ class CachingIterableSource<MessageType>
 
   public async terminate(): Promise<void> {
     this.#cache.length = 0;
-    this.#cachedTopics = new Map();
+    this.#cachedTopics.clear();
   }
 
   public loadedRanges(): Range[] {
@@ -128,7 +127,7 @@ class CachingIterableSource<MessageType>
   }
 
   public async *messageIterator(
-    args: Immutable<MessageIteratorArgs>,
+    args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult<MessageType>>> {
     if (!this.#initResult) {
       throw new Error("Invariant: uninitialized");
@@ -686,34 +685,6 @@ class CachingIterableSource<MessageType>
     }
 
     return idx;
-  }
-
-  public async stopProducer(): Promise<void> {}
-
-  public getBufferInfo(): BufferInfo {
-    return {
-      cacheSizeInBytes: this.getCacheSize(),
-      loadedRanges: this.loadedRanges(),
-    };
-  }
-
-  public subscribeToBufferingChanges(bufferInfoChangeHandler: (bufferInfo: BufferInfo) => void): {
-    unsubscribe: () => void;
-  } {
-    const handler = () => {
-      bufferInfoChangeHandler({
-        cacheSizeInBytes: this.getCacheSize(),
-        loadedRanges: this.loadedRanges(),
-      });
-    };
-
-    this.on("loadedRangesChange", handler);
-
-    return {
-      unsubscribe: () => {
-        this.off("loadedRangesChange", handler);
-      },
-    };
   }
 }
 

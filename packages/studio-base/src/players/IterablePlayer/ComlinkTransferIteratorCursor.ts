@@ -7,6 +7,12 @@ import { Time } from "@foxglove/studio";
 
 import type { IMessageCursor, IteratorResult } from "./IIterableSource";
 
+/**
+ * Wraps a IMessageCursor<Uint8Array> and returns message-events with calls to Comlink.transfer.
+ * This allows ArrayBuffers to be transferred rather than being structureClone'd which is significantly faster.
+ * This class must only be used for worker communication because otherwise Comlink's interal transfer buffer
+ * will never be emptied leading to an OOM.
+ */
 class ComlinkTransferIteratorCursor implements IMessageCursor<Uint8Array> {
   #cursor: IMessageCursor<Uint8Array>;
 
