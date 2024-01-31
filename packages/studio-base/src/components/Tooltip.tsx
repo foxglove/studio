@@ -6,7 +6,7 @@ import { Tooltip as MuiTooltip, TooltipProps } from "@mui/material";
 import { MouseEvent, useCallback, useMemo } from "react";
 
 /**
- * This component exists as result of a team preference to close the
+ * Tooltip wraps a MUI tooltip to close the tooltip when the child component is clicked. MUI tooltip does not have this feature.
  * tooltip `onClick` which the MUI Tooltip does not support.
  */
 
