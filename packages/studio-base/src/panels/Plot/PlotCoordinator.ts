@@ -184,12 +184,13 @@ export class PlotCoordinator extends EventEmitter<EventTypes> {
       },
       y: {
         max:
-          config.maxYValue == undefined || (typeof config.maxYValue === 'string' && config.maxYValue.length === 0)
-
+          config.maxYValue == undefined ||
+          (typeof config.maxYValue === "string" && config.maxYValue.length === 0)
             ? undefined
             : +config.maxYValue,
         min:
-          config.minYValue == undefined || (typeof config.minYValue === 'string' && config.minYValue.length === 0)
+          config.minYValue == undefined ||
+          (typeof config.minYValue === "string" && config.minYValue.length === 0)
             ? undefined
             : +config.minYValue,
       },
