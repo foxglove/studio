@@ -32,11 +32,11 @@ export class WorkerIterableSource implements IDeserializedIterableSource {
   #sourceWorkerRemote?: Comlink.Remote<WorkerIterableSourceWorker>;
   #disposeRemote?: () => void;
 
+  public readonly sourceType = "deserialized";
+
   public constructor(args: ConstructorArgs) {
     this.#args = args;
   }
-
-  public readonly sourceType = "deserialized";
 
   public async initialize(): Promise<Initalization> {
     this.#disposeRemote?.();

@@ -34,7 +34,7 @@ export class McapIndexedIterableSource implements IRawIterableSource {
   #start?: Time;
   #end?: Time;
 
-  public readonly sourceType = "raw";
+  public readonly sourceType = "serialized";
 
   public constructor(reader: McapIndexedReader) {
     this.#reader = reader;

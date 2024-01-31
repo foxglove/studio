@@ -190,7 +190,7 @@ export class IterablePlayer implements Player {
 
     const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
     this.#bufferedSource =
-      source.sourceType === "raw"
+      source.sourceType === "serialized"
         ? new DeserializingBufferedIterableSource(
             new BufferedIterableSource(source, {
               readAheadDuration: { sec: 120, nsec: 0 },
@@ -529,7 +529,7 @@ export class IterablePlayer implements Player {
         // --- setup block loader which loads messages for _full_ subscriptions in the "background"
         try {
           let blockLoaderSource: IDeserializedIterableSource;
-          if (this.#iterableSource.sourceType === "raw") {
+          if (this.#iterableSource.sourceType === "serialized") {
             const deserSource = new DeserializingIterableSource(this.#iterableSource);
             // The underlying source is already initialized, so we must not call initialize() here.
             deserSource.initializeDeserializers(initResult);

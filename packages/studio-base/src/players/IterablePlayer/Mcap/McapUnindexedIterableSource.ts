@@ -40,7 +40,7 @@ export class McapUnindexedIterableSource implements IRawIterableSource {
   #start?: Time;
   #end?: Time;
 
-  public readonly sourceType = "raw";
+  public readonly sourceType = "serialized";
 
   public constructor(options: Options) {
     this.#options = options;

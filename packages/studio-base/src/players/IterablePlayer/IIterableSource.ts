@@ -214,7 +214,7 @@ export type IterableSourceInitializeArgs = {
   };
 };
 
-export type IRawIterableSource = IIterableSource<Uint8Array> & { sourceType: "raw" };
+export type IRawIterableSource = IIterableSource<Uint8Array> & { sourceType: "serialized" };
 export type IDeserializedIterableSource = IIterableSource & {
   sourceType: "deserialized";
 };

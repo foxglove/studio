@@ -25,7 +25,7 @@ export class WorkerRawIterableSourceWorker implements IRawIterableSource {
     this.#source = source;
   }
 
-  public readonly sourceType = "raw";
+  public readonly sourceType = "serialized";
 
   public async initialize(): Promise<Initalization> {
     return await this.#source.initialize();

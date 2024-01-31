@@ -21,11 +21,11 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
   #messageSizeEstimateByTopic: Record<string, number> = {};
   #connectionIdByTopic: Record<string, number> = {};
 
+  public readonly sourceType = "deserialized";
+
   public constructor(source: IIterableSource<Uint8Array>) {
     this._source = source;
   }
-
-  public readonly sourceType = "deserialized";
 
   public async initialize(): Promise<Initalization> {
     return this.initializeDeserializers(await this._source.initialize());

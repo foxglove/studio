@@ -31,7 +31,7 @@ export class WorkerRawIterableSource implements IRawIterableSource {
 
   #sourceWorkerRemote?: Comlink.Remote<WorkerRawIterableSourceWorker>;
   #disposeRemote?: () => void;
-  public readonly sourceType = "raw";
+  public readonly sourceType = "serialized";
 
   public constructor(args: ConstructorArgs) {
     this.#args = args;

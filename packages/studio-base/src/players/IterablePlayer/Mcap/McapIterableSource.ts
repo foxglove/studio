@@ -51,7 +51,7 @@ export class McapIterableSource implements IRawIterableSource {
     this.#source = source;
   }
 
-  public readonly sourceType = "raw";
+  public readonly sourceType = "serialized";
 
   public async initialize(): Promise<Initalization> {
     const source = this.#source;
