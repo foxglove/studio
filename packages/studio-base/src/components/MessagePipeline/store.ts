@@ -165,7 +165,7 @@ export function createMessagePipelineStore({
       },
       async fetchAsset(uri, options) {
         const { protocol } = new URL(uri);
-        const player = get().player;
+        const { player, lastCapabilities } = get();
 
         if (protocol === "package:") {
           // For the desktop app, package:// is registered as a supported schema for builtin _fetch_ calls.
@@ -173,7 +173,7 @@ export function createMessagePipelineStore({
           const pkgPath = uri.slice("package://".length);
           const pkgName = pkgPath.split("/")[0];
 
-          if (player?.fetchAsset) {
+          if (lastCapabilities.includes(PlayerCapabilities.assets) && player?.fetchAsset) {
             try {
               return await player.fetchAsset(uri);
             } catch (_err) {
@@ -182,7 +182,11 @@ export function createMessagePipelineStore({
           }
 
           if (canBuiltinFetchPkgUri) {
-            return await builtinFetch(uri, options);
+            try {
+              return await builtinFetch(uri, options);
+            } catch (_err) {
+              // Do nothing here as the fallback method below might work.
+            }
           }
 
           if (
