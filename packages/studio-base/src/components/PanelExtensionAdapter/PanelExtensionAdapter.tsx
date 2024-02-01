@@ -548,9 +548,7 @@ function PanelExtensionAdapter(
     );
   }, [initialState, highestSupportedConfigVersion]);
 
-  const playerPresenceShouldBlockRender = useMemo(() => {
-    return playerPresence === PlayerPresence.INITIALIZING;
-  }, [playerPresence]);
+  const playerPresenceShouldBlockRender = playerPresence === PlayerPresence.INITIALIZING;
 
   // Manage extension lifecycle by calling initPanel() when the panel context changes.
   //

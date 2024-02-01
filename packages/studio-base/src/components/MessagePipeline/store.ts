@@ -29,7 +29,7 @@ import { MessagePipelineContext } from "./types";
 
 export function defaultPlayerState(player?: Player): PlayerState {
   return {
-    // when there is a player we default to initializing, to prevent less thrashing in the UI when
+    // when there is a player we default to initializing, to prevent thrashing in the UI when
     // the player is initialized.
     presence: player ? PlayerPresence.INITIALIZING : PlayerPresence.NOT_PRESENT,
     progress: {},
