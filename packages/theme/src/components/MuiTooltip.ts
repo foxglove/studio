@@ -11,8 +11,8 @@ export const MuiTooltip: OverrideComponentReturn<"MuiTooltip"> = {
   defaultProps: {
     arrow: true,
     TransitionComponent: Fade,
-    enterDelay: 800,
-    enterNextDelay: 200,
+    enterDelay: 800, // increase delay for first tooltip
+    enterNextDelay: 200, // increase delay for next tooltip to appear
     TransitionProps: {
       timeout: { exit: 0 },
     },
