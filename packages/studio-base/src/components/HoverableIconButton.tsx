@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { IconButton, IconButtonProps } from "@mui/material";
-import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
+import { forwardRef, useCallback, useEffect, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 type Props = {
@@ -20,8 +20,16 @@ const useStyles = makeStyles()(() => ({
 }));
 
 const HoverableIconButton = forwardRef<HTMLButtonElement, Props>((props, ref) => {
-  const { icon, activeIcon, className, color, activeColor, onMouseLeave, onMouseEnter, ...rest } =
-    props;
+  const {
+    icon,
+    activeIcon = icon,
+    className,
+    color,
+    activeColor,
+    onMouseLeave,
+    onMouseEnter,
+    ...rest
+  } = props;
   const { classes, cx } = useStyles();
   const [hovered, setHovered] = useState(false);
 
@@ -54,12 +62,7 @@ const HoverableIconButton = forwardRef<HTMLButtonElement, Props>((props, ref) =>
     }
   }, [props.disabled]);
 
-  const iconComponent = useMemo(() => {
-    if (activeIcon != undefined) {
-      return hovered ? activeIcon : icon;
-    }
-    return icon;
-  }, [activeIcon, hovered, icon]);
+  const iconComponent = hovered ? activeIcon : icon;
 
   return (
     <IconButton
