@@ -165,6 +165,17 @@ export default function PlaybackControls(props: {
     [getTimeInfo, seek],
   );
 
+  // There is a moment when isPlaying is false, but it is about to repeat (currentTime === endTime). Combining these values prevents visual flicker of the play button on rapid playback repeat
+  const isPlayingOrRepeating = useMemo(() => {
+    const { currentTime, endTime } = getTimeInfo();
+
+    if (isPlaying || (repeat && currentTime && endTime && compare(currentTime, endTime) === 0)) {
+      return true;
+    } else {
+      return false;
+    }
+  }, [isPlaying, repeat, getTimeInfo]);
+
   const keyDownHandlers = useMemo(
     () => ({
       " ": togglePlayPause,
@@ -243,10 +254,10 @@ export default function PlaybackControls(props: {
             <HoverableIconButton
               disabled={disableControls}
               size="small"
-              title={isPlaying ? "Pause" : "Play"}
+              title={isPlayingOrRepeating ? "Pause" : "Play"}
               onClick={togglePlayPause}
-              icon={isPlaying ? <Pause20Regular /> : <Play20Regular />}
-              activeIcon={isPlaying ? <Pause20Filled /> : <Play20Filled />}
+              icon={isPlayingOrRepeating ? <Pause20Regular /> : <Play20Regular />}
+              activeIcon={isPlayingOrRepeating ? <Pause20Filled /> : <Play20Filled />}
             />
             <HoverableIconButton
               disabled={disableControls}
