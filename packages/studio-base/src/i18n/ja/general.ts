@@ -10,4 +10,7 @@ export const general: Partial<TypeOptions["resources"]["general"]> = {
   // word since it would sound very different - フォックスグローブ (Fokusugorobu).
   foxglove: "Foxglove",
   learnMore: "もっと学ぶ",
+  on: undefined,
+  off: undefined,
+  auto: undefined,
 };

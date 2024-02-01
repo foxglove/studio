@@ -47,4 +47,5 @@ export const panels: Partial<TypeOptions["resources"]["panels"]> = {
   userScriptsDescription: "使用 TypeScript 编写自定义数据转换。以前称为 Node Playground。",
   variableSlider: "变量滑块",
   variableSliderDescription: "更新布局的数字变量值。",
+  settings: "设置",
 };

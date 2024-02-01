@@ -6,6 +6,7 @@ import { Button, Tooltip, Fade, buttonClasses, useTheme } from "@mui/material";
 import Hammer from "hammerjs";
 import * as _ from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMountedState } from "react-use";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuidv4 } from "uuid";
@@ -121,6 +122,7 @@ export function Plot(props: Props): JSX.Element {
 
   const { classes } = useStyles();
   const theme = useTheme();
+  const { t } = useTranslation("plot");
 
   const { setMessagePathDropConfig } = usePanelContext();
   const draggingRef = useRef(false);
@@ -738,7 +740,7 @@ export function Plot(props: Props): JSX.Element {
               title="(shortcut: double-click)"
               onClick={onResetView}
             >
-              Reset view
+              {t("resetView")}
             </Button>
           </div>
         )}

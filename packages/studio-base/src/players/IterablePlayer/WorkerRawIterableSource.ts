@@ -11,13 +11,13 @@ import { Immutable, MessageEvent, Time } from "@foxglove/studio";
 import type {
   GetBackfillMessagesArgs,
   IMessageCursor,
-  Initalization,
   IteratorResult,
   MessageIteratorArgs,
   IterableSourceInitializeArgs,
-  IDeserializedIterableSource,
+  IRawIterableSource,
+  Initalization,
 } from "./IIterableSource";
-import type { WorkerIterableSourceWorker } from "./WorkerIterableSourceWorker";
+import type { WorkerRawIterableSourceWorker } from "./WorkerRawIterableSourceWorker";
 
 Comlink.transferHandlers.set("abortsignal", abortSignalTransferHandler);
 
@@ -26,13 +26,12 @@ type ConstructorArgs = {
   initArgs: IterableSourceInitializeArgs;
 };
 
-export class WorkerIterableSource implements IDeserializedIterableSource {
+export class WorkerRawIterableSource implements IRawIterableSource {
   readonly #args: ConstructorArgs;
 
-  #sourceWorkerRemote?: Comlink.Remote<WorkerIterableSourceWorker>;
+  #sourceWorkerRemote?: Comlink.Remote<WorkerRawIterableSourceWorker>;
   #disposeRemote?: () => void;
-
-  public readonly sourceType = "deserialized";
+  public readonly sourceType = "serialized";
 
   public constructor(args: ConstructorArgs) {
     this.#args = args;
@@ -46,7 +45,7 @@ export class WorkerIterableSource implements IDeserializedIterableSource {
 
     const { remote: initializeWorker, dispose } =
       ComlinkWrap<
-        (args: IterableSourceInitializeArgs) => Comlink.Remote<WorkerIterableSourceWorker>
+        (args: IterableSourceInitializeArgs) => Comlink.Remote<WorkerRawIterableSourceWorker>
       >(worker);
 
     this.#disposeRemote = dispose;
@@ -56,7 +55,7 @@ export class WorkerIterableSource implements IDeserializedIterableSource {
 
   public async *messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult<Uint8Array>>> {
     if (this.#sourceWorkerRemote == undefined) {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
@@ -79,7 +78,9 @@ export class WorkerIterableSource implements IDeserializedIterableSource {
     }
   }
 
-  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<Uint8Array>[]> {
     if (this.#sourceWorkerRemote == undefined) {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
@@ -93,7 +94,7 @@ export class WorkerIterableSource implements IDeserializedIterableSource {
 
   public getMessageCursor(
     args: Immutable<MessageIteratorArgs & { abort?: AbortSignal }>,
-  ): IMessageCursor {
+  ): IMessageCursor<Uint8Array> {
     if (this.#sourceWorkerRemote == undefined) {
       throw new Error(`WorkerIterableSource is not initialized`);
     }
@@ -104,7 +105,7 @@ export class WorkerIterableSource implements IDeserializedIterableSource {
     const { abort, ...rest } = args;
     const messageCursorPromise = this.#sourceWorkerRemote.getMessageCursor(rest, abort);
 
-    const cursor: IMessageCursor = {
+    const cursor: IMessageCursor<Uint8Array> = {
       async next() {
         const messageCursor = await messageCursorPromise;
         return await messageCursor.next();

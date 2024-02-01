@@ -12,6 +12,7 @@ import {
   Portal,
 } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -152,7 +153,8 @@ export function CompatibilityBanner({
   isDismissable: boolean;
 }): JSX.Element | ReactNull {
   const { classes } = useStyles();
-  const muiTheme = createMuiTheme("dark");
+  const { i18n } = useTranslation();
+  const muiTheme = createMuiTheme("dark", i18n.language);
   const [showBanner, setShowBanner] = useState(true);
 
   if (!showBanner || currentVersion >= MINIMUM_CHROME_VERSION) {

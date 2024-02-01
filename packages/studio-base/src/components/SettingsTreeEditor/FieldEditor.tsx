@@ -16,6 +16,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { makeStyles } from "tss-react/mui";
 import { v4 as uuid } from "uuid";
 
@@ -112,6 +113,7 @@ function FieldInput({
   path: readonly string[];
 }): JSX.Element {
   const { classes, cx } = useStyles();
+  const { t } = useTranslation("general");
 
   switch (field.input) {
     case "autocomplete":
@@ -243,8 +245,8 @@ function FieldInput({
             }
           }}
         >
-          <ToggleButton value={false}>Off</ToggleButton>
-          <ToggleButton value={true}>On</ToggleButton>
+          <ToggleButton value={false}>{t("off")}</ToggleButton>
+          <ToggleButton value={true}>{t("on")}</ToggleButton>
         </ToggleButtonGroup>
       );
     case "rgb":

@@ -7,7 +7,7 @@ import { TypeOptions } from "i18next";
 export const plot: Partial<TypeOptions["resources"]["plot"]> = {
   accumulatedPath: "地址（累积）",
   addSeries: "添加数据系列",
-  clickToAddASeries: undefined,
+  clickToAddASeries: "点击来添加数据系列",
   color: "颜色",
   currentPath: "地址（当前）",
   deleteSeries: "删除数据系列",
@@ -19,6 +19,7 @@ export const plot: Partial<TypeOptions["resources"]["plot"]> = {
   label: "标签",
   left: "左",
   legend: "图例",
+  lineSize: "线宽",
   max: "最大值",
   maxXError: "X 的最大值必须大于 X 的最小值。",
   maxYError: "Y 的最大值必须大于 Y 的最小值。",
@@ -29,6 +30,7 @@ export const plot: Partial<TypeOptions["resources"]["plot"]> = {
   secondsRange: "范围（秒）",
   series: "数据系列",
   showLabels: "显示标签",
+  showLine: "显示线条",
   showValues: "显示值",
   syncWithOtherPlots: "与其他图表同步",
   timestamp: "时间戳",
@@ -36,4 +38,5 @@ export const plot: Partial<TypeOptions["resources"]["plot"]> = {
   value: "值",
   xAxis: "X 轴",
   yAxis: "Y 轴",
+  resetView: "重置视图",
 };

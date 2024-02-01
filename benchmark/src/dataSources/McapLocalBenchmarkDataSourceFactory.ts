@@ -6,6 +6,7 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { DeserializingIterableSource } from "@foxglove/studio-base/players/IterablePlayer/DeserializingIterableSource";
 import { McapIterableSource } from "@foxglove/studio-base/players/IterablePlayer/Mcap/McapIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
 
@@ -25,7 +26,8 @@ class McapLocalBenchmarkDataSourceFactory implements IDataSourceFactory {
     }
 
     const mcapProvider = new McapIterableSource({ type: "file", file });
-    return new BenchmarkPlayer(file.name, mcapProvider);
+    const source = new DeserializingIterableSource(mcapProvider);
+    return new BenchmarkPlayer(file.name, source);
   }
 }
 

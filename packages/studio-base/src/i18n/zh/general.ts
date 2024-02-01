@@ -8,4 +8,7 @@ import { TypeOptions } from "i18next";
 export const general: Partial<TypeOptions["resources"]["general"]> = {
   foxglove: "Foxglove",
   learnMore: "了解更多",
+  on: "开",
+  off: "关",
+  auto: "自动",
 };
