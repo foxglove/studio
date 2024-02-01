@@ -28,12 +28,12 @@ export const lineColors = [
   toolsColorScheme.paleGreen.medium,
 ];
 
-const colorExpansion = lineColors.map((color) => [
-  color,
-  ...tinycolor(color)
-    .tetrad()
-    .map((acolor) => acolor.toHexString()),
-]);
+// const colorExpansion = lineColors.map((color) => [
+//   color,
+//   ...tinycolor(color)
+//     .tetrad()
+//     .map((acolor) => acolor.toHexString()),
+// ]);
 
 // export const expandedLineColors = _.uniq(
 //   _.range(0, colorExpansion[0]!.length)
