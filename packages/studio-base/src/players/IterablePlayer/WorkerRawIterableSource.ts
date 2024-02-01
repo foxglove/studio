@@ -14,7 +14,7 @@ import type {
   IteratorResult,
   MessageIteratorArgs,
   IterableSourceInitializeArgs,
-  IRawIterableSource,
+  ISerializedIterableSource,
   Initalization,
 } from "./IIterableSource";
 import type { WorkerRawIterableSourceWorker } from "./WorkerRawIterableSourceWorker";
@@ -26,7 +26,7 @@ type ConstructorArgs = {
   initArgs: IterableSourceInitializeArgs;
 };
 
-export class WorkerRawIterableSource implements IRawIterableSource {
+export class WorkerRawIterableSource implements ISerializedIterableSource {
   readonly #args: ConstructorArgs;
 
   #sourceWorkerRemote?: Comlink.Remote<WorkerRawIterableSourceWorker>;

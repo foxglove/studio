@@ -13,15 +13,15 @@ import type {
   IMessageCursor,
   IteratorResult,
   MessageIteratorArgs,
-  IRawIterableSource,
+  ISerializedIterableSource,
   Initalization,
 } from "./IIterableSource";
 import { IteratorCursor } from "./IteratorCursor";
 
-export class WorkerRawIterableSourceWorker implements IRawIterableSource {
-  #source: IRawIterableSource;
+export class WorkerRawIterableSourceWorker implements ISerializedIterableSource {
+  #source: ISerializedIterableSource;
 
-  public constructor(source: IRawIterableSource) {
+  public constructor(source: ISerializedIterableSource) {
     this.#source = source;
   }
 

@@ -12,7 +12,7 @@ import {
   GetBackfillMessagesArgs,
   IteratorResult,
   MessageIteratorArgs,
-  IRawIterableSource,
+  ISerializedIterableSource,
   Initalization,
   TopicWithDecodingInfo,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
@@ -21,7 +21,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const log = Logger.getLogger(__filename);
 
-export class McapIndexedIterableSource implements IRawIterableSource {
+export class McapIndexedIterableSource implements ISerializedIterableSource {
   #reader: McapIndexedReader;
   #channelInfoById = new Map<
     number,
