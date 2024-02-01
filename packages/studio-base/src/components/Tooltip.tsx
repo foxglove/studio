@@ -6,8 +6,8 @@ import { Tooltip as MuiTooltip, TooltipProps } from "@mui/material";
 import { MouseEvent, useCallback, useMemo } from "react";
 
 /**
- * Tooltip wraps a MUI tooltip to close the tooltip when the child component is clicked. MUI tooltip does not have this feature.
- * tooltip `onClick` which the MUI Tooltip does not support.
+ * Tooltip wraps a MUI tooltip to close the tooltip when the child component is clicked.
+ * MUI tooltip does not have this feature.
  */
 
 export function Tooltip(props: TooltipProps): JSX.Element {

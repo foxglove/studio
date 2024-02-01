@@ -12,6 +12,7 @@ import {
   DialogActions,
   DialogTitle,
   TextField,
+  Tooltip,
   outlinedInputClasses,
 } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
@@ -20,7 +21,6 @@ import { makeStyles } from "tss-react/mui";
 import CopyButton from "@foxglove/studio-base/components/CopyButton";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { Tooltip } from "@foxglove/studio-base/components/Tooltip";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 export type ShareJsonModalProps = {
