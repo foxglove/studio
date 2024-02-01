@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Chart, ChartDataset, ChartOptions, ScatterDataPoint } from "chart.js";
+import { Chart, ChartDataset, ChartOptions, ScatterDataPoint, Ticks } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import EventEmitter from "eventemitter3";
 
@@ -71,6 +71,11 @@ export type UpdateAction = {
   referenceLines?: { color: string; value: number }[];
   interactionEvents?: InteractionEvent[];
 };
+
+const fixedNumberFormat = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 function addEventListener(emitter: EventEmitter) {
   return (eventName: string, fn?: () => void) => {
@@ -257,6 +262,19 @@ export class ChartRenderer {
 
       if (scaleOption && scaleOption.max !== action.xBounds.max) {
         scaleOption.max = action.xBounds.max;
+      }
+
+      // Adjust the `ticks` of the chart options to ensure the first/last x labels remain a
+      // constant width. See https://github.com/foxglove/studio/issues/2926
+      if (scaleOption?.ticks) {
+        scaleOption.ticks.callback = function (value, index, ticks) {
+          // use a fixed formatter for the first/last ticks
+          if (index === 0 || index === ticks.length - 1) {
+            return fixedNumberFormat.format(value as number);
+          }
+          // otherwise use chart.js's default formatter
+          return Ticks.formatters.numeric.apply(this, [value as number, index, ticks]);
+        };
       }
     }
 
