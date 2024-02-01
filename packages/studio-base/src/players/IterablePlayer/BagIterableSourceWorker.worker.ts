@@ -5,18 +5,20 @@
 import * as Comlink from "comlink";
 
 import { IterableSourceInitializeArgs } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { WorkerRawIterableSourceWorker } from "@foxglove/studio-base/players/IterablePlayer/WorkerRawIterableSourceWorker";
+import { WorkerSerializedIterableSourceWorker } from "@foxglove/studio-base/players/IterablePlayer/WorkerSerializedIterableSourceWorker";
 
 import { BagIterableSource } from "./BagIterableSource";
 
-export function initialize(args: IterableSourceInitializeArgs): WorkerRawIterableSourceWorker {
+export function initialize(
+  args: IterableSourceInitializeArgs,
+): WorkerSerializedIterableSourceWorker {
   if (args.file) {
     const source = new BagIterableSource({ type: "file", file: args.file });
-    const wrapped = new WorkerRawIterableSourceWorker(source);
+    const wrapped = new WorkerSerializedIterableSourceWorker(source);
     return Comlink.proxy(wrapped);
   } else if (args.url) {
     const source = new BagIterableSource({ type: "remote", url: args.url });
-    const wrapped = new WorkerRawIterableSourceWorker(source);
+    const wrapped = new WorkerSerializedIterableSourceWorker(source);
     return Comlink.proxy(wrapped);
   }
 

@@ -18,7 +18,7 @@ import type {
 } from "./IIterableSource";
 import { IteratorCursor } from "./IteratorCursor";
 
-export class WorkerRawIterableSourceWorker implements ISerializedIterableSource {
+export class WorkerSerializedIterableSourceWorker implements ISerializedIterableSource {
   #source: ISerializedIterableSource;
 
   public constructor(source: ISerializedIterableSource) {

@@ -11,7 +11,7 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   IterablePlayer,
-  WorkerRawIterableSource,
+  WorkerSerializedIterableSource,
 } from "@foxglove/studio-base/players/IterablePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
@@ -96,7 +96,7 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
       throw new Error(`Unsupported extension: ${extension}`);
     }
 
-    const source = new WorkerRawIterableSource({ initWorker, initArgs: { url } });
+    const source = new WorkerSerializedIterableSource({ initWorker, initArgs: { url } });
     return new IterablePlayer({
       source,
       name: url,

@@ -5,10 +5,10 @@
 import { MessageEvent } from "@foxglove/studio";
 import {
   GetBackfillMessagesArgs,
+  ISerializedIterableSource,
   Initalization,
-  MessageIteratorArgs,
   IteratorResult,
-  IRawIterableSource,
+  MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 
@@ -34,7 +34,7 @@ async function* defaultMessageIterator(
   }
 }
 
-class TestSource implements IRawIterableSource {
+class TestSource implements ISerializedIterableSource {
   public readonly sourceType = "serialized";
 
   public async initialize(): Promise<Initalization> {
