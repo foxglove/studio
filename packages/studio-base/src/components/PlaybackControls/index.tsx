@@ -185,18 +185,6 @@ export default function PlaybackControls(props: {
 
   const disableControls = presence === PlayerPresence.ERROR;
 
-  const playPauseButton = useMemo(() => {
-    return {
-      title: (
-        <>
-          {isPlaying ? "Pause" : "Play"} <kbd>Space</kbd>
-        </>
-      ),
-      icon: isPlaying ? <Pause20Regular /> : <Play20Regular />,
-      activeIcon: isPlaying ? <Pause20Filled /> : <Play20Filled />,
-    };
-  }, [isPlaying]);
-
   return (
     <>
       <RepeatAdapter play={play} seek={seek} repeatEnabled={repeat} />
@@ -259,13 +247,21 @@ export default function PlaybackControls(props: {
                 onClick={seekBackwardAction}
               />
             </Tooltip>
-            <Tooltip enterDelay={1200} enterNextDelay={800} title={playPauseButton.title}>
+            <Tooltip
+              enterDelay={1200}
+              enterNextDelay={800}
+              title={
+                <>
+                  {isPlaying ? "Pause" : "Play"} <kbd>Space</kbd>
+                </>
+              }
+            >
               <HoverableIconButton
                 disabled={disableControls}
                 size="small"
                 onClick={togglePlayPause}
-                icon={playPauseButton.icon}
-                activeIcon={playPauseButton.activeIcon}
+                icon={isPlaying ? <Pause20Regular /> : <Play20Regular />}
+                activeIcon={isPlaying ? <Pause20Filled /> : <Play20Filled />}
               />
             </Tooltip>
             <Tooltip
