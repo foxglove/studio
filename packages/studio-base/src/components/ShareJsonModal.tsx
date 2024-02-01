@@ -12,7 +12,6 @@ import {
   DialogActions,
   DialogTitle,
   TextField,
-  Tooltip,
   outlinedInputClasses,
 } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
@@ -109,16 +108,15 @@ export function ShareJsonModal({
             <ArrowDownload20Filled />
           </IconButton>
           <CopyButton color="inherit" getText={getText} />
-          <Tooltip title="Clear">
-            <HoverableIconButton
-              activeColor="error"
-              onClick={() => {
-                setValue("{}");
-              }}
-              aria-label="Clear"
-              icon={<Delete20Regular />}
-            />
-          </Tooltip>
+          <HoverableIconButton
+            activeColor="error"
+            onClick={() => {
+              setValue("{}");
+            }}
+            title="Clear"
+            aria-label="Clear"
+            icon={<Delete20Regular />}
+          />
         </Stack>
 
         <Stack flex="auto" />
