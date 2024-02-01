@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { ChartOptions, ScaleOptions } from "chart.js";
+import { AnnotationOptions } from "chartjs-plugin-annotation";
 import * as _ from "lodash-es";
 import * as R from "ramda";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -214,7 +215,7 @@ function StateTransitions(props: Props) {
 
   const showPoints = config.showPoints === true;
 
-  const { pathState, data, minY } = useMemo(() => {
+  const { pathState, data, minY, annotations } = useMemo(() => {
     // ignore all data when we don't have a start time
     if (!startTime) {
       return {
@@ -227,6 +228,8 @@ function StateTransitions(props: Props) {
     let outMinY: number | undefined;
     const outDatasets: ChartDatasets = [];
     const outPathState: PathState[] = [];
+
+    const outAnnotations: AnnotationOptions[] = [];
 
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
@@ -243,6 +246,18 @@ function StateTransitions(props: Props) {
         startTime,
         y,
         showPoints,
+      });
+      outAnnotations.push({
+        type: "line",
+        display: true,
+        drawTime: "afterDatasetsDraw",
+        xMin: 0.03,
+        xMax: 0.03,
+        yMin: y - 0.5,
+        yMax: y + 0.5,
+        borderColor: "#ffffff",
+        borderWidth: 1,
+        value: 2,
       });
 
       // We have already filtered out paths we can find in blocks so anything left here
@@ -277,6 +292,7 @@ function StateTransitions(props: Props) {
       data: { datasets: outDatasets },
       minY: outMinY,
       pathState: outPathState,
+      annotations: outAnnotations,
     };
   }, [decodedBlocks, newItemsByPath, paths, startTime, showPoints]);
 
@@ -421,6 +437,7 @@ function StateTransitions(props: Props) {
             interactionMode="lastX"
             onClick={onClick}
             currentTime={currentTimeSinceStart}
+            annotations={annotations}
           />
           <PathLegend
             paths={paths}

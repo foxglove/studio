@@ -35,11 +35,42 @@ const colorExpansion = lineColors.map((color) => [
     .map((acolor) => acolor.toHexString()),
 ]);
 
-export const expandedLineColors = _.uniq(
-  _.range(0, colorExpansion[0]!.length)
-    .map((i) => colorExpansion.map((colors) => colors[i]!))
-    .flat(),
-);
+// export const expandedLineColors = _.uniq(
+//   _.range(0, colorExpansion[0]!.length)
+//     .map((i) => colorExpansion.map((colors) => colors[i]!))
+//     .flat(),
+// );
+// export const expandedLineColors = _.range(10).flatMap((i) => [
+//   tinycolor({ h: (i * 360) / 10, s: 1, v: 0.8 }).toHexString(),
+//   tinycolor({ h: (i * 360) / 10, s: 0.8, v: 1 }).toHexString(),
+// ]);
+export const expandedLineColors = [
+  // "#8dd3c7",
+  // "#ffffb3",
+  // "#bebada",
+  // "#fb8072",
+  // "#80b1d3",
+  // "#fdb462",
+  // "#b3de69",
+  // "#fccde5",
+  // "#d9d9d9",
+  // "#bc80bd",
+  // "#ccebc5",
+  // "#ffed6f",
+  //
+  "#a6cee3",
+  "#1f78b4",
+  "#b2df8a",
+  "#33a02c",
+  "#fb9a99",
+  "#e31a1c",
+  "#fdbf6f",
+  "#ff7f00",
+  "#cab2d6",
+  "#6a3d9a",
+  "#ffff99",
+  "#b15928",
+];
 
 export const lightColor: (_: string) => string = _.memoize((color: string): string =>
   tinycolor(color).brighten(15).toString(),
