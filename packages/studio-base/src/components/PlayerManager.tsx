@@ -53,7 +53,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const analytics = useAnalytics();
   const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
-  const [playerState, setPlayerState] = useState<
+  const [playerInstances, setPlayerInstances] = useState<
     { topicAliasPlayer: TopicAliasingPlayer; player: Player } | undefined
   >();
 
@@ -62,13 +62,13 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const constructPlayers = useCallback(
     (newPlayer: Player | undefined) => {
       if (!newPlayer) {
-        setPlayerState(undefined);
+        setPlayerInstances(undefined);
         return undefined;
       }
 
       const topicAliasingPlayer = new TopicAliasingPlayer(newPlayer);
       const finalPlayer = wrapPlayer(topicAliasingPlayer);
-      setPlayerState({
+      setPlayerInstances({
         topicAliasPlayer: topicAliasingPlayer,
         player: finalPlayer,
       });
@@ -86,15 +86,15 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     // We only want to set alias functions on the player when the functions have changed
     let topicAliasFunctions =
       extensionCatalogContext.getState().installedTopicAliasFunctions ?? emptyAliasFunctions;
-    playerState?.topicAliasPlayer.setAliasFunctions(topicAliasFunctions);
+    playerInstances?.topicAliasPlayer.setAliasFunctions(topicAliasFunctions);
 
     return extensionCatalogContext.subscribe((state) => {
       if (topicAliasFunctions !== state.installedTopicAliasFunctions) {
         topicAliasFunctions = state.installedTopicAliasFunctions ?? emptyAliasFunctions;
-        playerState?.topicAliasPlayer.setAliasFunctions(topicAliasFunctions);
+        playerInstances?.topicAliasPlayer.setAliasFunctions(topicAliasFunctions);
       }
     });
-  }, [extensionCatalogContext, playerState?.topicAliasPlayer]);
+  }, [extensionCatalogContext, playerInstances?.topicAliasPlayer]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -248,7 +248,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   return (
     <>
       <PlayerSelectionContext.Provider value={value}>
-        <MessagePipelineProvider player={playerState?.player}>{children}</MessagePipelineProvider>
+        <MessagePipelineProvider player={playerInstances?.player}>
+          {children}
+        </MessagePipelineProvider>
       </PlayerSelectionContext.Provider>
     </>
   );
