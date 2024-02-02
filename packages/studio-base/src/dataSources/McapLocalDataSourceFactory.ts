@@ -7,7 +7,7 @@ import {
   IDataSourceFactory,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { IterablePlayer } from "@foxglove/studio-base/players/IterablePlayer";
-import { WorkerSerializedIterableSource } from "@foxglove/studio-base/players/IterablePlayer/WorkerSerializedIterableSource";
+import { WorkerRawIterableSource } from "@foxglove/studio-base/players/IterablePlayer/WorkerRawIterableSource";
 import { Player } from "@foxglove/studio-base/players/types";
 
 class McapLocalDataSourceFactory implements IDataSourceFactory {
@@ -23,7 +23,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const source = new WorkerSerializedIterableSource({
+    const source = new WorkerRawIterableSource({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta

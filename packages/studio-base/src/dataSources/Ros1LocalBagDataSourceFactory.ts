@@ -8,7 +8,7 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   IterablePlayer,
-  WorkerSerializedIterableSource,
+  WorkerRawIterableSource,
 } from "@foxglove/studio-base/players/IterablePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
@@ -25,7 +25,7 @@ class Ros1LocalBagDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    const source = new WorkerSerializedIterableSource({
+    const source = new WorkerRawIterableSource({
       initWorker: () => {
         return new Worker(
           // foxglove-depcheck-used: babel-plugin-transform-import-meta

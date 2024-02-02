@@ -5,19 +5,17 @@
 import * as Comlink from "comlink";
 
 import { IterableSourceInitializeArgs } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { WorkerSerializedIterableSourceWorker } from "@foxglove/studio-base/players/IterablePlayer/WorkerSerializedIterableSourceWorker";
+import { WorkerRawIterableSourceWorker } from "@foxglove/studio-base/players/IterablePlayer/WorkerRawIterableSourceWorker";
 
 import { RosDb3IterableSource } from "./RosDb3IterableSource";
 
-export function initialize(
-  args: IterableSourceInitializeArgs,
-): WorkerSerializedIterableSourceWorker {
+export function initialize(args: IterableSourceInitializeArgs): WorkerRawIterableSourceWorker {
   const files = args.file ? [args.file] : args.files;
   if (!files) {
     throw new Error("files required");
   }
   const source = new RosDb3IterableSource(files);
-  const wrapped = new WorkerSerializedIterableSourceWorker(source);
+  const wrapped = new WorkerRawIterableSourceWorker(source);
   return Comlink.proxy(wrapped);
 }
 

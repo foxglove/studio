@@ -17,7 +17,7 @@ import type {
   ISerializedIterableSource,
   Initalization,
 } from "./IIterableSource";
-import type { WorkerSerializedIterableSourceWorker } from "./WorkerSerializedIterableSourceWorker";
+import type { WorkerRawIterableSourceWorker } from "./WorkerRawIterableSourceWorker";
 
 Comlink.transferHandlers.set("abortsignal", abortSignalTransferHandler);
 
@@ -26,10 +26,10 @@ type ConstructorArgs = {
   initArgs: IterableSourceInitializeArgs;
 };
 
-export class WorkerSerializedIterableSource implements ISerializedIterableSource {
+export class WorkerRawIterableSource implements ISerializedIterableSource {
   readonly #args: ConstructorArgs;
 
-  #sourceWorkerRemote?: Comlink.Remote<WorkerSerializedIterableSourceWorker>;
+  #sourceWorkerRemote?: Comlink.Remote<WorkerRawIterableSourceWorker>;
   #disposeRemote?: () => void;
   public readonly sourceType = "serialized";
 
@@ -45,7 +45,7 @@ export class WorkerSerializedIterableSource implements ISerializedIterableSource
 
     const { remote: initializeWorker, dispose } =
       ComlinkWrap<
-        (args: IterableSourceInitializeArgs) => Comlink.Remote<WorkerSerializedIterableSourceWorker>
+        (args: IterableSourceInitializeArgs) => Comlink.Remote<WorkerRawIterableSourceWorker>
       >(worker);
 
     this.#disposeRemote = dispose;

@@ -4,4 +4,4 @@
 
 export * from "./IterablePlayer";
 export * from "./WorkerIterableSource";
-export * from "./WorkerSerializedIterableSource";
+export * from "./WorkerRawIterableSource";
