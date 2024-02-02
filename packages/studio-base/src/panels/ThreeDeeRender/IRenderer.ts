@@ -26,7 +26,7 @@ import { LabelPool } from "@foxglove/three-text";
 
 import { HUDItem } from "./HUDItemManager";
 import { Input } from "./Input";
-import { MeshUpAxis, ModelCache } from "./ModelCache";
+import { ConfiguredModelCache, MeshUpAxis } from "./ModelCache";
 import { PickedRenderable } from "./Picker";
 import { SceneExtension } from "./SceneExtension";
 import { SettingsManager } from "./SettingsManager";
@@ -249,7 +249,7 @@ export interface IRenderer extends EventEmitter<RendererEvents> {
   ros: boolean;
 
   colorScheme: "dark" | "light";
-  modelCache: ModelCache;
+  modelCache: ConfiguredModelCache;
   transformTree: TransformTree;
   coordinateFrameList: SelectEntry[];
   currentTime: bigint;

@@ -48,17 +48,24 @@ const OBJ_MIME_TYPES = ["model/obj", "text/prs.wavefront-obj"];
 export class ModelCache {
   #textDecoder = new TextDecoder();
   #models = new Map<string, Promise<LoadedModel | undefined>>();
-  #edgeMaterial: THREE.Material;
-  #fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   #colladaTextureObjectUrls = new Map<string, string>();
   #dracoLoader?: DRACOLoader;
+  #usageCount = 0;
 
-  public constructor(public readonly options: ModelCacheOptions) {
-    this.#edgeMaterial = options.edgeMaterial;
-    this.#fetchAsset = options.fetchAsset;
+  public getConfiguredLoad(
+    modelCacheOptions: ModelCacheOptions,
+  ): (
+    url: string,
+    opts: LoadModelOptions,
+    reportError: ErrorCallback,
+  ) => Promise<LoadedModel | undefined> {
+    return async (url: string, opts: LoadModelOptions, reportError: ErrorCallback) => {
+      return await this.load(modelCacheOptions, url, opts, reportError);
+    };
   }
 
   public async load(
+    config: ModelCacheOptions,
     url: string,
     opts: LoadModelOptions,
     reportError: ErrorCallback,
@@ -68,8 +75,8 @@ export class ModelCache {
       return await promise;
     }
 
-    promise = this.#loadModel(url, opts, reportError)
-      .then((model) => addEdges(model, this.#edgeMaterial))
+    promise = this.#loadModel(config, url, opts, reportError)
+      .then((model) => addEdges(model, config.edgeMaterial))
       .catch(async (err) => {
         reportError(err as Error);
         return undefined;
@@ -80,13 +87,14 @@ export class ModelCache {
   }
 
   async #loadModel(
+    config: ModelCacheOptions,
     url: string,
     options: LoadModelOptions,
     reportError: ErrorCallback,
   ): Promise<LoadedModel> {
     const GLB_MAGIC = 0x676c5446; // "glTF"
 
-    const asset = await this.#fetchAsset(url, { referenceUrl: options.referenceUrl });
+    const asset = await config.fetchAsset(url, { referenceUrl: options.referenceUrl });
 
     const buffer = asset.data;
     if (buffer.byteLength < 4) {
@@ -112,20 +120,20 @@ export class ModelCache {
       return this.#loadSTL(
         url,
         buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-        this.options.meshUpAxis,
+        config.meshUpAxis,
       );
     }
 
     // Check if this is a COLLADA file based on content-type or file extension
     if (DAE_MIME_TYPES.includes(contentType) || /\.dae$/i.test(url)) {
       const text = this.#textDecoder.decode(buffer);
-      return await this.#loadCollada(url, text, this.options.ignoreColladaUpAxis, reportError);
+      return await this.#loadCollada(config, url, text, config.ignoreColladaUpAxis, reportError);
     }
 
     // Check if this is an OBJ file based on content-type or file extension
     if (OBJ_MIME_TYPES.includes(contentType) || /\.obj$/i.test(url)) {
       const text = this.#textDecoder.decode(buffer);
-      return await this.#loadOBJ(url, text, this.options.meshUpAxis, reportError);
+      return await this.#loadOBJ(url, text, config.meshUpAxis, reportError);
     }
 
     throw new Error(`Unknown ${buffer.byteLength} byte mesh (content-type: "${contentType}")`);
@@ -181,6 +189,7 @@ export class ModelCache {
   }
 
   async #loadCollada(
+    config: ModelCacheOptions,
     url: string,
     text: string,
     // eslint-disable-next-line @foxglove/no-boolean-parameters
@@ -218,7 +227,7 @@ export class ModelCache {
         if (this.#colladaTextureObjectUrls.has(textureUrl)) {
           continue;
         }
-        const textureAsset = await this.#fetchAsset(textureUrl);
+        const textureAsset = await config.fetchAsset(textureUrl);
         const objectUrl = URL.createObjectURL(
           new Blob([textureAsset.data], { type: textureAsset.mediaType }),
         );
@@ -301,10 +310,36 @@ export class ModelCache {
     return dracoLoader;
   }
 
-  public dispose(): void {
+  public incrementUsage(): void {
+    this.#usageCount += 1;
+  }
+
+  public decrementUsage(): void {
+    this.#usageCount -= 1;
+    if (this.#usageCount <= 0) {
+      this.reset();
+    }
+  }
+
+  public reset(): void {
     this.#colladaTextureObjectUrls.forEach((_key, objectUrl) => {
       URL.revokeObjectURL(objectUrl);
     });
+    this.#colladaTextureObjectUrls.clear();
+    const modelPromises = this.#models.entries();
+    this.#models.clear();
+    for (const [, modelPromise] of modelPromises) {
+      void modelPromise.then((model) => {
+        model?.removeFromParent();
+        model?.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            child.material.dispose();
+          }
+        });
+      });
+    }
+
     // DRACOLoader is only loader that needs to be disposed because it uses a webworker
     this.#dracoLoader?.dispose();
     this.#dracoLoader = undefined;
@@ -413,4 +448,35 @@ function unrewriteUrl(url: string): string {
 
 function baseUrl(url: string): string {
   return url.slice(0, url.lastIndexOf("/") + 1);
+}
+
+let modelCacheInstance: ModelCache | undefined = undefined;
+
+export function resetModelCache(): void {
+  modelCacheInstance?.reset();
+}
+
+export type ConfiguredModelCache = {
+  load: (
+    url: string,
+    opts: LoadModelOptions,
+    reportError: ErrorCallback,
+  ) => Promise<LoadedModel | undefined>;
+  release: () => void;
+  options: ModelCacheOptions;
+};
+
+export function getConfiguredModelCache(
+  modelCacheConfiguration: ModelCacheOptions,
+): ConfiguredModelCache {
+  if (!modelCacheInstance) {
+    modelCacheInstance = new ModelCache();
+  }
+  modelCacheInstance.incrementUsage();
+
+  return {
+    load: modelCacheInstance.getConfiguredLoad(modelCacheConfiguration),
+    release: modelCacheInstance.decrementUsage.bind(modelCacheInstance),
+    options: modelCacheConfiguration,
+  };
 }

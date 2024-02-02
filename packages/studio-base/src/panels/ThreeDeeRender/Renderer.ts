@@ -49,7 +49,7 @@ import {
   TestOptions,
 } from "./IRenderer";
 import { Input } from "./Input";
-import { DEFAULT_MESH_UP_AXIS, ModelCache } from "./ModelCache";
+import { ConfiguredModelCache, DEFAULT_MESH_UP_AXIS, getConfiguredModelCache } from "./ModelCache";
 import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
 import { SceneExtension } from "./SceneExtension";
@@ -209,7 +209,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
   #selectionBackdrop: ScreenOverlay;
   #selectedRenderable: PickedRenderable | undefined;
   public colorScheme: "dark" | "light" = "light";
-  public modelCache: ModelCache;
+  public modelCache: ConfiguredModelCache;
 
   /**
    * Max capacity should be chosen to be at least several multiples of
@@ -299,7 +299,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       this.gl.setSize(width, height);
     }
 
-    this.modelCache = new ModelCache({
+    this.modelCache = getConfiguredModelCache({
       ignoreColladaUpAxis: config.scene.ignoreColladaUpAxis ?? false,
       meshUpAxis: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
       edgeMaterial: this.outlineMaterial,
@@ -431,7 +431,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
     this.sceneExtensions.clear();
     this.sharedGeometry.dispose();
-    this.modelCache.dispose();
+    this.modelCache.release();
 
     this.labelPool.dispose();
     this.markerPool.dispose();
