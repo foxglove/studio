@@ -84,7 +84,7 @@
     "@types/three": "0.156.0",
     "@types/tinycolor2": "1.4.6",
     "@types/uuid": "9.0.7",
-    "@types/wicg-file-system-access": "2020.9.6",
+    "@types/wicg-file-system-access": "2023.10.4",
     "@uiw/react-textarea-code-editor": "3.0.2",
     "babel-jest": "29.7.0",
     "babel-plugin-transform-import-meta": "2.2.1",
