@@ -71,6 +71,9 @@ const useStyles = makeStyles()((theme) => ({
       color: theme.palette.error.main,
     },
   },
+  popper: {
+    maxWidth: `calc(100vw - ${theme.spacing(2)})`,
+  },
 }));
 
 const EMPTY_SET = new Set<number>();
@@ -99,8 +102,14 @@ const getOptionLabel = (item: string | FzfResultItem) =>
 // the width. We want to set the minWidth to allow the popper to grow wider than the input field width,
 // so we can show long topic paths and autocomplete entries.
 const CustomPopper = function (props: PopperProps) {
-  const width = props.style?.width ?? 0;
-  return <Popper {...props} style={{ minWidth: width }} placement="bottom-start" />;
+  const { classes, cx } = useStyles();
+  return (
+    <Popper
+      {...props}
+      className={cx(props.className, classes.popper)}
+      style={{ minWidth: props.style?.width ?? 0 }}
+    />
+  );
 };
 
 /**
@@ -204,6 +213,7 @@ export const Autocomplete = React.forwardRef(function Autocomplete(
       className={className}
       componentsProps={{
         paper: { elevation: 8 },
+        popper: { placement: "bottom-start" },
       }}
       getOptionLabel={getOptionLabel}
       disableCloseOnSelect
