@@ -2305,7 +2305,7 @@ __metadata:
   dependencies:
     "@foxglove/log": "workspace:*"
     "@foxglove/tsconfig": 2.0.0
-    "@testing-library/react": 14.0.0
+    "@testing-library/react": 14.2.1
     "@types/foxglove__web": "workspace:*"
     "@types/lodash-es": ^4
     lodash-es: 4.17.21
@@ -2567,7 +2567,7 @@ __metadata:
     "@storybook/testing-library": 0.2.2
     "@svgr/webpack": 8.1.0
     "@tanstack/react-table": 8.11.7
-    "@testing-library/react": 14.0.0
+    "@testing-library/react": 14.2.1
     "@types/base16": ^1.0.5
     "@types/cytoscape": ^3.19.16
     "@types/foxglove__roslibjs": "workspace:*"
@@ -5665,9 +5665,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react@npm:14.0.0":
-  version: 14.0.0
-  resolution: "@testing-library/react@npm:14.0.0"
+"@testing-library/react@npm:14.2.1":
+  version: 14.2.1
+  resolution: "@testing-library/react@npm:14.2.1"
   dependencies:
     "@babel/runtime": ^7.12.5
     "@testing-library/dom": ^9.0.0
@@ -5675,7 +5675,7 @@ __metadata:
   peerDependencies:
     react: ^18.0.0
     react-dom: ^18.0.0
-  checksum: 4a54c8f56cc4a39b50803205f84f06280bb76521d6d5d4b3b36651d760c7c7752ef142d857d52aaf4fad4848ed7a8be49afc793a5dda105955d2f8bef24901ac
+  checksum: 7054ae69a0e06c0777da8105fa08fac7e8dac570476a065285d7b993947acda5c948598764a203ebaac759c161c562d6712f19f5bd08be3f09a07e23baee5426
   languageName: node
   linkType: hard
 
