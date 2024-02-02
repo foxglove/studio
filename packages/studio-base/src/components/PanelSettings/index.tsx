@@ -2,18 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Divider, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUnmount } from "react-use";
+import { makeStyles } from "tss-react/mui";
 
-import { SettingsTree } from "@foxglove/studio";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { ActionMenu } from "@foxglove/studio-base/components/PanelSettings/ActionMenu";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import { ShareJsonModal } from "@foxglove/studio-base/components/ShareJsonModal";
-import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -36,16 +35,34 @@ const singlePanelIdSelector = (state: LayoutState) =>
 
 const selectIncrementSequenceNumber = (store: PanelStateStore) => store.incrementSequenceNumber;
 
-const EMPTY_SETTINGS_TREE: SettingsTree = Object.freeze({
-  actionHandler: () => undefined,
-  nodes: {},
-});
+// const EMPTY_SETTINGS_TREE: SettingsTree = Object.freeze({
+//   actionHandler: () => undefined,
+//   nodes: {},
+// });
+
+const useStyles = makeStyles()((theme) => ({
+  root: {
+    display: "flex",
+    position: "relative",
+    flexDirection: "column",
+    height: "100%",
+    flex: "auto",
+  },
+  toolbar: {
+    display: "flex",
+    paddingLeft: theme.spacing(0.75),
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottom: `1px solid ${theme.palette.divider}`,
+  },
+}));
 
 export default function PanelSettings({
   selectedPanelIdsForTests,
 }: React.PropsWithChildren<{
   selectedPanelIdsForTests?: readonly string[];
 }>): JSX.Element {
+  const { classes } = useStyles();
   const { t } = useTranslation("panelSettings");
   const singlePanelId = useCurrentLayoutSelector(singlePanelIdSelector);
   const {
@@ -143,48 +160,33 @@ export default function PanelSettings({
   const showTitleField = panelInfo != undefined && panelInfo.hasCustomToolbar !== true;
   const title = panelInfo?.title ?? t("unknown");
 
+  if (!settingsTree) {
+    return (
+      <div className={classes.root}>
+        <EmptyState>{t("panelDoesNotHaveSettings")}</EmptyState>
+      </div>
+    );
+  }
+
   return (
-    <Stack fullHeight flex="auto" gap={1}>
+    <div className={classes.root}>
       {shareModal}
-      <Stack gap={2} justifyContent="flex-start" flex="auto">
-        <Stack flex="auto">
-          {settingsTree && (
-            <>
-              <Stack
-                paddingLeft={0.75}
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Typography variant="subtitle2">{t("panelName", { title })}</Typography>
-                <ActionMenu
-                  key={1}
-                  fontSize="small"
-                  allowShare={panelType !== TAB_PANEL_TYPE}
-                  onReset={resetToDefaults}
-                  onShare={() => {
-                    setShowShareModal(true);
-                  }}
-                />
-              </Stack>
-              <Divider />
-            </>
-          )}
-          {settingsTree != undefined || showTitleField ? (
-            <SettingsTreeEditor
-              variant="panel"
-              key={selectedPanelId}
-              settings={settingsTree ?? EMPTY_SETTINGS_TREE}
-            />
-          ) : (
-            <Stack flex="auto" alignItems="center" justifyContent="center" paddingX={1}>
-              <Typography variant="body2" color="text.secondary" align="center">
-                {t("panelDoesNotHaveSettings")}
-              </Typography>
-            </Stack>
-          )}
-        </Stack>
-      </Stack>
-    </Stack>
+      <header className={classes.toolbar}>
+        <Typography variant="subtitle2">{t("panelName", { title })}</Typography>
+        <ActionMenu
+          key={1}
+          fontSize="small"
+          allowShare={panelType !== TAB_PANEL_TYPE}
+          onReset={resetToDefaults}
+          onShare={() => {
+            setShowShareModal(true);
+          }}
+        />
+      </header>
+
+      {showTitleField && (
+        <SettingsTreeEditor variant="panel" key={selectedPanelId} settings={settingsTree} />
+      )}
+    </div>
   );
 }

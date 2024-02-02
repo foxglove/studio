@@ -2,16 +2,32 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CloseIcon from "@mui/icons-material/Close";
-import { Badge, BadgeProps, Divider, IconButton, Tab, Tabs } from "@mui/material";
+import { Dismiss12Filled } from "@fluentui/react-icons";
+import {
+  Badge,
+  BadgeProps,
+  Divider,
+  IconButton,
+  Tab,
+  Tabs,
+  tabClasses,
+  tabsClasses,
+} from "@mui/material";
 import { makeStyles } from "tss-react/mui";
-
-import Stack from "@foxglove/studio-base/components/Stack";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
+    display: "flex",
+    flexDirection: "column",
+    flexShrink: 0,
+    overflow: "hidden",
     boxSizing: "content-box",
     backgroundColor: theme.palette.background.paper,
+  },
+  toolbar: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   badgeRoot: {
     display: "flex",
@@ -40,11 +56,11 @@ const useStyles = makeStyles()((theme) => ({
     overflow: "hidden",
     paddingLeft: theme.spacing(0.25),
 
-    ".MuiTabs-indicator": {
+    [`.${tabsClasses.indicator}`]: {
       transform: "scaleX(0.5)",
       height: 2,
     },
-    ".MuiTab-root": {
+    [`.${tabClasses.root}`]: {
       minHeight: 30,
       minWidth: theme.spacing(4),
       padding: theme.spacing(0, 1),
@@ -57,7 +73,7 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   iconButton: {
-    padding: theme.spacing(0.91125), // round out the overall height to 30px
+    padding: theme.spacing(1.125),
     color: theme.palette.text.secondary,
     borderRadius: 0,
 
@@ -102,16 +118,14 @@ export function Sidebar<K extends string>({
   const SelectedComponent = (activeTab && items.get(activeTab)?.component) ?? Noop;
 
   return (
-    <Stack
+    <div
+      data-tourid={`sidebar-${anchor}`}
       className={cx(classes.root, {
         [classes.anchorLeft]: anchor === "left",
         [classes.anchorRight]: anchor === "right",
       })}
-      flexShrink={0}
-      overflow="hidden"
-      data-tourid={`sidebar-${anchor}`}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <div className={classes.toolbar}>
         <Tabs
           className={classes.tabs}
           textColor="inherit"
@@ -148,18 +162,17 @@ export function Sidebar<K extends string>({
         <IconButton
           className={classes.iconButton}
           onClick={onClose}
-          size="small"
           data-testid={`sidebar-close-${anchor}`}
         >
-          <CloseIcon fontSize="inherit" />
+          <Dismiss12Filled />
         </IconButton>
-      </Stack>
+      </div>
       <Divider />
       {activeTab != undefined && (
         <div className={classes.tabContent}>
           <SelectedComponent />
         </div>
       )}
-    </Stack>
+    </div>
   );
 }

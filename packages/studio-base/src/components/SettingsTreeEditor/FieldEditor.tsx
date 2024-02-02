@@ -58,6 +58,7 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => ({
   fieldWrapper: {
     minWidth: theme.spacing(14),
     marginRight: theme.spacing(0.5),
+
     [`&.${classes.error} .MuiInputBase-root, .MuiInputBase-root.${classes.error}`]: {
       outline: `1px ${theme.palette.error.main} solid`,
       outlineOffset: -1,
@@ -75,7 +76,6 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => ({
   styledToggleButtonGroup: {
     backgroundColor: theme.palette.action.hover,
     gap: theme.spacing(0.25),
-    overflowX: "auto",
 
     "& .MuiToggleButtonGroup-grouped": {
       margin: theme.spacing(0.55),

@@ -33,7 +33,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   fieldGrid: {
     display: "grid",
-    gridTemplateColumns: "minmax(20%, 20ch) auto",
+    gridTemplateColumns: "max-content minmax(180px, 2fr)",
     columnGap: theme.spacing(1),
   },
   textField: {
@@ -114,7 +114,7 @@ export default function SettingsTreeEditor({
     filterText.length === 0 && panelInfo?.hasCustomToolbar !== true && variant !== "log";
 
   return (
-    <Stack fullHeight>
+    <Stack flex="auto" overflow="auto">
       {settings.enableFilter === true && (
         <header className={classes.appBar}>
           <TextField
