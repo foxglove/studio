@@ -165,7 +165,7 @@ export function createMessagePipelineStore({
       },
       async fetchAsset(uri, options) {
         const { protocol } = new URL(uri);
-        const player = get().player;
+        const { player, lastCapabilities } = get();
 
         if (protocol === "package:") {
           // For the desktop app, package:// is registered as a supported schema for builtin _fetch_ calls.
@@ -173,19 +173,23 @@ export function createMessagePipelineStore({
           const pkgPath = uri.slice("package://".length);
           const pkgName = pkgPath.split("/")[0];
 
-          if (player?.fetchAsset) {
+          if (lastCapabilities.includes(PlayerCapabilities.assets) && player?.fetchAsset) {
             try {
               return await player.fetchAsset(uri);
-            } catch (err) {
-              if (canBuiltinFetchPkgUri) {
-                // Fallback to a builtin _fetch_ call if the asset couldn't be loaded through the player.
-                return await builtinFetch(uri, options);
-              }
-              throw err; // Bail out otherwise.
+            } catch (_err) {
+              // Do nothing here as one of the fallback methods below might work.
             }
-          } else if (canBuiltinFetchPkgUri) {
-            return await builtinFetch(uri, options);
-          } else if (
+          }
+
+          if (canBuiltinFetchPkgUri) {
+            try {
+              return await builtinFetch(uri, options);
+            } catch (_err) {
+              // Do nothing here as the fallback method below might work.
+            }
+          }
+
+          if (
             pkgName &&
             options?.referenceUrl != undefined &&
             !options.referenceUrl.startsWith("package://") &&
@@ -200,6 +204,8 @@ export function createMessagePipelineStore({
               options.referenceUrl.slice(0, options.referenceUrl.lastIndexOf(pkgName)) + pkgPath;
             return await builtinFetch(resolvedUrl, options);
           }
+
+          throw new Error(`Failed to load asset ${uri}`);
         }
 
         // Use a regular fetch for all other protocols

@@ -596,6 +596,33 @@ export const WithJustMaxYValueLessThanMinimumValue: StoryObj = {
   },
 };
 
+export const WithEmptyStringMinMaxValue: StoryObj = {
+  render: function Story() {
+    return (
+      <PlotWrapper
+        config={{
+          ...exampleConfig,
+          paths: [
+            {
+              value: "/some_topic/location.pose.velocity",
+              enabled: true,
+              timestampMethod: "receiveTime",
+            },
+          ],
+          minYValue: "",
+          maxYValue: "",
+        }}
+      />
+    );
+  },
+
+  name: "with empty string min and max y values",
+
+  parameters: {
+    colorScheme: "light",
+  },
+};
+
 export const IndexBasedXAxisForArray: StoryObj = {
   render: function Story() {
     return (
