@@ -452,10 +452,6 @@ function baseUrl(url: string): string {
 
 let modelCacheInstance: ModelCache | undefined = undefined;
 
-export function resetModelCache(): void {
-  modelCacheInstance?.reset();
-}
-
 export type ConfiguredModelCache = {
   load: (
     url: string,
