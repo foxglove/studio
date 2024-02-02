@@ -29,8 +29,8 @@ export type MessagePipelineContext = Immutable<{
   fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   startPlayback?: () => void;
   pausePlayback?: () => void;
+  setPlaybackSpeed?: ((speedFraction: number) => void) | undefined;
   playUntil?: (time: Time) => void;
-  setPlaybackSpeed?: (speed: number) => void;
   seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.
   pauseFrame: (name: string) => ResumeFrame;

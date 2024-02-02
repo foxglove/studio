@@ -10,6 +10,7 @@ import {
   RightSidebarItemKey,
   WorkspaceContextStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
+import { PlaybackConfig } from "@foxglove/studio-base/types/panels";
 
 // Type of version 0 store, used for migration.
 type WorkspaceContextStoreV0 = {
@@ -30,6 +31,7 @@ type WorkspaceContextStoreV0 = {
   rightSidebarSize: undefined | number;
   playbackControls: {
     repeat: boolean;
+    speed: PlaybackConfig["speed"];
   };
   prefsDialogState: {
     initialTab: undefined | AppSettingsTab;
@@ -74,6 +76,7 @@ export function migrateV0WorkspaceState(
     },
     playbackControls: {
       repeat: v0State.playbackControls.repeat,
+      speed: v0State.playbackControls.speed,
     },
   };
   return migrated;

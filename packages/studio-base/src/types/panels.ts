@@ -28,7 +28,7 @@ export type PanelConfig = {
 export type TimeDisplayMethod = "SEC" | "TOD";
 
 export type PlaybackConfig = {
-  speed: number;
+  speed: 0.01 | 0.02 | 0.05 | 0.1 | 0.2 | 0.5 | 0.8 | 1 | 2 | 3 | 5;
 };
 
 export type UserScript = { name: string; sourceCode: string };
