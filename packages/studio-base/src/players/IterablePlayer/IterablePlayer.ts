@@ -20,6 +20,7 @@ import {
   toString,
 } from "@foxglove/rostime";
 import { Immutable, MessageEvent, ParameterValue } from "@foxglove/studio";
+import { DeserializedSourceWrapper } from "@foxglove/studio-base/players/IterablePlayer/DeserializedSourceWrapper";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -42,7 +43,8 @@ import delay from "@foxglove/studio-base/util/delay";
 
 import { BlockLoader } from "./BlockLoader";
 import { BufferedIterableSource } from "./BufferedIterableSource";
-import { IIterableSource, IteratorResult } from "./IIterableSource";
+import { DeserializingIterableSource } from "./DeserializingIterableSource";
+import { IDeserializedIterableSource, IRawIterableSource, IteratorResult } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -75,7 +77,7 @@ const EMPTY_ARRAY = Object.freeze([]);
 type IterablePlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
 
-  source: IIterableSource;
+  source: IDeserializedIterableSource | IRawIterableSource;
 
   // Optional player name
   name?: string;
@@ -158,8 +160,14 @@ export class IterablePlayer implements Player {
 
   #problemManager = new PlayerProblemManager();
 
-  #iterableSource: IIterableSource;
-  #bufferedSource: BufferedIterableSource;
+  // Unbuffered source, used as input source for buffered source and block loader.
+  #iterableSource: IDeserializedIterableSource | IRawIterableSource;
+
+  // Buffered source used for playback.
+  #bufferedSource: IDeserializedIterableSource;
+
+  // Buffering source implementation. We store a reference to it here so we can access buffer information such as loaded ranges & memory size.
+  #bufferImpl: BufferedIterableSource;
 
   // Some states register an abort controller to signal they should abort
   #abort?: AbortController;
@@ -184,7 +192,19 @@ export class IterablePlayer implements Player {
     const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
 
     this.#iterableSource = source;
-    this.#bufferedSource = new BufferedIterableSource(source);
+    if (source.sourceType === "deserialized") {
+      this.#bufferImpl = new BufferedIterableSource(source);
+      this.#bufferedSource = new DeserializedSourceWrapper(this.#bufferImpl);
+    } else {
+      const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
+      const bufferInterface = new BufferedIterableSource(source, {
+        readAheadDuration: { sec: 120, nsec: 0 },
+        maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
+      });
+      this.#bufferImpl = bufferInterface;
+      this.#bufferedSource = new DeserializingIterableSource(bufferInterface);
+    }
+
     this.#name = name;
     this.#urlParams = urlParams;
     this.#metricsCollector = metricsCollector ?? new NoopMetricsCollector();
@@ -458,6 +478,7 @@ export class IterablePlayer implements Player {
     this.#queueEmitState();
 
     try {
+      const initResult = await this.#bufferedSource.initialize();
       const {
         start,
         end,
@@ -468,7 +489,7 @@ export class IterablePlayer implements Player {
         publishersByTopic,
         datatypes,
         name,
-      } = await this.#bufferedSource.initialize();
+      } = initResult;
 
       // Prior to initialization, the seekTarget may have been set to an out-of-bounds value
       // This brings the value in bounds
@@ -513,9 +534,18 @@ export class IterablePlayer implements Player {
       if (this.#enablePreload) {
         // --- setup block loader which loads messages for _full_ subscriptions in the "background"
         try {
+          let blockLoaderSource;
+          if (this.#iterableSource.sourceType === "deserialized") {
+            blockLoaderSource = this.#iterableSource;
+          } else {
+            blockLoaderSource = new DeserializingIterableSource(this.#iterableSource);
+            // We must not call initialize() here, as the #iterableSource was already initialized above.
+            blockLoaderSource.initializeDeserializers(initResult);
+          }
+
           this.#blockLoader = new BlockLoader({
             cacheSizeBytes: DEFAULT_CACHE_SIZE_BYTES,
-            source: this.#iterableSource,
+            source: blockLoaderSource,
             start: this.#start,
             end: this.#end,
             maxBlocks: MAX_BLOCKS,
@@ -570,7 +600,7 @@ export class IterablePlayer implements Player {
     await this.#playbackIterator?.return?.();
 
     // set the playIterator to the seek time
-    await this.#bufferedSource.stopProducer();
+    await this.#bufferImpl.stopProducer();
 
     log.debug("Initializing forward iterator from", next);
     this.#playbackIterator = this.#bufferedSource.messageIterator({
@@ -973,7 +1003,7 @@ export class IterablePlayer implements Player {
     // set the latest value of the loaded ranges for the next emit state
     this.#progress = {
       ...this.#progress,
-      fullyLoadedFractionRanges: this.#bufferedSource.loadedRanges(),
+      fullyLoadedFractionRanges: this.#bufferImpl.loadedRanges(),
       messageCache: this.#progress.messageCache,
     };
 
@@ -984,11 +1014,11 @@ export class IterablePlayer implements Player {
 
     const rangeChangeHandler = () => {
       this.#progress = {
-        fullyLoadedFractionRanges: this.#bufferedSource.loadedRanges(),
+        fullyLoadedFractionRanges: this.#bufferImpl.loadedRanges(),
         messageCache: this.#progress.messageCache,
         memoryInfo: {
           ...this.#progress.memoryInfo,
-          [MEMORY_INFO_BUFFERED_MSGS]: this.#bufferedSource.getCacheSize(),
+          [MEMORY_INFO_BUFFERED_MSGS]: this.#bufferImpl.getCacheSize(),
         },
       };
       this.#queueEmitState();
@@ -996,11 +1026,11 @@ export class IterablePlayer implements Player {
 
     // While idle, the buffered source might still be loading and we still want to update downstream
     // with the new ranges we've buffered. This event will update progress and queue state emits
-    this.#bufferedSource.on("loadedRangesChange", rangeChangeHandler);
+    this.#bufferImpl.on("loadedRangesChange", rangeChangeHandler);
 
     this.#queueEmitState();
     await aborted;
-    this.#bufferedSource.off("loadedRangesChange", rangeChangeHandler);
+    this.#bufferImpl.off("loadedRangesChange", rangeChangeHandler);
   }
 
   async #statePlay() {
@@ -1039,11 +1069,11 @@ export class IterablePlayer implements Player {
         // Update with the latest loaded ranges from the buffered source
         // The messageCache is updated separately by block loader events
         this.#progress = {
-          fullyLoadedFractionRanges: this.#bufferedSource.loadedRanges(),
+          fullyLoadedFractionRanges: this.#bufferImpl.loadedRanges(),
           messageCache: this.#progress.messageCache,
           memoryInfo: {
             ...this.#progress.memoryInfo,
-            [MEMORY_INFO_BUFFERED_MSGS]: this.#bufferedSource.getCacheSize(),
+            [MEMORY_INFO_BUFFERED_MSGS]: this.#bufferImpl.getCacheSize(),
           },
         };
 
@@ -1075,8 +1105,8 @@ export class IterablePlayer implements Player {
     this.#isPlaying = false;
     await this.#blockLoader?.stopLoading();
     await this.#blockLoadingProcess;
-    await this.#bufferedSource.stopProducer();
-    await this.#bufferedSource.terminate();
+    await this.#bufferImpl.stopProducer();
+    await this.#bufferedSource.terminate?.();
     await this.#playbackIterator?.return?.();
     this.#playbackIterator = undefined;
     await this.#iterableSource.terminate?.();
