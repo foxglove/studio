@@ -22,7 +22,7 @@
     "react-dom": "18.2.0",
     "react-i18next": "14.0.1",
     "tss-react": "4.9.3",
-    "webpack": "5.90.0",
+    "webpack": "5.90.1",
     "webpack-dev-server": "4.15.1"
   }
 }
