@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dismiss12Filled } from "@fluentui/react-icons";
+import { Dismiss12Regular } from "@fluentui/react-icons";
 import {
   Badge,
   BadgeProps,
@@ -164,7 +164,7 @@ export function Sidebar<K extends string>({
           onClick={onClose}
           data-testid={`sidebar-close-${anchor}`}
         >
-          <Dismiss12Filled />
+          <Dismiss12Regular />
         </IconButton>
       </div>
       <Divider />
