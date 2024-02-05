@@ -203,6 +203,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       if (this.#closed) {
         return;
       }
+      log.info("opened connection");
       if (this.#connectionAttemptTimeout != undefined) {
         clearTimeout(this.#connectionAttemptTimeout);
       }
@@ -299,6 +300,11 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this.#serverPublishesTime = this.#serverCapabilities.includes(ServerCapability.time);
       this.#supportedEncodings = event.supportedEncodings;
       this.#datatypes = new Map();
+
+      // Clear the thopics which makes us request them again
+      // and has the side-effect that we don't emit without a time update
+      // fixme - this is annoying because it will thrash the display
+      this.#topics = undefined;
 
       // If the server publishes the time we clear any existing clockTime we might have and let the
       // server override
@@ -846,9 +852,16 @@ export default class FoxgloveWebSocketPlayer implements Player {
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   #emitState = debouncePromise(() => {
+    // When the connection closes, we should not emit anoyher state update because it will override the startTime?
+    //
+
     if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
+
+    // the reason this does not break us on startup is because this #topics gate
+    // has stopped us from emitting anything until we have the list of topics
+    // so we never set the startTime to 0
 
     if (!this.#topics) {
       return this.#listener({
@@ -865,6 +878,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
 
     const currentTime = this.#getCurrentTime();
+    // currentTime starts as 0, then with sim time mode we get a new current time
+    // and this new currentTime is going to be > the start time and the start time is still set to 0
     if (!this.#startTime || isLessThan(currentTime, this.#startTime)) {
       this.#startTime = currentTime;
     }
@@ -1285,6 +1300,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   }
 
   #resetSessionState(): void {
+    log.info("Reset session state");
     this.#startTime = undefined;
     this.#endTime = undefined;
     this.#clockTime = undefined;
