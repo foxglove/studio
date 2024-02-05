@@ -12,7 +12,7 @@ import type { IRenderer } from "../../IRenderer";
 import { rgbToThreeColor } from "../../color";
 import { disposeMeshesRecursive } from "../../dispose";
 import { Marker } from "../../ros";
-import { removeLights, replaceMaterials } from "../models";
+import { replaceMaterials } from "../models";
 
 const MESH_FETCH_FAILED = "MESH_FETCH_FAILED";
 
@@ -125,7 +125,7 @@ export class RenderableMeshResource extends RenderableMarker {
     url: string,
     opts: { useEmbeddedMaterials: boolean },
   ): Promise<THREE.Group | THREE.Scene | undefined> {
-    const cachedModel = await this.renderer.modelCache.load(
+    const model = await this.renderer.modelCache.load(
       url,
       { referenceUrl: this.#referenceUrl },
       (err) => {
@@ -137,7 +137,7 @@ export class RenderableMeshResource extends RenderableMarker {
       },
     );
 
-    if (!cachedModel) {
+    if (!model) {
       if (!this.renderer.settings.errors.hasError(this.userData.settingsPath, MESH_FETCH_FAILED)) {
         this.renderer.settings.errors.add(
           this.userData.settingsPath,
@@ -148,12 +148,10 @@ export class RenderableMeshResource extends RenderableMarker {
       return undefined;
     }
 
-    const mesh = cachedModel.clone(true);
-    removeLights(mesh);
     if (!opts.useEmbeddedMaterials) {
-      replaceMaterials(mesh, this.#material);
+      replaceMaterials(model, this.#material);
     }
 
-    return mesh;
+    return model;
   }
 }

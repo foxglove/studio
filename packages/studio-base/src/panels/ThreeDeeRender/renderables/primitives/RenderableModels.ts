@@ -14,7 +14,7 @@ import { EDGE_LINE_SEGMENTS_NAME, LoadedModel } from "../../ModelCache";
 import { makeRgba, rgbToThreeColor, stringToRgba } from "../../color";
 import { disposeMeshesRecursive } from "../../dispose";
 import { LayerSettingsEntity } from "../../settings";
-import { removeLights, replaceMaterials } from "../models";
+import { replaceMaterials } from "../models";
 
 const tempRgba = makeRgba();
 
@@ -367,7 +367,6 @@ export class RenderableModels extends RenderablePrimitive {
 
 function cloneAndPrepareModel(cachedModel: LoadedModel) {
   const model = cachedModel.clone(true);
-  removeLights(model);
   return new THREE.Group().add(model);
 }
 

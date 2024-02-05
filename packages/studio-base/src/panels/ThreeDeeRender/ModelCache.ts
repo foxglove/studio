@@ -14,6 +14,8 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 
 import Logger from "@foxglove/log";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { disposeMeshesRecursive } from "@foxglove/studio-base/panels/ThreeDeeRender/dispose";
+import { removeLights } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/models";
 
 const log = Logger.getLogger(__filename);
 
@@ -33,6 +35,8 @@ type LoadModelOptions = {
   referenceUrl?: string;
 };
 
+type CacheKey = string & { __brand: "CacheKey" };
+
 export type LoadedModel = THREE.Group | THREE.Scene;
 
 type ErrorCallback = (err: Error) => void;
@@ -47,7 +51,7 @@ const OBJ_MIME_TYPES = ["model/obj", "text/prs.wavefront-obj"];
 
 export class ModelCache {
   #textDecoder = new TextDecoder();
-  #models = new Map<string, Promise<LoadedModel | undefined>>();
+  #models = new Map<CacheKey, Promise<LoadedModel | undefined>>();
   #colladaTextureObjectUrls = new Map<string, string>();
   #dracoLoader?: DRACOLoader;
   #usageCount = 0;
@@ -60,7 +64,24 @@ export class ModelCache {
     reportError: ErrorCallback,
   ) => Promise<LoadedModel | undefined> {
     return async (url: string, opts: LoadModelOptions, reportError: ErrorCallback) => {
-      return await this.load(modelCacheOptions, url, opts, reportError);
+      const cachedModel = await this.load(modelCacheOptions, url, opts, reportError);
+      if (!cachedModel) {
+        return undefined;
+      }
+      const model = cachedModel.clone(true);
+      removeLights(model);
+
+      /** Collada models aren't affected by meshUpAxis */
+      if (isColladaModel(model)) {
+        return model;
+      }
+
+      // THREE.js uses Y-up, while Studio follows the ROS
+      // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
+      if (modelCacheOptions.meshUpAxis === "y_up") {
+        model.rotateX(Math.PI / 2);
+      }
+      return model;
     };
   }
 
@@ -70,7 +91,8 @@ export class ModelCache {
     opts: LoadModelOptions,
     reportError: ErrorCallback,
   ): Promise<LoadedModel | undefined> {
-    let promise = this.#models.get(url);
+    const cacheKey = getCacheKey(config, url);
+    let promise = this.#models.get(cacheKey);
     if (promise) {
       return await promise;
     }
@@ -82,7 +104,7 @@ export class ModelCache {
         return undefined;
       });
 
-    this.#models.set(url, promise);
+    this.#models.set(cacheKey, promise);
     return await promise;
   }
 
@@ -120,20 +142,19 @@ export class ModelCache {
       return this.#loadSTL(
         url,
         buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-        config.meshUpAxis,
       );
     }
 
     // Check if this is a COLLADA file based on content-type or file extension
     if (DAE_MIME_TYPES.includes(contentType) || /\.dae$/i.test(url)) {
       const text = this.#textDecoder.decode(buffer);
-      return await this.#loadCollada(config, url, text, config.ignoreColladaUpAxis, reportError);
+      return await this.#loadCollada(config, url, text, reportError);
     }
 
     // Check if this is an OBJ file based on content-type or file extension
     if (OBJ_MIME_TYPES.includes(contentType) || /\.obj$/i.test(url)) {
       const text = this.#textDecoder.decode(buffer);
-      return await this.#loadOBJ(url, text, config.meshUpAxis, reportError);
+      return await this.#loadOBJ(url, text, reportError);
     }
 
     throw new Error(`Unknown ${buffer.byteLength} byte mesh (content-type: "${contentType}")`);
@@ -156,14 +177,10 @@ export class ModelCache {
     const gltf = await gltfLoader.loadAsync(url);
     manager.itemEnd(url);
 
-    // THREE.js uses Y-up, while Studio follows the ROS
-    // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
-    gltf.scene.rotateX(Math.PI / 2);
-
     return gltf.scene;
   }
 
-  #loadSTL(url: string, buffer: ArrayBuffer, meshUpAxis: MeshUpAxis): LoadedModel {
+  #loadSTL(url: string, buffer: ArrayBuffer): LoadedModel {
     // STL files do not reference any external assets, no LoadingManager needed
     const stlLoader = new STLLoader();
     const bufferGeometry = stlLoader.parse(buffer);
@@ -179,12 +196,6 @@ export class ModelCache {
     const group = new THREE.Group();
     group.add(mesh);
 
-    // THREE.js uses Y-up, while Studio follows the ROS
-    // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
-    if (meshUpAxis === "y_up") {
-      group.rotateX(Math.PI / 2);
-    }
-
     return group;
   }
 
@@ -192,8 +203,6 @@ export class ModelCache {
     config: ModelCacheOptions,
     url: string,
     text: string,
-    // eslint-disable-next-line @foxglove/no-boolean-parameters
-    ignoreUpAxis: boolean,
     reportError: ErrorCallback,
   ): Promise<LoadedModel> {
     const onError = (assetUrl: string) => {
@@ -206,6 +215,7 @@ export class ModelCache {
     // applying a scene rotation. Since Studio is already Z_UP, we do our own
     // <up_axis> handling and skip rotation entirely for the Z_UP case
     const xml = new DOMParser().parseFromString(text, "application/xml");
+    const ignoreUpAxis = config.ignoreColladaUpAxis;
     const upAxis = ignoreUpAxis
       ? "Z_UP"
       : (xml.querySelector("up_axis")?.textContent ?? "Y_UP").trim().toUpperCase();
@@ -252,15 +262,12 @@ export class ModelCache {
       dae.scene.rotateX(Math.PI / 2);
     }
 
-    return fixDaeMaterials(dae.scene);
+    const model = fixDaeMaterials(dae.scene);
+    setIsColladaModel(model);
+    return model;
   }
 
-  async #loadOBJ(
-    url: string,
-    text: string,
-    meshUpAxis: MeshUpAxis,
-    reportError: ErrorCallback,
-  ): Promise<LoadedModel> {
+  async #loadOBJ(url: string, text: string, reportError: ErrorCallback): Promise<LoadedModel> {
     const onError = (assetUrl: string) => {
       const originalUrl = unrewriteUrl(assetUrl);
       log.error(`Failed to load OBJ asset "${originalUrl}" for "${url}"`);
@@ -274,12 +281,6 @@ export class ModelCache {
     manager.itemStart(url);
     const group = objLoader.parse(text);
     manager.itemEnd(url);
-
-    // THREE.js uses Y-up, while Studio follows the ROS
-    // [REP-0103](https://www.ros.org/reps/rep-0103.html) convention of Z-up
-    if (meshUpAxis === "y_up") {
-      group.rotateX(Math.PI / 2);
-    }
 
     return fixObjMaterials(group);
   }
@@ -330,13 +331,11 @@ export class ModelCache {
     this.#models.clear();
     for (const [, modelPromise] of modelPromises) {
       void modelPromise.then((model) => {
-        model?.removeFromParent();
-        model?.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.geometry.dispose();
-            child.material.dispose();
-          }
-        });
+        if (!model) {
+          return;
+        }
+        model.removeFromParent();
+        disposeMeshesRecursive(model);
       });
     }
 
@@ -344,6 +343,20 @@ export class ModelCache {
     this.#dracoLoader?.dispose();
     this.#dracoLoader = undefined;
   }
+}
+
+/** used to determine whether up axis should be applied */
+function isColladaModel(model: LoadedModel): boolean {
+  return model.userData.isColladaModel === true;
+}
+
+function setIsColladaModel(model: LoadedModel): void {
+  model.userData.isColladaModel = true;
+}
+
+function getCacheKey(config: ModelCacheOptions, url: string): CacheKey {
+  /** ignore collada up axis affects how the model is parsed before being stored in the cache */
+  return `${config.ignoreColladaUpAxis}:${url}` as CacheKey;
 }
 
 export const EDGE_LINE_SEGMENTS_NAME = "edges";
@@ -453,6 +466,8 @@ function baseUrl(url: string): string {
 let modelCacheInstance: ModelCache | undefined = undefined;
 
 export type ConfiguredModelCache = {
+  /** Loads the model at the given URL as a Threejs object and returns a clone of the cached model
+   * with lights removed and with the config settings applied to the clone. */
   load: (
     url: string,
     opts: LoadModelOptions,
