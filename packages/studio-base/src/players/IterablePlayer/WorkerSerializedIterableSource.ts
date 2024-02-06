@@ -104,21 +104,33 @@ export class WorkerSerializedIterableSource implements ISerializedIterableSource
     // making the abort signal available within the worker.
     const { abort, ...rest } = args;
     const messageCursorPromise = this.#sourceWorkerRemote.getMessageCursor(rest, abort);
+    let remoteNext: Comlink.Remote<IMessageCursor<Uint8Array>["next"]> | undefined;
+    let remoteNextBatch: Comlink.Remote<IMessageCursor<Uint8Array>["nextBatch"]> | undefined;
+    let remoteReadUntil: Comlink.Remote<IMessageCursor<Uint8Array>["readUntil"]> | undefined;
 
     const cursor: IMessageCursor<Uint8Array> = {
       async next() {
-        const messageCursor = await messageCursorPromise;
-        return await messageCursor.next();
+        if (!remoteNext) {
+          const messageCursor = await messageCursorPromise;
+          remoteNext = messageCursor.next;
+        }
+        return await remoteNext();
       },
 
       async nextBatch(durationMs: number) {
-        const messageCursor = await messageCursorPromise;
-        return await messageCursor.nextBatch(durationMs);
+        if (!remoteNextBatch) {
+          const messageCursor = await messageCursorPromise;
+          remoteNextBatch = messageCursor.nextBatch;
+        }
+        return await remoteNextBatch(durationMs);
       },
 
       async readUntil(end: Time) {
-        const messageCursor = await messageCursorPromise;
-        return await messageCursor.readUntil(end);
+        if (!remoteReadUntil) {
+          const messageCursor = await messageCursorPromise;
+          remoteReadUntil = messageCursor.readUntil;
+        }
+        return await remoteReadUntil(end);
       },
 
       async end() {

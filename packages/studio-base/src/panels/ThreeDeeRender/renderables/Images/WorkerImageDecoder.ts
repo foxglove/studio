@@ -21,7 +21,7 @@ import { Image as RosImage } from "../../ros";
 
 type WorkerService = (typeof import("./WorkerImageDecoder.worker"))["service"];
 export class WorkerImageDecoder {
-  #remote: Comlink.Remote<WorkerService>;
+  #remoteDecode: Comlink.Remote<WorkerService["decode"]>;
   #dispose: () => void;
 
   public constructor() {
@@ -31,7 +31,7 @@ export class WorkerImageDecoder {
         new URL("./WorkerImageDecoder.worker", import.meta.url),
       ),
     );
-    this.#remote = remote;
+    this.#remoteDecode = remote.decode;
     this.#dispose = dispose;
   }
 
@@ -42,7 +42,7 @@ export class WorkerImageDecoder {
     image: RosImage | RawImage,
     options: Partial<RawImageOptions>,
   ): Promise<ImageData> {
-    return await this.#remote.decode(image, options);
+    return await this.#remoteDecode(image, options);
   }
 
   public terminate(): void {

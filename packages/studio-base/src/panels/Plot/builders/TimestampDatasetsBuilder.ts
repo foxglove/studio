@@ -50,13 +50,15 @@ type TimestampSeriesItem = {
  * downsampled data.
  */
 export class TimestampDatasetsBuilder implements IDatasetsBuilder {
-  #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>;
-
   #pendingDispatch: Immutable<UpdateDataAction>[] = [];
 
   #lastSeekTime = 0;
 
   #series: Immutable<TimestampSeriesItem[]> = [];
+
+  #remoteApplyActions: Comlink.Remote<TimestampDatasetsBuilderImpl["applyActions"]>;
+  #remoteGetViewportDatasets: Comlink.Remote<TimestampDatasetsBuilderImpl["getViewportDatasets"]>;
+  #remoteGetCsvData: Comlink.Remote<TimestampDatasetsBuilderImpl["getCsvData"]>;
 
   public constructor() {
     const worker = new Worker(
@@ -65,7 +67,9 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     );
     const { remote, dispose } =
       ComlinkWrap<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>(worker);
-    this.#datasetsBuilderRemote = remote;
+    this.#remoteApplyActions = remote.applyActions;
+    this.#remoteGetViewportDatasets = remote.getViewportDatasets;
+    this.#remoteGetCsvData = remote.getCsvData;
 
     registry.register(this, dispose);
   }
@@ -194,15 +198,15 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
     const dispatch = this.#pendingDispatch;
     if (dispatch.length > 0) {
       this.#pendingDispatch = [];
-      await this.#datasetsBuilderRemote.applyActions(dispatch);
+      await this.#remoteApplyActions(dispatch);
     }
 
-    const datasets = await this.#datasetsBuilderRemote.getViewportDatasets(viewport);
+    const datasets = await this.#remoteGetViewportDatasets(viewport);
     return { datasetsByConfigIndex: datasets, pathsWithMismatchedDataLengths: emptyPaths };
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {
-    return await this.#datasetsBuilderRemote.getCsvData();
+    return await this.#remoteGetCsvData();
   }
 }
 

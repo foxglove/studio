@@ -21,6 +21,9 @@ const registry = new FinalizationRegistry<() => void>((dispose) => {
 export class OffscreenCanvasRenderer {
   #canvas: OffscreenCanvas;
   #remote: Promise<Comlink.RemoteObject<ChartRenderer>>;
+  #remoteUpdate?: Comlink.Remote<ChartRenderer["update"]>;
+  #remoteGetElementsAtPixel?: Comlink.Remote<ChartRenderer["getElementsAtPixel"]>;
+  #remoteUpdateDatasets?: Comlink.Remote<ChartRenderer["updateDatasets"]>;
 
   #theme: Theme;
 
@@ -52,14 +55,23 @@ export class OffscreenCanvasRenderer {
   }
 
   public async update(action: Immutable<UpdateAction>): Promise<Bounds | undefined> {
-    return await (await this.#remote).update(action);
+    if (!this.#remoteUpdate) {
+      this.#remoteUpdate = (await this.#remote).update;
+    }
+    return await this.#remoteUpdate(action);
   }
 
   public async getElementsAtPixel(pixel: { x: number; y: number }): Promise<HoverElement[]> {
-    return await (await this.#remote).getElementsAtPixel(pixel);
+    if (!this.#remoteGetElementsAtPixel) {
+      this.#remoteGetElementsAtPixel = (await this.#remote).getElementsAtPixel;
+    }
+    return await this.#remoteGetElementsAtPixel(pixel);
   }
 
   public async updateDatasets(datasets: Dataset[]): Promise<Scale | undefined> {
-    return await (await this.#remote).updateDatasets(datasets);
+    if (!this.#remoteUpdateDatasets) {
+      this.#remoteUpdateDatasets = (await this.#remote).updateDatasets;
+    }
+    return await this.#remoteUpdateDatasets(datasets);
   }
 }

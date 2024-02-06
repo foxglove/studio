@@ -43,7 +43,9 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
   #xParsedPath?: Immutable<MessagePath>;
   #xValuesCursor?: BlockTopicCursor;
 
-  #datasetsBuilderRemote: Comlink.Remote<Comlink.RemoteObject<CustomDatasetsBuilderImpl>>;
+  #remoteUpdateData: Comlink.Remote<CustomDatasetsBuilderImpl["updateData"]>;
+  #remoteGetViewportDatasets: Comlink.Remote<CustomDatasetsBuilderImpl["getViewportDatasets"]>;
+  #remoteGetCsvData: Comlink.Remote<CustomDatasetsBuilderImpl["getCsvData"]>;
 
   #pendingDispatch: Immutable<UpdateDataAction>[] = [];
 
@@ -62,7 +64,9 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     const { remote, dispose } =
       ComlinkWrap<Comlink.RemoteObject<CustomDatasetsBuilderImpl>>(worker);
 
-    this.#datasetsBuilderRemote = remote;
+    this.#remoteUpdateData = remote.updateData;
+    this.#remoteGetViewportDatasets = remote.getViewportDatasets;
+    this.#remoteGetCsvData = remote.getCsvData;
     registry.register(this, dispose);
   }
 
@@ -227,14 +231,14 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
     const dispatch = this.#pendingDispatch;
     if (dispatch.length > 0) {
       this.#pendingDispatch = [];
-      await this.#datasetsBuilderRemote.updateData(dispatch);
+      await this.#remoteUpdateData(dispatch);
     }
 
-    return await this.#datasetsBuilderRemote.getViewportDatasets(viewport);
+    return await this.#remoteGetViewportDatasets(viewport);
   }
 
   public async getCsvData(): Promise<CsvDataset[]> {
-    return await this.#datasetsBuilderRemote.getCsvData();
+    return await this.#remoteGetCsvData();
   }
 }
 
