@@ -43,7 +43,6 @@ const storybookConfig: StorybookConfig = {
     );
     return {
       ...config,
-      // context is required for ForkTsCheckerWebpackPlugin to find .storybook/tsconfig.json
       optimization: {
         ...config.optimization,
         minimize: false, // disabling minification improves build performance

@@ -13,6 +13,7 @@
 
 import SettingsIcon from "@mui/icons-material/Settings";
 import { forwardRef, useCallback, useContext, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
@@ -39,6 +40,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
     const panelCatalog = useContext(PanelCatalogContext);
     const { setSelectedPanelIds } = useSelectedPanels();
     const { openPanelSettings } = useWorkspaceActions();
+    const { t } = useTranslation("panels");
 
     const hasSettingsSelector = useCallback(
       (store: PanelStateStore) => (panelId ? store.settingsTrees[panelId] != undefined : false),
@@ -67,7 +69,7 @@ const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarCon
       <Stack direction="row" alignItems="center" paddingLeft={1} ref={ref}>
         {additionalIcons}
         {showSettingsButton && (
-          <ToolbarIconButton title="Settings" onClick={openSettings}>
+          <ToolbarIconButton title={t("settings")} onClick={openSettings}>
             <SettingsIcon />
           </ToolbarIconButton>
         )}

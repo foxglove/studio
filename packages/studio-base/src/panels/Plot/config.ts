@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { TFunction } from "i18next";
+
 import { Time } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
 import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
@@ -64,8 +66,12 @@ function presence<T>(value: undefined | T): undefined | T {
   return value ?? undefined;
 }
 
-export function plotPathDisplayName(path: Readonly<PlotPath>, index: number): string {
-  return presence(path.label) ?? presence(path.value) ?? `Series ${index + 1}`;
+export function plotPathDisplayName(
+  path: Readonly<PlotPath>,
+  index: number,
+  t: TFunction<"plot">,
+): string {
+  return presence(path.label) ?? presence(path.value) ?? `${t("series")} ${index + 1}`;
 }
 type DeprecatedPlotConfig = {
   showSidebar?: boolean;

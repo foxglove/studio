@@ -49,4 +49,5 @@ export const panels: Partial<TypeOptions["resources"]["panels"]> = {
     "TypeScriptでカスタムデータ変換を記述します。以前はNode Playgroundとして知られていました。",
   variableSlider: "変数スライダー",
   variableSliderDescription: "レイアウトの数値変数を更新します。",
+  settings: undefined,
 };

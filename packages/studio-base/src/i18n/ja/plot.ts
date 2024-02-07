@@ -19,6 +19,7 @@ export const plot: Partial<TypeOptions["resources"]["plot"]> = {
   label: "ラベル",
   left: "左",
   legend: "凡例",
+  lineSize: undefined,
   max: "最大",
   maxXError: "X最大値は、X最小値より大きくなければなりません。",
   maxYError: "Y最大値は、Y最小値より大きくなければなりません。",
@@ -29,6 +30,7 @@ export const plot: Partial<TypeOptions["resources"]["plot"]> = {
   secondsRange: "範囲（秒数）",
   series: "シリーズ",
   showLabels: "ラベルを表示する",
+  showLine: undefined,
   showValues: "値を表示する",
   syncWithOtherPlots: "他のプロットと同期する",
   timestamp: "タイムスタンプ",
@@ -36,4 +38,5 @@ export const plot: Partial<TypeOptions["resources"]["plot"]> = {
   value: "値",
   xAxis: "X軸",
   yAxis: "Y軸",
+  resetView: undefined,
 };
