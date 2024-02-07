@@ -548,7 +548,7 @@ function PanelExtensionAdapter(
     );
   }, [initialState, highestSupportedConfigVersion]);
 
-  const playerPresenceShouldBlockRender = playerPresence === PlayerPresence.INITIALIZING;
+  const playerIsInitializing = playerPresence === PlayerPresence.INITIALIZING;
 
   // Manage extension lifecycle by calling initPanel() when the panel context changes.
   //
@@ -561,9 +561,12 @@ function PanelExtensionAdapter(
 
     // If the config is too new for this panel to support we bail and don't do any panel initialization
     // We will instead show a warning message to the user
-    // Also don't show panel when initializing to save on render cycles that will be thrown
-    // away after it is initialized.
-    if (configTooNew || playerPresenceShouldBlockRender) {
+    // Also don't show panel when the player is initializing. The initializing state is temporary for
+    // players to go through to load their sources. Once a player has completed intialization `initPanel` is called again,
+    // because parts of the player context have changed. This causes `initPanel` to be called again and cleans up the old panel that was
+    // present during initialization. So there can be no state held between extension panels between initialization and
+    // whatever follows it.
+    if (configTooNew || playerIsInitializing) {
       return;
     }
 
@@ -607,7 +610,7 @@ function PanelExtensionAdapter(
     partialExtensionContext,
     getMessagePipelineContext,
     configTooNew,
-    playerPresenceShouldBlockRender,
+    playerIsInitializing,
   ]);
 
   const style: CSSProperties = {};
