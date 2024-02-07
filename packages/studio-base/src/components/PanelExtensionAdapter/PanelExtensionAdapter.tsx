@@ -563,8 +563,8 @@ function PanelExtensionAdapter(
     // We will instead show a warning message to the user
     // Also don't show panel when the player is initializing. The initializing state is temporary for
     // players to go through to load their sources. Once a player has completed intialization `initPanel` is called again,
-    // because parts of the player context have changed. This causes `initPanel` to be called again and cleans up the old panel that was
-    // present during initialization. So there can be no state held between extension panels between initialization and
+    // because parts of the player context have changed. This cleans up the old panel that was present
+    // during initialization. So there can be no state held between extension panels between initialization and
     // whatever follows it.
     if (configTooNew || playerIsInitializing) {
       return;
