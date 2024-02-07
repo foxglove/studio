@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { MessageDefinition } from "@foxglove/message-definition";
 import { ROS2_TO_DEFINITIONS, Rosbag2, SqliteSqljs } from "@foxglove/rosbag2-web";
 import { stringify } from "@foxglove/rosmsg";
 import { Time, add as addTime } from "@foxglove/rostime";
@@ -18,6 +19,14 @@ import {
   MessageIteratorArgs,
   TopicWithDecodingInfo,
 } from "../IIterableSource";
+
+function dataTypeToFullName(dataType: string): string {
+  const parts = dataType.split("/");
+  if (parts.length === 2) {
+    return `${parts[0]!}/msg/${parts[1]!}`;
+  }
+  return dataType;
+}
 
 export class RosDb3IterableSource implements ISerializedIterableSource {
   #files: File[];
@@ -78,7 +87,7 @@ export class RosDb3IterableSource implements ISerializedIterableSource {
         topicStats.set(topicDef.name, { numMessages });
       }
 
-      const parsedMsgdef = datatypes.get(topicDef.type);
+      const parsedMsgdef = ROS2_TO_DEFINITIONS.get(topicDef.type);
       if (parsedMsgdef == undefined) {
         problems.push({
           severity: "warn",
@@ -88,23 +97,28 @@ export class RosDb3IterableSource implements ISerializedIterableSource {
       } else {
         // Create the full gendeps-like message definition so that parseChannel() can parse it.
         const typesToProcess = [parsedMsgdef];
-        const typesForMessage: RosDatatypes = new Map();
+        const typesForMessage: MessageDefinition[] = [];
+        const seenTypes = new Set<string>();
         while (typesToProcess.length > 0) {
           const rosType = typesToProcess.shift()!;
+          typesForMessage.push(rosType);
           for (const { type, isComplex } of rosType.definitions) {
-            if (isComplex === true && !typesForMessage.has(type)) {
-              const newComplexType = datatypes.get(type);
+            const fullTypeName = dataTypeToFullName(type);
+            if (isComplex === true && !seenTypes.has(fullTypeName)) {
+              const newComplexType = ROS2_TO_DEFINITIONS.get(fullTypeName);
               if (!newComplexType) {
                 // Should in theory never happen as these are all well-known types
-                throw new Error(`invariant: Subtype ${type} of type ${rosType.name} not found.`);
+                throw new Error(
+                  `invariant: Subtype ${fullTypeName} of type ${rosType.name} not found.`,
+                );
               }
               typesToProcess.push(newComplexType);
-              typesForMessage.set(type, newComplexType);
+              seenTypes.add(fullTypeName);
             }
           }
         }
 
-        const messageDefinition = stringify(Array.from(typesForMessage.values()));
+        const messageDefinition = stringify(typesForMessage);
         topic.schemaData = this.#textEncoder.encode(messageDefinition);
         topic.schemaEncoding = "ros2msg";
         topics.push(topic);
