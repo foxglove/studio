@@ -196,4 +196,79 @@ describe("DeserializingIterableSources", () => {
       done: true,
     });
   });
+
+  it("handles deserialization errors in message iteration", async () => {
+    const source = new TestSource();
+    const deserSource = new DeserializingIterableSource(source);
+
+    const initResult = await deserSource.initialize();
+    expect(initResult.problems).toStrictEqual([]);
+    await deserSource.initialize();
+
+    source.messageIterator = async function* messageIterator(
+      _args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult<Uint8Array>>> {
+      for (let i = 0; i < 8; ++i) {
+        yield {
+          type: "message-event",
+          msgEvent: {
+            topic: "json_topic",
+            receiveTime: { sec: 0, nsec: i * 1e8 },
+            // Every second message is invalid.
+            message:
+              i % 2 === 0
+                ? textEncoder.encode("non-valid json")
+                : textEncoder.encode(JSON.stringify({ foo: "bar", iteration: i })),
+            sizeInBytes: 0,
+            schemaName: "some_type",
+          },
+        };
+      }
+    };
+
+    const messageIterator = deserSource.messageIterator({
+      topics: new Map([["json_topic", { topic: "json_topic" }]]),
+    });
+
+    for (let i = 0; i < 8; ++i) {
+      const iterResult = messageIterator.next();
+      await expect(iterResult).resolves.toMatchObject({
+        done: false,
+        value: {
+          type: i % 2 === 0 ? "problem" : "message-event",
+        },
+      });
+    }
+  });
+
+  it("handles deserialization errors for backfill messages", async () => {
+    const source = new TestSource();
+    const deserSource = new DeserializingIterableSource(source);
+
+    const initResult = await deserSource.initialize();
+    expect(initResult.problems).toStrictEqual([]);
+    await deserSource.initialize();
+
+    source.getBackfillMessages = async (_args: GetBackfillMessagesArgs) => {
+      return new Array(8).fill(1).map((_val, i) => {
+        return {
+          topic: "json_topic",
+          receiveTime: { sec: 0, nsec: i * 1e8 },
+          // Every second message is invalid.
+          message:
+            i % 2 === 0
+              ? textEncoder.encode("non-valid json")
+              : textEncoder.encode(JSON.stringify({ foo: "bar", iteration: i })),
+          sizeInBytes: 0,
+          schemaName: "some_type",
+        };
+      });
+    };
+
+    const messages = await deserSource.getBackfillMessages({
+      time: { sec: 0, nsec: 0 },
+      topics: new Map([["json_topic", { topic: "json_topic" }]]),
+    });
+    expect(messages.length).toBe(4);
+  });
 });
