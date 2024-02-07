@@ -301,11 +301,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this.#supportedEncodings = event.supportedEncodings;
       this.#datatypes = new Map();
 
-      // Clear the thopics which makes us request them again
-      // and has the side-effect that we don't emit without a time update
-      // fixme - this is annoying because it will thrash the display
-      this.#topics = undefined;
-
       // If the server publishes the time we clear any existing clockTime we might have and let the
       // server override
       if (this.#serverPublishesTime) {
@@ -603,6 +598,13 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this.#numTimeSeeks++;
         this.#parsedMessages = [];
         this.#parsedMessagesBytes = 0;
+      }
+
+      // Override any previous start/end time when we set a clockTime for the first time which means
+      // we've received the first "time" event and know the server controlled time.
+      if (!this.#clockTime) {
+        this.#startTime = time;
+        this.#endTime = time;
       }
 
       this.#clockTime = time;
