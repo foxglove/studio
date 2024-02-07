@@ -43,10 +43,14 @@ export class WorkerSerializedIterableSourceWorker implements ISerializedIterable
     // clonable (and needs to signal across the worker boundary)
     abortSignal?: AbortSignal,
   ): Promise<MessageEvent<Uint8Array>[]> {
-    return await this.#source.getBackfillMessages({
+    const messages = await this.#source.getBackfillMessages({
       ...args,
       abortSignal,
     });
+    return Comlink.transfer(
+      messages,
+      messages.map((msg) => msg.message.buffer),
+    );
   }
 
   public getMessageCursor(
