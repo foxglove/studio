@@ -168,16 +168,22 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
       ]),
     );
 
-    const deserialize = (rawMessages: MessageEvent<Uint8Array>[]) => {
-      return rawMessages.map((rawMsg) => {
+    const rawMessages = await this.#source.getBackfillMessages(args);
+    const deserializedMsgs: MessageEvent[] = [];
+    for (const rawMsg of rawMessages) {
+      try {
         const subscription = subscribePayloadWithHashByTopic.get(rawMsg.topic);
         if (!subscription) {
           throw new Error(`Received message on topic ${rawMsg.topic} which was not subscribed to.`);
         }
-        return this.#deserializeMessage(rawMsg, subscription);
-      });
-    };
-    return await this.#source.getBackfillMessages(args).then(deserialize);
+        deserializedMsgs.push(this.#deserializeMessage(rawMsg, subscription));
+      } catch (err) {
+        // We simply ignore errors here as there is no way to pass errors/problems to the caller.
+        // Besides this, the error has most likely been already surfaced to the user during normal iteration.
+      }
+    }
+
+    return deserializedMsgs;
   }
 
   #deserializeMessage(
