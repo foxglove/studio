@@ -22,7 +22,7 @@ import {
   GetBackfillMessagesArgs,
   IteratorResult,
   MessageIteratorArgs,
-  IRawIterableSource,
+  ISerializedIterableSource,
   Initalization,
   TopicWithDecodingInfo,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
@@ -34,7 +34,7 @@ const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
 type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
 /** Only efficient for small files */
-export class McapUnindexedIterableSource implements IRawIterableSource {
+export class McapUnindexedIterableSource implements ISerializedIterableSource {
   #options: Options;
   #msgEventsByChannel?: Map<number, MessageEvent<Uint8Array>[]>;
   #start?: Time;

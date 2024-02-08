@@ -14,6 +14,15 @@ import {
   IIterableSource,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
+import { SubscribePayload } from "@foxglove/studio-base/players/types";
+
+// Computes the subscription hash for a given topic & subscription payload pair.
+// In the simplest case, when there are no message slicing fields, the subscription hash is just
+// the topic name. If there are slicing fields, the hash is computed as the topic name appended
+// by "+" seperated message slicing fields.
+function computeSubscriptionHash(topic: string, subscribePayload: SubscribePayload): string {
+  return subscribePayload.fields ? topic + "+" + subscribePayload.fields.join("+") : topic;
+}
 
 /**
  * Iterable source that deserializes messages from a raw iterable source (messages are Uint8Arrays).
@@ -21,7 +30,7 @@ import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryE
 export class DeserializingIterableSource implements IDeserializedIterableSource {
   #source: IIterableSource<Uint8Array>;
   #deserializersByTopic: Record<string, (data: ArrayBufferView) => unknown> = {};
-  #messageSizeEstimateByTopic: Record<string, number> = {};
+  #messageSizeEstimateBySubHash: Record<string, number> = {};
   #connectionIdByTopic: Record<string, number> = {};
 
   public readonly sourceType = "deserialized";
@@ -84,6 +93,19 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
   public messageIterator(
     args: MessageIteratorArgs,
   ): AsyncIterableIterator<Readonly<IteratorResult>> {
+    // Compute the unique subscription hash for every topic + subscription payload pair which will
+    // be used to lookup message size estimates. This is done here to avoid having to compute the
+    // the subscription hash for every new message event.
+    const subscribePayloadWithHashByTopic = new Map(
+      Array.from(args.topics, ([topic, subscribePayload]) => [
+        topic,
+        {
+          ...subscribePayload,
+          subscriptionHash: computeSubscriptionHash(topic, subscribePayload),
+        },
+      ]),
+    );
+
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const rawIterator = self.#source.messageIterator(args);
@@ -96,10 +118,16 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
           }
 
           try {
-            const fieldsToPick = args.topics.get(iterResult.msgEvent.topic)?.fields ?? [];
+            const subscription = subscribePayloadWithHashByTopic.get(iterResult.msgEvent.topic);
+            if (!subscription) {
+              throw new Error(
+                `Received message on topic ${iterResult.msgEvent.topic} which was not subscribed to.`,
+              );
+            }
+
             const deserializedMsgEvent = self.#deserializeMessage(
               iterResult.msgEvent,
-              fieldsToPick,
+              subscription,
             );
             yield {
               type: iterResult.type,
@@ -127,18 +155,40 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
   }
 
   public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
-    const deserialize = (rawMessages: MessageEvent<Uint8Array>[]) => {
-      return rawMessages.map((rawMsg) => {
-        const fieldsToPick = args.topics.get(rawMsg.topic)?.fields ?? [];
-        return this.#deserializeMessage(rawMsg, fieldsToPick);
-      });
-    };
-    return await this.#source.getBackfillMessages(args).then(deserialize);
+    // Compute the unique subscription hash for every topic + subscription payload pair which will
+    // be used to lookup message size estimates. This is done here to avoid having to compute the
+    // the subscription hash for every new message event.
+    const subscribePayloadWithHashByTopic = new Map(
+      Array.from(args.topics, ([topic, subscribePayload]) => [
+        topic,
+        {
+          ...subscribePayload,
+          subscriptionHash: computeSubscriptionHash(topic, subscribePayload),
+        },
+      ]),
+    );
+
+    const rawMessages = await this.#source.getBackfillMessages(args);
+    const deserializedMsgs: MessageEvent[] = [];
+    for (const rawMsg of rawMessages) {
+      try {
+        const subscription = subscribePayloadWithHashByTopic.get(rawMsg.topic);
+        if (!subscription) {
+          throw new Error(`Received message on topic ${rawMsg.topic} which was not subscribed to.`);
+        }
+        deserializedMsgs.push(this.#deserializeMessage(rawMsg, subscription));
+      } catch (err) {
+        // We simply ignore errors here as there is no way to pass errors/problems to the caller.
+        // Besides this, the error has most likely been already surfaced to the user during normal iteration.
+      }
+    }
+
+    return deserializedMsgs;
   }
 
   #deserializeMessage(
     rawMessageEvent: MessageEvent<Uint8Array>,
-    fieldsToPick: string[],
+    subscription: SubscribePayload & { subscriptionHash: string },
   ): MessageEvent {
     const { topic, message } = rawMessageEvent;
 
@@ -148,20 +198,27 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
     }
 
     const deserializedMessage = deserialize(message) as Record<string, unknown>;
-    const msg =
-      fieldsToPick.length > 0 ? pickFields(deserializedMessage, fieldsToPick) : deserializedMessage;
+    const msg = subscription.fields
+      ? pickFields(deserializedMessage, subscription.fields)
+      : deserializedMessage;
 
-    // Lookup the size estimate for this topic or compute it if not found in the cache.
-    let msgSizeEstimate = this.#messageSizeEstimateByTopic[rawMessageEvent.topic];
+    // Lookup the size estimate for this subscription hash or compute it if not found in the cache.
+    let msgSizeEstimate = this.#messageSizeEstimateBySubHash[subscription.subscriptionHash];
     if (msgSizeEstimate == undefined) {
       msgSizeEstimate = estimateObjectSize(msg);
-      this.#messageSizeEstimateByTopic[rawMessageEvent.topic] = msgSizeEstimate;
+      this.#messageSizeEstimateBySubHash[subscription.subscriptionHash] = msgSizeEstimate;
     }
+
+    // For sliced messages we use the estimated message size whereas for non-sliced messages
+    // take whatever size is bigger.
+    const sizeInBytes = subscription.fields
+      ? msgSizeEstimate
+      : Math.max(message.byteLength, msgSizeEstimate);
 
     return {
       ...rawMessageEvent,
       message: msg,
-      sizeInBytes: Math.max(message.byteLength, msgSizeEstimate),
+      sizeInBytes,
     };
   }
 }
