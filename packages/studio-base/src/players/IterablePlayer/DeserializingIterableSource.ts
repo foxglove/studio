@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { pickFields } from "@foxglove/den/records";
+import Logger from "@foxglove/log";
 import { parseChannel } from "@foxglove/mcap-support";
 import { MessageEvent } from "@foxglove/studio";
 import {
@@ -15,6 +16,8 @@ import {
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
 import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
+
+const log = Logger.getLogger(__filename);
 
 // Computes the subscription hash for a given topic & subscription payload pair.
 // In the simplest case, when there are no message slicing fields, the subscription hash is just
@@ -178,8 +181,9 @@ export class DeserializingIterableSource implements IDeserializedIterableSource 
         }
         deserializedMsgs.push(this.#deserializeMessage(rawMsg, subscription));
       } catch (err) {
-        // We simply ignore errors here as there is no way to pass errors/problems to the caller.
+        // We simply log errors here as there is no way to pass errors/problems to the caller.
         // Besides this, the error has most likely been already surfaced to the user during normal iteration.
+        log.error(err);
       }
     }
 
