@@ -47,7 +47,7 @@ export function makeWorkspaceContextInitialState(): WorkspaceContextStore {
     },
     playbackControls: {
       repeat: false,
-      speed: 1,
+      speed: 0.2,
     },
   };
 }

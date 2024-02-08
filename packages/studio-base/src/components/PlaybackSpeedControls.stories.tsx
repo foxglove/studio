@@ -17,8 +17,7 @@ import { screen, userEvent } from "@storybook/testing-library";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
-
-const CAPABILITIES = ["setSpeed", "playbackControl"];
+import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
 export default {
   title: "components/PlaybackSpeedControls",
@@ -27,11 +26,13 @@ export default {
   decorators: [
     (WrappedStory, { args }) => (
       <MockCurrentLayoutProvider>
-        <MockMessagePipelineProvider {...args}>
-          <div style={{ padding: 20, paddingTop: 300 }}>
-            <WrappedStory />
-          </div>
-        </MockMessagePipelineProvider>
+        <WorkspaceContextProvider initialState={args.initialState} disablePersistenceForStorybook>
+          <MockMessagePipelineProvider>
+            <div style={{ padding: 20, paddingTop: 300 }}>
+              <WrappedStory />
+            </div>
+          </MockMessagePipelineProvider>
+        </WorkspaceContextProvider>
       </MockCurrentLayoutProvider>
     ),
   ],
@@ -41,9 +42,9 @@ export default {
       await userEvent.click(el);
     }
   },
-} satisfies Meta<typeof MockMessagePipelineProvider>;
+} satisfies Meta<typeof WorkspaceContextProvider>;
 
-type Story = StoryObj<typeof MockMessagePipelineProvider>;
+type Story = StoryObj<typeof WorkspaceContextProvider>;
 
 export const WithoutSpeedCapability: Story = {
   name: "without speed capability",
@@ -51,15 +52,31 @@ export const WithoutSpeedCapability: Story = {
 
 export const WithoutASpeedFromThePlayer: Story = {
   name: "without a speed from the player",
-  args: { capabilities: CAPABILITIES, activeData: { speed: undefined } },
+  args: {
+    initialState: {},
+  },
 };
 
 export const WithASpeed: Story = {
   name: "with a speed",
-  args: { capabilities: CAPABILITIES },
+  args: {
+    initialState: {
+      playbackControls: {
+        repeat: false,
+        speed: 2,
+      },
+    },
+  },
 };
 
 export const WithAVerySmallSpeed: Story = {
   name: "with a very small speed",
-  args: { capabilities: CAPABILITIES, activeData: { speed: 0.01 } },
+  args: {
+    initialState: {
+      playbackControls: {
+        repeat: false,
+        speed: 0.01,
+      },
+    },
+  },
 };
