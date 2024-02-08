@@ -284,6 +284,8 @@ export class McapUnindexedIterableSource implements ISerializedIterableSource {
           resultMessages.push({
             type: "message-event" as const,
             connectionId: channelId,
+            // We copy the message event here as we are transferring the underlying array buffer
+            // to the main thread which invalidates it.
             msgEvent: structuredClone(msgEvent),
           });
         }
@@ -308,6 +310,8 @@ export class McapUnindexedIterableSource implements ISerializedIterableSource {
     for (const [, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
         if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.has(msgEvent.topic)) {
+          // We copy the message event here as we are transferring the underlying array buffer
+          // to the main thread which invalidates it.
           msgEventsByTopic.set(msgEvent.topic, structuredClone(msgEvent));
         }
       }
