@@ -200,10 +200,10 @@ export class IterablePlayer implements Player {
       this.#bufferImpl = new BufferedIterableSource(source);
       this.#bufferedSource = new DeserializedSourceWrapper(this.#bufferImpl);
     } else {
-      const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
+      const MEGABYTE_IN_BYTES = 1024 * 1024;
       const bufferInterface = new BufferedIterableSource(source, {
         readAheadDuration: { sec: 120, nsec: 0 },
-        maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
+        maxCacheSizeBytes: 600 * MEGABYTE_IN_BYTES,
       });
       this.#bufferImpl = bufferInterface;
       this.#bufferedSource = new DeserializingIterableSource(bufferInterface);
