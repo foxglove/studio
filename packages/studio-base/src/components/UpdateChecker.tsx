@@ -9,22 +9,23 @@ import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);
 
+type VersionResponse = {
+  version?: string;
+  message?: string;
+};
+
 export function UpdateChecker(): JSX.Element {
   const { enqueueSnackbar } = useSnackbar();
   useAsync(async () => {
-    if (!navigator.onLine) {
+    if (!navigator.onLine || !FOXGLOVE_STUDIO_VERSION) {
       return;
     }
     try {
-      const latestVersion = await (
-        await fetch(
-          `https://api.foxglove.dev/v1/oss-version?version=${FOXGLOVE_STUDIO_VERSION ?? ""}`,
-        )
-      ).text();
-      if (latestVersion.length > 0 && latestVersion !== FOXGLOVE_STUDIO_VERSION) {
-        enqueueSnackbar(`A new Foxglove Studio version is available: ${latestVersion}`, {
-          variant: "info",
-        });
+      const { message } = (await (
+        await fetch(`https://api.foxglove.dev/v1/oss-version?version=${FOXGLOVE_STUDIO_VERSION}`)
+      ).json()) as VersionResponse;
+      if (message) {
+        enqueueSnackbar(message);
       }
     } catch (err) {
       log.error(err);
