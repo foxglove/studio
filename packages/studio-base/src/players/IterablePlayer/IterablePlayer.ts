@@ -97,6 +97,9 @@ type IterablePlayerOptions = {
 
   // Set to _false_ to disable preloading. (default: true)
   enablePreload?: boolean;
+
+  // Max. time that messages will be buffered ahead for smoother playback. (default: 10sec)
+  readAheadDuration?: Time;
 };
 
 type IterablePlayerState =
@@ -195,7 +198,15 @@ export class IterablePlayer implements Player {
   #resolveIsClosed: () => void = () => {};
 
   public constructor(options: IterablePlayerOptions) {
-    const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
+    const {
+      metricsCollector,
+      urlParams,
+      source,
+      name,
+      enablePreload,
+      sourceId,
+      readAheadDuration = { sec: 10, nsec: 0 },
+    } = options;
 
     this.#iterableSource = source;
     if (source.sourceType === "deserialized") {
@@ -204,7 +215,7 @@ export class IterablePlayer implements Player {
     } else {
       const MEGABYTE_IN_BYTES = 1024 * 1024;
       const bufferInterface = new BufferedIterableSource(source, {
-        readAheadDuration: { sec: 120, nsec: 0 },
+        readAheadDuration,
         maxCacheSizeBytes: 600 * MEGABYTE_IN_BYTES,
       });
       this.#bufferImpl = bufferInterface;

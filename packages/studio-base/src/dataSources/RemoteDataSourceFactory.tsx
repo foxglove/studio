@@ -104,6 +104,7 @@ class RemoteDataSourceFactory implements IDataSourceFactory {
       // Use blank url params so the data source is set in the url
       urlParams: { url },
       sourceId: this.id,
+      readAheadDuration: { sec: 10, nsec: 0 },
     });
   }
 

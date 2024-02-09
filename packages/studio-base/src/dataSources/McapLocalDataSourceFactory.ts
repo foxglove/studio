@@ -41,6 +41,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       source,
       name: file.name,
       sourceId: this.id,
+      readAheadDuration: { sec: 120, nsec: 0 },
     });
   }
 }
