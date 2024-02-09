@@ -22,7 +22,7 @@ export function UpdateChecker(): JSX.Element {
     }
     try {
       const { message } = (await (
-        await fetch(`https://api.foxglove.dev/v1/oss-version?version=${FOXGLOVE_STUDIO_VERSION}`)
+        await fetch(`https://api.foxglove.dev/v1/studio-update?version=${FOXGLOVE_STUDIO_VERSION}`)
       ).json()) as VersionResponse;
       if (message) {
         enqueueSnackbar(message);
