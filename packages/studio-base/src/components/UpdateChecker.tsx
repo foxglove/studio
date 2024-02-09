@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useSnackbar } from "notistack";
-import { useAsync } from "react-use";
+import { useEffect } from "react";
 
 import Logger from "@foxglove/log";
 
@@ -16,23 +16,32 @@ type VersionResponse = {
 
 export function UpdateChecker(): JSX.Element {
   const { enqueueSnackbar } = useSnackbar();
-  useAsync(async () => {
+
+  useEffect(() => {
     if (!navigator.onLine || !FOXGLOVE_STUDIO_VERSION) {
       return;
     }
-    try {
-      const { message } = (await (
-        await fetch(
-          `https://api.foxglove.dev/v1/studio-update?version=${FOXGLOVE_STUDIO_VERSION}`,
-          { credentials: "omit" },
-        )
-      ).json()) as VersionResponse;
-      if (message) {
-        enqueueSnackbar(message);
-      }
-    } catch (err) {
-      log.error(err);
-    }
+
+    const abort = new AbortController();
+
+    fetch(`https://api.foxglove.dev/v1/studio-update?version=${FOXGLOVE_STUDIO_VERSION}`, {
+      credentials: "omit",
+      signal: abort.signal,
+    })
+      .then(async (res) => {
+        const { message } = (await res.json()) as VersionResponse;
+        if (message) {
+          enqueueSnackbar(message);
+        }
+      })
+      .catch((err) => {
+        log.error(err);
+      });
+
+    return () => {
+      abort.abort();
+    };
   }, [enqueueSnackbar]);
+
   return <></>;
 }
