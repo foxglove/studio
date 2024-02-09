@@ -35,8 +35,8 @@ describe("startup", () => {
 
     const browser = await chromium.launch();
     const page = await browser.newPage();
-    page.route("https://api.foxglove.dev/v1/oss-version", (route) => {
-      route.fulfill({
+    await page.route("https://api.foxglove.dev/v1/oss-version", async (route) => {
+      await route.fulfill({
         body: JSON.stringify({}),
       });
     });
