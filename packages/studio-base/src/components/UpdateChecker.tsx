@@ -12,6 +12,9 @@ const log = Logger.getLogger(__filename);
 export function UpdateChecker(): JSX.Element {
   const { enqueueSnackbar } = useSnackbar();
   useAsync(async () => {
+    if (!navigator.onLine) {
+      return;
+    }
     try {
       const latestVersion = await (
         await fetch(
