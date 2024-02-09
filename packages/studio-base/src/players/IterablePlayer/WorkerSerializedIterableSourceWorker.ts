@@ -18,6 +18,8 @@ import type {
 } from "./IIterableSource";
 import { IteratorCursor } from "./IteratorCursor";
 
+const pickTransferableBuffer = (msg: MessageEvent<Uint8Array>) => msg.message.buffer;
+
 export class WorkerSerializedIterableSourceWorker implements ISerializedIterableSource {
   #source: ISerializedIterableSource;
 
@@ -47,10 +49,7 @@ export class WorkerSerializedIterableSourceWorker implements ISerializedIterable
       ...args,
       abortSignal,
     });
-    return Comlink.transfer(
-      messages,
-      messages.map((msg) => msg.message.buffer),
-    );
+    return Comlink.transfer(messages, messages.map(pickTransferableBuffer));
   }
 
   public getMessageCursor(
