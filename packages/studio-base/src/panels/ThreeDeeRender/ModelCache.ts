@@ -49,7 +49,7 @@ const STL_MIME_TYPES = ["model/stl", "model/x.stl-ascii", "model/x.stl-binary", 
 const DAE_MIME_TYPES = ["model/vnd.collada+xml"];
 const OBJ_MIME_TYPES = ["model/obj", "text/prs.wavefront-obj"];
 
-export class ModelCache {
+class ModelCache {
   #textDecoder = new TextDecoder();
   #models = new Map<CacheKey, Promise<LoadedModel | undefined>>();
   #colladaTextureObjectUrls = new Map<string, string>();
@@ -317,9 +317,6 @@ export class ModelCache {
 
   public decrementUsage(): void {
     this.#usageCount -= 1;
-    if (this.#usageCount <= 0) {
-      this.reset();
-    }
   }
 
   public reset(): void {
