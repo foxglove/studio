@@ -72,6 +72,13 @@ export type UpdateAction = {
   interactionEvents?: InteractionEvent[];
 };
 
+const maxDigitNumberFormats = new Array(15).fill(0).map((_, index) => {
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: index,
+  });
+});
+
 const fixedNumberFormat = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -251,6 +258,30 @@ export class ChartRenderer {
       }
       if (scaleOption && scaleOption.max !== action.yBounds.max) {
         scaleOption.max = action.yBounds.max;
+      }
+
+      if (scaleOption?.ticks) {
+        scaleOption.ticks.callback = function (value, index, ticks) {
+          if (ticks.length < 2) {
+            return Ticks.formatters.numeric.apply(this, [value as number, index, ticks]);
+          }
+
+          const minValue = ticks[0]?.value ?? 0;
+          const maxValue = ticks[ticks.length - 1]?.value ?? 0;
+          const diff = maxValue - minValue;
+
+          // The number of displayed digits depends on how far apart min/max values are, e.g.
+          // for (100, 110) the ticks will be (101, 102...), but when displaying (0.1, 0.2)
+          // the ticks each need two digits (0.11, 0.12...)
+          const maxDigits = Math.max(0 - Math.floor(Math.log10(diff)), 0) + 1;
+
+          const format =
+            maxDigitNumberFormats.length > maxDigits
+              ? maxDigitNumberFormats[maxDigits]
+              : maxDigitNumberFormats[maxDigitNumberFormats.length - 1];
+
+          return format?.format(value as number);
+        };
       }
     }
 
