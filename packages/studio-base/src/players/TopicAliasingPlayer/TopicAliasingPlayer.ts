@@ -117,6 +117,10 @@ export class TopicAliasingPlayer implements Player {
     this.#player.seekPlayback?.(time);
   }
 
+  public toggleRepeatPlayback(): void {
+    this.#player.toggleRepeatPlayback?.();
+  }
+
   public playUntil?(time: Time): void {
     if (this.#player.playUntil) {
       this.#player.playUntil(time);

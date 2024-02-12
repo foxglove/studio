@@ -118,6 +118,7 @@ export class IterablePlayer implements Player {
   #state: IterablePlayerState = "preinit";
   #runningState: boolean = false;
 
+  #repeatEnabled: boolean = false;
   #isPlaying: boolean = false;
   #listener?: (playerState: PlayerState) => Promise<void>;
   #speed: number = 1.0;
@@ -275,11 +276,30 @@ export class IterablePlayer implements Player {
     }
   }
 
+  // Repeating is a continuation of the playing state/we should already be playing
+  public repeatPlayback(): void {
+    if (!this.#isPlaying) {
+      return;
+    }
+    this.#untilTime = undefined;
+    this.#lastTickMillis = undefined;
+    this.#lastRangeMillis = undefined;
+    this.#currentTime = this.#start;
+
+    this.#setState("reset-playback-iterator");
+  }
+
   public setPlaybackSpeed(speed: number): void {
     this.#lastRangeMillis = undefined;
     this.#speed = speed;
 
     // Queue event state update to update speed in player state to UI
+    this.#queueEmitState();
+  }
+
+  public toggleRepeatPlayback(): void {
+    this.#repeatEnabled = !this.#repeatEnabled;
+
     this.#queueEmitState();
   }
 
@@ -813,6 +833,7 @@ export class IterablePlayer implements Player {
         startTime: this.#start,
         endTime: this.#end,
         isPlaying: this.#isPlaying,
+        repeatEnabled: this.#repeatEnabled,
         speed: this.#speed,
         lastSeekTime: this.#lastSeekEmitTime,
         topics: this.#providerTopics,
@@ -1049,7 +1070,11 @@ export class IterablePlayer implements Player {
 
     try {
       while (this.#isPlaying && !this.#hasError && !this.#nextState) {
-        if (compare(this.#currentTime, this.#end) >= 0) {
+        if (this.#repeatEnabled && compare(this.#currentTime, this.#end) === 0) {
+          // Playback has ended and we should repeat
+          this.repeatPlayback();
+          return;
+        } else if (compare(this.#currentTime, this.#end) >= 0) {
           // Playback has ended. Reset internal trackers for maintaining the playback speed.
           this.#lastTickMillis = undefined;
           this.#lastRangeMillis = undefined;

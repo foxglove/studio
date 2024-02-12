@@ -892,6 +892,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         endTime: this.#endTime,
         currentTime,
         isPlaying: true,
+        repeatEnabled: false,
         speed: 1,
         lastSeekTime: this.#numTimeSeeks,
         topics: this.#topics,

@@ -25,7 +25,7 @@ import {
   Previous20Regular,
 } from "@fluentui/react-icons";
 import { Tooltip } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import { Time, compare } from "@foxglove/rostime";
@@ -51,7 +51,6 @@ import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/use
 import { Player, PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import PlaybackTimeDisplay from "./PlaybackTimeDisplay";
-import { RepeatAdapter } from "./RepeatAdapter";
 import Scrubber from "./Scrubber";
 import { DIRECTION, jumpSeek } from "./sharedHelpers";
 
@@ -93,11 +92,22 @@ export default function PlaybackControls(props: {
   play: NonNullable<Player["startPlayback"]>;
   pause: NonNullable<Player["pausePlayback"]>;
   seek: NonNullable<Player["seekPlayback"]>;
+  toggleRepeatPlayback: NonNullable<Player["toggleRepeatPlayback"]>;
   playUntil?: Player["playUntil"];
   isPlaying: boolean;
+  repeatEnabled: boolean;
   getTimeInfo: () => { startTime?: Time; endTime?: Time; currentTime?: Time };
 }): JSX.Element {
-  const { play, pause, seek, isPlaying, getTimeInfo, playUntil } = props;
+  const {
+    play,
+    pause,
+    seek,
+    toggleRepeatPlayback,
+    repeatEnabled,
+    isPlaying,
+    getTimeInfo,
+    playUntil,
+  } = props;
   const presence = useMessagePipeline(selectPresence);
 
   const { classes, cx } = useStyles();
@@ -110,9 +120,19 @@ export default function PlaybackControls(props: {
     playbackControlActions: { setRepeat },
   } = useWorkspaceActions();
 
+  // on initial load, sync the workspace setting with the iterable player. Repeat defaults to false, if repeat is saved on workspace as true, toggle.
+  useEffect(() => {
+    if (repeat) {
+      toggleRepeatPlayback();
+    }
+  }, []);
+
   const toggleRepeat = useCallback(() => {
-    setRepeat((old) => !old);
-  }, [setRepeat]);
+    // toggle repeat on the player
+    toggleRepeatPlayback();
+    // toggle repeat on the workspace
+    setRepeat(!repeat);
+  }, [setRepeat, toggleRepeatPlayback, repeat]);
 
   const togglePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -165,17 +185,6 @@ export default function PlaybackControls(props: {
     [getTimeInfo, seek],
   );
 
-  // There is a moment when isPlaying is false, but it is about to repeat (currentTime === endTime). Combining these values prevents visual flicker of the play button on rapid playback repeat
-  const isPlayingOrRepeating = useMemo(() => {
-    const { currentTime, endTime } = getTimeInfo();
-
-    if (isPlaying || (repeat && currentTime && endTime && compare(currentTime, endTime) === 0)) {
-      return true;
-    } else {
-      return false;
-    }
-  }, [isPlaying, repeat, getTimeInfo]);
-
   const keyDownHandlers = useMemo(
     () => ({
       " ": togglePlayPause,
@@ -198,7 +207,6 @@ export default function PlaybackControls(props: {
 
   return (
     <>
-      <RepeatAdapter play={play} seek={seek} repeatEnabled={repeat} />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <div className={classes.root}>
         <div className={classes.scrubberWrapper}>
@@ -254,10 +262,10 @@ export default function PlaybackControls(props: {
             <HoverableIconButton
               disabled={disableControls}
               size="small"
-              title={isPlayingOrRepeating ? "Pause" : "Play"}
+              title={isPlaying ? "Pause" : "Play"}
               onClick={togglePlayPause}
-              icon={isPlayingOrRepeating ? <Pause20Regular /> : <Play20Regular />}
-              activeIcon={isPlayingOrRepeating ? <Pause20Filled /> : <Play20Filled />}
+              icon={isPlaying ? <Pause20Regular /> : <Play20Regular />}
+              activeIcon={isPlaying ? <Pause20Filled /> : <Play20Filled />}
             />
             <HoverableIconButton
               disabled={disableControls}
@@ -274,9 +282,10 @@ export default function PlaybackControls(props: {
             <HoverableIconButton
               size="small"
               title="Loop playback"
-              color={repeat ? "primary" : "inherit"}
+              disabled={disableControls}
+              color={repeatEnabled ? "primary" : "inherit"}
               onClick={toggleRepeat}
-              icon={repeat ? <ArrowRepeatAll20Regular /> : <ArrowRepeatAllOff20Regular />}
+              icon={repeatEnabled ? <ArrowRepeatAll20Regular /> : <ArrowRepeatAllOff20Regular />}
             />
             <PlaybackSpeedControls />
           </Stack>

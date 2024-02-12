@@ -133,6 +133,7 @@ export function createMessagePipelineStore({
           pausePlayback: undefined,
           setPlaybackSpeed: undefined,
           seekPlayback: undefined,
+          toggleRepeatPlayback: undefined,
         },
       }));
     },
@@ -210,6 +211,7 @@ export function createMessagePipelineStore({
       pausePlayback: undefined,
       setPlaybackSpeed: undefined,
       seekPlayback: undefined,
+      toggleRepeatPlayback: undefined,
 
       pauseFrame(name: string) {
         const condvar = new Condvar();
@@ -391,6 +393,9 @@ function updatePlayerStateAction(
       : undefined;
     newPublicState.seekPlayback = capabilities.includes(PlayerCapabilities.playbackControl)
       ? player.seekPlayback?.bind(player)
+      : undefined;
+    newPublicState.toggleRepeatPlayback = capabilities.includes(PlayerCapabilities.playbackControl)
+      ? player.toggleRepeatPlayback?.bind(player)
       : undefined;
   }
 

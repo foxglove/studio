@@ -29,6 +29,7 @@ export type MessagePipelineContext = Immutable<{
   fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   startPlayback?: () => void;
   pausePlayback?: () => void;
+  toggleRepeatPlayback?: () => void;
   playUntil?: (time: Time) => void;
   setPlaybackSpeed?: (speed: number) => void;
   seekPlayback?: (time: Time) => void;

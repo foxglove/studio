@@ -247,6 +247,7 @@ export const fixture: Fixture = {
       toSec(msg.header.stamp),
     )?.header.stamp,
     isPlaying: false,
+    repeatEnabled: false,
     speed: 0.2,
   },
   frame: {
