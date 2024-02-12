@@ -156,7 +156,7 @@
     "text-metrics": "3.0.0",
     "three": "patch:three@0.156.1#../../patches/three.patch",
     "tinycolor2": "1.6.0",
-    "ts-essentials": "9.4.0",
+    "ts-essentials": "9.4.1",
     "ts-key-enum": "2.0.12",
     "ts-loader": "9.5.1",
     "tss-react": "4.9.3",
