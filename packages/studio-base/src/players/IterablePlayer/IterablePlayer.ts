@@ -44,7 +44,11 @@ import delay from "@foxglove/studio-base/util/delay";
 import { BlockLoader } from "./BlockLoader";
 import { BufferedIterableSource } from "./BufferedIterableSource";
 import { DeserializingIterableSource } from "./DeserializingIterableSource";
-import { IDeserializedIterableSource, IRawIterableSource, IteratorResult } from "./IIterableSource";
+import {
+  IDeserializedIterableSource,
+  ISerializedIterableSource,
+  IteratorResult,
+} from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -77,7 +81,7 @@ const EMPTY_ARRAY = Object.freeze([]);
 type IterablePlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
 
-  source: IDeserializedIterableSource | IRawIterableSource;
+  source: IDeserializedIterableSource | ISerializedIterableSource;
 
   // Optional player name
   name?: string;
@@ -161,7 +165,7 @@ export class IterablePlayer implements Player {
   #problemManager = new PlayerProblemManager();
 
   // Unbuffered source, used as input source for buffered source and block loader.
-  #iterableSource: IDeserializedIterableSource | IRawIterableSource;
+  #iterableSource: IDeserializedIterableSource | ISerializedIterableSource;
 
   // Buffered source used for playback.
   #bufferedSource: IDeserializedIterableSource;
