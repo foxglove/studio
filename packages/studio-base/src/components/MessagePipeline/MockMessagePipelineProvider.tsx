@@ -176,7 +176,7 @@ function getPublicState(
     startPlayback: props.startPlayback,
     playUntil: noop,
     pausePlayback: props.pausePlayback,
-    toggleRepeatPlayback: props.toggleRepeat,
+    toggleRepeatPlayback: props.toggleRepeat ?? noop,
     setPlaybackSpeed:
       props.capabilities?.includes(PlayerCapabilities.setSpeed) === true ? noop : undefined,
     seekPlayback: props.seekPlayback,
