@@ -145,7 +145,7 @@
     "react-use": "17.4.2",
     "react-virtualized": "9.22.5",
     "react-window": "1.8.9",
-    "readable-stream": "4.4.2",
+    "readable-stream": "4.5.2",
     "reselect": "5.1.0",
     "sanitize-html": "2.11.0",
     "seedrandom": "3.0.5",
