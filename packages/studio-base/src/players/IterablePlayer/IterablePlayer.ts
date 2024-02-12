@@ -297,8 +297,9 @@ export class IterablePlayer implements Player {
     this.#queueEmitState();
   }
 
-  public toggleRepeatPlayback(): void {
-    this.#repeatEnabled = !this.#repeatEnabled;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  public enableRepeatPlayback(enable: boolean): void {
+    this.#repeatEnabled = enable;
 
     this.#queueEmitState();
   }

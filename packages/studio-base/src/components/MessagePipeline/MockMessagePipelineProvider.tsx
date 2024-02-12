@@ -72,7 +72,7 @@ export type MockMessagePipelineProps = {
   startPlayback?: () => void;
   pausePlayback?: () => void;
   seekPlayback?: (arg0: Time) => void;
-  toggleRepeat?: () => void;
+  enableRepeat?: () => void;
   currentTime?: Time;
   startTime?: Time;
   endTime?: Time;
@@ -176,7 +176,7 @@ function getPublicState(
     startPlayback: props.startPlayback,
     playUntil: noop,
     pausePlayback: props.pausePlayback,
-    toggleRepeatPlayback: props.toggleRepeat ?? noop,
+    enableRepeatPlayback: props.enableRepeat ?? noop,
     setPlaybackSpeed:
       props.capabilities?.includes(PlayerCapabilities.setSpeed) === true ? noop : undefined,
     seekPlayback: props.seekPlayback,

@@ -92,7 +92,7 @@ export default function PlaybackControls(props: {
   play: NonNullable<Player["startPlayback"]>;
   pause: NonNullable<Player["pausePlayback"]>;
   seek: NonNullable<Player["seekPlayback"]>;
-  toggleRepeatPlayback: NonNullable<Player["toggleRepeatPlayback"]>;
+  enableRepeatPlayback: NonNullable<Player["enableRepeatPlayback"]>;
   playUntil?: Player["playUntil"];
   isPlaying: boolean;
   repeatEnabled: boolean;
@@ -102,7 +102,7 @@ export default function PlaybackControls(props: {
     play,
     pause,
     seek,
-    toggleRepeatPlayback,
+    enableRepeatPlayback,
     repeatEnabled,
     isPlaying,
     getTimeInfo,
@@ -120,19 +120,18 @@ export default function PlaybackControls(props: {
     playbackControlActions: { setRepeat },
   } = useWorkspaceActions();
 
-  // on initial load, sync the workspace setting with the iterable player. Repeat defaults to false, if repeat is saved on workspace as true, toggle.
-  useEffect(() => {
-    if (repeat) {
-      toggleRepeatPlayback();
-    }
-  }, []);
-
   const toggleRepeat = useCallback(() => {
-    // toggle repeat on the player
-    toggleRepeatPlayback();
     // toggle repeat on the workspace
     setRepeat(!repeat);
-  }, [setRepeat, toggleRepeatPlayback, repeat]);
+  }, [setRepeat, repeat]);
+
+  useEffect(() => {
+    // if workspace has a preference stored that is not reflected in the iterable player...
+    if (repeat !== repeatEnabled) {
+      // sync the workspace preference with the iterable player
+      enableRepeatPlayback(repeat);
+    }
+  }, [repeat, repeatEnabled, enableRepeatPlayback]);
 
   const togglePlayPause = useCallback(() => {
     if (isPlaying) {

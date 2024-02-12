@@ -117,8 +117,9 @@ export class TopicAliasingPlayer implements Player {
     this.#player.seekPlayback?.(time);
   }
 
-  public toggleRepeatPlayback(): void {
-    this.#player.toggleRepeatPlayback?.();
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  public enableRepeatPlayback(enable: boolean): void {
+    this.#player.enableRepeatPlayback?.(enable);
   }
 
   public playUntil?(time: Time): void {

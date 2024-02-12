@@ -100,7 +100,7 @@ const selectRepeatEnabled = (ctx: MessagePipelineContext) =>
 const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
 const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
-const selectToggleRepeat = (ctx: MessagePipelineContext) => ctx.toggleRepeatPlayback;
+const selectEnableRepeat = (ctx: MessagePipelineContext) => ctx.enableRepeatPlayback;
 const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
 const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
@@ -351,7 +351,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const playUntil = useMessagePipeline(selectPlayUntil);
   const pause = useMessagePipeline(selectPause);
   const seek = useMessagePipeline(selectSeek);
-  const toggleRepeat = useMessagePipeline(selectToggleRepeat);
+  const enableRepeat = useMessagePipeline(selectEnableRepeat);
   const repeatEnabled = useMessagePipeline(selectRepeatEnabled);
   const isPlaying = useMessagePipeline(selectIsPlaying);
   const getMessagePipeline = useMessagePipelineGetter();
@@ -462,7 +462,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
             </Stack>
           </RemountOnValueChange>
         </Sidebars>
-        {play && pause && seek && toggleRepeat && (
+        {play && pause && seek && enableRepeat && (
           <div style={{ flexShrink: 0 }}>
             <PlaybackControls
               play={play}
@@ -471,7 +471,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
               playUntil={playUntil}
               isPlaying={isPlaying}
               repeatEnabled={repeatEnabled}
-              toggleRepeatPlayback={toggleRepeat}
+              enableRepeatPlayback={enableRepeat}
               getTimeInfo={getTimeInfo}
             />
           </div>

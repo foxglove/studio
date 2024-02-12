@@ -134,7 +134,7 @@ export const Playing: StoryObj = {
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
-          toggleRepeatPlayback={action("toggle-repeat-playback")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -154,7 +154,7 @@ export const Paused: StoryObj = {
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
-          toggleRepeatPlayback={action("toggle-repeat-playback")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -174,7 +174,7 @@ export const Disabled: StoryObj = {
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
-          toggleRepeatPlayback={action("toggle-repeat-playback")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -203,7 +203,7 @@ export const DownloadProgressByRanges: StoryObj = {
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
-          toggleRepeatPlayback={action("toggle-repeat-playback")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -234,7 +234,7 @@ export const HoverTicks: StoryObj = {
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
-          toggleRepeatPlayback={action("toggle-repeat-playback")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -261,7 +261,7 @@ export const WithEvents: StoryObj = {
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
-          toggleRepeatPlayback={action("toggle-repeat-playback")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
