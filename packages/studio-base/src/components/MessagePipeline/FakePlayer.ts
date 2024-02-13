@@ -94,6 +94,9 @@ export default class FakePlayer implements Player {
   public startPlayback = (): void => {
     // no-op
   };
+  public enableRepeatPlayback = (): void => {
+    // no-op
+  };
   public seekPlayback = (): void => {
     // no-op
   };

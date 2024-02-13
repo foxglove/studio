@@ -14,7 +14,7 @@ import { McapUnindexedIterableSource } from "./McapUnindexedIterableSource";
 import { RemoteFileReadable } from "./RemoteFileReadable";
 import {
   GetBackfillMessagesArgs,
-  IRawIterableSource,
+  ISerializedIterableSource,
   Initalization,
   IteratorResult,
   MessageIteratorArgs,
@@ -43,9 +43,9 @@ async function tryCreateIndexedReader(readable: McapTypes.IReadable) {
   }
 }
 
-export class McapIterableSource implements IRawIterableSource {
+export class McapIterableSource implements ISerializedIterableSource {
   #source: McapSource;
-  #sourceImpl: IRawIterableSource | undefined;
+  #sourceImpl: ISerializedIterableSource | undefined;
 
   public constructor(source: McapSource) {
     this.#source = source;

@@ -27,9 +27,11 @@ import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 import { FramePromise } from "./pauseFrameForPromise";
 import { MessagePipelineContext } from "./types";
 
-export function defaultPlayerState(): PlayerState {
+export function defaultPlayerState(player?: Player): PlayerState {
   return {
-    presence: PlayerPresence.NOT_PRESENT,
+    // when there is a player we default to initializing, to prevent thrashing in the UI when
+    // the player is initialized.
+    presence: player ? PlayerPresence.INITIALIZING : PlayerPresence.NOT_PRESENT,
     progress: {},
     capabilities: [],
     profile: undefined,
@@ -133,12 +135,13 @@ export function createMessagePipelineStore({
           pausePlayback: undefined,
           setPlaybackSpeed: undefined,
           seekPlayback: undefined,
+          enableRepeatPlayback: undefined,
         },
       }));
     },
 
     public: {
-      playerState: defaultPlayerState(),
+      playerState: defaultPlayerState(initialPlayer),
       messageEventsBySubscriberId: new Map(),
       subscriptions: [],
       sortedTopics: [],
@@ -165,7 +168,7 @@ export function createMessagePipelineStore({
       },
       async fetchAsset(uri, options) {
         const { protocol } = new URL(uri);
-        const player = get().player;
+        const { player, lastCapabilities } = get();
 
         if (protocol === "package:") {
           // For the desktop app, package:// is registered as a supported schema for builtin _fetch_ calls.
@@ -173,19 +176,23 @@ export function createMessagePipelineStore({
           const pkgPath = uri.slice("package://".length);
           const pkgName = pkgPath.split("/")[0];
 
-          if (player?.fetchAsset) {
+          if (lastCapabilities.includes(PlayerCapabilities.assets) && player?.fetchAsset) {
             try {
               return await player.fetchAsset(uri);
-            } catch (err) {
-              if (canBuiltinFetchPkgUri) {
-                // Fallback to a builtin _fetch_ call if the asset couldn't be loaded through the player.
-                return await builtinFetch(uri, options);
-              }
-              throw err; // Bail out otherwise.
+            } catch (_err) {
+              // Do nothing here as one of the fallback methods below might work.
             }
-          } else if (canBuiltinFetchPkgUri) {
-            return await builtinFetch(uri, options);
-          } else if (
+          }
+
+          if (canBuiltinFetchPkgUri) {
+            try {
+              return await builtinFetch(uri, options);
+            } catch (_err) {
+              // Do nothing here as the fallback method below might work.
+            }
+          }
+
+          if (
             pkgName &&
             options?.referenceUrl != undefined &&
             !options.referenceUrl.startsWith("package://") &&
@@ -200,6 +207,8 @@ export function createMessagePipelineStore({
               options.referenceUrl.slice(0, options.referenceUrl.lastIndexOf(pkgName)) + pkgPath;
             return await builtinFetch(resolvedUrl, options);
           }
+
+          throw new Error(`Failed to load asset ${uri}`);
         }
 
         // Use a regular fetch for all other protocols
@@ -210,6 +219,7 @@ export function createMessagePipelineStore({
       pausePlayback: undefined,
       setPlaybackSpeed: undefined,
       seekPlayback: undefined,
+      enableRepeatPlayback: undefined,
 
       pauseFrame(name: string) {
         const condvar = new Condvar();
@@ -391,6 +401,9 @@ function updatePlayerStateAction(
       : undefined;
     newPublicState.seekPlayback = capabilities.includes(PlayerCapabilities.playbackControl)
       ? player.seekPlayback?.bind(player)
+      : undefined;
+    newPublicState.enableRepeatPlayback = capabilities.includes(PlayerCapabilities.playbackControl)
+      ? player.enableRepeatPlayback?.bind(player)
       : undefined;
   }
 

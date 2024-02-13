@@ -22,7 +22,7 @@ import {
   GetBackfillMessagesArgs,
   IteratorResult,
   MessageIteratorArgs,
-  IRawIterableSource,
+  ISerializedIterableSource,
   Initalization,
   TopicWithDecodingInfo,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
@@ -34,7 +34,7 @@ const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
 type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
 /** Only efficient for small files */
-export class McapUnindexedIterableSource implements IRawIterableSource {
+export class McapUnindexedIterableSource implements ISerializedIterableSource {
   #options: Options;
   #msgEventsByChannel?: Map<number, MessageEvent<Uint8Array>[]>;
   #start?: Time;
@@ -284,7 +284,9 @@ export class McapUnindexedIterableSource implements IRawIterableSource {
           resultMessages.push({
             type: "message-event" as const,
             connectionId: channelId,
-            msgEvent,
+            // We copy the message event here as we are transferring the underlying array buffer
+            // to the main thread which invalidates it.
+            msgEvent: structuredClone(msgEvent),
           });
         }
       }
@@ -308,7 +310,9 @@ export class McapUnindexedIterableSource implements IRawIterableSource {
     for (const [, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
         if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.has(msgEvent.topic)) {
-          msgEventsByTopic.set(msgEvent.topic, msgEvent);
+          // We copy the message event here as we are transferring the underlying array buffer
+          // to the main thread which invalidates it.
+          msgEventsByTopic.set(msgEvent.topic, structuredClone(msgEvent));
         }
       }
     }

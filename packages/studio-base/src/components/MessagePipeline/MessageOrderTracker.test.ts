@@ -43,6 +43,7 @@ const playerStateWithMessages = (messages: any): PlayerState => ({
     startTime: { sec: 0, nsec: 0 },
     endTime: { sec: 2, nsec: 0 },
     isPlaying: false,
+    repeatEnabled: false,
     messages,
     totalBytesReceived: 1234,
   },
