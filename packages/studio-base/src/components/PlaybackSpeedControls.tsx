@@ -74,9 +74,7 @@ export default function PlaybackSpeedControls(props: { disabled?: boolean }): JS
         color="inherit"
         endIcon={<ArrowDropDownIcon />}
       >
-        {/* This check is relevant in some stories where it's unecessary to bring in the Workspace context. */}
-        {}
-        {speed == undefined ? "–" : formatSpeed(speed)}
+        {formatSpeed(speed)}
       </Button>
       <Menu
         id="playback-speed-menu"
