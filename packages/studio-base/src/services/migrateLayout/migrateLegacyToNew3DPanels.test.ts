@@ -23,7 +23,6 @@ describe("migrateLegacyToNew3DPanels", () => {
         configById: { "3D Panel!a": {} },
         globalVariables: {},
         userNodes: {},
-        playbackConfig: { speed: 1 },
       }),
     ).toMatchInlineSnapshot(`
       {
@@ -74,9 +73,6 @@ describe("migrateLegacyToNew3DPanels", () => {
         },
         "globalVariables": {},
         "layout": "3D!1",
-        "playbackConfig": {
-          "speed": 1,
-        },
         "userNodes": {},
       }
     `);
@@ -93,7 +89,6 @@ describe("migrateLegacyToNew3DPanels", () => {
         configById: { "3D Panel!a": {}, "XXX!a": { foo: "bar" }, "XXX!b": { foo: "baz" } },
         globalVariables: {},
         userNodes: {},
-        playbackConfig: { speed: 1 },
       }),
     ).toMatchInlineSnapshot(`
       {
@@ -158,9 +153,6 @@ describe("migrateLegacyToNew3DPanels", () => {
           },
           "second": "XXX!b",
         },
-        "playbackConfig": {
-          "speed": 1,
-        },
         "userNodes": {},
       }
     `);
@@ -199,7 +191,6 @@ describe("migrateLegacyToNew3DPanels", () => {
         },
         globalVariables: {},
         userNodes: {},
-        playbackConfig: { speed: 1 },
       }),
     ).toMatchInlineSnapshot(`
       {
@@ -295,9 +286,6 @@ describe("migrateLegacyToNew3DPanels", () => {
           "direction": "row",
           "first": "Tab!a",
           "second": "XXX!b",
-        },
-        "playbackConfig": {
-          "speed": 1,
         },
         "userNodes": {},
       }

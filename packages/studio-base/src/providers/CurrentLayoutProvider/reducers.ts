@@ -42,7 +42,6 @@ import {
   SaveConfigsPayload,
   SaveFullConfigPayload,
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import { MosaicDropTargetPosition } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";

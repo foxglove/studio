@@ -14,7 +14,6 @@ import Logger from "@foxglove/log";
 import { VariableValue, RenderState } from "@foxglove/studio";
 import useShouldNotChangeOften from "@foxglove/studio-base/hooks/useShouldNotChangeOften";
 import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { PanelConfig, UserScripts } from "@foxglove/studio-base/types/panels";
 
 import {

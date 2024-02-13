@@ -41,7 +41,6 @@ describe("migrateLegacyToNewImagePanels", () => {
         },
         globalVariables: {},
         userNodes: {},
-        playbackConfig: { speed: 1 },
       }),
     ).toMatchInlineSnapshot(`
       {
@@ -109,9 +108,6 @@ describe("migrateLegacyToNewImagePanels", () => {
         },
         "globalVariables": {},
         "layout": "Image!1",
-        "playbackConfig": {
-          "speed": 1,
-        },
         "userNodes": {},
       }
     `);
@@ -128,7 +124,6 @@ describe("migrateLegacyToNewImagePanels", () => {
         configById: { "ImageViewPanel!a": {}, "XXX!a": { foo: "bar" }, "XXX!b": { foo: "baz" } },
         globalVariables: {},
         userNodes: {},
-        playbackConfig: { speed: 1 },
       }),
     ).toMatchInlineSnapshot(`
       {
@@ -203,9 +198,6 @@ describe("migrateLegacyToNewImagePanels", () => {
           },
           "second": "XXX!b",
         },
-        "playbackConfig": {
-          "speed": 1,
-        },
         "userNodes": {},
       }
     `);
@@ -247,7 +239,6 @@ describe("migrateLegacyToNewImagePanels", () => {
         },
         globalVariables: {},
         userNodes: {},
-        playbackConfig: { speed: 1 },
       }),
     ).toMatchInlineSnapshot(`
       {
@@ -353,9 +344,6 @@ describe("migrateLegacyToNewImagePanels", () => {
           "direction": "row",
           "first": "Tab!a",
           "second": "XXX!b",
-        },
-        "playbackConfig": {
-          "speed": 1,
         },
         "userNodes": {},
       }

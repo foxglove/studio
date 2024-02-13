@@ -33,7 +33,6 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import panelsReducer from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { PanelConfig, UserScripts } from "@foxglove/studio-base/types/panels";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 

@@ -22,13 +22,12 @@ import { MosaicDropTargetPosition } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
-import panelsReducer, { defaultPlaybackConfig } from "./reducers";
+import panelsReducer from "./reducers";
 
 const emptyLayout: LayoutData = {
   configById: {},
   globalVariables: {},
   userNodes: {},
-  playbackConfig: defaultPlaybackConfig,
 };
 
 describe("layout reducers", () => {

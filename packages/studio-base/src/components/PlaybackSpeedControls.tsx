@@ -5,7 +5,7 @@
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CheckIcon from "@mui/icons-material/Check";
 import { Button, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
 import {
@@ -42,13 +42,6 @@ export default function PlaybackSpeedControls(props: { disabled?: boolean }): JS
   const {
     playbackControlActions: { setSpeed },
   } = useWorkspaceActions();
-
-  const assignSpeed = useCallback(
-    (val: PlaybackConfig["speed"]) => {
-      setSpeed(val);
-    },
-    [setSpeed],
-  );
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -101,7 +94,7 @@ export default function PlaybackSpeedControls(props: { disabled?: boolean }): JS
             selected={speed === option}
             key={option}
             onClick={() => {
-              assignSpeed(option);
+              setSpeed(option);
               handleClose();
             }}
           >
