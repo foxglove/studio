@@ -207,7 +207,9 @@ class BufferedIterableSource<MessageType = unknown>
     log.debug("producer done");
   }
 
+  /** Calls stopProducer, clears cache, and terminates sources */
   public async terminate(): Promise<void> {
+    await this.stopProducer();
     this.#cache.clear();
     this.#source.removeAllListeners("loadedRangesChange");
     await this.#source.terminate();

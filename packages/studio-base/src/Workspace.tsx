@@ -95,9 +95,12 @@ const selectPlayerIsPresent = ({ playerState }: MessagePipelineContext) =>
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
 const selectIsPlaying = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.isPlaying === true;
+const selectRepeatEnabled = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.repeatEnabled === true;
 const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
 const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
+const selectEnableRepeat = (ctx: MessagePipelineContext) => ctx.enableRepeatPlayback;
 const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
 const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
@@ -348,6 +351,8 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const playUntil = useMessagePipeline(selectPlayUntil);
   const pause = useMessagePipeline(selectPause);
   const seek = useMessagePipeline(selectSeek);
+  const enableRepeat = useMessagePipeline(selectEnableRepeat);
+  const repeatEnabled = useMessagePipeline(selectRepeatEnabled);
   const isPlaying = useMessagePipeline(selectIsPlaying);
   const getMessagePipeline = useMessagePipelineGetter();
   const getTimeInfo = useCallback(
@@ -457,7 +462,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
             </Stack>
           </RemountOnValueChange>
         </Sidebars>
-        {play && pause && seek && (
+        {play && pause && seek && enableRepeat && (
           <div style={{ flexShrink: 0 }}>
             <PlaybackControls
               play={play}
@@ -465,6 +470,8 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
               seek={seek}
               playUntil={playUntil}
               isPlaying={isPlaying}
+              repeatEnabled={repeatEnabled}
+              enableRepeatPlayback={enableRepeat}
               getTimeInfo={getTimeInfo}
             />
           </div>

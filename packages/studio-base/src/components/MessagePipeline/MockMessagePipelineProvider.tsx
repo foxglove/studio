@@ -72,10 +72,12 @@ export type MockMessagePipelineProps = {
   startPlayback?: () => void;
   pausePlayback?: () => void;
   seekPlayback?: (arg0: Time) => void;
+  enableRepeat?: () => void;
   currentTime?: Time;
   startTime?: Time;
   endTime?: Time;
   isPlaying?: boolean;
+  repeatEnabled?: boolean;
   pauseFrame?: (arg0: string) => () => void;
   playerId?: string;
   progress?: Progress;
@@ -132,6 +134,7 @@ function getPublicState(
               currentTime: currentTime ?? { sec: 100, nsec: 0 },
               endTime: props.endTime ?? currentTime ?? { sec: 100, nsec: 0 },
               isPlaying: props.isPlaying ?? false,
+              repeatEnabled: props.repeatEnabled ?? false,
               speed: 0.2,
               lastSeekTime: 0,
               totalBytesReceived: 0,
@@ -173,6 +176,7 @@ function getPublicState(
     startPlayback: props.startPlayback,
     playUntil: noop,
     pausePlayback: props.pausePlayback,
+    enableRepeatPlayback: props.enableRepeat ?? noop,
     setPlaybackSpeed:
       props.capabilities?.includes(PlayerCapabilities.setSpeed) === true ? noop : undefined,
     seekPlayback: props.seekPlayback,

@@ -123,6 +123,7 @@ describe("renderState", () => {
           endTime: { sec: 100, nsec: 1 },
           startTime: { sec: 1, nsec: 1 },
           isPlaying: true,
+          repeatEnabled: false,
           messages: [],
           speed: 1,
           topics: [],

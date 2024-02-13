@@ -13,15 +13,17 @@ import type {
   IMessageCursor,
   IteratorResult,
   MessageIteratorArgs,
-  IRawIterableSource,
+  ISerializedIterableSource,
   Initalization,
 } from "./IIterableSource";
 import { IteratorCursor } from "./IteratorCursor";
 
-export class WorkerRawIterableSourceWorker implements IRawIterableSource {
-  #source: IRawIterableSource;
+const pickTransferableBuffer = (msg: MessageEvent<Uint8Array>) => msg.message.buffer;
 
-  public constructor(source: IRawIterableSource) {
+export class WorkerSerializedIterableSourceWorker implements ISerializedIterableSource {
+  #source: ISerializedIterableSource;
+
+  public constructor(source: ISerializedIterableSource) {
     this.#source = source;
   }
 
@@ -43,10 +45,11 @@ export class WorkerRawIterableSourceWorker implements IRawIterableSource {
     // clonable (and needs to signal across the worker boundary)
     abortSignal?: AbortSignal,
   ): Promise<MessageEvent<Uint8Array>[]> {
-    return await this.#source.getBackfillMessages({
+    const messages = await this.#source.getBackfillMessages({
       ...args,
       abortSignal,
     });
+    return Comlink.transfer(messages, messages.map(pickTransferableBuffer));
   }
 
   public getMessageCursor(

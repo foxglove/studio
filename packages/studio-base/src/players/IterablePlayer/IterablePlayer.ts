@@ -45,7 +45,11 @@ import delay from "@foxglove/studio-base/util/delay";
 import { BlockLoader } from "./BlockLoader";
 import { BufferedIterableSource } from "./BufferedIterableSource";
 import { DeserializingIterableSource } from "./DeserializingIterableSource";
-import { IDeserializedIterableSource, IRawIterableSource, IteratorResult } from "./IIterableSource";
+import {
+  IDeserializedIterableSource,
+  ISerializedIterableSource,
+  IteratorResult,
+} from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -78,7 +82,7 @@ const EMPTY_ARRAY = Object.freeze([]);
 type IterablePlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
 
-  source: IDeserializedIterableSource | IRawIterableSource;
+  source: IDeserializedIterableSource | ISerializedIterableSource;
 
   // Optional player name
   name?: string;
@@ -119,6 +123,7 @@ export class IterablePlayer implements Player {
   #state: IterablePlayerState = "preinit";
   #runningState: boolean = false;
 
+  #repeatEnabled: boolean = false;
   #isPlaying: boolean = false;
   #listener?: (playerState: PlayerState) => Promise<void>;
   #speed: PlaybackConfig["speed"] = 1.0;
@@ -162,7 +167,7 @@ export class IterablePlayer implements Player {
   #problemManager = new PlayerProblemManager();
 
   // Unbuffered source, used as input source for buffered source and block loader.
-  #iterableSource: IDeserializedIterableSource | IRawIterableSource;
+  #iterableSource: IDeserializedIterableSource | ISerializedIterableSource;
 
   // Buffered source used for playback.
   #bufferedSource: IDeserializedIterableSource;
@@ -197,10 +202,10 @@ export class IterablePlayer implements Player {
       this.#bufferImpl = new BufferedIterableSource(source);
       this.#bufferedSource = new DeserializedSourceWrapper(this.#bufferImpl);
     } else {
-      const GIGABYTE_IN_BYTES = 1024 * 1024 * 1024;
+      const MEGABYTE_IN_BYTES = 1024 * 1024;
       const bufferInterface = new BufferedIterableSource(source, {
         readAheadDuration: { sec: 120, nsec: 0 },
-        maxCacheSizeBytes: 2 * GIGABYTE_IN_BYTES,
+        maxCacheSizeBytes: 600 * MEGABYTE_IN_BYTES,
       });
       this.#bufferImpl = bufferInterface;
       this.#bufferedSource = new DeserializingIterableSource(bufferInterface);
@@ -281,6 +286,13 @@ export class IterablePlayer implements Player {
     this.#speed = speed;
 
     // Queue event state update to update speed in player state to UI
+    this.#queueEmitState();
+  }
+
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  public enableRepeatPlayback(enable: boolean): void {
+    this.#repeatEnabled = enable;
+
     this.#queueEmitState();
   }
 
@@ -814,6 +826,7 @@ export class IterablePlayer implements Player {
         startTime: this.#start,
         endTime: this.#end,
         isPlaying: this.#isPlaying,
+        repeatEnabled: this.#repeatEnabled,
         speed: this.#speed,
         lastSeekTime: this.#lastSeekEmitTime,
         topics: this.#providerTopics,
@@ -1034,6 +1047,16 @@ export class IterablePlayer implements Player {
     this.#bufferImpl.off("loadedRangesChange", rangeChangeHandler);
   }
 
+  // Repeating is a continuation of the playing state/we should already be playing
+  #repeatPlayback(): void {
+    if (!this.#isPlaying) {
+      return;
+    }
+    if (this.#start) {
+      this.seekPlayback(this.#start);
+    }
+  }
+
   async #statePlay() {
     this.#presence = PlayerPresence.PRESENT;
 
@@ -1050,7 +1073,12 @@ export class IterablePlayer implements Player {
 
     try {
       while (this.#isPlaying && !this.#hasError && !this.#nextState) {
-        if (compare(this.#currentTime, this.#end) >= 0) {
+        const timeToEnd = compare(this.#currentTime, this.#end);
+        if (this.#repeatEnabled && timeToEnd === 0) {
+          // Playback has ended and we should repeat
+          this.#repeatPlayback();
+          return;
+        } else if (timeToEnd >= 0) {
           // Playback has ended. Reset internal trackers for maintaining the playback speed.
           this.#lastTickMillis = undefined;
           this.#lastRangeMillis = undefined;
@@ -1106,7 +1134,7 @@ export class IterablePlayer implements Player {
     this.#isPlaying = false;
     await this.#blockLoader?.stopLoading();
     await this.#blockLoadingProcess;
-    await this.#bufferImpl.stopProducer();
+    await this.#bufferImpl.terminate();
     await this.#bufferedSource.terminate?.();
     await this.#playbackIterator?.return?.();
     this.#playbackIterator = undefined;

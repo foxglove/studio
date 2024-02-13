@@ -31,6 +31,8 @@ export type MessagePipelineContext = Immutable<{
   startPlayback?: () => void;
   pausePlayback?: () => void;
   setPlaybackSpeed?: ((speedFraction: PlaybackConfig["speed"]) => void) | undefined;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  enableRepeatPlayback?: (enable: boolean) => void;
   playUntil?: (time: Time) => void;
   seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.

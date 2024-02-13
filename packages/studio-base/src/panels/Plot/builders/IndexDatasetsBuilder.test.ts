@@ -50,6 +50,7 @@ function buildPlayerState(
       topics: [],
       speed: 1,
       isPlaying: false,
+      repeatEnabled: false,
       topicStats: new Map(),
       startTime: { sec: 0, nsec: 0 },
       datatypes: new Map(),
