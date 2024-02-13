@@ -15,7 +15,6 @@ import { MosaicNode, MosaicPath } from "react-mosaic-component";
 
 import { VariableValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { TabLocation } from "@foxglove/studio-base/types/layouts";
 import {
   UserScripts,
@@ -89,8 +88,6 @@ export type SET_GLOBAL_DATA = {
 };
 
 export type SET_STUDIO_NODES = { type: "SET_USER_NODES"; payload: Partial<UserScripts> };
-
-export type SET_PLAYBACK_CONFIG = { type: "SET_PLAYBACK_CONFIG"; payload: Partial<PlaybackConfig> };
 
 export type ClosePanelPayload = {
   tabId?: string;

@@ -7,13 +7,13 @@ import { Immutable, MessageEvent, ParameterValue } from "@foxglove/studio";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import {
   AdvertiseOptions,
+  PlaybackSpeed,
   PlayerState,
   PublishPayload,
   SubscribePayload,
   Topic,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 
 type ResumeFrame = () => void;
 export type MessagePipelineContext = Immutable<{
@@ -30,7 +30,7 @@ export type MessagePipelineContext = Immutable<{
   fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   startPlayback?: () => void;
   pausePlayback?: () => void;
-  setPlaybackSpeed?: ((speedFraction: PlaybackConfig["speed"]) => void) | undefined;
+  setPlaybackSpeed?: ((speedFraction: PlaybackSpeed) => void) | undefined;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   enableRepeatPlayback?: (enable: boolean) => void;
   playUntil?: (time: Time) => void;

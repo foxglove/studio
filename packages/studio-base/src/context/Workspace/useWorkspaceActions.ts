@@ -21,8 +21,8 @@ import {
   usePlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
+import { PlaybackSpeed } from "@foxglove/studio-base/players/types";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import {
@@ -59,7 +59,7 @@ export type WorkspaceActions = {
 
   playbackControlActions: {
     setRepeat: Dispatch<SetStateAction<boolean>>;
-    setSpeed: Dispatch<SetStateAction<PlaybackConfig["speed"]>>;
+    setSpeed: Dispatch<SetStateAction<PlaybackSpeed>>;
   };
 
   sidebarActions: {
@@ -252,7 +252,7 @@ export function useWorkspaceActions(): WorkspaceActions {
             draft.playbackControls.repeat = repeat;
           });
         },
-        setSpeed: (setter: SetStateAction<PlaybackConfig["speed"]>) => {
+        setSpeed: (setter: SetStateAction<PlaybackSpeed>) => {
           set((draft) => {
             const speed = setterValue(setter, draft.playbackControls.speed);
             draft.playbackControls.speed = speed;

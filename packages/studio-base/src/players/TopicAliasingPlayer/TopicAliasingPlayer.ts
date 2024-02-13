@@ -11,12 +11,12 @@ import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
+  PlaybackSpeed,
   Player,
   PlayerState,
   PublishPayload,
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 
 import { IStateProcessor } from "./IStateProcessor";
 import { NoopStateProcessor } from "./NoopStateProcessor";
@@ -131,7 +131,7 @@ export class TopicAliasingPlayer implements Player {
     this.#player.seekPlayback?.(time);
   }
 
-  public setPlaybackSpeed?(speedFraction: PlaybackConfig["speed"]): void {
+  public setPlaybackSpeed?(speedFraction: PlaybackSpeed): void {
     this.#player.setPlaybackSpeed?.(speedFraction);
   }
 

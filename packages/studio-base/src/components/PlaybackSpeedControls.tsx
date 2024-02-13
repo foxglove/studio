@@ -13,11 +13,11 @@ import {
   useWorkspaceStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
-import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
+import { PlaybackSpeed } from "@foxglove/studio-base/players/types";
 
-const SPEED_OPTIONS: PlaybackConfig["speed"][] = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.8, 1, 2, 3, 5];
+const SPEED_OPTIONS: PlaybackSpeed[] = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.8, 1, 2, 3, 5];
 
-const formatSpeed = (val: PlaybackConfig["speed"]) => `${val < 0.1 ? val.toFixed(2) : val}×`;
+const formatSpeed = (val: PlaybackSpeed) => `${val < 0.1 ? val.toFixed(2) : val}×`;
 
 const selectPlaybackSpeed = (store: WorkspaceContextStore) => store.playbackControls.speed;
 
@@ -68,7 +68,7 @@ export default function PlaybackSpeedControls(props: { disabled?: boolean }): JS
         endIcon={<ArrowDropDownIcon />}
       >
         {/* This check is relevant in some stories where it's unecessary to bring in the Workspace context. */}
-        {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition */}
+        {}
         {speed == undefined ? "–" : formatSpeed(speed)}
       </Button>
       <Menu
