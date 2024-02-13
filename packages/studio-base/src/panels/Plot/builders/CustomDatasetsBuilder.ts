@@ -54,11 +54,17 @@ export class CustomDatasetsBuilder implements IDatasetsBuilder {
   #xCurrentBounds?: Bounds1D;
   #xFullBounds?: Bounds1D;
 
-  public constructor() {
+  public constructor({ handleWorkerError }: { handleWorkerError?: (event: Event) => void } = {}) {
     const worker = new Worker(
       // foxglove-depcheck-used: babel-plugin-transform-import-meta
       new URL("./CustomDatasetsBuilderImpl.worker", import.meta.url),
     );
+    worker.onerror = (event) => {
+      handleWorkerError?.(event);
+    };
+    worker.onmessageerror = (event) => {
+      handleWorkerError?.(event);
+    };
     const { remote, dispose } =
       ComlinkWrap<Comlink.RemoteObject<CustomDatasetsBuilderImpl>>(worker);
 

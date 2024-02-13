@@ -58,11 +58,17 @@ export class TimestampDatasetsBuilder implements IDatasetsBuilder {
 
   #series: Immutable<TimestampSeriesItem[]> = [];
 
-  public constructor() {
+  public constructor({ handleWorkerError }: { handleWorkerError?: (event: Event) => void } = {}) {
     const worker = new Worker(
       // foxglove-depcheck-used: babel-plugin-transform-import-meta
       new URL("./TimestampDatasetsBuilderImpl.worker", import.meta.url),
     );
+    worker.onerror = (event) => {
+      handleWorkerError?.(event);
+    };
+    worker.onmessageerror = (event) => {
+      handleWorkerError?.(event);
+    };
     const { remote, dispose } =
       ComlinkWrap<Comlink.RemoteObject<TimestampDatasetsBuilderImpl>>(worker);
     this.#datasetsBuilderRemote = remote;

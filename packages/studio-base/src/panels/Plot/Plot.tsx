@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
+import { useRethrow } from "@foxglove/hooks";
 import { parseMessagePath } from "@foxglove/message-path";
 import { add as addTimes, fromSec, isTime, toSec } from "@foxglove/rostime";
 import { Immutable } from "@foxglove/studio";
@@ -260,14 +261,20 @@ export function Plot(props: Props): JSX.Element {
     return unsub;
   }, [coordinator, getMessagePipelineState, subscribeMessagePipeline]);
 
+  const handleWorkerError = useRethrow(
+    useCallback((_err: Event) => {
+      throw new Error(`Error encountered in plot worker`);
+    }, []),
+  );
+
   const datasetsBuilder = useMemo(() => {
     switch (xAxisMode) {
       case "timestamp":
-        return new TimestampDatasetsBuilder();
+        return new TimestampDatasetsBuilder({ handleWorkerError });
       case "index":
         return new IndexDatasetsBuilder();
       case "custom":
-        return new CustomDatasetsBuilder();
+        return new CustomDatasetsBuilder({ handleWorkerError });
       case "currentCustom":
         return new CurrentCustomDatasetsBuilder();
       default:
@@ -275,7 +282,7 @@ export function Plot(props: Props): JSX.Element {
     }
 
     return undefined;
-  }, [xAxisMode]);
+  }, [xAxisMode, handleWorkerError]);
 
   useEffect(() => {
     if (
@@ -314,12 +321,12 @@ export function Plot(props: Props): JSX.Element {
     canvasDiv.appendChild(canvas);
 
     const offscreenCanvas = canvas.transferControlToOffscreen();
-    setRenderer(new OffscreenCanvasRenderer(offscreenCanvas, theme));
+    setRenderer(new OffscreenCanvasRenderer(offscreenCanvas, theme, { handleWorkerError }));
 
     return () => {
       canvasDiv.removeChild(canvas);
     };
-  }, [canvasDiv, theme]);
+  }, [canvasDiv, theme, handleWorkerError]);
 
   useEffect(() => {
     if (!renderer || !datasetsBuilder || !canvasDiv) {
