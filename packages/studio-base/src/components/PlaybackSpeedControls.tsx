@@ -68,7 +68,7 @@ export default function PlaybackSpeedControls(props: { disabled?: boolean }): JS
         endIcon={<ArrowDropDownIcon />}
       >
         {/* This check is relevant in some stories where it's unecessary to bring in the Workspace context. */}
-        {}
+        {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition */}
         {speed == undefined ? "–" : formatSpeed(speed)}
       </Button>
       <Menu
