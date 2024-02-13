@@ -22,7 +22,7 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { PlaybackConfig } from "@foxglove/studio-base/types/panels";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import {

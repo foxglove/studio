@@ -13,6 +13,7 @@ import {
   Topic,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 
 type ResumeFrame = () => void;
 export type MessagePipelineContext = Immutable<{
@@ -29,7 +30,7 @@ export type MessagePipelineContext = Immutable<{
   fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   startPlayback?: () => void;
   pausePlayback?: () => void;
-  setPlaybackSpeed?: ((speedFraction: number) => void) | undefined;
+  setPlaybackSpeed?: ((speedFraction: PlaybackConfig["speed"]) => void) | undefined;
   playUntil?: (time: Time) => void;
   seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.

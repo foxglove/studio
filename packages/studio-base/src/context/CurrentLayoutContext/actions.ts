@@ -15,10 +15,10 @@ import { MosaicNode, MosaicPath } from "react-mosaic-component";
 
 import { VariableValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { TabLocation } from "@foxglove/studio-base/types/layouts";
 import {
   UserScripts,
-  PlaybackConfig,
   SavedProps,
   PanelConfig,
   MosaicDropTargetPosition,
@@ -29,7 +29,6 @@ export type LayoutData = {
   configById: SavedProps;
   layout?: MosaicNode<string>;
   globalVariables: GlobalVariables;
-  playbackConfig: PlaybackConfig;
   userNodes: UserScripts;
   /** @deprecated renamed to configById */
   savedProps?: SavedProps;

@@ -16,6 +16,7 @@ import {
   PublishPayload,
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 
 import { IStateProcessor } from "./IStateProcessor";
 import { NoopStateProcessor } from "./NoopStateProcessor";
@@ -125,7 +126,7 @@ export class TopicAliasingPlayer implements Player {
     this.#player.seekPlayback?.(time);
   }
 
-  public setPlaybackSpeed?(speedFraction: number): void {
+  public setPlaybackSpeed?(speedFraction: PlaybackConfig["speed"]): void {
     this.#player.setPlaybackSpeed?.(speedFraction);
   }
 

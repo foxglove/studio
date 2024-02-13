@@ -17,41 +17,42 @@ import { screen, userEvent } from "@storybook/testing-library";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
-import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
+import WorkspaceContextProvider, {
+  WorkspaceContextProviderProps,
+} from "@foxglove/studio-base/providers/WorkspaceContextProvider";
+
+type Story = StoryObj<typeof WorkspaceContextProvider>;
 
 export default {
   title: "components/PlaybackSpeedControls",
-  component: PlaybackSpeedControls,
   parameters: { colorScheme: "dark" },
+  component: PlaybackSpeedControls,
   decorators: [
-    (WrappedStory, { args }) => (
-      <MockCurrentLayoutProvider>
-        <WorkspaceContextProvider initialState={args.initialState} disablePersistenceForStorybook>
+    (
+      WrappedStory: typeof PlaybackSpeedControls,
+      { args }: { args: WorkspaceContextProviderProps },
+    ): JSX.Element => (
+      <WorkspaceContextProvider initialState={args.initialState} disablePersistenceForStorybook>
+        <MockCurrentLayoutProvider>
           <MockMessagePipelineProvider>
             <div style={{ padding: 20, paddingTop: 300 }}>
-              <WrappedStory />
+              <WrappedStory disabled={false} />
             </div>
           </MockMessagePipelineProvider>
-        </WorkspaceContextProvider>
-      </MockCurrentLayoutProvider>
+        </MockCurrentLayoutProvider>
+      </WorkspaceContextProvider>
     ),
   ],
-  play: async () => {
+  play: async (): Promise<void> => {
     const el = await screen.findByTestId<HTMLInputElement>("PlaybackSpeedControls-Dropdown");
     if (!el.disabled) {
       await userEvent.click(el);
     }
   },
-} satisfies Meta<typeof WorkspaceContextProvider>;
-
-type Story = StoryObj<typeof WorkspaceContextProvider>;
-
-export const WithoutSpeedCapability: Story = {
-  name: "without speed capability",
 };
 
-export const WithoutASpeedFromThePlayer: Story = {
-  name: "without a speed from the player",
+export const WithoutASpeedFromTheWorkspace: Story = {
+  name: "without a speed from the workspace",
   args: {
     initialState: {},
   },

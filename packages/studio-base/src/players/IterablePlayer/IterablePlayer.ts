@@ -39,6 +39,7 @@ import {
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import delay from "@foxglove/studio-base/util/delay";
 
 import { BlockLoader } from "./BlockLoader";
@@ -120,7 +121,7 @@ export class IterablePlayer implements Player {
 
   #isPlaying: boolean = false;
   #listener?: (playerState: PlayerState) => Promise<void>;
-  #speed: number = 1.0;
+  #speed: PlaybackConfig["speed"] = 1.0;
   #start?: Time;
   #end?: Time;
   #enablePreload = true;
@@ -275,7 +276,7 @@ export class IterablePlayer implements Player {
     }
   }
 
-  public setPlaybackSpeed(speed: number): void {
+  public setPlaybackSpeed(speed: PlaybackConfig["speed"]): void {
     this.#lastRangeMillis = undefined;
     this.#speed = speed;
 

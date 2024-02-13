@@ -10,7 +10,7 @@ import {
   RightSidebarItemKey,
   WorkspaceContextStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
-import { PlaybackConfig } from "@foxglove/studio-base/types/panels";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 
 // Type of version 0 store, used for migration.
 type WorkspaceContextStoreV0 = {

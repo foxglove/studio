@@ -13,11 +13,11 @@ import {
   useWorkspaceStore,
 } from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
-import { PlaybackConfig } from "@foxglove/studio-base/types/panels";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 
 const SPEED_OPTIONS: PlaybackConfig["speed"][] = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.8, 1, 2, 3, 5];
 
-const formatSpeed = (val: number) => `${val < 0.1 ? val.toFixed(2) : val}×`;
+const formatSpeed = (val: PlaybackConfig["speed"]) => `${val < 0.1 ? val.toFixed(2) : val}×`;
 
 const selectPlaybackSpeed = (store: WorkspaceContextStore) => store.playbackControls.speed;
 
@@ -32,7 +32,7 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export default function PlaybackSpeedControls(): JSX.Element {
+export default function PlaybackSpeedControls(props: { disabled?: boolean }): JSX.Element {
   const { classes } = useStyles();
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
@@ -68,12 +68,15 @@ export default function PlaybackSpeedControls(): JSX.Element {
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
         data-testid="PlaybackSpeedControls-Dropdown"
+        disabled={props.disabled}
         disableRipple
         variant="contained"
         color="inherit"
         endIcon={<ArrowDropDownIcon />}
       >
-        {formatSpeed(speed)}
+        {/* This check is relevant in some stories where it's unecessary to bring in the Workspace context. */}
+        {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition */}
+        {speed == undefined ? "–" : formatSpeed(speed)}
       </Button>
       <Menu
         id="playback-speed-menu"
@@ -109,7 +112,7 @@ export default function PlaybackSpeedControls(): JSX.Element {
             )}
             <ListItemText
               inset={speed !== option}
-              primary={formatSpeed(option as number)}
+              primary={formatSpeed(option)}
               primaryTypographyProps={{ variant: "inherit" }}
             />
           </MenuItem>

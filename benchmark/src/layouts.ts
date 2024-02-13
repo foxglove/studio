@@ -16,7 +16,6 @@ function makeLayoutData(partialData: Pick<LayoutData, "configById">): LayoutData
     configById: partialData.configById,
     globalVariables: {},
     userNodes: {},
-    playbackConfig: { speed: 1 },
   };
 }
 

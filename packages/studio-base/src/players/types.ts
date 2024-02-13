@@ -18,6 +18,7 @@ import { Immutable } from "@foxglove/studio";
 import { Asset } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { PlaybackConfig } from "@foxglove/studio-base/types/Workspace";
 import { Range } from "@foxglove/studio-base/util/ranges";
 import { NotificationSeverity } from "@foxglove/studio-base/util/sendNotification";
 
@@ -69,7 +70,7 @@ export interface Player {
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), set that speed. E.g. 1.0 is real time, 0.2 is 20% of real time.
-  setPlaybackSpeed?(speedFraction: number): void;
+  setPlaybackSpeed?(speedFraction: PlaybackConfig["speed"]): void;
   setGlobalVariables(globalVariables: GlobalVariables): void;
 }
 
@@ -163,7 +164,7 @@ export type PlayerStateActiveData = {
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), this represents that speed as a fraction of real time.
   // E.g. 1.0 is real time, 0.2 is 20% of real time.
-  speed: number;
+  speed: PlaybackConfig["speed"];
 
   // The last time a seek / discontinuity in messages happened. This will clear out data within
   // `PanelAPI` so we're not looking at stale data.

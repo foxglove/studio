@@ -14,7 +14,6 @@ import {
   PanelsActions,
   LayoutData,
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
 import panelsReducer from "./reducers";
 
@@ -44,7 +43,6 @@ export default function MockCurrentLayoutProvider({
         configById: {},
         globalVariables: {},
         userNodes: {},
-        playbackConfig: defaultPlaybackConfig,
         ...initialState,
       },
     },
@@ -123,9 +121,6 @@ export default function MockCurrentLayoutProvider({
       },
       setUserScripts: (payload) => {
         performAction({ type: "SET_USER_NODES", payload });
-      },
-      setPlaybackConfig: (payload) => {
-        performAction({ type: "SET_PLAYBACK_CONFIG", payload });
       },
       closePanel: (payload) => {
         performAction({ type: "CLOSE_PANEL", payload });
