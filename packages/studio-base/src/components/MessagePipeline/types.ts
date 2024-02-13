@@ -30,7 +30,7 @@ export type MessagePipelineContext = Immutable<{
   fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   startPlayback?: () => void;
   pausePlayback?: () => void;
-  setPlaybackSpeed?: ((speedFraction: PlaybackSpeed) => void) | undefined;
+  setPlaybackSpeed?: (speedFraction: PlaybackSpeed) => void;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   enableRepeatPlayback?: (enable: boolean) => void;
   playUntil?: (time: Time) => void;
