@@ -261,6 +261,7 @@ export function Plot(props: Props): JSX.Element {
     return unsub;
   }, [coordinator, getMessagePipelineState, subscribeMessagePipeline]);
 
+  // Crash the panel when a worker fails to load or encounters an error
   const handleWorkerError = useRethrow(
     useCallback((_err: Event) => {
       throw new Error(`Error encountered in plot worker`);
