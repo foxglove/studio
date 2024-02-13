@@ -598,7 +598,16 @@ export class IterablePlayer implements Player {
       throw new Error("Invariant: Tried to reset playback iterator with no current time.");
     }
 
-    const next = add(this.#currentTime, { sec: 0, nsec: 1 });
+    if (!this.#start) {
+      throw new Error("Invariant: Tried to reset playback iterator with no start time.");
+    }
+
+    // When resetting the iterator to the start of the source, we must not add 1 ns otherwise we
+    // might skip messages whose timestamp is equal to the source start time.
+    const next =
+      compare(this.#currentTime, this.#start) === 0
+        ? this.#start
+        : add(this.#currentTime, { sec: 0, nsec: 1 });
 
     log.debug("Ending previous iterator");
     await this.#playbackIterator?.return?.();

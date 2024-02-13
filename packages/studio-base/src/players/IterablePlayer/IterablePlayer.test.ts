@@ -6,7 +6,7 @@
 import * as _ from "lodash-es";
 
 import { signal } from "@foxglove/den/async";
-import { fromSec } from "@foxglove/rostime";
+import { compare, fromSec } from "@foxglove/rostime";
 import {
   MessageEvent,
   PlayerCapabilities,
@@ -835,6 +835,99 @@ describe("IterablePlayer", () => {
           consumptionType: "partial",
         },
       ],
+    ]);
+
+    player.close();
+    await player.isClosed;
+  });
+
+  it("should emit all messages when seeking back to start", async () => {
+    const source = new TestSource();
+    const player = new IterablePlayer({
+      source,
+      enablePreload: false,
+      sourceId: "test",
+    });
+
+    source.messageIterator = async function* messageIterator(
+      args: MessageIteratorArgs,
+    ): AsyncIterableIterator<Readonly<IteratorResult>> {
+      if (args.start == undefined) {
+        throw new Error("Message iterator called without start time");
+      }
+
+      // Emit a single message whose timestamp is equal to the source start
+      if (compare(args.start, { sec: 0, nsec: 0 }) === 0) {
+        yield {
+          type: "message-event",
+          msgEvent: {
+            topic: "foo",
+            receiveTime: { sec: 0, nsec: 0 },
+            message: undefined,
+            sizeInBytes: 0,
+            schemaName: "foo",
+          },
+        };
+      }
+    };
+
+    const store = new PlayerStateStore(4);
+    player.setListener(async (state) => {
+      await store.add(state);
+    });
+
+    // Wait for initial states to finish. This includes the play-start state which will advance the
+    // current time (even though we are not subscribed to anything yet)
+    let lastState = (await store.done).pop();
+    expect(lastState).toMatchObject({
+      activeData: {
+        isPlaying: false,
+        messages: [],
+        currentTime: { sec: 0, nsec: 99000000 },
+      },
+    });
+
+    // Subscribe to our topic.
+    store.reset(2);
+    player.setSubscriptions([{ topic: "foo" }]);
+    lastState = (await store.done).pop();
+    expect(lastState).toMatchObject({
+      activeData: {
+        isPlaying: false,
+        messages: [],
+        currentTime: { sec: 0, nsec: 99000000 },
+      },
+    });
+
+    // Seek back to the start
+    store.reset(2);
+    player.seekPlayback({ sec: 0, nsec: 0 });
+    lastState = (await store.done).pop();
+    expect(lastState).toMatchObject({
+      activeData: {
+        isPlaying: false,
+        currentTime: { sec: 0, nsec: 0 },
+      },
+    });
+
+    // Start playing, our message should now be emitted in the first player state
+    store.reset(1);
+    player.startPlayback();
+    expect(await store.done).toMatchObject([
+      {
+        activeData: {
+          isPlaying: true,
+          messages: [
+            {
+              topic: "foo",
+              receiveTime: { sec: 0, nsec: 0 },
+              message: undefined,
+              sizeInBytes: 0,
+              schemaName: "foo",
+            },
+          ],
+        },
+      },
     ]);
 
     player.close();
