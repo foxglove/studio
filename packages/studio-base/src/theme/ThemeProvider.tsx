@@ -7,6 +7,7 @@ import { CacheProvider } from "@emotion/react";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material";
 import * as React from "react";
 import { useEffect, useLayoutEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { createMuiTheme } from "@foxglove/theme";
 
@@ -26,6 +27,7 @@ export default function ThemeProvider({
   children,
   isDark,
 }: React.PropsWithChildren<{ isDark: boolean }>): React.ReactElement | ReactNull {
+  const { i18n } = useTranslation();
   useEffect(() => {
     // Trick CodeEditor into sync with our theme
     document.documentElement.setAttribute("data-color-mode", isDark ? "dark" : "light");
@@ -34,7 +36,10 @@ export default function ThemeProvider({
     document.querySelector("#loading-styles")?.remove();
   }, [isDark]);
 
-  const muiTheme = useMemo(() => createMuiTheme(isDark ? "dark" : "light"), [isDark]);
+  const muiTheme = useMemo(
+    () => createMuiTheme(isDark ? "dark" : "light", i18n.language),
+    [isDark, i18n.language],
+  );
 
   useLayoutEffect(() => {
     // Set the theme color to match the sidebar and playback bar

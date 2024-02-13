@@ -27,10 +27,6 @@ export type PanelConfig = {
 
 export type TimeDisplayMethod = "SEC" | "TOD";
 
-export type PlaybackConfig = {
-  speed: number;
-};
-
 export type UserScript = { name: string; sourceCode: string };
 export type UserScripts = {
   [scriptId: string]: UserScript;

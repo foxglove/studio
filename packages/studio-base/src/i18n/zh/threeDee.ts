@@ -133,7 +133,7 @@ export const threeDee: Partial<TypeOptions["resources"]["threeDee"]> = {
   covarianceColor: "协方差颜色",
   poseDisplayTypeArrow: "箭头",
   poseDisplayTypeAxis: "轴",
-  poseDisplayTypeLine: undefined,
+  poseDisplayTypeLine: "线",
 
   // Publish
   publish: "发布",

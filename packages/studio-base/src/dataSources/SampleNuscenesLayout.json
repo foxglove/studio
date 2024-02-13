@@ -332,8 +332,6 @@
           "timestampMethod": "headerStamp"
         }
       ],
-      "minYValue": "",
-      "maxYValue": "",
       "showLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",
@@ -367,8 +365,6 @@
           "timestampMethod": "headerStamp"
         }
       ],
-      "minYValue": "",
-      "maxYValue": "",
       "showLegend": true,
       "isSynced": true,
       "xAxisVal": "timestamp",

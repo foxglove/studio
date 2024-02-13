@@ -98,7 +98,7 @@ const selectGlobalBounds = (store: TimelineInteractionStateStore) => store.globa
 const selectSetGlobalBounds = (store: TimelineInteractionStateStore) => store.setGlobalBounds;
 
 // Calculation mode for the "reset view" view.
-export type ChartDefaultView =
+type ChartDefaultView =
   | { type: "fixed"; minXValue: number; maxXValue: number }
   | { type: "following"; width: number };
 
@@ -358,7 +358,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
       tooltipItems.push({
         item: {
-          datasetIndex: element.datasetIndex,
+          configIndex: element.datasetIndex,
           value: value ?? (states ?? []).join(", "),
           constantName,
         },
@@ -731,8 +731,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       <TimeBasedChartTooltipContent
         content={activeTooltip.data}
         multiDataset={datasetsLength > 1}
-        colorsByDatasetIndex={colorsByDatasetIndex}
-        labelsByDatasetIndex={labelsByDatasetIndex}
+        colorsByConfigIndex={colorsByDatasetIndex}
+        labelsByConfigIndex={labelsByDatasetIndex}
       />
     ) : undefined;
   }, [activeTooltip, colorsByDatasetIndex, datasetsLength, labelsByDatasetIndex]);

@@ -279,7 +279,7 @@ export function AppBar(props: AppBarProps): JSX.Element {
                   {rightSidebarOpen ? <PanelRight24Filled /> : <PanelRight24Regular />}
                 </AppBarIconButton>
               </Stack>
-              <Tooltip classes={{ tooltip: classes.tooltip }} title="Profile" arrow={false}>
+              <Tooltip classes={{ tooltip: classes.tooltip }} title={t("profile")} arrow={false}>
                 <IconButton
                   className={cx(classes.iconButton, { "Mui-selected": userMenuOpen })}
                   aria-label="User profile menu button"

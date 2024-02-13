@@ -43,7 +43,7 @@ import {
   SaveFullConfigPayload,
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
-import { PlaybackConfig, MosaicDropTargetPosition } from "@foxglove/studio-base/types/panels";
+import { MosaicDropTargetPosition } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import {
   updateTabPanelLayout,
@@ -65,10 +65,6 @@ import {
 } from "@foxglove/studio-base/util/layout";
 
 import { isTabPanelConfig } from "../../util/layout";
-
-export const defaultPlaybackConfig: PlaybackConfig = {
-  speed: 1.0,
-};
 
 function changePanelLayout(
   state: LayoutData,
@@ -806,14 +802,6 @@ export default function (panelsState: Readonly<LayoutData>, action: PanelsAction
       };
     }
 
-    case "SET_PLAYBACK_CONFIG":
-      return {
-        ...panelsState,
-        playbackConfig: {
-          ...panelsState.playbackConfig,
-          ...action.payload,
-        },
-      };
     case "CLOSE_PANEL":
       return closePanel(panelsState, action.payload);
 

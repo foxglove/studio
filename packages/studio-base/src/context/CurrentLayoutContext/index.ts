@@ -14,7 +14,7 @@ import Logger from "@foxglove/log";
 import { VariableValue, RenderState } from "@foxglove/studio";
 import useShouldNotChangeOften from "@foxglove/studio-base/hooks/useShouldNotChangeOften";
 import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
-import { PanelConfig, PlaybackConfig, UserScripts } from "@foxglove/studio-base/types/panels";
+import { PanelConfig, UserScripts } from "@foxglove/studio-base/types/panels";
 
 import {
   LayoutData,
@@ -97,7 +97,6 @@ export interface ICurrentLayout {
     overwriteGlobalVariables: (payload: Record<string, VariableValue>) => void;
     setGlobalVariables: (payload: Record<string, VariableValue>) => void;
     setUserScripts: (payload: Partial<UserScripts>) => void;
-    setPlaybackConfig: (payload: Partial<PlaybackConfig>) => void;
     closePanel: (payload: ClosePanelPayload) => void;
     splitPanel: (payload: SplitPanelPayload) => void;
     swapPanel: (payload: SwapPanelPayload) => void;

@@ -166,6 +166,7 @@ class TransformPlayer implements Player {
           currentTime: timestamp,
           startTime,
           isPlaying: true,
+          repeatEnabled: false,
           speed: 1,
           lastSeekTime: 1,
           endTime: timestamp,

@@ -49,13 +49,13 @@ jobs:
         with:
           lfs: true
 
-      - uses: actions/setup-node@v4.0.1
+      - uses: actions/setup-node@v4.0.2
         with:
           node-version: 16.17
       - run: corepack enable yarn
 
       - name: Restore cache
-        uses: actions/cache@v3.3.2
+        uses: actions/cache@v4.0.0
         with:
           path: |
             .yarn/cache
@@ -77,13 +77,13 @@ jobs:
           fetch-depth: 0 # Required for Chromatic
           lfs: true
 
-      - uses: actions/setup-node@v4.0.1
+      - uses: actions/setup-node@v4.0.2
         with:
           node-version: 16.17
       - run: corepack enable yarn
 
       - name: Restore cache
-        uses: actions/cache@v3.3.2
+        uses: actions/cache@v4.0.0
         with:
           path: |
             .yarn/cache
@@ -120,13 +120,13 @@ jobs:
         with:
           lfs: true
 
-      - uses: actions/setup-node@v4.0.1
+      - uses: actions/setup-node@v4.0.2
         with:
           node-version: 16.17
       - run: corepack enable yarn
 
       - name: Restore cache
-        uses: actions/cache@v3.3.2
+        uses: actions/cache@v4.0.0
         with:
           path: |
             .yarn/cache

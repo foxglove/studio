@@ -7,6 +7,7 @@ import { Immutable, MessageEvent, ParameterValue } from "@foxglove/studio";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
 import {
   AdvertiseOptions,
+  PlaybackSpeed,
   PlayerState,
   PublishPayload,
   SubscribePayload,
@@ -29,8 +30,10 @@ export type MessagePipelineContext = Immutable<{
   fetchAsset: BuiltinPanelExtensionContext["unstable_fetchAsset"];
   startPlayback?: () => void;
   pausePlayback?: () => void;
+  setPlaybackSpeed?: (speedFraction: PlaybackSpeed) => void;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  enableRepeatPlayback?: (enable: boolean) => void;
   playUntil?: (time: Time) => void;
-  setPlaybackSpeed?: (speed: number) => void;
   seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.
   pauseFrame: (name: string) => ResumeFrame;

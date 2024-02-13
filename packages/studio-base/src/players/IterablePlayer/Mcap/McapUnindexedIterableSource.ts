@@ -20,13 +20,13 @@ import {
 import { MessageEvent } from "@foxglove/studio";
 import {
   GetBackfillMessagesArgs,
-  IIterableSource,
-  Initalization,
   IteratorResult,
   MessageIteratorArgs,
+  ISerializedIterableSource,
+  Initalization,
+  TopicWithDecodingInfo,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { estimateObjectSize } from "@foxglove/studio-base/players/messageMemoryEstimation";
-import { PlayerProblem, Topic, TopicStats } from "@foxglove/studio-base/players/types";
+import { PlayerProblem, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
@@ -34,11 +34,13 @@ const DURATION_YEAR_SEC = 365 * 24 * 60 * 60;
 type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
 /** Only efficient for small files */
-export class McapUnindexedIterableSource implements IIterableSource {
+export class McapUnindexedIterableSource implements ISerializedIterableSource {
   #options: Options;
-  #msgEventsByChannel?: Map<number, MessageEvent[]>;
+  #msgEventsByChannel?: Map<number, MessageEvent<Uint8Array>[]>;
   #start?: Time;
   #end?: Time;
+
+  public readonly sourceType = "serialized";
 
   public constructor(options: Options) {
     this.#options = options;
@@ -58,7 +60,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
     const channelIdsWithErrors = new Set<number>();
 
     let messageCount = 0;
-    const messagesByChannel = new Map<number, MessageEvent[]>();
+    const messagesByChannel = new Map<number, MessageEvent<Uint8Array>[]>();
     const schemasById = new Map<number, McapTypes.TypedMcapRecords["Schema"]>();
     const channelInfoById = new Map<
       number,
@@ -66,20 +68,10 @@ export class McapUnindexedIterableSource implements IIterableSource {
         channel: McapTypes.Channel;
         parsedChannel: ParsedChannel;
         schemaName: string | undefined;
+        schemaEncoding: string | undefined;
+        schemaData: Uint8Array | undefined;
       }
     >();
-    const messageSizeEstimateByTopic: Record<string, number> = {};
-    const estimateMessageSize = (topic: string, msg: unknown): number => {
-      const cachedSize = messageSizeEstimateByTopic[topic];
-      if (cachedSize != undefined) {
-        return cachedSize;
-      }
-
-      const sizeEstimate = estimateObjectSize(msg);
-      messageSizeEstimateByTopic[topic] = sizeEstimate;
-      return sizeEstimate;
-    };
-
     let startTime: Time | undefined;
     let endTime: Time | undefined;
     let profile: string | undefined;
@@ -128,6 +120,8 @@ export class McapUnindexedIterableSource implements IIterableSource {
               channel: record,
               parsedChannel,
               schemaName: schema?.name,
+              schemaEncoding: schema?.encoding,
+              schemaData: schema?.data,
             });
             messagesByChannel.set(record.id, []);
           } catch (error) {
@@ -159,17 +153,12 @@ export class McapUnindexedIterableSource implements IIterableSource {
           if (!endTime || isGreaterThan(receiveTime, endTime)) {
             endTime = receiveTime;
           }
-          const deserializedMessage = channelInfo.parsedChannel.deserialize(record.data);
-          const estimatedMemorySize = estimateMessageSize(
-            channelInfo.channel.topic,
-            deserializedMessage,
-          );
           messages.push({
             topic: channelInfo.channel.topic,
             receiveTime,
             publishTime: fromNanoSec(record.publishTime),
-            message: deserializedMessage,
-            sizeInBytes: Math.max(record.data.byteLength, estimatedMemorySize),
+            message: record.data,
+            sizeInBytes: record.data.byteLength,
             schemaName: channelInfo.schemaName ?? "",
           });
           break;
@@ -187,13 +176,25 @@ export class McapUnindexedIterableSource implements IIterableSource {
 
     this.#msgEventsByChannel = messagesByChannel;
 
-    const topics: Topic[] = [];
+    const topics: TopicWithDecodingInfo[] = [];
     const topicStats = new Map<string, TopicStats>();
     const datatypes: RosDatatypes = new Map();
     const publishersByTopic = new Map<string, Set<string>>();
 
-    for (const { channel, parsedChannel, schemaName } of channelInfoById.values()) {
-      topics.push({ name: channel.topic, schemaName });
+    for (const {
+      channel,
+      parsedChannel,
+      schemaName,
+      schemaData,
+      schemaEncoding,
+    } of channelInfoById.values()) {
+      topics.push({
+        name: channel.topic,
+        messageEncoding: channel.messageEncoding,
+        schemaName,
+        schemaData,
+        schemaEncoding,
+      });
       const numMessages = messagesByChannel.get(channel.id)?.length;
       if (numMessages != undefined) {
         topicStats.set(channel.topic, { numMessages });
@@ -258,7 +259,7 @@ export class McapUnindexedIterableSource implements IIterableSource {
 
   public async *messageIterator(
     args: MessageIteratorArgs,
-  ): AsyncIterableIterator<Readonly<IteratorResult>> {
+  ): AsyncIterableIterator<Readonly<IteratorResult<Uint8Array>>> {
     if (!this.#msgEventsByChannel) {
       throw new Error("initialization not completed");
     }
@@ -283,7 +284,9 @@ export class McapUnindexedIterableSource implements IIterableSource {
           resultMessages.push({
             type: "message-event" as const,
             connectionId: channelId,
-            msgEvent,
+            // We copy the message event here as we are transferring the underlying array buffer
+            // to the main thread which invalidates it.
+            msgEvent: structuredClone(msgEvent),
           });
         }
       }
@@ -295,17 +298,21 @@ export class McapUnindexedIterableSource implements IIterableSource {
     yield* resultMessages;
   }
 
-  public async getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent[]> {
+  public async getBackfillMessages(
+    args: GetBackfillMessagesArgs,
+  ): Promise<MessageEvent<Uint8Array>[]> {
     if (!this.#msgEventsByChannel) {
       throw new Error("initialization not completed");
     }
 
     const needTopics = args.topics;
-    const msgEventsByTopic = new Map<string, MessageEvent>();
+    const msgEventsByTopic = new Map<string, MessageEvent<Uint8Array>>();
     for (const [, msgEvents] of this.#msgEventsByChannel) {
       for (const msgEvent of msgEvents) {
         if (compare(msgEvent.receiveTime, args.time) <= 0 && needTopics.has(msgEvent.topic)) {
-          msgEventsByTopic.set(msgEvent.topic, msgEvent);
+          // We copy the message event here as we are transferring the underlying array buffer
+          // to the main thread which invalidates it.
+          msgEventsByTopic.set(msgEvent.topic, structuredClone(msgEvent));
         }
       }
     }

@@ -53,17 +53,28 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const analytics = useAnalytics();
   const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
-  const [basePlayer, setBasePlayer] = useState<Player | undefined>();
+  const [playerInstances, setPlayerInstances] = useState<
+    { topicAliasPlayer: TopicAliasingPlayer; player: Player } | undefined
+  >();
 
   const { recents, addRecent } = useIndexedDbRecents();
 
-  const topicAliasPlayer = useMemo(() => {
-    if (!basePlayer) {
-      return undefined;
-    }
+  const constructPlayers = useCallback(
+    (newPlayer: Player | undefined) => {
+      if (!newPlayer) {
+        setPlayerInstances(undefined);
+        return undefined;
+      }
 
-    return new TopicAliasingPlayer(basePlayer);
-  }, [basePlayer]);
+      const topicAliasingPlayer = new TopicAliasingPlayer(newPlayer);
+      const finalPlayer = wrapPlayer(topicAliasingPlayer);
+      setPlayerInstances({
+        topicAliasPlayer: topicAliasingPlayer,
+        player: finalPlayer,
+      });
+    },
+    [wrapPlayer],
+  );
 
   // Update the alias functions when they change. We do not need to re-render the player manager
   // since nothing in the local state has changed.
@@ -75,23 +86,15 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     // We only want to set alias functions on the player when the functions have changed
     let topicAliasFunctions =
       extensionCatalogContext.getState().installedTopicAliasFunctions ?? emptyAliasFunctions;
-    topicAliasPlayer?.setAliasFunctions(topicAliasFunctions);
+    playerInstances?.topicAliasPlayer.setAliasFunctions(topicAliasFunctions);
 
     return extensionCatalogContext.subscribe((state) => {
       if (topicAliasFunctions !== state.installedTopicAliasFunctions) {
         topicAliasFunctions = state.installedTopicAliasFunctions ?? emptyAliasFunctions;
-        topicAliasPlayer?.setAliasFunctions(topicAliasFunctions);
+        playerInstances?.topicAliasPlayer.setAliasFunctions(topicAliasFunctions);
       }
     });
-  }, [extensionCatalogContext, topicAliasPlayer]);
-
-  const player = useMemo(() => {
-    if (!topicAliasPlayer) {
-      return undefined;
-    }
-
-    return wrapPlayer(topicAliasPlayer);
-  }, [topicAliasPlayer, wrapPlayer]);
+  }, [extensionCatalogContext, playerInstances?.topicAliasPlayer]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -119,7 +122,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           metricsCollector,
         });
 
-        setBasePlayer(newPlayer);
+        constructPlayers(newPlayer);
         return;
       }
 
@@ -136,7 +139,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               metricsCollector,
               params: args.params,
             });
-            setBasePlayer(newPlayer);
+            constructPlayers(newPlayer);
 
             if (args.params?.url) {
               addRecent({
@@ -173,7 +176,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
-              setBasePlayer(newPlayer);
+              constructPlayers(newPlayer);
               return;
             } else if (handle) {
               const permission = await handle.queryPermission({ mode: "read" });
@@ -198,7 +201,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 metricsCollector,
               });
 
-              setBasePlayer(newPlayer);
+              constructPlayers(newPlayer);
               addRecent({
                 type: "file",
                 title: handle.name,
@@ -216,7 +219,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         enqueueSnackbar((error as Error).message, { variant: "error" });
       }
     },
-    [playerSources, metricsCollector, enqueueSnackbar, isMounted, addRecent],
+    [playerSources, metricsCollector, enqueueSnackbar, constructPlayers, addRecent, isMounted],
   );
 
   // Select a recent entry by id
@@ -245,7 +248,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   return (
     <>
       <PlayerSelectionContext.Provider value={value}>
-        <MessagePipelineProvider player={player}>{children}</MessagePipelineProvider>
+        <MessagePipelineProvider player={playerInstances?.player}>
+          {children}
+        </MessagePipelineProvider>
       </PlayerSelectionContext.Provider>
     </>
   );

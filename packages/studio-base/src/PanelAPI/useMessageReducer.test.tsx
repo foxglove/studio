@@ -419,6 +419,7 @@ describe("useMessageReducer", () => {
             startTime: { sec: 0, nsec: 0 },
             endTime: { sec: 1, nsec: 0 },
             isPlaying: true,
+            repeatEnabled: false,
             speed: 0.2,
             lastSeekTime: 1234,
             topics: [

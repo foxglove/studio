@@ -18,7 +18,6 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import { TabLocation } from "@foxglove/studio-base/types/layouts";
 import {
   UserScripts,
-  PlaybackConfig,
   SavedProps,
   PanelConfig,
   MosaicDropTargetPosition,
@@ -29,7 +28,6 @@ export type LayoutData = {
   configById: SavedProps;
   layout?: MosaicNode<string>;
   globalVariables: GlobalVariables;
-  playbackConfig: PlaybackConfig;
   userNodes: UserScripts;
   /** @deprecated renamed to configById */
   savedProps?: SavedProps;
@@ -90,8 +88,6 @@ export type SET_GLOBAL_DATA = {
 };
 
 export type SET_STUDIO_NODES = { type: "SET_USER_NODES"; payload: Partial<UserScripts> };
-
-export type SET_PLAYBACK_CONFIG = { type: "SET_PLAYBACK_CONFIG"; payload: Partial<PlaybackConfig> };
 
 export type ClosePanelPayload = {
   tabId?: string;
@@ -168,7 +164,6 @@ export type PanelsActions =
   | OVERWRITE_GLOBAL_DATA
   | SET_GLOBAL_DATA
   | SET_STUDIO_NODES
-  | SET_PLAYBACK_CONFIG
   | CLOSE_PANEL
   | SPLIT_PANEL
   | SWAP_PANEL

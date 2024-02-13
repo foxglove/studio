@@ -37,6 +37,7 @@ import {
   PlayerMetricsCollectorInterface,
   TopicStats,
   TopicWithSchemaName,
+  PlaybackSpeed,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { bagConnectionsToDatatypes } from "@foxglove/studio-base/util/bagConnectionsHelper";
@@ -112,7 +113,6 @@ export default class RosbridgePlayer implements Player {
   #parsedTopics = new Set<string>();
   #receivedBytes: number = 0;
   #metricsCollector: PlayerMetricsCollectorInterface;
-  #hasReceivedMessage = false;
   #presence: PlayerPresence = PlayerPresence.NOT_PRESENT;
   #problems = new PlayerProblemManager();
   #emitTimer?: ReturnType<typeof setTimeout>;
@@ -406,6 +406,7 @@ export default class RosbridgePlayer implements Player {
         endTime: currentTime,
         currentTime,
         isPlaying: true,
+        repeatEnabled: false,
         speed: 1,
         // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
         // that we don't accidentally hit falsy checks.
@@ -435,8 +436,6 @@ export default class RosbridgePlayer implements Player {
       clearTimeout(this.#emitTimer);
       this.#emitTimer = undefined;
     }
-    this.#metricsCollector.close();
-    this.#hasReceivedMessage = false;
   }
 
   public setSubscriptions(subscriptions: SubscribePayload[]): void {
@@ -501,11 +500,6 @@ export default class RosbridgePlayer implements Player {
             }
           }
           const receiveTime = this.#getCurrentTime();
-
-          if (!this.#hasReceivedMessage) {
-            this.#hasReceivedMessage = true;
-            this.#metricsCollector.recordTimeToFirstMsgs();
-          }
 
           if (this.#parsedTopics.has(topicName)) {
             const msg: MessageEvent = {
@@ -645,7 +639,7 @@ export default class RosbridgePlayer implements Player {
   public seekPlayback(_time: Time): void {
     // no-op
   }
-  public setPlaybackSpeed(_speedFraction: number): void {
+  public setPlaybackSpeed(_speedFraction: PlaybackSpeed): void {
     // no-op
   }
   public setGlobalVariables(): void {

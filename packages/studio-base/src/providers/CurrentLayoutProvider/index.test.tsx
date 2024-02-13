@@ -35,7 +35,6 @@ describe("CurrentLayoutProvider", () => {
             configById: { "Foo!bar": { setting: 1 } },
             globalVariables: { var: "hello" },
             layout: "Foo!bar",
-            playbackConfig: { speed: 0.1 },
             userNodes: { node1: { name: "node", sourceCode: "node()" } },
             version: MAX_SUPPORTED_LAYOUT_VERSION + 1,
           },

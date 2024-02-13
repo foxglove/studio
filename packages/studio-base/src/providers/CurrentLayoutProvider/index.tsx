@@ -33,7 +33,7 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import panelsReducer from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { PanelConfig, PlaybackConfig, UserScripts } from "@foxglove/studio-base/types/panels";
+import { PanelConfig, UserScripts } from "@foxglove/studio-base/types/panels";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import { IncompatibleLayoutVersionAlert } from "./IncompatibleLayoutVersionAlert";
@@ -192,9 +192,6 @@ export default function CurrentLayoutProvider({ children }: React.PropsWithChild
       },
       setUserScripts: (payload: Partial<UserScripts>) => {
         performAction({ type: "SET_USER_NODES", payload });
-      },
-      setPlaybackConfig: (payload: Partial<PlaybackConfig>) => {
-        performAction({ type: "SET_PLAYBACK_CONFIG", payload });
       },
       closePanel: (payload: ClosePanelPayload) => {
         performAction({ type: "CLOSE_PANEL", payload });

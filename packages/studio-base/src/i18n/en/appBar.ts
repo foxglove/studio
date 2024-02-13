@@ -33,4 +33,5 @@ export const appBar = {
   view: "View",
   viewData: "View data",
   viewOurDocs: "View our docs",
+  profile: "Profile",
 };

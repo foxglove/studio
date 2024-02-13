@@ -2,9 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { MessagePathFilter } from "./constants";
+import { MessagePathFilter } from "@foxglove/message-path";
+import { Immutable } from "@foxglove/studio";
 
-export function filterMatches(filter: MessagePathFilter, value: unknown): boolean {
+export function filterMatches(filter: Immutable<MessagePathFilter>, value: unknown): boolean {
   if (typeof filter.value === "object") {
     throw new Error("filterMatches only works on paths where global variables have been filled in");
   }

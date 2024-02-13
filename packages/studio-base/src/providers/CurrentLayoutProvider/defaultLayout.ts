@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
 /**
  * Overridden default layout that may have been provided when self-hosting via Docker
@@ -42,7 +41,6 @@ export const defaultLayout: LayoutData =
     },
     globalVariables: {},
     userNodes: {},
-    playbackConfig: { ...defaultPlaybackConfig },
     layout: {
       first: "3D!18i6zy7",
       second: {

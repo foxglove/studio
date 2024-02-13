@@ -49,6 +49,7 @@ function getPlayerState(): PlayerState {
       endTime: { sec: START_TIME + 20, nsec: 331 },
       currentTime: { sec: START_TIME + 5, nsec: 331 },
       isPlaying: true,
+      repeatEnabled: false,
       speed: 0.2,
       lastSeekTime: 0,
       topics: [{ name: "/empty_topic", schemaName: "VoidType" }],
@@ -128,10 +129,12 @@ export const Playing: StoryObj = {
       <Wrapper isPlaying>
         <PlaybackControls
           isPlaying={true}
+          repeatEnabled={false}
           getTimeInfo={() => ({})}
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -146,10 +149,12 @@ export const Paused: StoryObj = {
       <Wrapper>
         <PlaybackControls
           isPlaying={false}
+          repeatEnabled={false}
           getTimeInfo={() => ({})}
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -164,10 +169,12 @@ export const Disabled: StoryObj = {
       <Wrapper presence={PlayerPresence.ERROR} noActiveData>
         <PlaybackControls
           isPlaying={false}
+          repeatEnabled={false}
           getTimeInfo={() => ({})}
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -191,10 +198,12 @@ export const DownloadProgressByRanges: StoryObj = {
       <Wrapper progress={player.progress}>
         <PlaybackControls
           isPlaying
+          repeatEnabled={false}
           getTimeInfo={() => ({})}
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -220,10 +229,12 @@ export const HoverTicks: StoryObj = {
       <Wrapper activeData={player.activeData}>
         <PlaybackControls
           isPlaying
+          repeatEnabled={false}
           getTimeInfo={() => ({})}
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );
@@ -245,10 +256,12 @@ export const WithEvents: StoryObj = {
       <Wrapper activeData={player.activeData}>
         <PlaybackControls
           isPlaying
+          repeatEnabled={false}
           getTimeInfo={() => ({})}
           play={action("play")}
           pause={action("pause")}
           seek={action("seek")}
+          enableRepeatPlayback={action("enable-repeat-playback")}
         />
       </Wrapper>
     );

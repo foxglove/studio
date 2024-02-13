@@ -4,6 +4,7 @@
 
 import * as Comlink from "comlink";
 
+import { ComlinkWrap } from "@foxglove/den/worker";
 import { RawImage } from "@foxglove/schemas";
 
 import type { RawImageOptions } from "./decodeImage";
@@ -17,16 +18,21 @@ import { Image as RosImage } from "../../ros";
  * [transferred](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects)
  * back to the main thread.
  */
+
+type WorkerService = (typeof import("./WorkerImageDecoder.worker"))["service"];
 export class WorkerImageDecoder {
-  #worker: Worker;
-  #remote: Comlink.Remote<(typeof import("./WorkerImageDecoder.worker"))["service"]>;
+  #remote: Comlink.Remote<WorkerService>;
+  #dispose: () => void;
 
   public constructor() {
-    this.#worker = new Worker(
-      // foxglove-depcheck-used: babel-plugin-transform-import-meta
-      new URL("./WorkerImageDecoder.worker", import.meta.url),
+    const { remote, dispose } = ComlinkWrap<WorkerService>(
+      new Worker(
+        // foxglove-depcheck-used: babel-plugin-transform-import-meta
+        new URL("./WorkerImageDecoder.worker", import.meta.url),
+      ),
     );
-    this.#remote = Comlink.wrap(this.#worker);
+    this.#remote = remote;
+    this.#dispose = dispose;
   }
 
   /**
@@ -40,6 +46,6 @@ export class WorkerImageDecoder {
   }
 
   public terminate(): void {
-    this.#worker.terminate();
+    this.#dispose();
   }
 }

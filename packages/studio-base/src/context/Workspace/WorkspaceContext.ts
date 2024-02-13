@@ -9,6 +9,7 @@ import { useGuaranteedContext } from "@foxglove/hooks";
 import { AppSettingsTab } from "@foxglove/studio-base/components/AppSettingsDialog/AppSettingsDialog";
 import { DataSourceDialogItem } from "@foxglove/studio-base/components/DataSourceDialog";
 import { IDataSourceFactory } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { PlaybackSpeed } from "@foxglove/studio-base/players/types";
 
 export const LeftSidebarItemKeys = ["panel-settings", "topics", "problems"] as const;
 export type LeftSidebarItemKey = (typeof LeftSidebarItemKeys)[number];
@@ -39,6 +40,7 @@ export type WorkspaceContextStore = {
   };
   playbackControls: {
     repeat: boolean;
+    speed: PlaybackSpeed;
   };
   sidebars: {
     left: {

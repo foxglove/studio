@@ -29,4 +29,5 @@ export const appBar: Partial<TypeOptions["resources"]["appBar"]> = {
   view: "表示",
   viewData: "データを見る",
   viewOurDocs: "ドキュメンテーションを見る",
+  profile: undefined,
 };

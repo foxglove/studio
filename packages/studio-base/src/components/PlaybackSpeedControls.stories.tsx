@@ -11,55 +11,73 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Meta, StoryObj } from "@storybook/react";
+import { StoryObj } from "@storybook/react";
 import { screen, userEvent } from "@storybook/testing-library";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
+import WorkspaceContextProvider, {
+  WorkspaceContextProviderProps,
+} from "@foxglove/studio-base/providers/WorkspaceContextProvider";
 
-const CAPABILITIES = ["setSpeed", "playbackControl"];
+type Story = StoryObj<typeof WorkspaceContextProvider>;
 
 export default {
   title: "components/PlaybackSpeedControls",
-  component: PlaybackSpeedControls,
   parameters: { colorScheme: "dark" },
+  component: PlaybackSpeedControls,
   decorators: [
-    (WrappedStory, { args }) => (
-      <MockCurrentLayoutProvider>
-        <MockMessagePipelineProvider {...args}>
-          <div style={{ padding: 20, paddingTop: 300 }}>
-            <WrappedStory />
-          </div>
-        </MockMessagePipelineProvider>
-      </MockCurrentLayoutProvider>
+    (
+      WrappedStory: typeof PlaybackSpeedControls,
+      { args }: { args: WorkspaceContextProviderProps },
+    ): JSX.Element => (
+      <WorkspaceContextProvider initialState={args.initialState} disablePersistenceForStorybook>
+        <MockCurrentLayoutProvider>
+          <MockMessagePipelineProvider>
+            <div style={{ padding: 20, paddingTop: 300 }}>
+              <WrappedStory disabled={false} />
+            </div>
+          </MockMessagePipelineProvider>
+        </MockCurrentLayoutProvider>
+      </WorkspaceContextProvider>
     ),
   ],
-  play: async () => {
+  play: async (): Promise<void> => {
     const el = await screen.findByTestId<HTMLInputElement>("PlaybackSpeedControls-Dropdown");
     if (!el.disabled) {
       await userEvent.click(el);
     }
   },
-} satisfies Meta<typeof MockMessagePipelineProvider>;
-
-type Story = StoryObj<typeof MockMessagePipelineProvider>;
-
-export const WithoutSpeedCapability: Story = {
-  name: "without speed capability",
 };
 
-export const WithoutASpeedFromThePlayer: Story = {
-  name: "without a speed from the player",
-  args: { capabilities: CAPABILITIES, activeData: { speed: undefined } },
+export const WithoutASpeedFromTheWorkspace: Story = {
+  name: "without a speed from the workspace",
+  args: {
+    initialState: {},
+  },
 };
 
 export const WithASpeed: Story = {
   name: "with a speed",
-  args: { capabilities: CAPABILITIES },
+  args: {
+    initialState: {
+      playbackControls: {
+        repeat: false,
+        speed: 2,
+      },
+    },
+  },
 };
 
 export const WithAVerySmallSpeed: Story = {
   name: "with a very small speed",
-  args: { capabilities: CAPABILITIES, activeData: { speed: 0.01 } },
+  args: {
+    initialState: {
+      playbackControls: {
+        repeat: false,
+        speed: 0.01,
+      },
+    },
+  },
 };

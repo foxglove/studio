@@ -10,12 +10,12 @@ import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SettingsTreeAction, SettingsTreeNode, SettingsTreeNodes } from "@foxglove/studio";
-import { PlotPath } from "@foxglove/studio-base/panels/Plot/internalTypes";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
-import { plotableRosTypes, PlotConfig, plotPathDisplayName } from "./types";
+import { PlotPath, PlotConfig, plotPathDisplayName } from "./config";
+import { plotableRosTypes } from "./plotableRosTypes";
 
 export const DEFAULT_PATH: PlotPath = Object.freeze({
   timestampMethod: "receiveTime",
@@ -38,7 +38,7 @@ const makeSeriesNode = memoizeWeak(
             },
           ]
         : [],
-      label: plotPathDisplayName(path, index),
+      label: plotPathDisplayName(path, index, t),
       visible: path.enabled,
       fields: {
         value: {
@@ -64,7 +64,9 @@ const makeSeriesNode = memoizeWeak(
           value: path.lineSize,
           step: 0.2,
           min: 0,
-          placeholder: "auto",
+          placeholder: t("auto", {
+            ns: "general",
+          }),
         },
         showLine: {
           label: t("showLine"),
@@ -167,14 +169,18 @@ function buildSettingsTree(config: PlotConfig, t: TFunction<"plot">): SettingsTr
           label: t("min"),
           input: "number",
           value: config.minYValue != undefined ? Number(config.minYValue) : undefined,
-          placeholder: "auto",
+          placeholder: t("auto", {
+            ns: "general",
+          }),
         },
         maxYValue: {
           label: t("max"),
           input: "number",
           error: maxYError,
           value: config.maxYValue != undefined ? Number(config.maxYValue) : undefined,
-          placeholder: "auto",
+          placeholder: t("auto", {
+            ns: "general",
+          }),
         },
       },
     },
@@ -211,19 +217,25 @@ function buildSettingsTree(config: PlotConfig, t: TFunction<"plot">): SettingsTr
           label: t("min"),
           input: "number",
           value: config.minXValue != undefined ? Number(config.minXValue) : undefined,
-          placeholder: "auto",
+          placeholder: t("auto", {
+            ns: "general",
+          }),
         },
         maxXValue: {
           label: t("max"),
           input: "number",
           error: maxXError,
           value: config.maxXValue != undefined ? Number(config.maxXValue) : undefined,
-          placeholder: "auto",
+          placeholder: t("auto", {
+            ns: "general",
+          }),
         },
         followingViewWidth: {
           label: t("secondsRange"),
           input: "number",
-          placeholder: "auto",
+          placeholder: t("auto", {
+            ns: "general",
+          }),
           value: config.followingViewWidth,
         },
       },

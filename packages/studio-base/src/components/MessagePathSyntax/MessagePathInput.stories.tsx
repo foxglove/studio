@@ -56,7 +56,6 @@ function MessagePathInputStory(props: {
     <PanelSetup fixture={props.heavy ?? false ? heavyFixture : MessagePathInputStoryFixture}>
       <Stack direction="row" flex="auto" margin={1.25}>
         <MessagePathInput
-          autoSize={false}
           path={path}
           validTypes={props.validTypes}
           prioritizedDatatype={props.prioritizedDatatype}
@@ -132,6 +131,12 @@ export const AutocompleteScalarFromFullTopic: MsgPathInputStoryObj = {
     const options = await waitFor(() => screen.queryAllByTestId("autocomplete-item"));
     fireEvent.click(options[0]!);
   },
+};
+
+export const AutocompleteWithFilterAndArraySuggestions: MsgPathInputStoryObj = {
+  render: MessagePathInputStory,
+  args: { path: "stateitems" },
+  play: clickInput,
 };
 
 export const AutocompleteMessagePath: MsgPathInputStoryObj = {
