@@ -5,9 +5,10 @@
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CheckIcon from "@mui/icons-material/Check";
 import { Button, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import {
   WorkspaceContextStore,
   useWorkspaceStore,
@@ -37,11 +38,17 @@ export default function PlaybackSpeedControls(props: { disabled?: boolean }): JS
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
   const speed = useWorkspaceStore(selectPlaybackSpeed);
-
+  const setPlaybackSpeed = useMessagePipeline(useCallback((state) => state.setPlaybackSpeed, []));
   // Speed setting lives on the Workspace/persists accross layouts
   const {
     playbackControlActions: { setSpeed },
   } = useWorkspaceActions();
+
+  useEffect(() => {
+    if (setPlaybackSpeed) {
+      setPlaybackSpeed(speed);
+    }
+  }, [speed, setPlaybackSpeed]);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -68,7 +75,7 @@ export default function PlaybackSpeedControls(props: { disabled?: boolean }): JS
         endIcon={<ArrowDropDownIcon />}
       >
         {/* This check is relevant in some stories where it's unecessary to bring in the Workspace context. */}
-        {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition */}
+        {}
         {speed == undefined ? "–" : formatSpeed(speed)}
       </Button>
       <Menu
