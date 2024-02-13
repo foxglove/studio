@@ -270,5 +270,7 @@ describe("DeserializingIterableSources", () => {
       topics: new Map([["json_topic", { topic: "json_topic" }]]),
     });
     expect(messages.length).toBe(4);
+    expect(console.error).toHaveBeenCalledTimes(4);
+    (console.error as jest.Mock).mockClear();
   });
 });

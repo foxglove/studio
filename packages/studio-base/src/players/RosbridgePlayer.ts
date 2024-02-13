@@ -405,6 +405,7 @@ export default class RosbridgePlayer implements Player {
         endTime: currentTime,
         currentTime,
         isPlaying: true,
+        repeatEnabled: false,
         speed: 1,
         // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
         // that we don't accidentally hit falsy checks.

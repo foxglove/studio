@@ -66,6 +66,7 @@ export interface Player {
   pausePlayback?(): void;
   seekPlayback?(time: Time): void;
   playUntil?(time: Time): void;
+  enableRepeatPlayback?(enable: boolean): void;
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), set that speed. E.g. 1.0 is real time, 0.2 is 20% of real time.
@@ -159,6 +160,9 @@ export type PlayerStateActiveData = {
   // It's still allowed to emit `messages` even when not playing (e.g. when doing a backfill after
   // a seek).
   isPlaying: boolean;
+
+  // Whether or not playback will repeat when it reaches the end
+  repeatEnabled: boolean;
 
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), this represents that speed as a fraction of real time.

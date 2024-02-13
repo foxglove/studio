@@ -27,9 +27,11 @@ import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 import { FramePromise } from "./pauseFrameForPromise";
 import { MessagePipelineContext } from "./types";
 
-export function defaultPlayerState(): PlayerState {
+export function defaultPlayerState(player?: Player): PlayerState {
   return {
-    presence: PlayerPresence.NOT_PRESENT,
+    // when there is a player we default to initializing, to prevent thrashing in the UI when
+    // the player is initialized.
+    presence: player ? PlayerPresence.INITIALIZING : PlayerPresence.NOT_PRESENT,
     progress: {},
     capabilities: [],
     profile: undefined,
@@ -133,12 +135,13 @@ export function createMessagePipelineStore({
           pausePlayback: undefined,
           setPlaybackSpeed: undefined,
           seekPlayback: undefined,
+          enableRepeatPlayback: undefined,
         },
       }));
     },
 
     public: {
-      playerState: defaultPlayerState(),
+      playerState: defaultPlayerState(initialPlayer),
       messageEventsBySubscriberId: new Map(),
       subscriptions: [],
       sortedTopics: [],
@@ -216,6 +219,7 @@ export function createMessagePipelineStore({
       pausePlayback: undefined,
       setPlaybackSpeed: undefined,
       seekPlayback: undefined,
+      enableRepeatPlayback: undefined,
 
       pauseFrame(name: string) {
         const condvar = new Condvar();
@@ -397,6 +401,9 @@ function updatePlayerStateAction(
       : undefined;
     newPublicState.seekPlayback = capabilities.includes(PlayerCapabilities.playbackControl)
       ? player.seekPlayback?.bind(player)
+      : undefined;
+    newPublicState.enableRepeatPlayback = capabilities.includes(PlayerCapabilities.playbackControl)
+      ? player.enableRepeatPlayback?.bind(player)
       : undefined;
   }
 
