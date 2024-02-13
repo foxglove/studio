@@ -11,6 +11,7 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
+import { Opaque } from "ts-essentials";
 
 import Logger from "@foxglove/log";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
@@ -22,7 +23,7 @@ const log = Logger.getLogger(__filename);
 export type MeshUpAxis = "y_up" | "z_up";
 export const DEFAULT_MESH_UP_AXIS: MeshUpAxis = "y_up";
 
-export type ModelCacheOptions = {
+type ModelCacheConfiguration = {
   edgeMaterial: THREE.Material;
   ignoreColladaUpAxis: boolean;
   meshUpAxis: MeshUpAxis;
@@ -35,7 +36,7 @@ type LoadModelOptions = {
   referenceUrl?: string;
 };
 
-type CacheKey = string & { __brand: "CacheKey" };
+type CacheKey = Opaque<string, "CacheKey">;
 
 export type LoadedModel = THREE.Group | THREE.Scene;
 
@@ -49,22 +50,54 @@ const STL_MIME_TYPES = ["model/stl", "model/x.stl-ascii", "model/x.stl-binary", 
 const DAE_MIME_TYPES = ["model/vnd.collada+xml"];
 const OBJ_MIME_TYPES = ["model/obj", "text/prs.wavefront-obj"];
 
-class ModelCache {
+export interface ConfiguredModelCache {
+  /** Loads the model at the given URL as a Threejs object and returns a clone of the cached model
+   * with lights removed and with the config settings applied to the clone. */
+  load: (
+    url: string,
+    opts: LoadModelOptions,
+    reportError: ErrorCallback,
+  ) => Promise<LoadedModel | undefined>;
+  release: () => void;
+  options: ModelCacheConfiguration;
+}
+
+/** Class that manages the loading and caching of loaded model assests.
+ * Follows the singleton pattern. To use call ModelCache.getConfiguredModelCache
+ *
+ */
+export class ModelCache {
+  static #instance?: ModelCache;
+  public static getConfiguredModelCache(
+    modelCacheConfiguration: ModelCacheConfiguration,
+  ): ConfiguredModelCache {
+    if (!ModelCache.#instance) {
+      ModelCache.#instance = new ModelCache();
+    }
+    ModelCache.#instance.incrementUsage();
+
+    return {
+      load: ModelCache.#instance.#getConfiguredLoad(modelCacheConfiguration),
+      release: ModelCache.#instance.decrementUsage.bind(ModelCache.#instance),
+      options: modelCacheConfiguration,
+    };
+  }
+
   #textDecoder = new TextDecoder();
   #models = new Map<CacheKey, Promise<LoadedModel | undefined>>();
   #colladaTextureObjectUrls = new Map<string, string>();
   #dracoLoader?: DRACOLoader;
   #usageCount = 0;
 
-  public getConfiguredLoad(
-    modelCacheOptions: ModelCacheOptions,
+  #getConfiguredLoad(
+    modelCacheOptions: ModelCacheConfiguration,
   ): (
     url: string,
     opts: LoadModelOptions,
     reportError: ErrorCallback,
   ) => Promise<LoadedModel | undefined> {
     return async (url: string, opts: LoadModelOptions, reportError: ErrorCallback) => {
-      const cachedModel = await this.load(modelCacheOptions, url, opts, reportError);
+      const cachedModel = await this.#load(modelCacheOptions, url, opts, reportError);
       if (!cachedModel) {
         return undefined;
       }
@@ -85,8 +118,8 @@ class ModelCache {
     };
   }
 
-  public async load(
-    config: ModelCacheOptions,
+  async #load(
+    config: ModelCacheConfiguration,
     url: string,
     opts: LoadModelOptions,
     reportError: ErrorCallback,
@@ -109,7 +142,7 @@ class ModelCache {
   }
 
   async #loadModel(
-    config: ModelCacheOptions,
+    config: ModelCacheConfiguration,
     url: string,
     options: LoadModelOptions,
     reportError: ErrorCallback,
@@ -200,7 +233,7 @@ class ModelCache {
   }
 
   async #loadCollada(
-    config: ModelCacheOptions,
+    config: ModelCacheConfiguration,
     url: string,
     text: string,
     reportError: ErrorCallback,
@@ -351,7 +384,7 @@ function setIsColladaModel(model: LoadedModel): void {
   model.userData.isColladaModel = true;
 }
 
-function getCacheKey(config: ModelCacheOptions, url: string): CacheKey {
+function getCacheKey(config: ModelCacheConfiguration, url: string): CacheKey {
   /** ignore collada up axis affects how the model is parsed before being stored in the cache */
   return `${config.ignoreColladaUpAxis}:${url}` as CacheKey;
 }
@@ -458,33 +491,4 @@ function unrewriteUrl(url: string): string {
 
 function baseUrl(url: string): string {
   return url.slice(0, url.lastIndexOf("/") + 1);
-}
-
-let modelCacheInstance: ModelCache | undefined = undefined;
-
-export type ConfiguredModelCache = {
-  /** Loads the model at the given URL as a Threejs object and returns a clone of the cached model
-   * with lights removed and with the config settings applied to the clone. */
-  load: (
-    url: string,
-    opts: LoadModelOptions,
-    reportError: ErrorCallback,
-  ) => Promise<LoadedModel | undefined>;
-  release: () => void;
-  options: ModelCacheOptions;
-};
-
-export function getConfiguredModelCache(
-  modelCacheConfiguration: ModelCacheOptions,
-): ConfiguredModelCache {
-  if (!modelCacheInstance) {
-    modelCacheInstance = new ModelCache();
-  }
-  modelCacheInstance.incrementUsage();
-
-  return {
-    load: modelCacheInstance.getConfiguredLoad(modelCacheConfiguration),
-    release: modelCacheInstance.decrementUsage.bind(modelCacheInstance),
-    options: modelCacheConfiguration,
-  };
 }

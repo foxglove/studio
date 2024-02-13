@@ -49,7 +49,7 @@ import {
   TestOptions,
 } from "./IRenderer";
 import { Input } from "./Input";
-import { ConfiguredModelCache, DEFAULT_MESH_UP_AXIS, getConfiguredModelCache } from "./ModelCache";
+import { ConfiguredModelCache, DEFAULT_MESH_UP_AXIS, ModelCache } from "./ModelCache";
 import { PickedRenderable, Picker } from "./Picker";
 import type { Renderable } from "./Renderable";
 import { SceneExtension } from "./SceneExtension";
@@ -299,7 +299,7 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
       this.gl.setSize(width, height);
     }
 
-    this.modelCache = getConfiguredModelCache({
+    this.modelCache = ModelCache.getConfiguredModelCache({
       ignoreColladaUpAxis: config.scene.ignoreColladaUpAxis ?? false,
       meshUpAxis: config.scene.meshUpAxis ?? DEFAULT_MESH_UP_AXIS,
       edgeMaterial: this.outlineMaterial,
