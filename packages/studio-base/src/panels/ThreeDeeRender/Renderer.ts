@@ -431,7 +431,6 @@ export class Renderer extends EventEmitter<RendererEvents> implements IRenderer 
     }
     this.sceneExtensions.clear();
     this.sharedGeometry.dispose();
-    this.modelCache.release();
 
     this.labelPool.dispose();
     this.markerPool.dispose();

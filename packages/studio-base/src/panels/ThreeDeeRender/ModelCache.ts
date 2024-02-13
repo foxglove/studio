@@ -58,13 +58,14 @@ export interface ConfiguredModelCache {
     opts: LoadModelOptions,
     reportError: ErrorCallback,
   ) => Promise<LoadedModel | undefined>;
-  release: () => void;
   options: ModelCacheConfiguration;
 }
 
 /** Class that manages the loading and caching of loaded model assests.
- * Follows the singleton pattern. To use call ModelCache.getConfiguredModelCache
- *
+ * Follows the singleton pattern. To use call ModelCache.getConfiguredModelCache with the desired config.
+ * Loaded models are cached and cloned to callers to avoid modifying the original model.
+ * Callers are expected to dispose of the cloned models.
+ * The ModelCache is only ever cleared on page refresh, to keep loading across layouts and sources quick.
  */
 export class ModelCache {
   static #instance?: ModelCache;
@@ -74,11 +75,9 @@ export class ModelCache {
     if (!ModelCache.#instance) {
       ModelCache.#instance = new ModelCache();
     }
-    ModelCache.#instance.incrementUsage();
 
     return {
       load: ModelCache.#instance.#getConfiguredLoad(modelCacheConfiguration),
-      release: ModelCache.#instance.decrementUsage.bind(ModelCache.#instance),
       options: modelCacheConfiguration,
     };
   }
@@ -87,7 +86,6 @@ export class ModelCache {
   #models = new Map<CacheKey, Promise<LoadedModel | undefined>>();
   #colladaTextureObjectUrls = new Map<string, string>();
   #dracoLoader?: DRACOLoader;
-  #usageCount = 0;
 
   #getConfiguredLoad(
     modelCacheOptions: ModelCacheConfiguration,
@@ -342,14 +340,6 @@ export class ModelCache {
 
     dracoLoader.manager = manager;
     return dracoLoader;
-  }
-
-  public incrementUsage(): void {
-    this.#usageCount += 1;
-  }
-
-  public decrementUsage(): void {
-    this.#usageCount -= 1;
   }
 
   public reset(): void {
