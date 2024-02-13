@@ -122,8 +122,8 @@ export default function PlaybackControls(props: {
 
   const toggleRepeat = useCallback(() => {
     // toggle repeat on the workspace
-    setRepeat(!repeat);
-  }, [setRepeat, repeat]);
+    setRepeat((old) => !old);
+  }, [setRepeat]);
 
   useEffect(() => {
     // if workspace has a preference stored that is not reflected in the iterable player...

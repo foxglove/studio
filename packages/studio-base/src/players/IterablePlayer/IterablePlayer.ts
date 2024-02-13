@@ -276,19 +276,6 @@ export class IterablePlayer implements Player {
     }
   }
 
-  // Repeating is a continuation of the playing state/we should already be playing
-  public repeatPlayback(): void {
-    if (!this.#isPlaying) {
-      return;
-    }
-    this.#untilTime = undefined;
-    this.#lastTickMillis = undefined;
-    this.#lastRangeMillis = undefined;
-    this.#currentTime = this.#start;
-
-    this.#setState("reset-playback-iterator");
-  }
-
   public setPlaybackSpeed(speed: number): void {
     this.#lastRangeMillis = undefined;
     this.#speed = speed;
@@ -1055,6 +1042,16 @@ export class IterablePlayer implements Player {
     this.#bufferImpl.off("loadedRangesChange", rangeChangeHandler);
   }
 
+  // Repeating is a continuation of the playing state/we should already be playing
+  #repeatPlayback(): void {
+    if (!this.#isPlaying) {
+      return;
+    }
+    if (this.#start) {
+      this.seekPlayback(this.#start);
+    }
+  }
+
   async #statePlay() {
     this.#presence = PlayerPresence.PRESENT;
 
@@ -1071,11 +1068,12 @@ export class IterablePlayer implements Player {
 
     try {
       while (this.#isPlaying && !this.#hasError && !this.#nextState) {
-        if (this.#repeatEnabled && compare(this.#currentTime, this.#end) === 0) {
+        const timeToEnd = compare(this.#currentTime, this.#end);
+        if (this.#repeatEnabled && timeToEnd === 0) {
           // Playback has ended and we should repeat
-          this.repeatPlayback();
+          this.#repeatPlayback();
           return;
-        } else if (compare(this.#currentTime, this.#end) >= 0) {
+        } else if (timeToEnd >= 0) {
           // Playback has ended. Reset internal trackers for maintaining the playback speed.
           this.#lastTickMillis = undefined;
           this.#lastRangeMillis = undefined;
