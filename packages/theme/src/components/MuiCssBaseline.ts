@@ -6,6 +6,10 @@ import { OverrideComponentReturn } from "../types";
 
 export const MuiCssBaseline: OverrideComponentReturn<"MuiCssBaseline"> = {
   styleOverrides: (theme) => ({
+    html: {
+      WebkitFontSmoothing: "unset",
+      MozOsxFontSmoothing: "unset",
+    },
     svg: {
       display: "block",
       maxWidth: "100%",
