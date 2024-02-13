@@ -144,20 +144,27 @@ function CompatibilityBannerBase({
 }
 
 export function CompatibilityBanner({
-  isChrome,
-  currentVersion,
+  overrideIsChrome,
+  overrideCurrentVersion,
   isDismissable,
 }: {
-  isChrome: boolean;
-  currentVersion: number;
   isDismissable: boolean;
+  /** For stories */
+  overrideIsChrome?: boolean;
+  /** For stories */
+  overrideCurrentVersion?: number;
 }): JSX.Element | ReactNull {
+  const chromeMatch = navigator.userAgent.match(/Chrome\/(\d+)\./);
+  const chromeVersion =
+    overrideCurrentVersion ?? (chromeMatch ? parseInt(chromeMatch[1] ?? "", 10) : 0);
+  const isChrome = overrideIsChrome ?? chromeVersion !== 0;
+
   const { classes } = useStyles();
   const { i18n } = useTranslation();
   const muiTheme = createMuiTheme("dark", i18n.language);
   const [showBanner, setShowBanner] = useState(true);
 
-  if (!showBanner || currentVersion >= MINIMUM_CHROME_VERSION) {
+  if (!showBanner || chromeVersion >= MINIMUM_CHROME_VERSION) {
     return ReactNull;
   }
 

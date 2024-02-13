@@ -6,6 +6,7 @@ import { Fragment, Suspense, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+import { CompatibilityBanner } from "@foxglove/studio-base/components/CompatibilityBanner";
 import { useSharedRootContext } from "@foxglove/studio-base/context/SharedRootContext";
 import EventsProvider from "@foxglove/studio-base/providers/EventsProvider";
 import ProblemsContextProvider from "@foxglove/studio-base/providers/ProblemsContextProvider";
@@ -75,6 +76,7 @@ export function StudioApp(): JSX.Element {
 
   return (
     <MaybeLaunchPreference>
+      <CompatibilityBanner isDismissable />
       <MultiProvider providers={providers}>
         <DocumentTitleAdapter />
         <SendNotificationToastAdapter />
