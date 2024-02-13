@@ -25,6 +25,8 @@ import { filterTreeNodes, prepareSettingsNodes } from "./utils";
 const useStyles = makeStyles()((theme) => ({
   appBar: {
     top: 0,
+    rigtht: 0,
+    left: 0,
     marginRight: 1,
     zIndex: theme.zIndex.appBar,
     padding: theme.spacing(0.5),
@@ -33,7 +35,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   fieldGrid: {
     display: "grid",
-    gridTemplateColumns: "max-content minmax(180px, 2fr)",
+    gridTemplateColumns: "minmax(96px, auto) minmax(180px, 2fr)",
     columnGap: theme.spacing(1),
   },
   textField: {
