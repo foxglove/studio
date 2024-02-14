@@ -505,7 +505,6 @@ describe("layout reducers", () => {
         type: "SPLIT_PANEL",
         payload: {
           id: "Audio!a",
-          config: audioConfig,
           direction: "row",
           path: [],
           root: "Audio!a",
@@ -532,7 +531,6 @@ describe("layout reducers", () => {
         type: "SPLIT_PANEL",
         payload: {
           id: "Tab!a",
-          config: tabConfig,
           direction: "row",
           path: [],
           root: "Tab!a",
@@ -577,7 +575,6 @@ describe("layout reducers", () => {
         payload: {
           id: "Audio!a",
           tabId: "Tab!a",
-          config: audioConfig,
           direction: "row",
           path: [],
           root: "Audio!a",
@@ -625,7 +622,6 @@ describe("layout reducers", () => {
         payload: {
           id: "Tab!a",
           tabId: undefined,
-          config: tabConfig1,
           direction: "row",
           path: [],
           root: "Tab!a",
@@ -683,7 +679,6 @@ describe("layout reducers", () => {
         payload: {
           id: "Tab!b",
           tabId: "Tab!a",
-          config: tabConfig2,
           direction: "row",
           path: [],
           root: "Tab!b",
