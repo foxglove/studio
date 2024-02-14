@@ -35,7 +35,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   fieldGrid: {
     display: "grid",
-    gridTemplateColumns: "minmax(96px, auto) minmax(180px, 2fr)",
+    gridTemplateColumns: `minmax(${theme.spacing(6)}, auto) minmax(${theme.spacing(12)}, 1fr)`,
     columnGap: theme.spacing(1),
   },
   textField: {
