@@ -69,7 +69,7 @@ export class TopicMarkers extends Renderable<MarkerTopicUserData> {
   }
 
   public addMarkerMessage(marker: Marker, receiveTime: bigint): void {
-    switch (marker.action) {
+    switch (marker.action as MarkerAction) {
       case MarkerAction.ADD:
       case MarkerAction.MODIFY:
         this.#addOrUpdateMarker(marker, receiveTime);
@@ -216,7 +216,7 @@ export class TopicMarkers extends Renderable<MarkerTopicUserData> {
 
   #createMarkerRenderable(marker: Marker, receiveTime: bigint): RenderableMarker | undefined {
     const pool = this.renderer.markerPool;
-    switch (marker.type) {
+    switch (marker.type as MarkerType) {
       case MarkerType.ARROW:
         return pool.acquire(MarkerType.ARROW, this.topic, marker, receiveTime);
       case MarkerType.CUBE:

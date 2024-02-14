@@ -1127,7 +1127,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
           const data = parsedResponse.deserialize(response.data);
           resolve(data as Record<string, unknown>);
         } catch (error) {
-          reject(error);
+          reject(error as Error);
         }
       });
     });

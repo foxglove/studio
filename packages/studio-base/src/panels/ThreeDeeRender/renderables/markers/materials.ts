@@ -13,7 +13,7 @@ export type LineOptions = {
 };
 
 export function markerHasTransparency(marker: Marker): boolean {
-  switch (marker.type) {
+  switch (marker.type as MarkerType) {
     case MarkerType.ARROW:
     case MarkerType.CUBE:
     case MarkerType.SPHERE:

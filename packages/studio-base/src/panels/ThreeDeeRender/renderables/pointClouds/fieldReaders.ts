@@ -106,7 +106,7 @@ export function getReader(
   const numericType = (field as Partial<PackedElementField>).type;
   if (numericType == undefined) {
     const type = forceType ?? (field as PointField).datatype;
-    switch (type) {
+    switch (type as PointFieldType) {
       case PointFieldType.INT8:
         return field.offset + 1 <= stride ? int8Reader(field.offset, normalize) : undefined;
       case PointFieldType.UINT8:

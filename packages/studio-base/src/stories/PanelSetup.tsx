@@ -137,7 +137,7 @@ function MockExtensionCatalogProvider(props: PropsWithChildren<ExtensionCatalogP
     return createStore(
       () =>
         ({
-          installExtension: async () => await Promise.reject("unsupported"),
+          installExtension: async () => await Promise.reject(new Error("unsupported")),
           installedExtensions: [],
           installedMessageConverters: props.messageConverters ?? [],
           installedPanels: {},

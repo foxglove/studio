@@ -33,7 +33,7 @@ export type ExtensionCatalog = Immutable<{
 
 export const ExtensionCatalogContext = createContext<StoreApi<ExtensionCatalog>>(
   createStore(() => ({
-    installExtension: async () => await Promise.reject("Unsupported"),
+    installExtension: async () => await Promise.reject(new Error("Unsupported")),
     installedExtensions: [],
     installedPanels: {},
     installedMessageConverters: [],
