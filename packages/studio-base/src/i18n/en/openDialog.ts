@@ -4,7 +4,7 @@
 
 export const openDialog = {
   canBeShared: "Share data files, visualization layouts, and custom extensions with teammates",
-  collaborateTitle: "Accelerate development with Foxglove Data Platform",
+  collaborateTitle: "Accelerate development with Foxglove",
   convenientWebInterface:
     "Use a convenient web interface to tag, search, and retrieve data at lightning speed",
   createAFreeAccount: "Create a free account",
@@ -16,7 +16,7 @@ export const openDialog = {
   learnMore: "Learn more",
   needHelp: "Need help?",
   needHelpDescription: "View our documentation, or check out the tutorials on the Foxglove blog.",
-  newToFoxgloveStudio: "New to Foxglove Studio?",
+  newToFoxgloveStudio: "New to Foxglove?",
   newToFoxgloveStudioDescription:
     "Start by exploring a sample dataset or checking out our documentation.",
   openAGitHubIssue: "Open a GitHub issue",
@@ -26,7 +26,7 @@ export const openDialog = {
   openLocalFile: "Open local file",
   openLocalFileDescription: "Visualize data directly from your local filesystem.",
   openUrl: "Upload and share data",
-  openUrlDescription: "Use Foxglove Data Platform to share data with your team.",
+  openUrlDescription: "Use Foxglove to share data with your team.",
   recentDataSources: "Recent data sources",
   secureStorageOfData: "Securely store petabytes of ROS or custom data",
   seeTutorials: "See tutorials",

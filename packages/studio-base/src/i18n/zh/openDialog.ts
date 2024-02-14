@@ -16,7 +16,7 @@ export const openDialog: Partial<TypeOptions["resources"]["openDialog"]> = {
   learnMore: "了解更多",
   needHelp: "需要帮助？",
   needHelpDescription: "查看我们的文档，或查看 Foxglove 博客上的教程。",
-  newToFoxgloveStudio: "第一次使用 Foxglove Studio？",
+  newToFoxgloveStudio: "第一次使用 Foxglove？",
   newToFoxgloveStudioDescription: "从探索一个样本数据集开始，或查看我们的文档。",
   openAGitHubIssue: "打开 GitHub issue",
   openConnection: "打开连接",
