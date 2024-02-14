@@ -231,8 +231,8 @@ function StateTransitions(props: Props) {
     paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
       // negative makes each path render below the previous
-      const y = (pathIndex + 1) * 6 * -1;
-      outMinY = Math.min(outMinY ?? y, y - 3);
+      const y = (pathIndex + 1) * 6 * -3;
+      outMinY = Math.min(outMinY ?? y, y - 5);
 
       const blocksForPath = decodedBlocks.map((decodedBlock) => decodedBlock[path.value]);
 
