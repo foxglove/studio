@@ -77,6 +77,8 @@ function createWorkspaceContextStore(
         return _.pick(state, ["featureTours", "playbackControls", "sidebars"]);
       },
       merge(persistedState, currentState) {
+        // Use a deep merge to ensure that defaults are filled in for nested values if the values
+        // were not present in localStorage.
         return _.merge(currentState, persistedState);
       },
     }),
