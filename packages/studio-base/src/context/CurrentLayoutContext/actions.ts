@@ -102,7 +102,6 @@ export type SplitPanelPayload = {
   direction: "row" | "column";
   root: MosaicNode<string>;
   path: MosaicPath;
-  config: PanelConfig;
 };
 export type SPLIT_PANEL = { type: "SPLIT_PANEL"; payload: SplitPanelPayload };
 

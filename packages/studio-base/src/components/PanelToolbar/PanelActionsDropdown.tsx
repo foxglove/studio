@@ -66,11 +66,7 @@ function PanelActionsDropdownComponent({ isUnknownPanel }: Props): JSX.Element {
   const tabId = panelContext?.tabId;
   const { mosaicActions } = useContext(MosaicContext);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
-  const {
-    getCurrentLayoutState: getCurrentLayout,
-    closePanel,
-    splitPanel,
-  } = useCurrentLayoutActions();
+  const { closePanel, splitPanel } = useCurrentLayoutActions();
   const getPanelType = useCallback(
     () => getPanelTypeFromMosaic(mosaicWindowActions, mosaicActions),
     [mosaicActions, mosaicWindowActions],
@@ -117,18 +113,16 @@ function PanelActionsDropdownComponent({ isUnknownPanel }: Props): JSX.Element {
         throw new Error("Trying to split unknown panel!");
       }
 
-      const config = getCurrentLayout().selectedLayout?.data?.configById[id] ?? {};
       splitPanel({
         id,
         tabId,
         direction,
         root: mosaicActions.getRoot() as MosaicNode<string>,
         path: mosaicWindowActions.getPath(),
-        config,
       });
       handleMenuClose();
     },
-    [getCurrentLayout, getPanelType, mosaicActions, mosaicWindowActions, splitPanel, tabId],
+    [getPanelType, mosaicActions, mosaicWindowActions, splitPanel, tabId],
   );
 
   const enterFullscreen = useCallback(() => {
