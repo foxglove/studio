@@ -74,7 +74,7 @@ export type UpdateAction = {
 
 const maxDigitNumberFormats = new Array(15).fill(0).map((_, index) => {
   return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: index,
     maximumFractionDigits: index,
   });
 });
