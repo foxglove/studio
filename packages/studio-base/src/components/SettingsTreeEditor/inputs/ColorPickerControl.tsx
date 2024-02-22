@@ -176,6 +176,8 @@ export function useColorPickerControl(props: ColorPickerProps) {
   }, [hex]);
 
 
+
+
   // Synchronize props and state
   if (hex !== editedValue) {
     setEditedValue(hex!);
