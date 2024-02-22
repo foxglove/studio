@@ -175,6 +175,11 @@ export function useColorPickerControl(props: ColorPickerProps) {
     setEditedValue(hex ?? "");
   }, [hex]);
 
+    // Synchronize props and state
+    if (hex !== editedValue) {
+      setEditedValue(hex!);
+    }
+
   return {
     alphaType,
     swatchColor,
