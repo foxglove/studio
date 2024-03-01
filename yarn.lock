@@ -2448,21 +2448,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg-serialization@npm:2.0.3":
+"@foxglove/rosmsg-serialization@npm:2.0.3, @foxglove/rosmsg-serialization@npm:^2.0.0":
   version: 2.0.3
   resolution: "@foxglove/rosmsg-serialization@npm:2.0.3"
   dependencies:
     "@foxglove/message-definition": ^0.2.0
   checksum: d2ad60e625e819b6373fe32216118e510858decddb65b14590191cea3ba114a6f0941d445a048e8f6a3c0cbdb69a977b7e2ecb910166eecbece1666c57b932a3
-  languageName: node
-  linkType: hard
-
-"@foxglove/rosmsg-serialization@npm:^2.0.0":
-  version: 2.0.2
-  resolution: "@foxglove/rosmsg-serialization@npm:2.0.2"
-  dependencies:
-    "@foxglove/message-definition": ^0.2.0
-  checksum: 066172af1ab659379ce50735f4627ecb45f2d75313fe3bba4e19f1e7c9f3f17f265492558c80669aa60ce1aa76539e5be3433b1ce59c0f78743d773e21a0c947
   languageName: node
   linkType: hard
 
