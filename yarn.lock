@@ -11651,7 +11651,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fsevents@npm:^2.3.2, fsevents@npm:~2.3.2":
+"fsevents@npm:2.3.2, fsevents@npm:^2.3.2, fsevents@npm:~2.3.2":
   version: 2.3.2
   resolution: "fsevents@npm:2.3.2"
   dependencies:
@@ -11661,7 +11661,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fsevents@patch:fsevents@^2.3.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
+"fsevents@patch:fsevents@2.3.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@^2.3.2#~builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
   resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=df0bf1"
   dependencies:
@@ -16344,23 +16344,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.37.1":
-  version: 1.37.1
-  resolution: "playwright-core@npm:1.37.1"
+"playwright-core@npm:1.42.0":
+  version: 1.42.0
+  resolution: "playwright-core@npm:1.42.0"
   bin:
     playwright-core: cli.js
-  checksum: 69f818da2230057584140d5b3af7778a4f4a822b5b18d133abfc5d259128becb943c343a2ddf6b0635277a69f28983e83e2bc3fce23595ececb1e410475b6368
+  checksum: f4b9578b285d6673e9f23040087b5bc008e3183553a5dc0304ddc9ab57445f3645dbb6b28af96a3b8535fc339262ad9cb858f5d75e46f6132a1bc707aeff9c5e
   languageName: node
   linkType: hard
 
-"playwright@npm:1.37.1":
-  version: 1.37.1
-  resolution: "playwright@npm:1.37.1"
+"playwright@npm:1.42.0":
+  version: 1.42.0
+  resolution: "playwright@npm:1.42.0"
   dependencies:
-    playwright-core: 1.37.1
+    fsevents: 2.3.2
+    playwright-core: 1.42.0
+  dependenciesMeta:
+    fsevents:
+      optional: true
   bin:
     playwright: cli.js
-  checksum: 99406ef3e15b83a659cb23ef1d92d9935789aad430580d1e0371087dfdf266891483c6f97cfa06bf5f49f081eacd44245d05d20714f98531edef4cc317044d6b
+  checksum: 879903e52fa83afb1e387ee725f19e4fecceeea37d6b92405722551e746c184938da3187a4b2be3de1d8b7dafe1f32ec7ddeb324a44275c955d26c70d36a3b65
   languageName: node
   linkType: hard
 
@@ -20461,7 +20465,7 @@ __metadata:
     "@foxglove/studio-web": "workspace:*"
     "@foxglove/tsconfig": 2.0.0
     "@types/serve-handler": ^6
-    playwright: 1.37.1
+    playwright: 1.42.0
     serve-handler: 6.1.5
     webpack: 5.90.1
     webpack-dev-server: 4.15.1
