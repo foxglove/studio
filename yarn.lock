@@ -2318,7 +2318,7 @@ __metadata:
     "@foxglove/omgidl-parser": 1.0.3
     "@foxglove/omgidl-serialization": 1.0.4
     "@foxglove/ros2idl-parser": 0.3.2
-    "@foxglove/rosmsg": 4.2.2
+    "@foxglove/rosmsg": 5.0.3
     "@foxglove/rosmsg-serialization": 2.0.3
     "@foxglove/rosmsg2-serialization": 2.0.3
     "@foxglove/schemas": 1.6.2
@@ -2468,7 +2468,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg@npm:4.2.2, @foxglove/rosmsg@npm:^4.0.0":
+"@foxglove/rosmsg@npm:5.0.3":
+  version: 5.0.3
+  resolution: "@foxglove/rosmsg@npm:5.0.3"
+  dependencies:
+    "@foxglove/message-definition": ^0.3.1
+    md5-typescript: ^1.0.5
+  bin:
+    gendeps2: bin/gendeps2
+  checksum: 09d07b153cddc37db0c5d315c62e902107e5da1a00130d8ccb99de53ae4ff844e0c0e1154ca2fccc6c3dbb598406d5d3a6710e5b528852270e266658547402e2
+  languageName: node
+  linkType: hard
+
+"@foxglove/rosmsg@npm:^4.0.0":
   version: 4.2.2
   resolution: "@foxglove/rosmsg@npm:4.2.2"
   dependencies:
@@ -2525,7 +2537,7 @@ __metadata:
     "@foxglove/rosbag": 0.4.0
     "@foxglove/rosbag2-web": 4.1.1
     "@foxglove/roslibjs": 0.0.3
-    "@foxglove/rosmsg": 4.2.2
+    "@foxglove/rosmsg": 5.0.3
     "@foxglove/rosmsg-msgs-common": 3.1.0
     "@foxglove/rosmsg-serialization": 2.0.3
     "@foxglove/rosmsg2-serialization": 2.0.3
