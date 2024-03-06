@@ -359,7 +359,7 @@ function SidebarItems(props: {
             actions: (
               <>
                 <Button
-                  href="https://console.foxglove.dev/recordings"
+                  href="https://app.foxglove.dev/~/recordings"
                   target="_blank"
                   variant="outlined"
                   className={classes.button}
@@ -454,7 +454,7 @@ export default function Start(): JSX.Element {
           </SvgIcon>
         ),
         iconProps: { iconName: "FileASPX" },
-        href: "https://console.foxglove.dev/recordings",
+        href: "https://app.foxglove.dev/~/recordings",
         onClick: () => {
           void analytics.logEvent(AppEvent.DIALOG_SELECT_VIEW, { type: "data-platform" });
         },

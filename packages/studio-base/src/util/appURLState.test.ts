@@ -22,7 +22,7 @@ describe("app state url parser", () => {
   // interprets foxglove:// URLs differently than the browser does.
   describe.each([
     { isDesktop: true, urlBuilder: () => new URL("foxglove://host/open") },
-    { isDesktop: false, urlBuilder: () => new URL("https://studio.foxglove.dev/") },
+    { isDesktop: false, urlBuilder: () => new URL("https://app.foxglove.dev/") },
   ])("url tests", ({ isDesktop, urlBuilder }) => {
     beforeEach(() => mockIsDesktop.mockReturnValue(isDesktop));
     it("rejects non data state urls", () => {
